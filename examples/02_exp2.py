@@ -14,32 +14,30 @@
 # limitations under the License.
 # *****************************************************************************
 
-
-import asnumpy as ap
-import numpy as np
 import time
+import numpy as np
+import asnumpy as ap
+
 
 def main():
     array_size = (1000, 1000)
     comparison_tolerance = {'rtol': 1e-5, 'atol': 1e-8}
 
 
-    print(f"Generating two random arrays of size {array_size}...")
-    np_a = np.random.rand(*array_size).astype(np.float32)
-    np_b = np.random.rand(*array_size).astype(np.float32)
+    print(f"Generating one random arrays of size {array_size}...")
+    np_data = np.random.rand(*array_size).astype(np.float32)
     
-    ap_a = ap.ndarray.from_numpy(np_a)
-    ap_b = ap.ndarray.from_numpy(np_b)
+    ap_data = ap.ndarray.from_numpy(np_data)
 
 
-    print("Performing addition with NumPy (CPU)...")
+    print("Performing exp2 with NumPy (CPU)...")
     start_np = time.time()
-    np_result = np.add(np_a, np_b)
+    np_result = np.exp2(np_data)
     end_np = time.time()
     
-    print("Performing addition with asnumpy (GPU/Custom Device)...")
+    print("Performing exp2 with asnumpy (GPU/Custom Device)...")
     start_ap = time.time()
-    ap_result = ap.add(ap_a, ap_b)
+    ap_result = ap.exp2(ap_data)
     np_ap_result = ap_result.to_numpy()
     end_ap = time.time()
     

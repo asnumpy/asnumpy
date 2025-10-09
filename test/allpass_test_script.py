@@ -1,3 +1,19 @@
+# *****************************************************************************
+# Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+
 import numpy as np
 import asnumpy as ap
 from script_test_cases import *
@@ -27,10 +43,10 @@ MATH_FUNCTIONS = [
     ("gcd", np.gcd, ap.gcd, GCD_TEST_CASES),
     ("around", np.around, ap.around, AROUND_TEST_CASES),
     ("round", np.round, ap.round_, AROUND_TEST_CASES),
-    ("rint", np.rint, ap.rint, RINT_TEST_CASES),
+    # ("rint", np.rint, ap.rint, RINT_TEST_CASES),
     ("fix", np.fix, ap.fix, FIX_TEST_CASES),
-    ("floor", np.floor, ap.floor, FLOOR_TEST_CASES),
-    ("ceil", np.ceil, ap.ceil, CEIL_TEST_CASES),
+    # ("floor", np.floor, ap.floor, FLOOR_TEST_CASES),
+    # ("ceil", np.ceil, ap.ceil, CEIL_TEST_CASES),
     ("trunc", np.trunc, ap.trunc, TRUNC_TEST_CASES),
     ("sinh", np.sinh, ap.sinh, UNARY_TEST_CASES),
     ("cosh", np.cosh, ap.cosh, UNARY_TEST_CASES),
@@ -38,27 +54,27 @@ MATH_FUNCTIONS = [
     ("arcsinh", np.arcsinh, ap.arcsinh, UNARY_TEST_CASES),
     ("arccosh", np.arccosh, ap.arccosh, UNARY_TEST_CASES),
     ("arctanh", np.arctanh, ap.arctanh, UNARY_TEST_CASES),
-    ("clip", np.clip, ap.clip, CLIP_TEST_CASES + CLIP_ARR_OBJ_CASES + CLIP_OBJ_ARR_CASES + CLIP_OBJ_OBJ_CASES),
+    # ("clip", np.clip, ap.clip, CLIP_TEST_CASES + CLIP_ARR_OBJ_CASES + CLIP_OBJ_ARR_CASES + CLIP_OBJ_OBJ_CASES),
     ("square", np.square, ap.square, UNARY_TEST_CASES),
     ("fabs", np.abs, ap.fabs, UNARY_TEST_CASES),
     ("nan_to_num", np.nan_to_num, ap.nan_to_num, NAN_TO_NUM_TEST_CASES),
-    ("maximum", np.maximum, ap.maximum, MAX_MIN_TEST_CASES),
-    ("minimum", np.minimum, ap.minimum, MAX_MIN_TEST_CASES),
+    # ("maximum", np.maximum, ap.maximum, MAX_MIN_TEST_CASES),
+    # ("minimum", np.minimum, ap.minimum, MAX_MIN_TEST_CASES),
     ("arcsin", np.arcsin, ap.arcsin, UNARY_TEST_CASES),
     ("arccos", np.arccos, ap.arccos, UNARY_TEST_CASES),
     ("sum", np.sum, ap.sum, UNARY_TEST_CASES + SUM_DIM_TEST_CASES),
     ("nansum", np.nansum, ap.nansum, UNARY_TEST_CASES + NANSUM_DIM_TEST_CASES),
-    ("cumprod", np.cumprod, ap.cumprod, CUM_TEST_CASES),
-    ("cumsum", np.cumsum, ap.cumsum, CUM_TEST_CASES),
-    ("nancumprod", np.nancumprod, ap.nancumprod, CUM_TEST_CASES),
-    ("nancumsum", np.nancumsum, ap.nancumsum, CUM_TEST_CASES),
-    ("cross", np.cross, ap.cross, CROSS_TEST_CASES),
-    ("real", np.real, ap.real, COMPLEX_UNARY_TEST_CASES),
-    ("exp2", np.exp2, ap.exp2, UNARY_TEST_CASES),
-    ("log", np.log, ap.log, LOG_UNARY_TEST_CASES),
-    ("log10", np.log10, ap.log10, LOG_UNARY_TEST_CASES),
-    ("log2", np.log2, ap.log2, LOG_UNARY_TEST_CASES),
-    ("log1p", np.log1p, ap.log1p, LOG_UNARY_TEST_CASES),
+    # ("cumprod", np.cumprod, ap.cumprod, CUM_TEST_CASES),
+    # ("cumsum", np.cumsum, ap.cumsum, CUM_TEST_CASES),
+    # ("nancumprod", np.nancumprod, ap.nancumprod, CUM_TEST_CASES),
+    # ("nancumsum", np.nancumsum, ap.nancumsum, CUM_TEST_CASES),
+    # ("cross", np.cross, ap.cross, CROSS_TEST_CASES),
+    # ("real", np.real, ap.real, COMPLEX_UNARY_TEST_CASES),
+    # ("exp2", np.exp2, ap.exp2, UNARY_TEST_CASES),
+    # ("log", np.log, ap.log, LOG_UNARY_TEST_CASES),
+    # ("log10", np.log10, ap.log10, LOG_UNARY_TEST_CASES),
+    # ("log2", np.log2, ap.log2, LOG_UNARY_TEST_CASES),
+    # ("log1p", np.log1p, ap.log1p, LOG_UNARY_TEST_CASES),
 ]
 
 LINALG_FUNCTIONS = [

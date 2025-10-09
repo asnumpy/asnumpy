@@ -53,4 +53,16 @@
     x：NPUArray，输入数组  
     decimals：int，要四舍五入的小数位数；若为负数，则表示在小数点左侧取整  
     dtype：py::dtype，可选，返回类型，默认与 x 相同  
-- **返回**
+- **返回类型：**  
+    NPUArray  
+- **功能：**  
+    逐元素将 x 四舍五入到指定小数位数（与 Around 功能相同）。  
+
+<span id="Trunc">7. <mark>**Trunc**</mark></span>  
+- **参数：**  
+    x：NPUArray，输入数组  
+    dtype：py::dtype，可选，返回类型，默认与 x 相同  
+- **返回类型：**  
+    NPUArray  
+- **功能：**  
+    逐元素向零取整，截断小数部分（与 Fix 功能相同）。

@@ -1,11 +1,27 @@
+# *****************************************************************************
+# Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+
 add_library(asnumpy INTERFACE)
 add_library(ascend_sdk INTERFACE)
 
 target_include_directories(asnumpy INTERFACE ${CMAKE_SOURCE_DIR}/include)
 
-target_include_directories(ascend_sdk INTERFACE /usr/local/Ascend/ascend-toolkit/latest/include)
-target_link_directories(ascend_sdk INTERFACE /usr/local/Ascend/ascend-toolkit/latest/lib64)
-target_link_libraries(ascend_sdk INTERFACE ascendcl runtime nnopbase opapi)
+target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/include)
+target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/lib64)
+target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi)
 
 add_subdirectory(array)
 add_subdirectory(cann)

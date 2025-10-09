@@ -35,7 +35,7 @@ AsNumpy 是一款 **深度支持昇腾 NPU 并高度兼容 Numpy 接口的轻量
 
 ### **API 架构**
 
-AsNumpy 的 API 架构分为 **功能模块** 与 **基础模块** 两大类，目前已实现约 **113 个 API**（含十几个功能尚不完全支持的接口，以及若干对参数 `shape` 有特殊限制的接口）。此外，还有 **10 个 API** 因代码问题尚未合并，以及 **11 个内部 `utils` 接口** 仅供开发者使用。  
+AsNumpy 的 API 架构分为 **功能模块** 与 **基础模块** 两大类。
 
 API 架构设计示意图如下所示：
 
@@ -44,14 +44,7 @@ API 架构设计示意图如下所示：
 #### 📊 具体功能
 AsNumpy 已实现涵盖 **[数学运算](docs/math/)**（三角函数、指数、对数等常见数学计算）、线性代数（矩阵运算与分解）、**[随机抽样](docs/random/)**、**[逻辑函数](docs/logic/)**、**数组创建**、**输入输出**等多个功能模块，以及 **辅助工具**、**内存池管理**、**数据类型** 等基础模块，为开发者提供全面的科学计算支持。
 
-详细 API 列表请参阅 [docs](docs/) 目录下的各模块文档。 
-
-📌 **总结**  
-- 目前 AsNumpy 共规划约 **260 个接口**。  
-- 已实现并合并：**113 个**  
-- 待合并：**10 个**  
-- 内部 utils：**11 个**  
-- 数学模块是主要进展，随机模块由于复杂性进度相对缓慢，线性代数模块则在整理后逐步合并。  
+详细 API 列表请参阅 [docs](docs/) 目录下的各模块文档。  
 
 ---
 
@@ -140,30 +133,25 @@ total_sum = ap.sum(elementwise_product)
 
 本仓库目前支持用户以 **源代码编译安装** 的方式使用，后续将以 `whl` 包形式提供预编译版本。  
 
-**环境要求**：  
-- 操作系统：Linux  
-- 编译工具：`gcc >= 11.2`、`ninja-build`  
-- Python：`>= 3.9`  
-- 硬件环境：昇腾 910B  
-- 软件环境：`CANN 8.2.RC1.alpha003` 已安装  
+**环境要求**:
+- 硬件平台：
+    - CPU：AArch64或X86_64
+    - NPU：昇腾910B
+- 系统版本：
+    - 主流Linux系统，Ubuntu 20.04及以上版本
+- 软件版本：
+    - 编译工具：`GCC >= 11.2`、`CMake >= 3.22`、`ninja-build >= 1.12`
+    - Python环境：`Python >= 3.9`、具有`pip`工具
+    - CANN：`8.2.RC1.alpha003`及以上版本
 
 **用户使用方式**：
 ```bash
 git clone --recursive https://gitcode.com/cann/asnumpy.git
 cd asnumpy
-pip install .
+pip install -r requirements.txt
+python -m build
+pip install dist/*.whl
 ```
-
-**开发者使用方式**：
-```bash
-git clone --recursive https://gitcode.com/cann/asnumpy.git
-cd asnumpy
-mkdir build && cd build
-cmake .. -GNinja && ninja
-```
-> 构建产物将位于 `asnumpy/lib` 子文件夹下。  
-开发者可在 `src` 与 `include` 文件夹中开发新的 API。
-
 
 ---
 
