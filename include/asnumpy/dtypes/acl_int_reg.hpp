@@ -14,9 +14,9 @@
 namespace asnumpy {
 namespace dtypes {
 
-    // ACL 浮点类型管理器基类
+    // ACL 整数类型管理器基类
     template <typename T>
-    struct ACLFloatManager {
+    struct ACLIntManager {
         static PyObject* type_ptr;      // Python类型对象指针
         static int npy_type;           // NumPy类型ID
         static int Dtype() { return npy_type; }
@@ -29,16 +29,16 @@ namespace dtypes {
 
     // Python 标量对象包装
     template <typename T>
-    struct PyACLScalar {
+    struct PyACLIntScalar {
         PyObject_HEAD;
         T value;
     };
 
-    // 通用的浮点类型注册器
+    // 通用的整数类型注册器
     template <typename T>
-    class FloatTypeRegistrar {
+    class IntTypeRegistrar {
     public:
-        using ScalarType = PyACLScalar<T>;
+        using ScalarType = PyACLIntScalar<T>;
         using DescriptorType = TypeDescriptor<T>;
         
         // 数组操作函数
@@ -80,18 +80,18 @@ namespace dtypes {
         
         static PyObject* getitem(void* data, void* arr) {
             T val = *static_cast<T*>(data);
-            float float_val = static_cast<float>(val);
-            return PyFloat_FromDouble(static_cast<double>(float_val));
+            int64_t int_val = static_cast<int64_t>(val);
+            return PyLong_FromLongLong(int_val);
         }
         
         static int setitem(PyObject* obj, void* data, void* arr) {
-            float val;
-            if (PyFloat_Check(obj)) {
-                val = static_cast<float>(PyFloat_AsDouble(obj));
-            } else if (PyLong_Check(obj)) {
-                val = static_cast<float>(PyLong_AsDouble(obj));
+            int64_t val;
+            if (PyLong_Check(obj)) {
+                val = PyLong_AsLongLong(obj);
+            } else if (PyFloat_Check(obj)) {
+                val = static_cast<int64_t>(PyFloat_AsDouble(obj));
             } else {
-                PyErr_SetString(PyExc_TypeError, "Cannot convert to float type");
+                PyErr_SetString(PyExc_TypeError, "Cannot convert to int type");
                 return -1;
             }
             
@@ -100,17 +100,17 @@ namespace dtypes {
         }
         
         // 类型转换函数
-        static void cast_to_float(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+        static void cast_to_int32(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
             T* from_ptr = static_cast<T*>(from);
-            float* to_ptr = static_cast<float*>(to);
+            int32_t* to_ptr = static_cast<int32_t*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
-                to_ptr[i] = static_cast<float>(from_ptr[i]);
+                to_ptr[i] = static_cast<int32_t>(from_ptr[i]);
             }
         }
         
-        static void cast_from_float(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
-            float* from_ptr = static_cast<float*>(from);
+        static void cast_from_int32(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+            int32_t* from_ptr = static_cast<int32_t*>(from);
             T* to_ptr = static_cast<T*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
@@ -118,32 +118,32 @@ namespace dtypes {
             }
         }
         
-        static void cast_to_double(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+        static void cast_to_int64(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
             T* from_ptr = static_cast<T*>(from);
-            double* to_ptr = static_cast<double*>(to);
+            int64_t* to_ptr = static_cast<int64_t*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
-                to_ptr[i] = static_cast<double>(from_ptr[i]);
+                to_ptr[i] = static_cast<int64_t>(from_ptr[i]);
             }
         }
         
-        static void cast_from_double(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
-            double* from_ptr = static_cast<double*>(from);
+        static void cast_from_int64(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+            int64_t* from_ptr = static_cast<int64_t*>(from);
             T* to_ptr = static_cast<T*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
-                to_ptr[i] = T(static_cast<float>(from_ptr[i]));
+                to_ptr[i] = T(from_ptr[i]);
             }
         }
         
-        // 添加与其他 ACL 浮点类型的转换函数
+        // 添加与其他 ACL 整数类型的转换函数
         template<typename U>
         static void cast_to_acl_type(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
             T* from_ptr = static_cast<T*>(from);
             U* to_ptr = static_cast<U*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
-                to_ptr[i] = U(static_cast<float>(from_ptr[i]));
+                to_ptr[i] = U(static_cast<int64_t>(from_ptr[i]));
             }
         }
         
@@ -153,7 +153,7 @@ namespace dtypes {
             T* to_ptr = static_cast<T*>(to);
             
             for (npy_intp i = 0; i < n; i++) {
-                to_ptr[i] = T(static_cast<float>(from_ptr[i]));
+                to_ptr[i] = T(static_cast<int64_t>(from_ptr[i]));
             }
         }
         
@@ -165,7 +165,7 @@ namespace dtypes {
         static PyObject* scalar_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
             ScalarType* self = reinterpret_cast<ScalarType*>(type->tp_alloc(type, 0));
             if (self != nullptr) {
-                self->value = T(0.0f);
+                self->value = T(0);
             }
             return reinterpret_cast<PyObject*>(self);
         }
@@ -177,13 +177,13 @@ namespace dtypes {
             }
             
             if (obj == nullptr) {
-                self->value = T(0.0f);
-            } else if (PyFloat_Check(obj)) {
-                self->value = T(static_cast<float>(PyFloat_AsDouble(obj)));
+                self->value = T(0);
             } else if (PyLong_Check(obj)) {
-                self->value = T(static_cast<float>(PyLong_AsDouble(obj)));
+                self->value = T(static_cast<int64_t>(PyLong_AsLongLong(obj)));
+            } else if (PyFloat_Check(obj)) {
+                self->value = T(static_cast<int64_t>(PyFloat_AsDouble(obj)));
             } else {
-                PyErr_SetString(PyExc_TypeError, "Cannot convert to ACL float type");
+                PyErr_SetString(PyExc_TypeError, "Cannot convert to ACL int type");
                 return -1;
             }
             
@@ -191,13 +191,13 @@ namespace dtypes {
         }
         
         static PyObject* scalar_repr(ScalarType* self) {
-            float val = static_cast<float>(self->value);
-            return PyUnicode_FromFormat("%s(%g)", TypeDescriptor<T>::kTypeName, val);
+            int64_t val = static_cast<int64_t>(self->value);
+            return PyUnicode_FromFormat("%s(%lld)", TypeDescriptor<T>::kTypeName, val);
         }
         
         static PyObject* scalar_str(ScalarType* self) {
-            float val = static_cast<float>(self->value);
-            return PyUnicode_FromFormat("%g", val);
+            int64_t val = static_cast<int64_t>(self->value);
+            return PyUnicode_FromFormat("%lld", val);
         }
         
         static PyObject* scalar_richcompare(ScalarType* self, PyObject* other, int op) {
@@ -247,15 +247,15 @@ namespace dtypes {
         static PyArray_ArrFuncs* GetArrFuncs() {
             static bool initialized = false;
             if (!initialized) {
-                PyArray_InitArrFuncs(&ACLFloatManager<T>::arr_funcs);
-                ACLFloatManager<T>::arr_funcs.copyswap = copyswap;
-                ACLFloatManager<T>::arr_funcs.copyswapn = copyswapn;
-                ACLFloatManager<T>::arr_funcs.compare = compare;
-                ACLFloatManager<T>::arr_funcs.getitem = getitem;
-                ACLFloatManager<T>::arr_funcs.setitem = setitem;
+                PyArray_InitArrFuncs(&ACLIntManager<T>::arr_funcs);
+                ACLIntManager<T>::arr_funcs.copyswap = copyswap;
+                ACLIntManager<T>::arr_funcs.copyswapn = copyswapn;
+                ACLIntManager<T>::arr_funcs.compare = compare;
+                ACLIntManager<T>::arr_funcs.getitem = getitem;
+                ACLIntManager<T>::arr_funcs.setitem = setitem;
                 initialized = true;
             }
-            return &ACLFloatManager<T>::arr_funcs;
+            return &ACLIntManager<T>::arr_funcs;
         }
 
         // 构造 NumPy 描述符原型（兼容 NumPy 2.x）
@@ -281,27 +281,21 @@ namespace dtypes {
             return proto;
         }
         
-        // 注册与其他 ACL 浮点类型的转换函数
+        // 注册与其他 ACL 整数类型的转换函数
         static void RegisterACLTypeConversions(int type_num) {
             // 检查其他 ACL 类型是否已注册，如果已注册则注册转换函数
-            RegisterConversionIfRegistered<float8_e5m2>(type_num);
-            RegisterConversionIfRegistered<float8_e4m3fn>(type_num);
-            RegisterConversionIfRegistered<float8_e8m0>(type_num);
-            RegisterConversionIfRegistered<bfloat16>(type_num);
-            RegisterConversionIfRegistered<float6_e2m3fn>(type_num);
-            RegisterConversionIfRegistered<float6_e3m2fn>(type_num);
-            RegisterConversionIfRegistered<float4_e2m1fn>(type_num);
-            RegisterConversionIfRegistered<float4_e1m2fn>(type_num);
+            RegisterConversionIfRegistered<int4>(type_num);
+            RegisterConversionIfRegistered<uint1>(type_num);
         }
         
         template<typename U>
         static void RegisterConversionIfRegistered(int type_num) {
-            if (ACLFloatManager<U>::npy_type != NPY_NOTYPE) {
+            if (ACLIntManager<U>::npy_type != NPY_NOTYPE) {
                 // 注册 T -> U 的转换
-                PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), ACLFloatManager<U>::npy_type,
+                PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), ACLIntManager<U>::npy_type,
                                          reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_acl_type<U>));
                 // 注册 U -> T 的转换
-                PyArray_RegisterCastFunc(PyArray_DescrFromType(ACLFloatManager<U>::npy_type), type_num,
+                PyArray_RegisterCastFunc(PyArray_DescrFromType(ACLIntManager<U>::npy_type), type_num,
                                          reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_acl_type<U>));
             }
         }
@@ -371,20 +365,20 @@ namespace dtypes {
             }
             
             // 2. 构造并注册 NumPy 描述符原型（NumPy 2.x）
-            ACLFloatManager<T>::npy_descr_proto = GetDescrProto();
-            Py_SET_TYPE(&ACLFloatManager<T>::npy_descr_proto, &PyArrayDescr_Type);
-            ACLFloatManager<T>::npy_descr_proto.typeobj = python_type;
+            ACLIntManager<T>::npy_descr_proto = GetDescrProto();
+            Py_SET_TYPE(&ACLIntManager<T>::npy_descr_proto, &PyArrayDescr_Type);
+            ACLIntManager<T>::npy_descr_proto.typeobj = python_type;
 
-            int type_num = PyArray_RegisterDataType(&ACLFloatManager<T>::npy_descr_proto);
+            int type_num = PyArray_RegisterDataType(&ACLIntManager<T>::npy_descr_proto);
             if (type_num < 0) {
                 PyErr_SetString(PyExc_RuntimeError, "Failed to register dtype");
                 return false;
             }
 
             // 3. 保存类型信息
-            ACLFloatManager<T>::npy_type = type_num;
-            ACLFloatManager<T>::npy_descr = PyArray_DescrFromType(type_num);
-            ACLFloatManager<T>::type_ptr = reinterpret_cast<PyObject*>(python_type);
+            ACLIntManager<T>::npy_type = type_num;
+            ACLIntManager<T>::npy_descr = PyArray_DescrFromType(type_num);
+            ACLIntManager<T>::type_ptr = reinterpret_cast<PyObject*>(python_type);
 
             // 4. 立即注册转换函数（在dtype注册后立即初始化，避免警告）
             RegisterConversionFunctions(type_num);
@@ -394,56 +388,57 @@ namespace dtypes {
         
         // 注册转换函数的辅助方法
         static void RegisterConversionFunctions(int type_num) {
-            // 注册与标准浮点类型的转换（双向）
-            PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), NPY_FLOAT,
-                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_float));
-            PyArray_RegisterCastFunc(PyArray_DescrFromType(NPY_FLOAT), type_num,
-                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_float));
+            // 注册与标准整数类型的转换（双向）
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), NPY_INT32,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_int32));
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(NPY_INT32), type_num,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_int32));
 
-            PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), NPY_DOUBLE,
-                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_double));
-            PyArray_RegisterCastFunc(PyArray_DescrFromType(NPY_DOUBLE), type_num,
-                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_double));
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), NPY_INT64,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_int64));
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(NPY_INT64), type_num,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_int64));
             
-            // 注册与其他 ACL 浮点类型的转换（如果它们已注册）
+            // 注册与其他 ACL 整数类型的转换（如果它们已注册）
             RegisterACLTypeConversions(type_num);
         }
     };
 
     // 静态成员定义模板（需要在使用的地方特化）
     template <typename T>
-    PyObject* ACLFloatManager<T>::type_ptr = nullptr;
+    PyObject* ACLIntManager<T>::type_ptr = nullptr;
     
     template <typename T>
-    int ACLFloatManager<T>::npy_type = NPY_NOTYPE;
+    int ACLIntManager<T>::npy_type = NPY_NOTYPE;
     
     template <typename T>
-    PyArray_ArrFuncs ACLFloatManager<T>::arr_funcs = {};
+    PyArray_ArrFuncs ACLIntManager<T>::arr_funcs = {};
     
     template <typename T>
-    PyArray_DescrProto ACLFloatManager<T>::npy_descr_proto = {};
+    PyArray_DescrProto ACLIntManager<T>::npy_descr_proto = {};
     
     template <typename T>
-    PyArray_Descr* ACLFloatManager<T>::npy_descr = nullptr;
+    PyArray_Descr* ACLIntManager<T>::npy_descr = nullptr;
 
 
     // 显式特化宏，简化在具体实现中的代码
-    #define EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(T) \
+    #define EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(T) \
         template<> \
-        PyObject* ACLFloatManager<T>::type_ptr = nullptr; \
+        PyObject* ACLIntManager<T>::type_ptr = nullptr; \
         \
         template<> \
-        int ACLFloatManager<T>::npy_type = NPY_NOTYPE; \
+        int ACLIntManager<T>::npy_type = NPY_NOTYPE; \
         \
         template<> \
-        PyArray_ArrFuncs ACLFloatManager<T>::arr_funcs = {}; \
+        PyArray_ArrFuncs ACLIntManager<T>::arr_funcs = {}; \
         \
         template<> \
-        PyArray_Descr* ACLFloatManager<T>::npy_descr = nullptr;
+        PyArray_Descr* ACLIntManager<T>::npy_descr = nullptr;
 
     // 获取类型对象指针的函数声明（用于绑定到 Python 模块）
     template<typename T>
-    PyObject* GetACLFloatTypeObject();
+    PyObject* GetACLIntTypeObject();
 
 }
 }
+

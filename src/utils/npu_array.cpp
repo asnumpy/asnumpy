@@ -15,6 +15,8 @@
  * limitations under the License.
  *****************************************************************************/
 #include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/dtypes/float_types.hpp>
+#include <asnumpy/dtypes/int_types.hpp>
 #include <cstddef>
 
 
@@ -267,8 +269,20 @@ py::array NPUArray::ToNumpy() const {
     auto error = aclGetRawTensorAddr(this->tensorPtr, &rawDataPtr);
     if (error != ACL_SUCCESS || !rawDataPtr) throw std::runtime_error(fmt::format("Failed to get tensor data pointer. error: {}", error));
     
-    // 创建结果数组
-    py::array result(this->dtype, this->shape);
+    // 创建结果数组 - 对于自定义类型，使用兼容的dtype或自身dtype
+    py::dtype result_dtype;
+    if (this->aclDtype == ACL_BF16) {
+        result_dtype = py::dtype::of<float>();  // bfloat16 转换为 float32
+    } else if (this->aclDtype == ACL_FLOAT8_E5M2 || this->aclDtype == ACL_FLOAT8_E4M3FN || 
+               this->aclDtype == ACL_FLOAT8_E8M0 || this->aclDtype == ACL_FLOAT6_E3M2 || 
+               this->aclDtype == ACL_FLOAT6_E2M3 || this->aclDtype == ACL_FLOAT4_E2M1 || 
+               this->aclDtype == ACL_FLOAT4_E1M2 || this->aclDtype == ACL_INT4 || 
+               this->aclDtype == ACL_UINT1) {
+        result_dtype = this->dtype;  // 自定义类型直接使用其注册的dtype
+    } else {
+        result_dtype = this->dtype;  // 标准类型直接使用
+    }
+    py::array result(result_dtype, this->shape);
     py::buffer_info info = result.request();
     if(tensorByteSize == 0) return result;
     
@@ -294,6 +308,15 @@ py::array NPUArray::ToNumpy() const {
                 result_ptr[i] = *reinterpret_cast<float*>(&f);
             }
         }
+    } else if (this->aclDtype == ACL_FLOAT8_E5M2 || this->aclDtype == ACL_FLOAT8_E4M3FN || 
+               this->aclDtype == ACL_FLOAT8_E8M0 || this->aclDtype == ACL_FLOAT6_E3M2 || 
+               this->aclDtype == ACL_FLOAT6_E2M3 || this->aclDtype == ACL_FLOAT4_E2M1 || 
+               this->aclDtype == ACL_FLOAT4_E1M2 || this->aclDtype == ACL_INT4 || 
+               this->aclDtype == ACL_UINT1) {
+        // 对于自定义float类型和整数类型，直接复制原始字节数据
+        if(info.size * info.itemsize != tensorByteSize) throw std::runtime_error("Size mismatch between tensor and NumPy array");
+        error = aclrtMemcpy(info.ptr, tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
+        if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data to host. error: {}", error));
     } else {
         // 对于其他类型，直接复制
         if(info.size * info.itemsize != tensorByteSize) throw std::runtime_error("Size mismatch between tensor and NumPy array");
@@ -347,8 +370,19 @@ aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
     if(dtype.is(py::dtype::of<uint32_t>())) return ACL_UINT32;
     if(dtype.is(py::dtype::of<uint64_t>())) return ACL_UINT64;
     if(dtype.is(py::dtype::of<bool>())) return ACL_BOOL;
-    if(dtype.is(py::dtype::of<std::complex<float>>())) return ACL_COMPLEX64;
-    if(dtype.is(py::dtype::of<std::complex<double>>())) return ACL_COMPLEX128;
+    
+    // 对于已注册的ACL浮点类型，通过getACLenum()方法获取ACL枚举值
+    // 获取dtype的type对象（类型构造函数）
+    py::object type_obj = dtype.attr("type");
+    
+    // 检查是否有getACLenum方法
+    if (py::hasattr(type_obj, "getACLenum")) {
+        // 创建一个标量实例并调用getACLenum方法
+        py::object scalar = type_obj(1.0);
+        int acl_enum = scalar.attr("getACLenum")().cast<int>();
+        return static_cast<aclDataType>(acl_enum);
+    }
+    
     throw std::runtime_error("Unsupported py::dtype for aclDataType.");
 }
 
@@ -376,22 +410,23 @@ py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
         case ACL_UINT64: return py::dtype::of<uint64_t>();
         case ACL_BOOL: return py::dtype::of<bool>();
         case ACL_FLOAT16: return py::dtype::of<float>();  // float16 映射到 float，保持浮点语义
-        case ACL_BF16: return py::dtype::of<float>();     // bf16 映射到 float，保持浮点语义
-        case ACL_INT4: return py::dtype::of<uint8_t>();      // int4 映射到 uint8
-        case ACL_UINT1: return py::dtype::of<uint8_t>();     // uint1 映射到 uint8
+        case ACL_INT4: return py::dtype::of<asnumpy::dtypes::int4>();
+        case ACL_UINT1: return py::dtype::of<asnumpy::dtypes::uint1>();
         case ACL_COMPLEX64: return py::dtype::of<std::complex<float>>();
         case ACL_COMPLEX128: return py::dtype::of<std::complex<double>>();
         case ACL_COMPLEX32: return py::dtype::of<std::complex<float>>(); // complex32 映射到 complex64
         case ACL_STRING: return py::dtype::of<char*>();      // 字符串指针
         case ACL_DT_UNDEFINED: return py::dtype::of<uint8_t>(); // 未定义类型映射到 uint8
         case ACL_HIFLOAT8: return py::dtype::of<uint8_t>();  // Float8 变体映射到 uint8
-        case ACL_FLOAT8_E5M2: return py::dtype::of<uint8_t>(); // Float8 E5M2格式映射到 uint8
-        case ACL_FLOAT8_E4M3FN: return py::dtype::of<uint8_t>(); // Float8 E4M3FN格式映射到 uint8
-        case ACL_FLOAT8_E8M0: return py::dtype::of<uint8_t>(); // Float8 E8M0格式映射到 uint8
-        case ACL_FLOAT6_E3M2: return py::dtype::of<uint8_t>(); // Float6 E3M2格式映射到 uint8
-        case ACL_FLOAT6_E2M3: return py::dtype::of<uint8_t>(); // Float6 E2M3格式映射到 uint8
-        case ACL_FLOAT4_E2M1: return py::dtype::of<uint8_t>(); // Float4 E2M1格式映射到 uint8
-        case ACL_FLOAT4_E1M2: return py::dtype::of<uint8_t>(); // Float4 E1M2格式映射到 uint8
+        // 修改自定义类型映射到实际注册的类型
+        case ACL_BF16: return py::dtype::of<asnumpy::dtypes::bfloat16>();   
+        case ACL_FLOAT8_E5M2: return py::dtype::of<asnumpy::dtypes::float8_e5m2>(); 
+        case ACL_FLOAT8_E4M3FN: return py::dtype::of<asnumpy::dtypes::float8_e4m3fn>(); 
+        case ACL_FLOAT8_E8M0: return py::dtype::of<asnumpy::dtypes::float8_e8m0>(); 
+        case ACL_FLOAT6_E3M2: return py::dtype::of<asnumpy::dtypes::float6_e3m2fn>(); 
+        case ACL_FLOAT6_E2M3: return py::dtype::of<asnumpy::dtypes::float6_e2m3fn>(); 
+        case ACL_FLOAT4_E2M1: return py::dtype::of<asnumpy::dtypes::float4_e2m1fn>(); 
+        case ACL_FLOAT4_E1M2: return py::dtype::of<asnumpy::dtypes::float4_e1m2fn>();
         default:
             throw std::runtime_error("Unsupported aclDataType for py::dtype conversion.");
     }

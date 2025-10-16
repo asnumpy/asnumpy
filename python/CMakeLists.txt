@@ -34,5 +34,6 @@ target_link_libraries(asnumpy_core
     linalg
     random
     math
+    dtypes
     logic
 )

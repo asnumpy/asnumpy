@@ -1,5 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <asnumpy/dtypes/acl_float_reg.hpp>
+#include <asnumpy/dtypes/acl_int_reg.hpp>
+#include <asnumpy/dtypes/float_types.hpp>
+#include <asnumpy/dtypes/int_types.hpp>
 // 前向声明，避免额外头文件
 namespace asnumpy { namespace dtypes { void InitAndRegisterDtypes(); } }
 
@@ -45,5 +48,21 @@ void bind_dtypes(pybind11::module_& dtypes) {
     if (ACLFloatManager<float4_e2m1fn>::type_ptr != nullptr) {
         dtypes.attr("float4_e2m1fn") = pybind11::reinterpret_borrow<pybind11::object>(
             ACLFloatManager<float4_e2m1fn>::type_ptr);
+    }
+
+    if (ACLFloatManager<float4_e1m2fn>::type_ptr != nullptr) {
+        dtypes.attr("float4_e1m2fn") = pybind11::reinterpret_borrow<pybind11::object>(
+            ACLFloatManager<float4_e1m2fn>::type_ptr);
+    }
+    
+    // 绑定所有注册的整数类型对象到 Python 模块
+    if (ACLIntManager<int4>::type_ptr != nullptr) {
+        dtypes.attr("int4") = pybind11::reinterpret_borrow<pybind11::object>(
+            ACLIntManager<int4>::type_ptr);
+    }
+    
+    if (ACLIntManager<uint1>::type_ptr != nullptr) {
+        dtypes.attr("uint1") = pybind11::reinterpret_borrow<pybind11::object>(
+            ACLIntManager<uint1>::type_ptr);
     }
 }

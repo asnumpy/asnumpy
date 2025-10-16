@@ -8,6 +8,12 @@ from .asnumpy_core import linalg
 # linalg模块内部分需要ap.linalg.xxx调用，部分ap.yyy调用，
 # yyy类函数分到了.asnumpy_core根模块中
 
+from .asnumpy_core import dtypes 
+import sys as _sys
+
+# 注册完整模块名，确保可通过 import asnumpy.dtypes 导入
+_parent = __name__.rsplit('.', 1)[0]
+_sys.modules[_parent + '.dtypes'] = dtypes
 
 __all__ = [
     "zeros",
@@ -29,6 +35,7 @@ __all__ = [
     "sign",
     "heaviside",
     "linalg",  # linalg整个子模块
+    "dtypes", 
     "dot",
     "vdot",
     "inner",
@@ -135,6 +142,3 @@ __all__ = [
     "equal",
     "not_equal",
 ]
-
-
-

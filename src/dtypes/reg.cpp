@@ -1,6 +1,8 @@
 #include <asnumpy/dtypes/acl_float_reg.hpp>
+#include <asnumpy/dtypes/acl_int_reg.hpp>
 #include <asnumpy/dtypes/desc.hpp>
 #include <asnumpy/dtypes/float_types.hpp>
+#include <asnumpy/dtypes/int_types.hpp>
 #include <asnumpy/dtypes/np_import.hpp>
 
 namespace asnumpy {
@@ -14,6 +16,11 @@ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(bfloat16)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e2m3fn)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e3m2fn)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e2m1fn)
+EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e1m2fn)
+
+// 显式特化所有 ACL 整数类型的静态成员
+EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(int4)
+EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(uint1)
 
 // TypeDescriptor 具体类型的特化实现
 // TypeDescriptor 对 float8_e5m2 的特化
@@ -149,6 +156,63 @@ struct TypeDescriptor<float4_e2m1fn> : ACLFloatManager<float4_e2m1fn> {
     static constexpr int kAlignment = alignof(T);
 };
 
+// TypeDescriptor 对 float4_e1m2fn 的特化
+template<>
+struct TypeDescriptor<float4_e1m2fn> : ACLFloatManager<float4_e1m2fn> {
+    using T = float4_e1m2fn;
+
+    static constexpr bool is_floating = true;
+    static constexpr bool is_integral = false;
+    static constexpr bool is_complex = false;
+    static constexpr const char* kTypeName = "float4_e1m2fn";
+    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float4_e1m2fn";
+    static constexpr const char* kTpDoc = "Float4 E1M2FN floating-point values";
+
+    static constexpr char kNpyDescrKind = 'f';
+    static constexpr char kNpyDescrType = 'C';
+    static constexpr char kNpyDescrByteorder = '=';
+    static constexpr int kSize = sizeof(T);
+    static constexpr int kAlignment = alignof(T);
+};
+
+// TypeDescriptor 对 int4 的特化
+template<>
+struct TypeDescriptor<int4> : ACLIntManager<int4> {
+    using T = int4;
+
+    static constexpr bool is_floating = false;
+    static constexpr bool is_integral = true;
+    static constexpr bool is_complex = false;
+    static constexpr const char* kTypeName = "int4";
+    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.int4";
+    static constexpr const char* kTpDoc = "4-bit signed integer values";
+
+    static constexpr char kNpyDescrKind = 'i';
+    static constexpr char kNpyDescrType = 'D';
+    static constexpr char kNpyDescrByteorder = '=';
+    static constexpr int kSize = sizeof(T);
+    static constexpr int kAlignment = alignof(T);
+};
+
+// TypeDescriptor 对 uint1 的特化
+template<>
+struct TypeDescriptor<uint1> : ACLIntManager<uint1> {
+    using T = uint1;
+
+    static constexpr bool is_floating = false;
+    static constexpr bool is_integral = true;
+    static constexpr bool is_complex = false;
+    static constexpr const char* kTypeName = "uint1";
+    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.uint1";
+    static constexpr const char* kTpDoc = "1-bit unsigned integer values";
+
+    static constexpr char kNpyDescrKind = 'u';
+    static constexpr char kNpyDescrType = 'E';
+    static constexpr char kNpyDescrByteorder = '=';
+    static constexpr int kSize = sizeof(T);
+    static constexpr int kAlignment = alignof(T);
+};
+
 // 对外暴露统一初始化与注册入口
 void InitAndRegisterDtypes() {
     // 1) 确保只导入一次 NumPy C API
@@ -162,6 +226,11 @@ void InitAndRegisterDtypes() {
     FloatTypeRegistrar<float6_e2m3fn>::RegisterDtype();
     FloatTypeRegistrar<float6_e3m2fn>::RegisterDtype();
     FloatTypeRegistrar<float4_e2m1fn>::RegisterDtype();
+    FloatTypeRegistrar<float4_e1m2fn>::RegisterDtype();
+    
+    // 3) 直接注册所有 ACL 整数类型
+    IntTypeRegistrar<int4>::RegisterDtype();
+    IntTypeRegistrar<uint1>::RegisterDtype();
 }
 
 // 检查所有类型是否已注册
@@ -172,7 +241,14 @@ bool AreAllACLFloatTypesRegistered() {
            ACLFloatManager<bfloat16>::npy_type != NPY_NOTYPE &&
            ACLFloatManager<float6_e2m3fn>::npy_type != NPY_NOTYPE &&
            ACLFloatManager<float6_e3m2fn>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float4_e2m1fn>::npy_type != NPY_NOTYPE;
+           ACLFloatManager<float4_e2m1fn>::npy_type != NPY_NOTYPE &&
+           ACLFloatManager<float4_e1m2fn>::npy_type != NPY_NOTYPE;
+}
+
+// 检查所有ACL整数类型是否已注册
+bool AreAllACLIntTypesRegistered() {
+    return ACLIntManager<int4>::npy_type != NPY_NOTYPE &&
+           ACLIntManager<uint1>::npy_type != NPY_NOTYPE;
 }
 
 // 获取特定类型的 dtype 类型号
