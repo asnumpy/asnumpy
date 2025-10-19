@@ -14,20 +14,22 @@
 # limitations under the License.
 # *****************************************************************************
  
-// Prevent multiple inclusion
 import sys
 import os
-# 添加 build/python 到路径以导入最新编译的模块
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../build/python'))
 
-import asnumpy_core as core
+# 确保从 site-packages 导入已安装的包，而不是本地源码目录
+# 移除源码根目录，避免导入没有编译好的源码
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path = [p for p in sys.path if root_dir not in p]
+
+# 使用标准的 asnumpy 导入方式
+import asnumpy as ap
 import numpy as np
-adt = core.dtypes
 
-# 初始化ACL环境（直接导入build/python时需要手动初始化）
+# 初始化ACL环境
 try:
-    core.cann.init()
-    core.cann.set_device(0)
+    ap.init()
+    ap.set_device(0)
     print("✓ ACL环境初始化成功\n")
 except Exception as e:
     print(f"⚠ ACL环境初始化失败: {e}")
@@ -41,20 +43,20 @@ def test_all_custom_dtypes():
     
     # 所有已注册的自定义ACL浮点类型及其期望的ACL枚举值
     custom_float_dtypes = [
-        ('float8_e5m2', adt.float8_e5m2, 35, "ACL_FLOAT8_E5M2"),
-        ('float8_e4m3fn', adt.float8_e4m3fn, 36, "ACL_FLOAT8_E4M3FN"),
-        ('float8_e8m0', adt.float8_e8m0, 37, "ACL_FLOAT8_E8M0"),
-        ('bfloat16', adt.bfloat16, 27, "ACL_BF16"),
-        ('float6_e2m3fn', adt.float6_e2m3fn, 39, "ACL_FLOAT6_E2M3"),
-        ('float6_e3m2fn', adt.float6_e3m2fn, 38, "ACL_FLOAT6_E3M2"),
-        ('float4_e2m1fn', adt.float4_e2m1fn, 40, "ACL_FLOAT4_E2M1"),
-        ('float4_e1m2fn', adt.float4_e1m2fn, 41, "ACL_FLOAT4_E1M2"),
+        ('float8_e5m2', ap.dtypes.float8_e5m2, 35, "ACL_FLOAT8_E5M2"),
+        ('float8_e4m3fn', ap.dtypes.float8_e4m3fn, 36, "ACL_FLOAT8_E4M3FN"),
+        ('float8_e8m0', ap.dtypes.float8_e8m0, 37, "ACL_FLOAT8_E8M0"),
+        ('bfloat16', ap.dtypes.bfloat16, 27, "ACL_BF16"),
+        ('float6_e2m3fn', ap.dtypes.float6_e2m3fn, 39, "ACL_FLOAT6_E2M3"),
+        ('float6_e3m2fn', ap.dtypes.float6_e3m2fn, 38, "ACL_FLOAT6_E3M2"),
+        ('float4_e2m1fn', ap.dtypes.float4_e2m1fn, 40, "ACL_FLOAT4_E2M1"),
+        ('float4_e1m2fn', ap.dtypes.float4_e1m2fn, 41, "ACL_FLOAT4_E1M2"),
     ]
     
     # 所有已注册的自定义ACL整数类型及其期望的ACL枚举值
     custom_int_dtypes = [
-        ('int4', adt.int4, 29, "ACL_INT4"),
-        ('uint1', adt.uint1, 30, "ACL_UINT1"),
+        ('int4', ap.dtypes.int4, 29, "ACL_INT4"),
+        ('uint1', ap.dtypes.uint1, 30, "ACL_UINT1"),
     ]
     
     # 合并所有自定义类型
@@ -86,7 +88,7 @@ def test_all_custom_dtypes():
             
             for i, shape in enumerate(shapes):
                 try:
-                    array = core.ndarray(shape, dtype=np.dtype(dtype_obj))
+                    array = ap.ndarray(shape, dtype=np.dtype(dtype_obj))
                     print(f"  形状 {shape}: 成功创建")
                     print(f"    类型: {type(array)}")
                     print(f"    形状: {array.shape}")
@@ -113,7 +115,7 @@ def test_all_custom_dtypes():
             print(f"\n测试 {name} ({acl_name}):")
             
             # 直接使用dtype对象
-            array = core.ndarray([2, 2], dtype=np.dtype(dtype_obj))
+            array = ap.ndarray([2, 2], dtype=np.dtype(dtype_obj))
             print(f"  成功创建: {type(array)}")
             print(f"  aclDtype: {array.aclDtype}")
             
@@ -140,7 +142,7 @@ def test_all_custom_dtypes():
             
             for i, shape in enumerate(shapes):
                 try:
-                    array = core.ndarray(shape, dtype=np.dtype(dtype_obj))
+                    array = ap.ndarray(shape, dtype=np.dtype(dtype_obj))
                     print(f"  形状 {shape}: 成功创建")
                     print(f"    类型: {type(array)}")
                     print(f"    形状: {array.shape}")
@@ -176,16 +178,16 @@ def test_dtype_properties():
     
     # 浮点类型样例
     float_dtypes = [
-        ('float8_e5m2', adt.float8_e5m2, 1.0),
-        ('float8_e4m3fn', adt.float8_e4m3fn, 1.0),
-        ('bfloat16', adt.bfloat16, 1.0),
-        ('float4_e1m2fn', adt.float4_e1m2fn, 1.0),
+        ('float8_e5m2', ap.dtypes.float8_e5m2, 1.0),
+        ('float8_e4m3fn', ap.dtypes.float8_e4m3fn, 1.0),
+        ('bfloat16', ap.dtypes.bfloat16, 1.0),
+        ('float4_e1m2fn', ap.dtypes.float4_e1m2fn, 1.0),
     ]
     
     # 整数类型样例
     int_dtypes = [
-        ('int4', adt.int4, 5),
-        ('uint1', adt.uint1, 1),
+        ('int4', ap.dtypes.int4, 5),
+        ('uint1', ap.dtypes.uint1, 1),
     ]
     
     all_test_dtypes = float_dtypes + int_dtypes

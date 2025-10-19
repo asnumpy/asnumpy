@@ -19,6 +19,13 @@
 测试 float_types.hpp 中定义的浮点类型是否正确注册到 NumPy 并绑定到模块
 """
 
+import sys
+import os
+
+# 确保从 site-packages 导入已安装的包，而不是本地源码目录
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path = [p for p in sys.path if root_dir not in p]
+
 import numpy as np
 import asnumpy as ap
 
@@ -46,12 +53,12 @@ def test_float_types_registration():
         try:
             print(f"\n测试 {type_name}:")
             
-            # 1. 检查类型是否在asnumpy模块中可用
-            if not hasattr(ap, type_name):
-                print(f"  ✗ 类型 {type_name} 不在 asnumpy 模块中")
+            # 1. 检查类型是否在asnumpy.dtypes模块中可用
+            if not hasattr(ap.dtypes, type_name):
+                print(f"  ✗ 类型 {type_name} 不在 asnumpy.dtypes 模块中")
                 continue
             
-            dtype_obj = getattr(ap, type_name)
+            dtype_obj = getattr(ap.dtypes, type_name)
             print(f"  ✓ 类型对象: {dtype_obj}")
             
             # 2. 检查NumPy是否能识别这个类型
@@ -114,7 +121,7 @@ def test_numpy_dtype_methods():
     print("测试 NumPy dtype 方法")
     print("=" * 60)
     
-    test_type = ap.float8_e5m2
+    test_type = ap.dtypes.float8_e5m2
     np_dtype = np.dtype(test_type)
     
     print(f"测试类型: {test_type}")
@@ -149,7 +156,7 @@ def test_array_operations():
     
     try:
         # 使用float8_e5m2进行测试
-        dtype = ap.float8_e5m2
+        dtype = ap.dtypes.float8_e5m2
         
         print(f"使用类型: {dtype}")
         
@@ -192,7 +199,7 @@ def test_type_compatibility():
     
     # 测试与标准NumPy类型的兼容性
     standard_types = [np.float32, np.float64, np.int32, np.int64]
-    custom_types = [ap.float8_e5m2, ap.bfloat16, ap.float8_e4m3fn]
+    custom_types = [ap.dtypes.float8_e5m2, ap.dtypes.bfloat16, ap.dtypes.float8_e4m3fn]
     
     for custom_type in custom_types:
         np_custom_dtype = np.dtype(custom_type)
@@ -239,7 +246,7 @@ def test_getACLenum_interface():
             print(f"\n测试 {type_name}:")
             
             # 获取类型对象
-            dtype_obj = getattr(ap, type_name)
+            dtype_obj = getattr(ap.dtypes, type_name)
             print(f"  ✓ 类型对象: {dtype_obj}")
             
             # 创建标量
@@ -288,10 +295,10 @@ def test_getACLenum_with_arrays():
     
     try:
         # 直接使用asnumpy类型创建数组，无需包装
-        print(f"使用类型: {ap.float8_e5m2}")
+        print(f"使用类型: {ap.dtypes.float8_e5m2}")
         
         # 直接创建数组，无需np.dtype()包装
-        arr = np.array([1.0, 2.0, 3.14], dtype=ap.float8_e5m2)
+        arr = np.array([1.0, 2.0, 3.14], dtype=ap.dtypes.float8_e5m2)
         print(f"数组: {arr}")
         print(f"数组dtype: {arr.dtype}")
         
@@ -316,7 +323,7 @@ def test_getACLenum_with_arrays():
         
         # 测试其他类型的数组
         print(f"\n测试其他类型:")
-        other_types = [ap.bfloat16, ap.float8_e4m3fn, ap.float6_e2m3fn]
+        other_types = [ap.dtypes.bfloat16, ap.dtypes.float8_e4m3fn, ap.dtypes.float6_e2m3fn]
         
         for dtype in other_types:
             try:

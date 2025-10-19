@@ -25,12 +25,13 @@
 
 import sys
 import os
-# 添加 build/python 到路径以导入最新编译的模块
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../build/python'))
 
-import asnumpy_core as core
+# 确保从 site-packages 导入已安装的包，而不是本地源码目录
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path = [p for p in sys.path if root_dir not in p]
+
+import asnumpy as ap
 import numpy as np
-adt = core.dtypes
 
 print("=" * 80)
 print("测试ACL整数类型的NumPy dtype支持")
@@ -44,14 +45,14 @@ def test_int4_basic():
     print("=" * 80)
     
     # 检查类型对象
-    assert hasattr(adt, 'int4'), "int4 类型对象未绑定"
-    dt = np.dtype(adt.int4)
+    assert hasattr(ap.dtypes, 'int4'), "int4 类型对象未绑定"
+    dt = np.dtype(ap.dtypes.int4)
     assert dt is not None, "np.dtype 未能识别 int4 类型对象"
     print("✓ int4 类型对象已绑定且可被 numpy.dtype 识别")
     
     # 创建标量
     try:
-        scalar = adt.int4(5)
+        scalar = ap.dtypes.int4(5)
         print(f"✓ 成功创建 int4 标量: {scalar}")
         print(f"  类型: {type(scalar).__name__}")
         
@@ -67,8 +68,8 @@ def test_int4_basic():
     
     # 测试边界值
     print("\n测试边界值:")
-    min_val = adt.int4(-8)  # 4-bit signed min
-    max_val = adt.int4(7)   # 4-bit signed max
+    min_val = ap.dtypes.int4(-8)  # 4-bit signed min
+    max_val = ap.dtypes.int4(7)   # 4-bit signed max
     print(f"  min (-8): {min_val}")
     print(f"  max (7): {max_val}")
     print("✓ 边界值测试通过")
@@ -82,14 +83,14 @@ def test_uint1_basic():
     print("=" * 80)
     
     # 检查类型对象
-    assert hasattr(adt, 'uint1'), "uint1 类型对象未绑定"
-    dt = np.dtype(adt.uint1)
+    assert hasattr(ap.dtypes, 'uint1'), "uint1 类型对象未绑定"
+    dt = np.dtype(ap.dtypes.uint1)
     assert dt is not None, "np.dtype 未能识别 uint1 类型对象"
     print("✓ uint1 类型对象已绑定且可被 numpy.dtype 识别")
     
     # 创建标量
     try:
-        scalar = adt.uint1(1)
+        scalar = ap.dtypes.uint1(1)
         print(f"✓ 成功创建 uint1 标量: {scalar}")
         print(f"  类型: {type(scalar).__name__}")
         
@@ -105,8 +106,8 @@ def test_uint1_basic():
     
     # 测试边界值
     print("\n测试边界值:")
-    zero_val = adt.uint1(0)  # 1-bit unsigned min
-    one_val = adt.uint1(1)   # 1-bit unsigned max
+    zero_val = ap.dtypes.uint1(0)  # 1-bit unsigned min
+    one_val = ap.dtypes.uint1(1)   # 1-bit unsigned max
     print(f"  min (0): {zero_val}")
     print(f"  max (1): {one_val}")
     print("✓ 边界值测试通过")
@@ -120,9 +121,9 @@ def test_int_types_comparison():
     print("=" * 80)
     
     # int4 比较
-    a = adt.int4(3)
-    b = adt.int4(5)
-    c = adt.int4(3)
+    a = ap.dtypes.int4(3)
+    b = ap.dtypes.int4(5)
+    c = ap.dtypes.int4(3)
     
     print("int4 比较:")
     print(f"  3 < 5: {a < b}")
@@ -133,9 +134,9 @@ def test_int_types_comparison():
     print("✓ int4 比较测试通过")
     
     # uint1 比较
-    x = adt.uint1(0)
-    y = adt.uint1(1)
-    z = adt.uint1(0)
+    x = ap.dtypes.uint1(0)
+    y = ap.dtypes.uint1(1)
+    z = ap.dtypes.uint1(0)
     
     print("\nuint1 比较:")
     print(f"  0 < 1: {x < y}")
@@ -155,14 +156,14 @@ def test_numpy_array_creation():
     
     try:
         # 创建int4数组 - 使用empty然后填充
-        int4_array = np.empty(16, dtype=np.dtype(adt.int4))
+        int4_array = np.empty(16, dtype=np.dtype(ap.dtypes.int4))
         print(f"✓ 成功创建 int4 数组:")
         print(f"  形状: {int4_array.shape}")
         print(f"  dtype: {int4_array.dtype}")
         print(f"  itemsize: {int4_array.itemsize}")
         
         # 创建uint1数组 - 使用empty然后填充
-        uint1_array = np.empty(10, dtype=np.dtype(adt.uint1))
+        uint1_array = np.empty(10, dtype=np.dtype(ap.dtypes.uint1))
         print(f"\n✓ 成功创建 uint1 数组:")
         print(f"  形状: {uint1_array.shape}")
         print(f"  dtype: {uint1_array.dtype}")
@@ -171,7 +172,7 @@ def test_numpy_array_creation():
         # 测试类型转换
         print("\n测试类型转换:")
         int32_arr = np.array([1, 2, 3, 4, 5], dtype=np.int32)
-        int4_arr = int32_arr.astype(np.dtype(adt.int4))
+        int4_arr = int32_arr.astype(np.dtype(ap.dtypes.int4))
         print(f"  int32 -> int4 转换成功")
         print(f"  dtype: {int4_arr.dtype}")
         
