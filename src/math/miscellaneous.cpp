@@ -335,7 +335,7 @@ NPUArray Sqrt(const NPUArray& x) {
     auto error = aclnnSqrtGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if(workspaceSize != 0ULL) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
         CheckMallocAclnnStatus(error);
     }
