@@ -640,3 +640,32 @@ MAX_MIN_TEST_CASES = [
     (np.array([-3.2, 4.7, -1.8], dtype=np.float32), 
      np.array([-2.1, 3.9, -0.5], dtype=np.float32)),
 ]
+
+SORT_TEST_CASES = [
+    # 一维数组，沿轴0排序，不保持原顺序
+    (np.array([-5, 0, -2, 7, -1], dtype=np.float32), 0, False),
+
+    # 二维数组，沿轴0排序（按行排序）
+    (np.array([[3, 1, 4], [1, 5, 9], [2, 6, 5]], dtype=np.float32), 0, False),
+
+    # 二维数组，沿轴1排序（按列排序）
+    (np.array([[3, 1, 4], [1, 5, 9], [2, 6, 5]], dtype=np.float32), 1, False),
+
+    # 三维数组，沿最后一个轴排序
+    (np.array([[[3, 1], [4, 2]], [[5, 8], [9, 6]]], dtype=np.float32), -1, False),
+
+    # 全为相同元素的数组
+    (np.array([2, 2, 2, 2, 2], dtype=np.float32), 0, False),
+
+    # 空数组边界测试
+    (np.array([], dtype=np.float32), 0, False),
+
+    # 单个元素数组
+    (np.array([42], dtype=np.float32), 0, False),
+
+    # 包含NaN值的数组
+    (np.array([3.5, np.nan, 1.2, np.nan, 7.8], dtype=np.float32), 0, False),
+
+    # 大数值范围测试
+    (np.array([1e10, -1e10, 1e-10, -1e-10], dtype=np.float32), 0, False),
+]

@@ -18,12 +18,14 @@
 #include <asnumpy/math/miscellaneous.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_ops_macros.hpp>
+#include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_flip.h>
 #include <aclnnop/aclnn_convolution.h>
 #include <aclnnop/aclnn_clamp.h>
+#include <aclnnop/aclnn_sqrt.h>
 #include <aclnnop/aclnn_pow.h>
 #include <aclnnop/aclnn_nan_to_num.h>
 #include <aclnnop/aclnn_abs.h>
@@ -318,6 +320,29 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
     error2 = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error2);
     if (workspaceAddr2) aclrtFree(workspaceAddr2);
+    return result;
+}
+
+NPUArray Sqrt(const NPUArray& x) {
+    auto shape = x.shape;
+    aclDataType aclType = ACL_DOUBLE;
+    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+        aclType = x.aclDtype;
+    }
+    auto result = NPUArray(shape, aclType);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnSqrtGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+    error = aclnnSqrt(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnSqrt error");
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
     return result;
 }
 

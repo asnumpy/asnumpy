@@ -144,8 +144,12 @@ LOGIC_FUNCTIONS = [
     ("not_equal", np.not_equal, ap.not_equal, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
 ]
 
+SORTING_FUNCTIONS = [
+    ("sort", np.sort, ap.sort, SORT_TEST_CASES),
+]
+
 # 总表
-FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS
+FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
 
 # =========================测试函数本体======================
 
@@ -179,6 +183,8 @@ def test_functions():
                         np_result = np_func(test_case[0], test_case[1], axis=test_case[2])
                     elif name == "nan_to_num":
                         np_result = np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
+                    elif name == "sort":
+                        np_result = np_func(test_case[0], axis=test_case[1])
                     else:
                         np_result = np_func(*test_case)
                     ap_result = ap_func(*converted_args)

@@ -93,6 +93,7 @@ void bind_miscellaneous(py::module_& math){
     math.def("clip", py::overload_cast<const NPUArray&, const NPUArray&, float>(&Clip), 
             py::arg("a"), py::arg("a_min"), py::arg("a_max"));
     math.def("nan_to_num",&Nan_to_num, py::arg("x"), py::arg("nan"), py::arg("posinf"), py::arg("neginf"));
+    math.def("sqrt", &Sqrt, py::arg("x"));
     math.def("square", &Square, py::arg("x"));
     math.def("maximum", &Maximum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
     math.def("minimum", &Minimum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());

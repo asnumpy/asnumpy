@@ -32,6 +32,8 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max);
 NPUArray Clip(const NPUArray& a, float a_min, float a_max);
 NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max);
 
+NPUArray Sqrt(const NPUArray& x);
+
 NPUArray Square(const NPUArray& x);
 
 NPUArray Absolute(const NPUArray& x);
