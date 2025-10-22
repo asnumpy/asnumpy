@@ -52,4 +52,7 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
 
 NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
+NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
+
+NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 }

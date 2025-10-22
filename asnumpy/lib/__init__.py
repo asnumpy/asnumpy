@@ -121,6 +121,8 @@ __all__ = [
     "minimum",
     "fmax",
     "fmin",
+    "relu",
+    "gelu",
     "pareto",
     "rayleigh",
     "normal",

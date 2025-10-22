@@ -42,6 +42,18 @@ UNARY_FUNCTIONS = [
         ap.fabs,
         UNARY_TEST_CASES
     ),
+        (
+        "relu",
+        lambda x: np.maximum(x, 0),  # NumPy 没有内置 relu，用 maximum 模拟
+        ap.relu,
+        UNARY_TEST_CASES
+    ),
+        (
+        "gelu",
+        lambda x: x * 0.5 * (1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * np.power(x, 3)))),  # GELU 近似公式
+        ap.gelu,
+        UNARY_TEST_CASES
+    ),
 ]
 
 # 双操作数函数注册表 (函数名, numpy函数, asnumpy函数, 测试用例列表)

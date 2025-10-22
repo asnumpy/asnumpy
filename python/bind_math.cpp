@@ -98,6 +98,8 @@ void bind_miscellaneous(py::module_& math){
     math.def("minimum", &Minimum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
     math.def("fmax", &Fmax, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
     math.def("fmin", &Fmin, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("relu", &Relu, py::arg("x"), py::arg("dtype") = py::none());
+    math.def("gelu", &Gelu, py::arg("x"), py::arg("dtype") = py::none());
 }
 
 void bind_arithmetic_operations(py::module_& math) {
