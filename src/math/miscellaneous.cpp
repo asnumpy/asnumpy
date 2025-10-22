@@ -765,23 +765,22 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
  NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype) {
-    // 确定输出数据类型
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
     auto out = NPUArray(x.shape, out_dtype);
-
-    // 获取工作空间大小
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnReluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    
-    if (workspaceSize < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](relu) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
     }
-
-    // 执行操作（自动处理工作空间分配、执行和同步）
-    EXECUTE_OP_WORKSPACE(Relu, workspaceSize, executor, aclnnRelu);
-
+    error = aclnnRelu(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnRelu error");
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) aclrtFree(workspaceAddr);
     return out;
 }
 
@@ -801,23 +800,22 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
  NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype) {
-    // 确定输出数据类型
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
     auto out = NPUArray(x.shape, out_dtype);
-
-    // 获取工作空间大小
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnGeluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    
-    if (workspaceSize < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](gelu) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
     }
-
-    // 执行操作（自动处理工作空间分配、执行和同步）
-    EXECUTE_OP_WORKSPACE(Gelu, workspaceSize, executor, aclnnGelu);
-
+    error = aclnnGelu(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnGelu error");
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) aclrtFree(workspaceAddr);
     return out;
 }
 }
