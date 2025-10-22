@@ -767,65 +767,20 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
  NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 确定输出数据类型
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    auto shape = x.shape;
-    auto out = NPUArray(shape, out_dtype);
+    auto out = NPUArray(x.shape, out_dtype);
 
     // 获取工作空间大小
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnReluGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](relu) aclnnReluGetWorkspaceSize error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) 
-            error_msg += " - " + std::string(detailed_msg);
-        throw std::runtime_error(error_msg);
-    }
+    auto error = aclnnReluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    
     if (workspaceSize < 0ULL) {
         throw std::runtime_error("[miscellaneous.cpp](relu) Invalid workspaceSize: " + std::to_string(workspaceSize));
     }
 
-    // 分配工作空间
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = "[miscellaneous.cpp](relu) aclrtMalloc error = " + std::to_string(error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
-                error_msg += " - " + std::string(detailed_msg);
-            throw std::runtime_error(error_msg);
-        }
-    }
-
-    // 执行 ReLU 计算
-    error = aclnnRelu(workspaceAddr, workspaceSize, executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](relu) aclnnRelu error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
-            error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
-
-    // 同步设备
-    error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](relu) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
-            error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
-
-    // 释放工作空间
-    if (workspaceAddr) {
-        aclrtFree(workspaceAddr);
-    }
+    // 执行操作（自动处理工作空间分配、执行和同步）
+    EXECUTE_OP_WORKSPACE(Relu, workspaceSize, executor, aclnnRelu);
 
     return out;
 }
@@ -848,65 +803,20 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
  NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 确定输出数据类型
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    auto shape = x.shape;
-    auto out = NPUArray(shape, out_dtype);
+    auto out = NPUArray(x.shape, out_dtype);
 
     // 获取工作空间大小
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnGeluGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](gelu) aclnnGeluGetWorkspaceSize error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) 
-            error_msg += " - " + std::string(detailed_msg);
-        throw std::runtime_error(error_msg);
-    }
+    auto error = aclnnGeluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    
     if (workspaceSize < 0ULL) {
         throw std::runtime_error("[miscellaneous.cpp](gelu) Invalid workspaceSize: " + std::to_string(workspaceSize));
     }
 
-    // 分配工作空间
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = "[miscellaneous.cpp](gelu) aclrtMalloc error = " + std::to_string(error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
-                error_msg += " - " + std::string(detailed_msg);
-            throw std::runtime_error(error_msg);
-        }
-    }
-
-    // 执行 GELU 计算
-    error = aclnnGelu(workspaceAddr, workspaceSize, executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](gelu) aclnnGelu error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
-            error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
-
-    // 同步设备
-    error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](gelu) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
-            error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
-
-    // 释放工作空间
-    if (workspaceAddr) {
-        aclrtFree(workspaceAddr);
-    }
+    // 执行操作（自动处理工作空间分配、执行和同步）
+    EXECUTE_OP_WORKSPACE(Gelu, workspaceSize, executor, aclnnGelu);
 
     return out;
 }
