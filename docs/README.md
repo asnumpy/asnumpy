@@ -1,69 +1,57 @@
-# AsNumpy API 
+# AsNumpy 文档总览（`docs/`）
 
-本文档介绍 AsNumpy 目前已实现的 API 情况。AsNumpy 致力于在昇腾 NPU 上提供与 Numpy 高度兼容的科学计算接口。
+本目录聚焦三件事：
 
----
-
-## 📊 API 完成情况总览
-
-AsNumpy 目前已实现多个核心功能模块的 API，涵盖数学运算、逻辑函数、随机抽样等常用科学计算功能。各模块的 API 实现正在持续完善中。
+1. **功能覆盖现状**（已支持与缺口）；
+2. **贡献与认领指南**（外部贡献者如何补齐算子/函数）；
+3. **统一的文档与图片资源**。
 
 ---
 
-## 📚 已实现的 API 模块
+## 目录结构
 
-### 🧮 数学运算模块 (Math)
+```text
+docs/
+├─ contributing/                  # 缺口功能算子贡献相关
+│  ├─example/                     # 贡献算子样例模版
+│  └─ README.md                   # 缺口功能算子贡献流程介绍
+├─ functions-backlog/             # 待补齐清单
+│  ├─ AOL-backlog/                # 可用 CANN AOL 组合补齐的条目（按模块组织，示例：array、dtypes...）
+│  │  ├─array/
+│  │  ├─dtypes/
+│  │  ├─...
+│  │  └─ README.md                # AOL路线的划分规则与开发计划总览
+│  ├─ AscendC_ops-backlog/        # 可认领贡献，需要 Ascend C 自定义开发算子的条目（按模块组织，示例：array、dtypes...）
+│  │  ├─array/
+│  │  ├─dtypes/
+│  │  ├─...
+│  │  └─ README.md                # Ascend C自定义算子路线的划分规则与开发计划总览
+│  └─ README.md                   # backlog 维护规则、状态与需求分类介绍
+├─ functions-supported/           # 已支持/已发布功能（按模块组织，示例：array、dtypes...）
+│  │  ├─array/
+│  │  ├─dtypes/
+│  │  ├─...
+│  │  └─ README.md                # 针对已支持/已发布功能的介绍，划分规则与开发计划总览
+├─ images/                        # 文档统一图片资源
+└─ README.md                      # 本目录总览与导航
+```
 
-数学运算模块是 AsNumpy 的核心模块之一，提供了丰富的数学计算功能：
+> 术语约定：**AOL** 指基于 CANN 的算子库组合实现；**Ascend C** 指使用Ascend C手写自定义核实现。
 
-- [算术运算 (Arithmetic Operations)](math/arithmetic_operations.md) - 基础算术运算符
-- [指数与对数 (Exponents and Logarithms)](math/exponents_and_logarithms.md) - 指数、对数函数
-- [三角函数 (Trigonometric Functions)](math/trigonometric_functions.md) - sin, cos, tan 等三角函数
-- [双曲函数 (Hyperbolic Functions)](math/hyperbolic_functions.md) - sinh, cosh, tanh 等双曲函数
-- [浮点数例程 (Floating Point Routines)](math/floating_point_routines.md) - 浮点数处理函数
-- [舍入 (Rounding)](math/rounding.md) - 各类舍入函数
-- [求和、乘积、差分 (Sums, Products, Differences)](math/sums_products_differences.md) - 聚合运算
-- [复数处理 (Handling Complex Numbers)](math/handling_complex_numbers.md) - 复数运算
-- [有理数例程 (Rational Routines)](math/rational_routines.md) - 有理数相关函数
-- [特殊函数 (Other Special Functions)](math/other_special_functions.md) - Sinc 等特殊数学函数
-- [杂项函数 (Miscellaneous)](math/miscellaneous.md) - Clip、Maximum、Minimum、Square 等工具函数
+## AsNumpy API 模块划分
 
-### 🎲 随机抽样模块 (Random)
+> 下列“模块”用于组织 `functions-backlog/` 与 `functions-supported/` 的条目，也用于贡献指南中的导航。
 
-随机模块提供各类概率分布的随机数生成功能：
-
-- [概率分布 (Distributions)](random/distributions.md) - 各类概率分布函数
-
-### 🔍 逻辑函数模块 (Logic)
-
-逻辑模块提供数组比较、逻辑运算等功能：
-
-- [逻辑函数 (Logic Functions)](logic/logic.md) - 逻辑运算与比较函数
-
----
-
-## 🚧 开发进度说明
-
-**总体进展**  
-- 目前 AsNumpy 共规划约 **260 个接口**
-- 已实现并合并：**113 个**
-- 待合并：**10 个**
-- 内部 utils：**11 个**
-
-**各模块进展**  
-- **数学模块**：当前项目的主要进展，已实现大部分常用数学函数，是目前完成度最高的模块
-- **随机模块**：由于复杂性进度相对缓慢，部分分布函数仍在开发中
-- **逻辑模块**：已实现基础逻辑运算功能
-- **线性代数模块**：在整理后逐步合并中
-
----
-
-## 📝 说明
-
-- 部分 API 可能对参数 `shape` 有特殊限制，具体请参阅各 API 的详细文档
-- 部分 API 功能尚未完全支持，会在文档中标注
-- API 文档持续更新中
-
-
-
-
+```text
+asnumpy-module/
+├─ array/           # 数组结构与创建：asarray/array、reshape/stack/concat、take/put、索引与切片等
+├─ math/            # 通用数学运算：算术/指数/对数/幂、三角与双曲、舍入、复数部件、特殊函数
+├─ logic/           # 比较与逻辑：==、!=、<、>、logical_and/or/not、where、isfinite/isnan 等
+├─ linalg/          # 线性代数：dot/matmul、tensordot、norm、solve/inv、eig(若支持)、矩阵分解等
+├─ statistics/      # 聚合与统计：sum/prod、mean/var/std、min/max、arg*、quantile、histogram
+├─ random/          # 随机数：PRNG 初始化、均匀/正态/离散采样、随机打乱等（与 numpy.random 对齐）
+├─ fft/             # 傅立叶变换：fft/ifft、rfft/irfft、fftshift/ifftshift 等
+├─ polynomial/      # 多项式与插值：polyval/polyfit（如覆盖）、interp 系列等
+├─ dtypes/          # 数据类型管理：astype、类型查询、精度/范围信息（iinfo/finfo）
+└─ utils/           # 工具与调试：计时、检查、形状与广播辅助、错误与警告处理
+```
