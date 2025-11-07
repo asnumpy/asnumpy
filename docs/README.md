@@ -28,10 +28,10 @@ docs/
 │  │  └─ README.md                # Ascend C自定义算子路线的划分规则与开发计划总览
 │  └─ README.md                   # backlog 维护规则、状态与需求分类介绍
 ├─ functions-supported/           # 已支持/已发布功能（按模块组织，示例：array、dtypes...）
-│  │  ├─array/
-│  │  ├─dtypes/
-│  │  ├─...
-│  │  └─ README.md                # 针对已支持/已发布功能的介绍，划分规则与开发计划总览
+│  ├─array/
+│  ├─dtypes/
+│  ├─...
+│  └─ README.md                # 针对已支持/已发布功能的介绍，划分规则与开发计划总览
 ├─ images/                        # 文档统一图片资源
 └─ README.md                      # 本目录总览与导航
 ```
@@ -44,14 +44,14 @@ docs/
 
 ```text
 asnumpy-module/
-├─ array/           # 数组结构与创建：asarray/array、reshape/stack/concat、take/put、索引与切片等
-├─ math/            # 通用数学运算：算术/指数/对数/幂、三角与双曲、舍入、复数部件、特殊函数
-├─ logic/           # 比较与逻辑：==、!=、<、>、logical_and/or/not、where、isfinite/isnan 等
-├─ linalg/          # 线性代数：dot/matmul、tensordot、norm、solve/inv、eig(若支持)、矩阵分解等
-├─ statistics/      # 聚合与统计：sum/prod、mean/var/std、min/max、arg*、quantile、histogram
-├─ random/          # 随机数：PRNG 初始化、均匀/正态/离散采样、随机打乱等（与 numpy.random 对齐）
-├─ fft/             # 傅立叶变换：fft/ifft、rfft/irfft、fftshift/ifftshift 等
-├─ polynomial/      # 多项式与插值：polyval/polyfit（如覆盖）、interp 系列等
-├─ dtypes/          # 数据类型管理：astype、类型查询、精度/范围信息（iinfo/finfo）
-└─ utils/           # 工具与调试：计时、检查、形状与广播辅助、错误与警告处理
+├─ array/           # 数组结构与创建
+├─ math/            # 通用数学运算
+├─ logic/           # 比较与逻辑
+├─ linalg/          # 线性代数
+├─ statistics/      # 聚合与统计
+├─ random/          # 随机数
+├─ fft/             # 傅立叶变换
+├─ polynomial/      # 多项式与插值
+├─ dtypes/          # 数据类型管理
+└─ utils/           # 工具与调试
 ```

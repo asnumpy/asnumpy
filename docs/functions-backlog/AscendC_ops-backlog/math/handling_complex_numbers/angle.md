@@ -6,6 +6,7 @@
 - **难易度（预估）**：易
 - **开发状态**：开发中
 - **更新时间**：2025.11.4
+- **对应issue**：https://gitcode.com/HIT1920/OpenBOAT/issues/1
 
 ## 相关内容
 - **dtype**：aclTensor，**输出数据类型为 float64**。  

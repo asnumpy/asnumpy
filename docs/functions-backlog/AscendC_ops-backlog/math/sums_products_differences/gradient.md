@@ -6,6 +6,7 @@
 - **难易度（预估）**：难
 - **开发状态**：开发中
 - **更新时间**：2025.11.4
+- **对应issue**：https://gitcode.com/HIT1920/OpenBOAT/issues/10
 
 ## 相关内容
 - **dtype**：aclTensor 或 aclTensor 元组，数据类型为所有浮点数类型；建议兼容复数类型（complex64/complex128）。  

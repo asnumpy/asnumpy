@@ -6,7 +6,7 @@
 - **难易度（预估）**：易
 - **开发状态**：开发中
 - **更新时间**：2025.11.4
-- **贡献地址**：https://gitee.com/sutonghua/ascendbasicops/tree/main/AscendVectorMath
+- **对应issue**：https://gitcode.com/HIT1920/OpenBOAT/issues/4
 
 ## 相关内容
 - **dtype**：aclTensor，数据类型为所有浮点数类型，最好可以支持复数类型。  
