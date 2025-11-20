@@ -25,7 +25,7 @@ target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi)
 
 add_subdirectory(array)
 add_subdirectory(cann)
-# add_subdirectory(dtypes)
+add_subdirectory(dtypes)
 add_subdirectory(linalg)
 add_subdirectory(random)
 add_subdirectory(math)

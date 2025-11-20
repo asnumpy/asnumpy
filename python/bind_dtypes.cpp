@@ -15,51 +15,20 @@
  ******************************************************************************/
 
 #include <pybind11/pybind11.h>
-#include <asnumpy/dtypes/acl_float_reg.hpp>
-// 前向声明，避免额外头文件
-namespace asnumpy { namespace dtypes { void InitAndRegisterDtypes(); } }
-
-using namespace asnumpy::dtypes;
-
-void bind_dtypes(pybind11::module_& dtypes) {
-    dtypes.doc() = "ACL custom dtypes for NumPy";
-    
-    // 初始化并注册所有 dtypes（幂等且仅导入一次 NumPy C API）
-    asnumpy::dtypes::InitAndRegisterDtypes();
-
-    // 绑定所有注册的浮点类型对象到 Python 模块
-    if (ACLFloatManager<float8_e5m2>::type_ptr != nullptr) {
-        dtypes.attr("float8_e5m2") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float8_e5m2>::type_ptr);
-    }
-    
-    if (ACLFloatManager<float8_e4m3fn>::type_ptr != nullptr) {
-        dtypes.attr("float8_e4m3fn") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float8_e4m3fn>::type_ptr);
-    }
-    
-    if (ACLFloatManager<float8_e8m0>::type_ptr != nullptr) {
-        dtypes.attr("float8_e8m0") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float8_e8m0>::type_ptr);
-    }
-    
-    if (ACLFloatManager<bfloat16>::type_ptr != nullptr) {
-        dtypes.attr("bfloat16") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<bfloat16>::type_ptr);
-    }
-    
-    if (ACLFloatManager<float6_e2m3fn>::type_ptr != nullptr) {
-        dtypes.attr("float6_e2m3fn") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float6_e2m3fn>::type_ptr);
-    }
-    
-    if (ACLFloatManager<float6_e3m2fn>::type_ptr != nullptr) {
-        dtypes.attr("float6_e3m2fn") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float6_e3m2fn>::type_ptr);
-    }
-    
-    if (ACLFloatManager<float4_e2m1fn>::type_ptr != nullptr) {
-        dtypes.attr("float4_e2m1fn") = pybind11::reinterpret_borrow<pybind11::object>(
-            ACLFloatManager<float4_e2m1fn>::type_ptr);
-    }
-}
+#include <pybind11/numpy.h>
+#include <cstdint>
+namespace py = pybind11;
+void bind_dtypes(py::module_& dtypes){
+    dtypes.doc() = "dtypes module of asnumpy";
+    dtypes.attr("int32") = py::dtype::of<int32_t>();
+    // dtypes.def("float8_e5m2", &float8_e5m2);
+    // dtypes.def("float8_e4m3fn", &float8_e4m3fn);
+    // dtypes.def("float8_e8m0", &float8_e8m0);
+    // dtypes.def("bfloat16", &bfloat16);
+    // dtypes.def("float6_e2m3fn", &float6_e2m3fn);
+    // dtypes.def("float6_e3m2fn", &float6_e3m2fn);
+    // dtypes.def("float4_e2m1fn", &float4_e2m1fn);
+    // dtypes.def("float4_e1m2fn", &float4_e1m2fn);
+    // dtypes.def("int4", &int4);
+    // dtypes.def("uint1", &uint1);
+} 
