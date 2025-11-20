@@ -27,7 +27,7 @@ from .asnumpy_core import dtypes
 from .asnumpy_core.dtypes import *
 
 __all__ = [
-    "dtypes",#dtypes模块
+    "dtypes",
     "zeros",
     "zeros_like",
     "full",

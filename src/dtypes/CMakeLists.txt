@@ -14,7 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-add_library(dtypes OBJECT reg.cpp)
+add_library(dtypes OBJECT reg.cpp np_import.cpp)
 
 target_include_directories(dtypes PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(dtypes PUBLIC fmt::fmt pybind11::pybind11)
