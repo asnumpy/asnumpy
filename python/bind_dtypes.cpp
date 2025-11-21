@@ -23,7 +23,7 @@ namespace py = pybind11;
 void bind_dtypes(py::module_& dtypes){
     dtypes.doc() = "dtypes module of asnumpy";
     dtypes.attr("int32") = py::dtype::of<int32_t>();
-    dtypes.def("_debug_numpy_dtype_str", []() {
+    dtypes.def("test_numpy_dtype_str", []() {
         asnumpy::dtypes::ImportNumpy();
         PyArray_Descr* descr = PyArray_DescrFromType(NPY_INT32);
         if (descr == nullptr) {
@@ -32,7 +32,7 @@ void bind_dtypes(py::module_& dtypes){
         py::object dtype_obj = py::reinterpret_steal<py::object>(reinterpret_cast<PyObject*>(descr));
         return py::str(dtype_obj);
     });
-    dtypes.def("_debug_numpy_create_array", []() {
+    dtypes.def("test_numpy_create_array", []() {
         asnumpy::dtypes::ImportNumpy();
         npy_intp dims[1] = {3};
         PyObject* arr = PyArray_SimpleNew(1, dims, NPY_INT32);
@@ -41,14 +41,4 @@ void bind_dtypes(py::module_& dtypes){
         }
         return py::reinterpret_steal<py::array>(arr);
     });
-    // dtypes.def("float8_e5m2", &float8_e5m2);
-    // dtypes.def("float8_e4m3fn", &float8_e4m3fn);
-    // dtypes.def("float8_e8m0", &float8_e8m0);
-    // dtypes.def("bfloat16", &bfloat16);
-    // dtypes.def("float6_e2m3fn", &float6_e2m3fn);
-    // dtypes.def("float6_e3m2fn", &float6_e3m2fn);
-    // dtypes.def("float4_e2m1fn", &float4_e2m1fn);
-    // dtypes.def("float4_e1m2fn", &float4_e1m2fn);
-    // dtypes.def("int4", &int4);
-    // dtypes.def("uint1", &uint1);
 } 

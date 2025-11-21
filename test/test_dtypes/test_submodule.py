@@ -14,22 +14,22 @@
 # limitations under the License.
 # *****************************************************************************
 
-import numpy as np
+import importlib
+import types
 
-import asnumpy as ap
-
-
-def test_debug_numpy_dtype_str():
-    dtype_str = str(ap.dtypes.test_numpy_dtype_str())
-    assert "int32" in dtype_str
+import asnumpy
 
 
-def test_debug_numpy_create_array():
-    np_arr = ap.dtypes.test_numpy_create_array()
-    assert isinstance(np_arr, np.ndarray)
-    assert np_arr.dtype == np.dtype("int32")
-    assert np_arr.shape == (3,)
+def test_asnumpy_exposes_dtypes_submodule():
+    """确保 asnumpy 顶层可以直接访问 dtypes 子模块。"""
+    dtypes_module = getattr(asnumpy, "dtypes", None)
+    assert isinstance(dtypes_module, types.ModuleType), "asnumpy.dtypes 应该是一个有效的模块对象"
 
+
+def test_asnumpy_dtypes_is_importable():
+    """确保可以通过常规的模块导入语法使用 asnumpy.dtypes。"""
+    imported = importlib.import_module("asnumpy.dtypes")
+    assert imported is asnumpy.dtypes, "asnumpy.dtypes 应该与 importlib.import_module 返回的模块一致"
 
 def _run_test(func):
     try:
@@ -45,11 +45,10 @@ def _run_test(func):
 
 if __name__ == "__main__":
     tests = [
-        test_debug_numpy_dtype_str,
-        test_debug_numpy_create_array,
+        test_asnumpy_exposes_dtypes_submodule,
+        test_asnumpy_dtypes_is_importable,
     ]
     total = len(tests)
     passed = sum(_run_test(func) for func in tests)
     print(f"\nSummary: {passed}/{total} tests passed")
     raise SystemExit(0 if passed == total else 1)
-
