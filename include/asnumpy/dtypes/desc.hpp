@@ -14,16 +14,19 @@
  * limitations under the License.
  *****************************************************************************/
 
+// Prevent multiple inclusion
+#pragma once
 
- #define ASNUMPY_IMPORT_NUMPY
- #include <asnumpy/dtypes/np_import.hpp>
- 
- namespace asnumpy{
-     namespace dtypes{
-         void ImportNumpy(){
-            if (!PyArray_API) {
-                import_array1();
-            }
-         }
-     }
- }
+namespace asnumpy {
+namespace dtypes {
+    class float8_e5m2;
+    template <typename T>
+    struct ACLFloatManager;
+    template <typename T, typename Enable = void>
+    struct TypeDescriptor {
+    };
+    // 具体类型的特化声明（实现在 reg.cpp 中）
+    template<>
+    struct TypeDescriptor<float8_e5m2>;
+}
+}

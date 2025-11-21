@@ -31,6 +31,7 @@ def test_asnumpy_dtypes_is_importable():
     imported = importlib.import_module("asnumpy.dtypes")
     assert imported is asnumpy.dtypes, "asnumpy.dtypes 应该与 importlib.import_module 返回的模块一致"
 
+
 def _run_test(func):
     try:
         func()

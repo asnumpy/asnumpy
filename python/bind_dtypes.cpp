@@ -19,10 +19,41 @@
 #include <cstdint>
 
 #include <asnumpy/dtypes/np_import.hpp>
+#include <asnumpy/dtypes/reg.hpp>
+#include <asnumpy/dtypes/float_types.hpp>
+
 namespace py = pybind11;
 void bind_dtypes(py::module_& dtypes){
     dtypes.doc() = "dtypes module of asnumpy";
+    
+    // 1. 初始化并注册所有 dtype（包括 float8_e5m2）
+    asnumpy::dtypes::InitAndRegisterDtypes();
+    
+    // 2. 检查注册是否成功
+    bool is_registered = asnumpy::dtypes::AreAllACLFloatTypesRegistered();
+    if (!is_registered) {
+        throw std::runtime_error("float8_e5m2 registration failed");
+    }
+    
+    // 3. 绑定标准类型
     dtypes.attr("int32") = py::dtype::of<int32_t>();
+    
+    // 4. 绑定 float8_e5m2
+    PyObject* float8_e5m2_type = asnumpy::dtypes::GetACLFloatTypeObject<asnumpy::dtypes::float8_e5m2>();
+    if (float8_e5m2_type != nullptr) {
+        dtypes.attr("float8_e5m2") = py::reinterpret_borrow<py::object>(float8_e5m2_type);
+    } else {
+        throw std::runtime_error("float8_e5m2 type object is null");
+    }
+    
+    // 5. 添加检查注册状态的测试函数
+    dtypes.def("_check_float8_e5m2_registered", []() {
+        return asnumpy::dtypes::AreAllACLFloatTypesRegistered();
+    });
+    
+    dtypes.def("_get_float8_e5m2_type_num", []() {
+        return asnumpy::dtypes::GetACLFloatTypeNum<asnumpy::dtypes::float8_e5m2>();
+    });
     dtypes.def("test_numpy_dtype_str", []() {
         asnumpy::dtypes::ImportNumpy();
         PyArray_Descr* descr = PyArray_DescrFromType(NPY_INT32);
