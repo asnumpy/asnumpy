@@ -139,6 +139,7 @@ __all__ = [
     "laplace",
     "logistic",
     "lognormal",
+    "pow",
     # logic
     "all",
     "any",
