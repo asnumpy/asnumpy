@@ -669,3 +669,73 @@ SORT_TEST_CASES = [
     # 大数值范围测试
     (np.array([1e10, -1e10, 1e-10, -1e-10], dtype=np.float32), 0, False),
 ]
+
+LDEXP_TEST_CASES = [
+    # === 基础测试 ===
+    (np.array([1.0, 2.0, 3.0], dtype=np.float32),
+     np.array([1, 2, 3], dtype=np.int32)),
+
+    (np.array([-1.5, 0.0, 2.5], dtype=np.float32),
+     np.array([-1, 0, 1], dtype=np.int32)),
+
+    # === 广播测试 ===
+    (np.array([[1.0, -2.0], [3.0, -4.0]], dtype=np.float32),
+     np.array([1], dtype=np.int32)),  # scalar-like broadcast
+
+    (np.array([1.0, 2.0, 3.0], dtype=np.float32),
+     np.array([[0], [1]], dtype=np.int32)),  # 3 vs (2,1)
+
+    # === 特殊数值 ===
+    (np.array([np.inf, -np.inf, np.nan], dtype=np.float32),
+     np.array([1, -1, 0], dtype=np.int32)),
+
+    (np.array([0.0, -0.0, 1.0], dtype=np.float32),
+     np.array([10, -10, 0], dtype=np.int32)),  # 正负零处理
+
+    # === 极大极小值 ===
+    (np.array([1e-38, 1e-20, 1e20], dtype=np.float32),
+     np.array([10, -10, 1], dtype=np.int32)),
+
+    # === 高维张量 ===
+    (np.array([[[1.0], [2.0]], [[3.0], [4.0]]], dtype=np.float32),
+     np.array([1], dtype=np.int32)),
+
+    # === 指数 float32（numpy 允许）===
+    (np.array([1.0, 2.0, 3.0], dtype=np.float32),
+     np.array([1.0, -1.0, 0.0], dtype=np.float32)),
+]
+
+COPYSIGN_TEST_CASES = [
+    # === 基础测试 ===
+    (np.array([1.0, -2.0, 3.0], dtype=np.float32),
+     np.array([-1.0, 2.0, -3.0], dtype=np.float32)),
+
+    (np.array([-1.5, 0.0, 2.5], dtype=np.float32),
+     np.array([1.0, -1.0, 0.0], dtype=np.float32)),
+
+    # === 广播测试 ===
+    (np.array([[1.0, -2.0], [3.0, -4.0]], dtype=np.float32),
+     np.array([1.0], dtype=np.float32)),  # 1 → (2,2)
+
+    (np.array([1.0, 2.0, 3.0], dtype=np.float32),
+     np.array([[0.0], [1.0]], dtype=np.float32)),  # 3 vs (2,1)
+
+    # === 特殊数值 ===
+    (np.array([np.inf, -np.inf, np.nan], dtype=np.float32),
+     np.array([-1.0, np.nan, 1.0], dtype=np.float32)),
+
+    (np.array([0.0, -0.0, 1.0], dtype=np.float32),
+     np.array([-0.0, +0.0, -1.0], dtype=np.float32)),  # 处理 ±0 的符号
+
+    # === 极大极小 ===
+    (np.array([1e38, -1e-38, 1e-38], dtype=np.float32),
+     np.array([-1e38, 1e38, -1e-38], dtype=np.float32)),
+
+    # === 多维测试 ===
+    (np.array([[1, -2], [-3, 4]], dtype=np.float32),
+     np.array([[0, 1], [1, 0]], dtype=np.float32)),
+
+    # === NaN 与广播混合 ===
+    (np.array([[np.nan], [0], [1]], dtype=np.float32),
+     np.array([0.5, np.inf, -1.0], dtype=np.float32)),
+]

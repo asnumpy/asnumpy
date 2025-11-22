@@ -177,6 +177,8 @@ void bind_handling_complex_numbers(py::module_& math){
 
 void bind_floating_point_routines(py::module_& math){
     math.def("signbit", &Signbit, py::arg("x"));
+    math.def("ldexp", &Ldexp, py::arg("x1"), py::arg("x2"));
+    math.def("copysign", &Copysign, py::arg("x1"), py::arg("x2"));
 }
 
 void bind_hyperbolic_functions(py::module_& math){
