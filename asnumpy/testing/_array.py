@@ -19,6 +19,8 @@
 提供用于测试的数组比较断言函数。
 """
 
+__all__ = ['assert_array_equal', 'assert_allclose']
+
 import numpy as np
 
 
@@ -131,7 +133,4 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_c
         else:
             msg = "Arrays are not almost equal."
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
-
-
-__all__ = ['assert_array_equal', 'assert_allclose']
 

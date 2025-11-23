@@ -22,8 +22,11 @@
 - 启用pytester插件用于测试Asnumpy的测试工具本身
 """
 
+import logging
 import numpy
 import pytest
+
+logger = logging.getLogger(__name__)
 
 
 def pytest_configure(config):
@@ -36,8 +39,9 @@ def pytest_configure(config):
         # NumPy 1.20+ 支持弱类型提升
         if hasattr(numpy, '_set_promotion_state'):
             numpy._set_promotion_state('weak')
-    except Exception:
-        pass
+    except Exception as e:
+        # 忽略设置失败，不影响测试运行
+        logger.debug(f"Failed to set numpy promotion state: {e}")
 
 
 def pytest_addoption(parser):

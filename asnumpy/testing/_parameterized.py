@@ -21,6 +21,12 @@
 - _make_class_name() - 为参数化测试生成类名
 """
 
+__all__ = [
+    'product',
+    'product_dict',
+    'parameterize_test_class',
+]
+
 import itertools
 
 
@@ -144,12 +150,4 @@ def parameterize_test_class(base_class, params_dict):
         classes.append(new_class)
     
     return classes
-
-
-# 导出的公共API
-__all__ = [
-    'product',
-    'product_dict',
-    'parameterize_test_class',
-]
 

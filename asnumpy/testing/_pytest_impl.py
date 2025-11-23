@@ -22,6 +22,16 @@
 - is_available() - 检查pytest是否可用
 """
 
+__all__ = [
+    'is_available',
+    'parameterize',
+    'fixture',
+    'skip',
+    'skipif',
+    'xfail',
+    '_TestingParameterizeMixin',
+]
+
 import functools
 
 
@@ -173,16 +183,3 @@ def xfail(reason='', strict=False):
     
     import pytest
     return pytest.mark.xfail(reason=reason, strict=strict)
-
-
-# 导出的公共API
-__all__ = [
-    'is_available',
-    'parameterize',
-    'fixture',
-    'skip',
-    'skipif',
-    'xfail',
-    '_TestingParameterizeMixin',
-]
-
