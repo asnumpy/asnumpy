@@ -21,6 +21,12 @@
 - _generate_case() - 生成具体的测试类
 """
 
+__all__ = [
+    'make_decorator',
+    'generate_test_classes',
+    'TestBundle',
+]
+
 import functools
 
 
@@ -74,18 +80,20 @@ def _generate_case(test_class, params):
     
     # 复制测试类的所有方法
     for attr_name in dir(test_class):
-        if not attr_name.startswith('_'):
-            attr = getattr(test_class, attr_name)
-            if callable(attr):
-                # 为方法添加参数
-                def make_method(original_method, test_params):
-                    @functools.wraps(original_method)
-                    def method(self, *args, **kwargs):
-                        kwargs.update(test_params)
-                        return original_method(self, *args, **kwargs)
-                    return method
-                
-                class_dict[attr_name] = make_method(attr, params)
+        if attr_name.startswith('_'):
+            continue
+        attr = getattr(test_class, attr_name)
+        if not callable(attr):
+            continue
+        # 为方法添加参数
+        def make_method(original_method, test_params):
+            @functools.wraps(original_method)
+            def method(self, *args, **kwargs):
+                kwargs.update(test_params)
+                return original_method(self, *args, **kwargs)
+            return method
+        
+        class_dict[attr_name] = make_method(attr, params)
     
     # 创建新类
     new_class = type(class_name, (test_class,), class_dict)
@@ -153,12 +161,4 @@ class TestBundle:
                 if attr_name.startswith('test_'):
                     count += 1
         return count
-
-
-# 导出的公共API
-__all__ = [
-    'make_decorator',
-    'generate_test_classes',
-    'TestBundle',
-]
 

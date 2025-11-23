@@ -19,9 +19,21 @@
 提供用于参数化测试的装饰器，包括dtype、order等维度的循环测试。
 """
 
+__all__ = [
+    'for_dtypes', 'for_all_dtypes', 'for_float_dtypes', 'for_int_dtypes',
+    'for_signed_dtypes', 'for_unsigned_dtypes',
+    'for_orders', 'for_CF_orders',
+    'numpy_asnumpy_array_equal', 'numpy_asnumpy_allclose',
+]
+
 import functools
+import inspect
+import logging
 import numpy
+
 from . import _array
+
+logger = logging.getLogger(__name__)
 
 
 # dtype常量定义
@@ -83,7 +95,10 @@ def _wraps_partial(impl, name):
 def for_dtypes(dtypes, name='dtype'):
     """为多个数据类型参数化测试
     
-    仅支持 pytest 风格（无 self 参数）
+    支持简洁写法（推荐）：
+        @for_dtypes([numpy.float32, numpy.float64])
+        def test_func(xp, dtype):
+            return xp.some_function(...)
     
     Args:
         dtypes: 数据类型列表
@@ -93,20 +108,24 @@ def for_dtypes(dtypes, name='dtype'):
         装饰器函数
     """
     def decorator(impl):
-        @_wraps_partial(impl, name)
-        def test_func(*args, **kw):
+        # 创建一个无参数的包装函数，避免pytest将参数识别为fixture
+        @functools.wraps(impl)
+        def test_func():
             for dtype in dtypes:
                 try:
-                    kw[name] = dtype
-                    impl(*args, **kw)
+                    # 使用关键字参数调用原函数
+                    impl(**{name: dtype})
                 except Exception:
-                    print(f'{name} is {dtype}')
+                    logger.info(f'{name} is {dtype}')
                     raise
+        # 清除函数签名中的参数，让pytest看到的是无参数函数
+        test_func.__signature__ = inspect.Signature()
         return test_func
     return decorator
 
 
-def for_all_dtypes(name='dtype', no_float16=True, no_bool=False, no_complex=False, no_uint32=True, no_uint64=True):
+def for_all_dtypes(name='dtype', no_float16=True, no_bool=False, no_complex=False,
+                   no_uint32=True, no_uint64=True, exclude=None):
     """为所有数据类型参数化测试
     
     默认排除 asnumpy 不支持的类型：float16, uint32, uint64
@@ -118,14 +137,18 @@ def for_all_dtypes(name='dtype', no_float16=True, no_bool=False, no_complex=Fals
         no_complex: 是否排除复数类型
         no_uint32: 是否排除uint32（默认True - NPU算子不支持）
         no_uint64: 是否排除uint64（默认True - NPU算子不支持）
+        exclude: 额外排除的类型列表，如 [numpy.float64, numpy.uint8]
         
     Returns:
         装饰器函数
     """
-    return for_dtypes(_make_all_dtypes(no_float16, no_bool, no_complex, no_uint32, no_uint64), name=name)
+    dtypes = list(_make_all_dtypes(no_float16, no_bool, no_complex, no_uint32, no_uint64))
+    if exclude:
+        dtypes = [dt for dt in dtypes if dt not in exclude]
+    return for_dtypes(dtypes, name=name)
 
 
-def for_float_dtypes(name='dtype', no_float16=True):
+def for_float_dtypes(name='dtype', no_float16=True, exclude=None):
     """为浮点数数据类型参数化测试
     
     默认排除 float16（asnumpy 不支持）
@@ -133,6 +156,7 @@ def for_float_dtypes(name='dtype', no_float16=True):
     Args:
         name: 参数名
         no_float16: 是否排除float16（默认True - 不支持）
+        exclude: 额外排除的类型列表，如 [numpy.float64]
         
     Returns:
         装饰器函数
@@ -140,12 +164,25 @@ def for_float_dtypes(name='dtype', no_float16=True):
     dtypes = list(_float_dtypes)
     if no_float16:
         dtypes.remove(numpy.float16)
+    if exclude:
+        dtypes = [dt for dt in dtypes if dt not in exclude]
     return for_dtypes(tuple(dtypes), name=name)
 
 
-def for_int_dtypes(name='dtype'):
-    """为所有整数类型参数化测试"""
-    return for_dtypes(_int_dtypes, name=name)
+def for_int_dtypes(name='dtype', exclude=None):
+    """为所有整数类型参数化测试
+    
+    Args:
+        name: 参数名
+        exclude: 排除的类型列表，如 [numpy.uint8]
+        
+    Returns:
+        装饰器函数
+    """
+    dtypes = list(_int_dtypes)
+    if exclude:
+        dtypes = [dt for dt in dtypes if dt not in exclude]
+    return for_dtypes(dtypes, name=name)
 
 
 def for_signed_dtypes(name='dtype'):
@@ -179,7 +216,12 @@ def for_unsigned_dtypes(name='dtype', no_uint32=True, no_uint64=True):
 def for_orders(orders, name='order'):
     """为多个内存顺序参数化测试
     
-    仅支持 pytest 风格（无 self 参数）
+    测试函数应使用 **kw 接收参数：
+        @for_orders(['C', 'F'])
+        def test_func(**kw):
+            xp = kw['xp']
+            order = kw['order']
+            return xp.some_function(...)
     
     Args:
         orders: 内存顺序列表
@@ -196,7 +238,7 @@ def for_orders(orders, name='order'):
                     kw[name] = order
                     impl(*args, **kw)
                 except Exception:
-                    print(f'{name} is {order}')
+                    logger.info(f'{name} is {order}')
                     raise
         return test_func
     return decorator
@@ -212,7 +254,10 @@ def for_CF_orders(name='order'):
 def _make_decorator(check_func, name, type_check, accept_error, sp_name=None, scipy_name=None):
     """创建numpy-asnumpy比较装饰器的核心函数
     
-    仅支持 pytest 风格（无 self 参数）
+    支持简洁写法（推荐）：
+        @numpy_asnumpy_array_equal()
+        def test_func(xp, dtype):
+            return xp.some_function(...)
     
     Args:
         check_func: 用于比较结果的函数
@@ -226,65 +271,124 @@ def _make_decorator(check_func, name, type_check, accept_error, sp_name=None, sc
         装饰器函数
     """
     def decorator(impl):
-        @functools.wraps(impl)
-        def test_func(*args, **kw):
-            # 执行numpy版本
-            kw[name] = numpy
-            try:
-                numpy_result = impl(*args, **kw)
-                numpy_error = None
-            except Exception as e:
-                numpy_result = None
-                numpy_error = e
-            
-            # 执行asnumpy版本
-            import asnumpy as ap
-            kw[name] = ap
-            
-            # 为asnumpy自动转换和过滤参数
-            kw_asnumpy = kw.copy()
-            
-            # 转换dtype参数
-            if 'dtype' in kw_asnumpy and kw_asnumpy['dtype'] is not None:
-                kw_asnumpy['dtype'] = numpy.dtype(kw_asnumpy['dtype'])
-            
-            # 移除asnumpy不支持的参数（order参数）
-            if 'order' in kw_asnumpy:
-                kw_asnumpy.pop('order')
-            
-            try:
-                asnumpy_result = impl(*args, **kw_asnumpy)
-                asnumpy_error = None
-            except Exception as e:
-                asnumpy_result = None
-                asnumpy_error = e
-            
-            # 比较结果
-            if numpy_error is not None:
-                if asnumpy_error is None:
-                    raise AssertionError(
-                        f'NumPy抛出 {type(numpy_error).__name__}，'
-                        f'但AsNumPy没有抛出异常\n'
-                        f'NumPy错误: {numpy_error}'
-                    )
-                elif type(numpy_error) != type(asnumpy_error):
-                    if not accept_error:
+        # 获取原函数的参数列表
+        sig = inspect.signature(impl)
+        params = list(sig.parameters.keys())
+        
+        # 判断是否有除了xp之外的其他参数
+        other_params = [p for p in params if p != name]
+        needs_external_params = len(other_params) > 0
+        
+        if needs_external_params:
+            # 有其他参数，说明有外层装饰器会提供，返回接收参数的函数
+            @functools.wraps(impl)
+            def test_func(**kw):
+                # 执行numpy版本
+                kw_numpy = kw.copy()
+                kw_numpy[name] = numpy
+                try:
+                    numpy_result = impl(**kw_numpy)
+                    numpy_error = None
+                except Exception as e:
+                    numpy_result = None
+                    numpy_error = e
+                
+                # 执行asnumpy版本
+                import asnumpy as ap
+                kw_asnumpy = kw.copy()
+                kw_asnumpy[name] = ap
+                
+                # 转换dtype参数
+                if 'dtype' in kw_asnumpy and kw_asnumpy['dtype'] is not None:
+                    kw_asnumpy['dtype'] = numpy.dtype(kw_asnumpy['dtype'])
+                
+                # 移除asnumpy不支持的参数（order参数）
+                if 'order' in kw_asnumpy:
+                    kw_asnumpy.pop('order')
+                
+                try:
+                    asnumpy_result = impl(**kw_asnumpy)
+                    asnumpy_error = None
+                except Exception as e:
+                    asnumpy_result = None
+                    asnumpy_error = e
+                
+                # 比较结果
+                if numpy_error is not None:
+                    if asnumpy_error is None:
                         raise AssertionError(
-                            f'异常类型不同:\n'
-                            f'  NumPy: {type(numpy_error).__name__}\n'
-                            f'  AsNumPy: {type(asnumpy_error).__name__}'
+                            f'NumPy抛出 {type(numpy_error).__name__}，'
+                            f'但AsNumPy没有抛出异常\n'
+                            f'NumPy错误: {numpy_error}'
                         )
-                # 异常类型相同，测试通过
-                return
-            elif asnumpy_error is not None:
-                raise AssertionError(
-                    f'AsNumPy抛出 {type(asnumpy_error).__name__}，'
-                    f'但NumPy没有抛出异常\n'
-                    f'AsNumPy错误: {asnumpy_error}'
-                )
+                    elif not isinstance(asnumpy_error, type(numpy_error)):
+                        if not accept_error:
+                            raise AssertionError(
+                                f'异常类型不同:\n'
+                                f'  NumPy: {type(numpy_error).__name__}\n'
+                                f'  AsNumPy: {type(asnumpy_error).__name__}'
+                            )
+                    # 异常类型相同，测试通过
+                    return
+                elif asnumpy_error is not None:
+                    raise AssertionError(
+                        f'AsNumPy抛出 {type(asnumpy_error).__name__}，'
+                        f'但NumPy没有抛出异常\n'
+                        f'AsNumPy错误: {asnumpy_error}'
+                    )
+                
+                # 都没有异常，比较结果
+                check_func(numpy_result, asnumpy_result)
+        else:
+            # 没有其他参数，只有xp，返回无参数函数
+            @functools.wraps(impl)
+            def test_func():
+                # 执行numpy版本
+                try:
+                    numpy_result = impl(**{name: numpy})
+                    numpy_error = None
+                except Exception as e:
+                    numpy_result = None
+                    numpy_error = e
+                
+                # 执行asnumpy版本
+                import asnumpy as ap
+                try:
+                    asnumpy_result = impl(**{name: ap})
+                    asnumpy_error = None
+                except Exception as e:
+                    asnumpy_result = None
+                    asnumpy_error = e
+                
+                # 比较结果
+                if numpy_error is not None:
+                    if asnumpy_error is None:
+                        raise AssertionError(
+                            f'NumPy抛出 {type(numpy_error).__name__}，'
+                            f'但AsNumPy没有抛出异常\n'
+                            f'NumPy错误: {numpy_error}'
+                        )
+                    elif not isinstance(asnumpy_error, type(numpy_error)):
+                        if not accept_error:
+                            raise AssertionError(
+                                f'异常类型不同:\n'
+                                f'  NumPy: {type(numpy_error).__name__}\n'
+                                f'  AsNumPy: {type(asnumpy_error).__name__}'
+                            )
+                    # 异常类型相同，测试通过
+                    return
+                elif asnumpy_error is not None:
+                    raise AssertionError(
+                        f'AsNumPy抛出 {type(asnumpy_error).__name__}，'
+                        f'但NumPy没有抛出异常\n'
+                        f'AsNumPy错误: {asnumpy_error}'
+                    )
+                
+                # 都没有异常，比较结果
+                check_func(numpy_result, asnumpy_result)
             
-            # 都没有异常，比较结果
-            check_func(numpy_result, asnumpy_result)
+            # 清除函数签名，避免pytest识别为fixture
+            test_func.__signature__ = inspect.Signature()
         
         return test_func
     return decorator
@@ -336,12 +440,3 @@ def numpy_asnumpy_allclose(rtol=1e-7, atol=0, err_msg='', verbose=True, name='xp
     def check_func(x, y):
         _array.assert_allclose(x, y, rtol, atol, err_msg, verbose, strides_check=strides_check)
     return _make_decorator(check_func, name, type_check, accept_error, sp_name, scipy_name)
-
-
-__all__ = [
-    'for_dtypes', 'for_all_dtypes', 'for_float_dtypes', 'for_int_dtypes',
-    'for_signed_dtypes', 'for_unsigned_dtypes',
-    'for_orders', 'for_CF_orders',
-    'numpy_asnumpy_array_equal', 'numpy_asnumpy_allclose',
-]
-
