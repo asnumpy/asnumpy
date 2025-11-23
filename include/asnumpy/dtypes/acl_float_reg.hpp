@@ -89,8 +89,12 @@ namespace dtypes {
             T ta = *static_cast<const T*>(a);
             T tb = *static_cast<const T*>(b);
             
-            if (ta < tb) return -1;
-            if (ta > tb) return 1;
+            if (ta < tb) {
+                return -1;
+            }
+            if (ta > tb) {
+                return 1;
+            }
             return 0;
         }
         

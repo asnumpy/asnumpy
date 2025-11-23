@@ -47,11 +47,11 @@ def test_float_types_registration():
             print(f"\n测试 {type_name}:")
             
             # 1. 检查类型是否在asnumpy模块中可用
-            if not hasattr(ap, type_name):
+            if not hasattr(ap.dtypes, type_name):
                 print(f"  ✗ 类型 {type_name} 不在 asnumpy 模块中")
                 continue
             
-            dtype_obj = getattr(ap, type_name)
+            dtype_obj = getattr(ap.dtypes, type_name)
             print(f"  ✓ 类型对象: {dtype_obj}")
             
             # 2. 检查NumPy是否能识别这个类型
