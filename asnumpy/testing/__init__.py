@@ -18,13 +18,25 @@
 
 完整的测试框架，包含：
 - 数组断言函数
+- 异常和警告断言
 - 参数化装饰器
 - pytest集成
-- 测试工具函数
+- 测试辅助函数
 """
 
 # 数组断言函数
 from asnumpy.testing._array import assert_array_equal, assert_allclose
+
+# 异常和警告断言
+from asnumpy.testing._assertions import (
+    assert_raises,
+    assert_raises_regex,
+    assert_warns,
+    assert_no_warnings,
+    assert_equal,
+    assert_string_equal,
+    assert_warns_message,
+)
 
 # 装饰器 - dtype和order参数化
 from asnumpy.testing._loops import (
@@ -58,10 +70,34 @@ from asnumpy.testing._bundle import (
     TestBundle,
 )
 
+# 测试辅助函数
+from asnumpy.testing._helper import (
+    shaped_arange,
+    shaped_random,
+    shaped_reverse_arange,
+    assert_array_list_equal,
+    suppress_warnings,
+    with_seed,
+    generate_test_data,
+    TEST_SHAPES,
+    TEST_DTYPES,
+    TEST_ORDERS,
+)
+
 __all__ = [
     # 数组断言
     'assert_array_equal', 
     'assert_allclose',
+    'assert_array_list_equal',
+    
+    # 异常和警告断言
+    'assert_raises',
+    'assert_raises_regex',
+    'assert_warns',
+    'assert_no_warnings',
+    'assert_equal',
+    'assert_string_equal',
+    'assert_warns_message',
     
     # dtype装饰器
     'for_dtypes', 
@@ -96,5 +132,18 @@ __all__ = [
     'make_decorator',
     'generate_test_classes',
     'TestBundle',
+    
+    # 辅助函数
+    'shaped_arange',
+    'shaped_random',
+    'shaped_reverse_arange',
+    'suppress_warnings',
+    'with_seed',
+    'generate_test_data',
+    
+    # 测试常量
+    'TEST_SHAPES',
+    'TEST_DTYPES',
+    'TEST_ORDERS',
 ]
 
