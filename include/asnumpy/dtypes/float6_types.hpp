@@ -37,7 +37,7 @@ namespace dtypes {
             // 显式转换：从 uint32_t 到 uint8_t
             return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E2M3FnSignShift) | static_cast<uint8_t>(0b0'11'111));
         }
-        if (exp == 0 && frac == 0) {
+        if (exp == static_cast<uint32_t>(0) && frac == static_cast<uint32_t>(0)) {
             // 显式转换：从 uint32_t 到 uint8_t
             return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat6E2M3FnSignShift);
         }
@@ -96,7 +96,7 @@ namespace dtypes {
 
         int e_unbiased;
         float mant;
-        if (exp == 0) {
+        if (exp == static_cast<uint32_t>(0)) {
             e_unbiased = constants::kFloat32SubnormalExponent;
             mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
         } else {
@@ -106,7 +106,7 @@ namespace dtypes {
         }
 
         constexpr int bias = constants::kFloat6E2M3FnBias;
-        if (exp == 0 || e_unbiased < constants::kFloat6E2M3FnSubnormalThreshold) {
+        if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat6E2M3FnSubnormalThreshold) {
             return encode_subnormal(sign, mant, e_unbiased);
         }
 
@@ -126,7 +126,7 @@ namespace dtypes {
         uint8_t mant = bits & constants::kFloat6E2M3FnMantissaMask;         // 3-bit mantissa
         constexpr int bias = constants::kFloat6E2M3FnBias;
 
-        if (exp == 0) {
+        if (exp == static_cast<uint8_t>(0)) {
             float v = static_cast<float>(mant) * (1.0f / static_cast<float>(constants::kFloat6E2M3FnSubnormalGrid));  // 次正规
             return sign ? -v : v;
         }
@@ -213,7 +213,7 @@ public:
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E3M2FnSignShift) | static_cast<uint8_t>(0b0'111'11));
          }
-         if (exp == 0 && frac == 0) {
+         if (exp == static_cast<uint32_t>(0) && frac == static_cast<uint32_t>(0)) {
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat6E3M2FnSignShift);
          }
@@ -272,7 +272,7 @@ public:
 
          int e_unbiased;
          float mant;
-         if (exp == 0) {
+         if (exp == static_cast<uint32_t>(0)) {
              e_unbiased = constants::kFloat32SubnormalExponent;
              mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
          } else {
@@ -282,7 +282,7 @@ public:
          }
 
          constexpr int bias = constants::kFloat6E3M2FnBias;
-         if (exp == 0 || e_unbiased < constants::kFloat6E3M2FnSubnormalThreshold) {
+         if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat6E3M2FnSubnormalThreshold) {
              return encode_subnormal(sign, mant, e_unbiased);
          }
 
@@ -302,7 +302,7 @@ public:
          uint8_t mant = bits & constants::kFloat6E3M2FnMantissaMask;         // 2-bit mantissa
          constexpr int bias = constants::kFloat6E3M2FnBias;
 
-         if (exp == 0) {
+         if (exp == static_cast<uint8_t>(0)) {
              float v = static_cast<float>(mant) * (1.0f / static_cast<float>(constants::kFloat6E3M2FnSubnormalGrid));  // 次正规
              return sign ? -v : v;
          }

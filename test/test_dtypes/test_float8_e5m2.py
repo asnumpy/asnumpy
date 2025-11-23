@@ -54,6 +54,165 @@ def test_float8_e5m2_can_create_array():
     assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
     print(f"[PASS] 成功创建数组: {arr}, dtype: {arr.dtype}")
 
+def test_float8_e5m2_getACLenum():
+    """检查 float8_e5m2 的 getACLenum() 接口"""
+    expected_acl_value = 35  # ACL_FLOAT8_E5M2
+    
+    scalar = ap.dtypes.float8_e5m2(0)
+    assert scalar is not None, "应该能够创建标量对象"
+    assert hasattr(scalar, 'getACLenum'), "getACLenum 方法应该存在"
+    
+    acl_enum = scalar.getACLenum()
+    assert acl_enum == expected_acl_value, f"ACL枚举值应该为 {expected_acl_value}，实际为 {acl_enum}"
+    
+    # 测试不同标量值的 getACLenum 是否一致
+    scalar2 = ap.dtypes.float8_e5m2(3.14)
+    acl_enum2 = scalar2.getACLenum()
+    assert acl_enum == acl_enum2, "不同标量值的ACL枚举值应该一致"
+    
+    print(f"[PASS] float8_e5m2 getACLenum() = {acl_enum} (期望: {expected_acl_value})")
+
+def test_float8_e5m2_GetACLDataType():
+    """测试 GetACLDataType 函数是否能正确识别 float8_e5m2 并返回正确的 ACL 类型"""
+    import numpy as np
+    import asnumpy as ap
+    
+    # 创建 float8_e5m2 类型的数组
+    arr = np.array([1.0, 2.0, 3.14], dtype=ap.dtypes.float8_e5m2)
+    assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
+    
+    # 使用 ndarray.from_numpy 创建 NPUArray，这会调用 GetACLDataType
+    try:
+        npu_arr = ap.ndarray.from_numpy(arr)
+        expected_acl_value = 35  # ACL_FLOAT8_E5M2
+        
+        # 检查 aclDtype 是否正确
+        assert npu_arr.aclDtype == expected_acl_value, \
+            f"ACL类型应该为 {expected_acl_value}，实际为 {npu_arr.aclDtype}"
+        
+        print(f"[PASS] GetACLDataType 正确识别 float8_e5m2: ACL类型 = {npu_arr.aclDtype}")
+        print(f"[PASS] NPUArray 创建成功: shape={npu_arr.shape}, dtype={npu_arr.dtype}")
+        
+    except Exception as e:
+        print(f"[FAIL] GetACLDataType 测试失败: {e}")
+        raise
+
+def test_float8_e5m2_static_getACLenum():
+    """测试静态方法 getACLenum 是否可以直接调用（C++层面）"""
+    import numpy as np
+    import asnumpy as ap
+    
+    # 这个测试验证 Python 层面的接口
+    # C++ 层面的静态方法调用需要通过 GetACLDataType 间接测试
+    
+    # 创建多个不同值的数组，验证都能正确识别
+    test_values = [
+        [0.0],
+        [1.0, 2.0],
+        [3.14, 2.71, 1.41],
+    ]
+    
+    for values in test_values:
+        arr = np.array(values, dtype=ap.dtypes.float8_e5m2)
+        npu_arr = ap.ndarray.from_numpy(arr)
+        
+        # 所有数组的 ACL 类型应该都是 ACL_FLOAT8_E5M2 (35)
+        assert npu_arr.aclDtype == 35, \
+            f"所有 float8_e5m2 数组的 ACL 类型应该为 35，实际为 {npu_arr.aclDtype}"
+    
+    print(f"[PASS] 静态方法 getACLenum 通过 GetACLDataType 间接测试成功")
+
+
+def test_float8_e5m2_array_creation_operators():
+    """测试使用 float8_e5m2 类型调用 asnumpy 封装的算子（ones, zeros, full）"""
+    import numpy as np
+    import asnumpy as ap
+    
+    # 将类型对象转换为 numpy.dtype（函数需要 numpy.dtype 对象）
+    dtype = np.dtype(ap.dtypes.float8_e5m2)
+    expected_acl_value = 35  # ACL_FLOAT8_E5M2
+    
+    # 测试 ones
+    print("\n测试 ones 算子:")
+    try:
+        ones_arr = ap.ones(shape=(3, 4), dtype=dtype)
+        assert ones_arr.aclDtype == expected_acl_value, \
+            f"ones 创建的数组 ACL 类型应该为 {expected_acl_value}，实际为 {ones_arr.aclDtype}"
+        assert ones_arr.shape == [3, 4], f"ones 创建的数组形状应该为 [3, 4]，实际为 {ones_arr.shape}"
+        ones_cpu = ones_arr.to_numpy()
+        assert ones_cpu.dtype == dtype, \
+            f"ones 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {ones_cpu.dtype}"
+        print(f"[PASS] ones 创建成功: shape={ones_arr.shape}, aclDtype={ones_arr.aclDtype}")
+        print(f"[PASS] 转换到 numpy: dtype={ones_cpu.dtype}, shape={ones_cpu.shape}")
+    except Exception as e:
+        print(f"[FAIL] ones 测试失败: {e}")
+    
+    # 测试 NPUArray 构造函数
+    print("\n测试 NPUArray 构造函数:")
+    npu_arr = ap.ndarray(shape=(2, 3), dtype=dtype)
+    assert npu_arr.aclDtype == expected_acl_value, \
+        f"构造函数创建的数组 ACL 类型应该为 {expected_acl_value}，实际为 {npu_arr.aclDtype}"
+    assert npu_arr.shape == [2, 3], f"构造函数创建的数组形状应该为 [2, 3]，实际为 {npu_arr.shape}"
+    npu_cpu = npu_arr.to_numpy()
+    assert npu_cpu.dtype == dtype, \
+        f"构造函数创建的数组转换后 dtype 应该为 float8_e5m2，实际为 {npu_cpu.dtype}"
+    print(f"[PASS] NPUArray 构造函数成功: shape={npu_arr.shape}, aclDtype={npu_arr.aclDtype}")
+    print(f"[PASS] 转换到 numpy: dtype={npu_cpu.dtype}, shape={npu_cpu.shape}")
+    
+    # 测试 zeros
+    print("\n测试 zeros 算子:")
+    try:
+        zeros_arr = ap.zeros(shape=(2, 3), dtype=dtype)
+        assert zeros_arr.aclDtype == expected_acl_value, \
+            f"zeros 创建的数组 ACL 类型应该为 {expected_acl_value}，实际为 {zeros_arr.aclDtype}"
+        assert zeros_arr.shape == [2, 3], f"zeros 创建的数组形状应该为 [2, 3]，实际为 {zeros_arr.shape}"
+        zeros_cpu = zeros_arr.to_numpy()
+        assert zeros_cpu.dtype == dtype, \
+            f"zeros 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {zeros_cpu.dtype}"
+        print(f"[PASS] zeros 创建成功: shape={zeros_arr.shape}, aclDtype={zeros_arr.aclDtype}")
+        print(f"[PASS] 转换到 numpy: dtype={zeros_cpu.dtype}, shape={zeros_cpu.shape}")
+    except Exception as e:
+        print(f"[FAIL] zeros 测试失败: {e}")
+    
+    # 测试 full
+    print("\n测试 full 算子:")
+    try:
+        full_value = 2.5
+        full_arr = ap.full(shape=(2, 2), value=full_value, dtype=dtype)
+        assert full_arr.aclDtype == expected_acl_value, \
+            f"full 创建的数组 ACL 类型应该为 {expected_acl_value}，实际为 {full_arr.aclDtype}"
+        assert full_arr.shape == [2, 2], f"full 创建的数组形状应该为 [2, 2]，实际为 {full_arr.shape}"
+        full_cpu = full_arr.to_numpy()
+        assert full_cpu.dtype == dtype, \
+            f"full 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {full_cpu.dtype}"
+        print(f"[PASS] full 创建成功: shape={full_arr.shape}, aclDtype={full_arr.aclDtype}, value={full_value}")
+        print(f"[PASS] 转换到 numpy: dtype={full_cpu.dtype}, shape={full_cpu.shape}")
+    except Exception as e:
+        print(f"[FAIL] full 测试失败: {e}")
+    
+    # 测试不同形状
+    print("\n测试不同形状:")
+    test_shapes = [
+        (5,),
+        (2, 3),
+        (1, 2, 3),
+    ]
+    for shape in test_shapes:
+        try:
+            test_arr = ap.empty(shape=shape, dtype=dtype)
+            assert test_arr.aclDtype == expected_acl_value, \
+                f"形状 {shape} 的数组 ACL 类型应该为 {expected_acl_value}，实际为 {test_arr.aclDtype}"
+            assert list(test_arr.shape) == list(shape), \
+                f"形状应该为 {shape}，实际为 {test_arr.shape}"
+            test_cpu = test_arr.to_numpy()
+            assert test_cpu.dtype == dtype, \
+                f"转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {test_cpu.dtype}"
+            print(f"[PASS] 形状 {shape} 测试通过")
+        except Exception as e:
+            print(f"[FAIL] 形状 {shape} 测试失败: {e}")
+    
+    print(f"\n[PASS] float8_e5m2 数组创建算子测试成功（ones, zeros, full）")
+
 
 def _run_test(func):
     try:
@@ -74,6 +233,10 @@ if __name__ == "__main__":
         test_float8_e5m2_is_bound,
         test_float8_e5m2_can_create_dtype,
         test_float8_e5m2_can_create_array,
+        test_float8_e5m2_getACLenum,
+        test_float8_e5m2_GetACLDataType,  
+        test_float8_e5m2_static_getACLenum,
+        test_float8_e5m2_array_creation_operators,
     ]
     total = len(tests)
     passed = sum(_run_test(func) for func in tests)

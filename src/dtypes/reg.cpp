@@ -135,8 +135,17 @@ bool AreAllACLFloatTypesRegistered() {
  PyObject* GetACLFloatTypeObject() {
      return ACLFloatManager<T>::type_ptr;
  }
+ // 检查类型号是否是某个 ACL 浮点类型
+ template<typename T>
+ bool IsACLFloatType(int type_num) {
+     int acl_float_type_num = GetACLFloatTypeNum<T>();
+     return (type_num == acl_float_type_num && acl_float_type_num != NPY_NOTYPE);
+ }
+ 
  // 显式实例化模板函数（用于链接）
 template int GetACLFloatTypeNum<float8_e5m2>();
 template PyObject* GetACLFloatTypeObject<float8_e5m2>();
- }  // namespace dtypes
- }  // namespace asnumpy
+template PyArray_Descr* GetACLFloatDescr<float8_e5m2>();
+template bool IsACLFloatType<float8_e5m2>(int);
+}  // namespace dtypes
+}  // namespace asnumpy
