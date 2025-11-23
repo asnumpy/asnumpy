@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include "float_constants.hpp"
-#include "float_utils.hpp"
 #include <cstdint>
 #include <cmath>
 #include <limits>
 #include <acl/acl.h>
+#include "float_constants.hpp"
+#include "float_utils.hpp"
 
 namespace asnumpy {
 namespace dtypes {
@@ -41,10 +41,10 @@ namespace dtypes {
             // Inf/NaN
             if (frac == 0) {
                 // 显式转换：从 uint32_t 到 uint8_t
-                return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | 0b0'11111'00);
+                return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(0b0'11111'00));
             }
             // 显式转换：从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | 0b0'11111'10);  // qNaN
+            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(0b0'11111'10));  // qNaN
         }
         if (exp == 0 && frac == 0) {
             // Preserve ±0
@@ -99,7 +99,7 @@ namespace dtypes {
 
         if (e > constants::kFloat8E5M2MaxExponent) {
             // 显式转换：从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | 0b0'11111'00);
+            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(0b0'11111'00));
         }
         if (e < constants::kFloat8E5M2SubnormalThreshold) {
             int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + constants::kFloat8E5M2SubnormalLdexpOffset)));
@@ -223,7 +223,7 @@ public:
         // 无 Inf（finite-only），Inf/NaN 统一编码为外层 NaN
         if (exp == constants::kFloat32MaxExponent) {
             // 显式转换：从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | 0b0'1111'111);
+            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(0b0'1111'111));
         }
         if (exp == 0 && frac == 0) {
             // 显式转换：从 uint32_t 到 uint8_t
@@ -268,7 +268,7 @@ public:
         // 最大指数 e_unbiased=8（exp_bits=0x0F）范围内保留外层 NaN
          if (e > constants::kFloat8E4M3FnMaxExponent) {
              // 显式转换：从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | 0b0'1111'111);
+            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(0b0'1111'111));
          }
         if (e < constants::kFloat8E4M3FnSubnormalThreshold) {
             int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + constants::kFloat8E4M3FnSubnormalLdexpOffset)));
@@ -287,7 +287,7 @@ public:
          uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
          if (e_bits == constants::kFloat8E4M3FnMaxExponentValue && (m & constants::kFloat8E4M3FnMantissaMask) == constants::kFloat8E4M3FnMaxMantissa) {
              // 显式转换：从 uint32_t 到 uint8_t
-             return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | 0b0'1111'111);
+             return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(0b0'1111'111));
          }
          // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
          return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | (e_bits << constants::kFloat8E4M3FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & constants::kFloat8E4M3FnMantissaMask));

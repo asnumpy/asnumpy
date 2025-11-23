@@ -46,12 +46,12 @@ void bind_dtypes(py::module_& dtypes){
         throw std::runtime_error("float8_e5m2 type object is null");
     }
     
-    // 5. 添加检查注册状态的测试函数
-    dtypes.def("_check_float8_e5m2_registered", []() {
+    // 5. 添加检查注册状态的公共函数（用于测试）
+    dtypes.def("check_float8_e5m2_registered", []() {
         return asnumpy::dtypes::AreAllACLFloatTypesRegistered();
     });
     
-    dtypes.def("_get_float8_e5m2_type_num", []() {
+    dtypes.def("get_float8_e5m2_type_num", []() {
         return asnumpy::dtypes::GetACLFloatTypeNum<asnumpy::dtypes::float8_e5m2>();
     });
     dtypes.def("test_numpy_dtype_str", []() {

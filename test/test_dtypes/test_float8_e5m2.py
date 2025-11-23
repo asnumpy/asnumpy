@@ -21,14 +21,14 @@ import asnumpy as ap
 
 def test_float8_e5m2_is_registered():
     """检查 float8_e5m2 是否已注册"""
-    is_registered = ap.dtypes._check_float8_e5m2_registered()
+    is_registered = ap.dtypes.check_float8_e5m2_registered()
     assert is_registered, "float8_e5m2 应该已注册"
     print(f"[PASS] float8_e5m2 注册状态: {is_registered}")
 
 
 def test_float8_e5m2_type_num():
     """检查 float8_e5m2 的类型号"""
-    type_num = ap.dtypes._get_float8_e5m2_type_num()
+    type_num = ap.dtypes.get_float8_e5m2_type_num()
     assert type_num != -1, "float8_e5m2 类型号应该有效"
     print(f"[PASS] float8_e5m2 类型号: {type_num}")
 

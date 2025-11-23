@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include "float_constants.hpp"
-#include "float_utils.hpp"
 #include <cstdint>
 #include <cmath>
 #include <limits>
 #include <acl/acl.h>
+#include "float_constants.hpp"
+#include "float_utils.hpp"
 
 namespace asnumpy {
 namespace dtypes {

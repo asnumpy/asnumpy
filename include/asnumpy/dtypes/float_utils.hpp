@@ -29,6 +29,8 @@ namespace dtypes {
 // 安全 bit_cast（兼容 C++17）
 // 注意：使用 memcpy 是 C++17 之前实现 bit_cast 的标准方法
 // 在 C++20 中可以使用 std::bit_cast，但为了兼容性保留此实现
+// 警告：memcpy 被认为是不安全函数，但在此上下文中是必要的且安全的，
+// 因为我们已通过 static_assert 确保类型是 trivially copyable
  template <class To, class From>
  inline auto bit_cast(const From& src) -> To {
      static_assert(sizeof(To) == sizeof(From), "bit_cast size mismatch");
