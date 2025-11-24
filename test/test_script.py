@@ -161,7 +161,7 @@ FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_
 
 def test_functions():
     
-    for name, np_func, ap_func, test_cases in MATH_FUNCTIONS:
+    for name, np_func, ap_func, test_cases in FUNCTIONS_TABLE:
         print("=" * 50)
         print(f"Testing {name} function:")
         print("=" * 50)
@@ -180,10 +180,12 @@ def test_functions():
                         for arg in test_case
                     )
                     # === 特殊函数注释说明 ===
-                    # 测试 prod, sum, nanprod, nansum, max, amax 时，可使用：np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
+                    # 测试 prod, sum, nanprod, nansum, max, amax 时，可使用：
+                    # np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     # 测试 cross 时，可使用：np_func(test_case[0], test_case[1], axis=test_case[2])
                     # 测试 nan_to_num 时，可使用：np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
-                    if name == "prod" or name == "sum" or name == "nanprod" or name == "nansum" or name == "max" or name == "amax" or name == "nanmax":
+                    if name == "prod" or name == "sum" or name == "nanprod" or name == "nansum" or name == "max" \
+                    or name == "amax" or name == "nanmax":
                         np_result = np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     elif name == "cross":
                         np_result = np_func(test_case[0], test_case[1], axis=test_case[2])

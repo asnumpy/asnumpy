@@ -66,8 +66,9 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[Maximum] aclnnMaximumGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
+        }
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0ULL) {
@@ -81,8 +82,9 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[Maximum] aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
+            if (detailed_msg && std::strlen(detailed_msg) > 0) {
                 error_msg += " - " + std::string(detailed_msg);
+            }
             throw std::runtime_error(error_msg);
         }
     }
@@ -92,9 +94,12 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[Maximum] aclnnMaximum error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -103,9 +108,12 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[Maximum] aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -152,8 +160,9 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](minimum) aclnnMinimumGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
+        }
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0ULL) {
@@ -166,8 +175,9 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[miscellaneous.cpp](minimum) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
+            if (detailed_msg && std::strlen(detailed_msg) > 0) {
                 error_msg += " - " + std::string(detailed_msg);
+            }
             throw std::runtime_error(error_msg);
         }
     }
@@ -176,9 +186,12 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](minimum) aclnnMinimum error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -186,9 +199,12 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](minimum) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -220,8 +236,9 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmax) aclnnMaximumGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
+        }
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0ULL) {
@@ -234,8 +251,9 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[miscellaneous.cpp](fmax) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
+            if (detailed_msg && std::strlen(detailed_msg) > 0) {
                 error_msg += " - " + std::string(detailed_msg);
+            }
             throw std::runtime_error(error_msg);
         }
     }
@@ -244,9 +262,12 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmax) aclnnMaximum error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -254,9 +275,12 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmax) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -288,8 +312,9 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmin) aclnnMinimumGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
+        }
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0ULL) {
@@ -302,8 +327,9 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[miscellaneous.cpp](fmin) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0)
+            if (detailed_msg && std::strlen(detailed_msg) > 0) {
                 error_msg += " - " + std::string(detailed_msg);
+            }
             throw std::runtime_error(error_msg);
         }
     }
@@ -312,9 +338,12 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmin) aclnnMinimum error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
@@ -322,9 +351,12 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[miscellaneous.cpp](fmin) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0)
+        if (detailed_msg && std::strlen(detailed_msg) > 0) {
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        }
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
         throw std::runtime_error(error_msg);
     }
 
