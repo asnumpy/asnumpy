@@ -331,5 +331,4 @@ NPUArray Pow(const py::object& x1, const NPUArray& x2, std::optional<py::dtype> 
  */
 NPUArray Pow(const NPUArray& x1, const py::object& x2, std::optional<py::dtype> dtype);
 
-
 }

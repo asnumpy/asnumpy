@@ -15,8 +15,8 @@
  *****************************************************************************/
 
 
-#include "asnumpy/math/arithmetic_operations.hpp"
 #include "asnumpy/utils/npu_array.hpp"
+#include "asnumpy/math/arithmetic_operations.hpp"
 #include <asnumpy/math/floating_point_routines.hpp>
 #include "asnumpy/math/miscellaneous.hpp"
 
