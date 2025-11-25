@@ -81,6 +81,7 @@ __all__ = [
     "arctan2",
     "radians",
     "degrees",
+    "rad2deg",
     "prod",
     "sum",
     "nanprod",
