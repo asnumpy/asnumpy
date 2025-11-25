@@ -89,6 +89,7 @@ MATH_FUNCTIONS = [
     ("hypot", np.hypot, ap.hypot, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("arctan2", np.arctan2, ap.arctan2, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("radians", np.radians, ap.radians, UNARY_TEST_CASES),
+    ("degrees", np.degrees, ap.degrees, DEGREES_TEST_CASES),
     ("prod", np.prod, ap.prod, UNARY_TEST_CASES + PROD_DIM_TEST_CASES),
     ("sum", np.sum, ap.sum, UNARY_TEST_CASES + SUM_DIM_TEST_CASES),
     ("nanprod", np.nanprod, ap.nanprod, UNARY_TEST_CASES + NANPROD_DIM_TEST_CASES),

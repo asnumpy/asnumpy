@@ -739,3 +739,14 @@ COPYSIGN_TEST_CASES = [
     (np.array([[np.nan], [0], [1]], dtype=np.float32),
      np.array([0.5, np.inf, -1.0], dtype=np.float32)),
 ]
+
+# 在script_test_cases.py中添加
+DEGREES_TEST_CASES = [
+    np.array([0]),
+    np.array([np.pi]),
+    np.array([np.pi / 2]),
+    np.array([np.pi / 3]),
+    np.array([2 * np.pi]),
+    np.array([-np.pi]),
+    np.array([np.pi / 4]),
+]
