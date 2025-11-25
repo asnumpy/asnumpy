@@ -75,6 +75,7 @@ MATH_FUNCTIONS = [
     # ("log10", np.log10, ap.log10, LOG_UNARY_TEST_CASES),
     # ("log2", np.log2, ap.log2, LOG_UNARY_TEST_CASES),
     # ("log1p", np.log1p, ap.log1p, LOG_UNARY_TEST_CASES),
+    ("degrees", np.degrees, ap.degrees, DEGREES_TEST_CASES),
 ]
 
 LINALG_FUNCTIONS = [
