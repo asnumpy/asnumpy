@@ -16,6 +16,22 @@
 
 
 #include "asnumpy/utils/npu_scalar.hpp"
+#include <fmt/core.h>
+#include <cstring>
+
+/*
+    Helper function to safely cast values to target types.
+    For float8_e5m2, converts to float first, then to target type.
+    For other types, performs direct cast.
+*/
+template<typename TargetType, typename SourceType>
+TargetType safe_cast(SourceType value) {
+    if constexpr (std::is_same_v<std::decay_t<SourceType>, asnumpy::dtypes::float8_e5m2>) {
+        return static_cast<TargetType>(static_cast<float>(value));
+    } else {
+        return static_cast<TargetType>(value);
+    }
+}
 
 /*
     Creates an aclScalar object by automatically determining the appropriate ACL data type
@@ -39,7 +55,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, float>) {
                 return aclCreateScalar(&value, ACL_FLOAT);
             } else {
-                auto converted = static_cast<float>(value);
+                auto converted = safe_cast<float>(value);
                 return aclCreateScalar(&converted, ACL_FLOAT);
             }
         }
@@ -47,7 +63,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, double>) {
                 return aclCreateScalar(&value, ACL_DOUBLE);
             } else {
-                auto converted = static_cast<double>(value);
+                auto converted = safe_cast<double>(value);
                 return aclCreateScalar(&converted, ACL_DOUBLE);
             }
         }
@@ -55,7 +71,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, int32_t>) {
                 return aclCreateScalar(&value, ACL_INT32);
             } else {
-                auto converted = static_cast<int32_t>(value);
+                auto converted = safe_cast<int32_t>(value);
                 return aclCreateScalar(&converted, ACL_INT32);
             }
         }
@@ -63,7 +79,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, int64_t>) {
                 return aclCreateScalar(&value, ACL_INT64);
             } else {
-                auto converted = static_cast<int64_t>(value);
+                auto converted = safe_cast<int64_t>(value);
                 return aclCreateScalar(&converted, ACL_INT64);
             }
         }
@@ -71,7 +87,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, int8_t>) {
                 return aclCreateScalar(&value, ACL_INT8);
             } else {
-                auto converted = static_cast<int8_t>(value);
+                auto converted = safe_cast<int8_t>(value);
                 return aclCreateScalar(&converted, ACL_INT8);
             }
         }
@@ -79,7 +95,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, int16_t>) {
                 return aclCreateScalar(&value, ACL_INT16);
             } else {
-                auto converted = static_cast<int16_t>(value);
+                auto converted = safe_cast<int16_t>(value);
                 return aclCreateScalar(&converted, ACL_INT16);
             }
         }
@@ -87,7 +103,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, uint8_t>) {
                 return aclCreateScalar(&value, ACL_UINT8);
             } else {
-                auto converted = static_cast<uint8_t>(value);
+                auto converted = safe_cast<uint8_t>(value);
                 return aclCreateScalar(&converted, ACL_UINT8);
             }
         }
@@ -95,7 +111,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, uint16_t>) {
                 return aclCreateScalar(&value, ACL_UINT16);
             } else {
-                auto converted = static_cast<uint16_t>(value);
+                auto converted = safe_cast<uint16_t>(value);
                 return aclCreateScalar(&converted, ACL_UINT16);
             }
         }
@@ -103,7 +119,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, uint32_t>) {
                 return aclCreateScalar(&value, ACL_UINT32);
             } else {
-                auto converted = static_cast<uint32_t>(value);
+                auto converted = safe_cast<uint32_t>(value);
                 return aclCreateScalar(&converted, ACL_UINT32);
             }
         }
@@ -111,7 +127,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, uint64_t>) {
                 return aclCreateScalar(&value, ACL_UINT64);
             } else {
-                auto converted = static_cast<uint64_t>(value);
+                auto converted = safe_cast<uint64_t>(value);
                 return aclCreateScalar(&converted, ACL_UINT64);
             }
         }
@@ -119,7 +135,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             if constexpr (std::is_same_v<std::decay_t<ValueType>, bool>) {
                 return aclCreateScalar(&value, ACL_BOOL);
             } else {
-                auto converted = static_cast<bool>(value);
+                auto converted = safe_cast<bool>(value);
                 return aclCreateScalar(&converted, ACL_BOOL);
             }
         }
@@ -132,11 +148,11 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             return aclCreateScalar(&converted, ACL_BF16);
         }
         case ACL_INT4: {
-            auto converted = static_cast<int8_t>(value);
+            auto converted = safe_cast<int8_t>(value);
             return aclCreateScalar(&converted, ACL_INT4);
         }
         case ACL_UINT1: {
-            auto converted = static_cast<uint8_t>(value);
+            auto converted = safe_cast<uint8_t>(value);
             return aclCreateScalar(&converted, ACL_UINT1);
         }
         case ACL_COMPLEX64: {
@@ -156,8 +172,33 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             return aclCreateScalar(&converted, ACL_HIFLOAT8);
         }
         case ACL_FLOAT8_E5M2: {
-            auto converted = static_cast<uint8_t>(static_cast<float>(value));
-            return aclCreateScalar(&converted, ACL_FLOAT8_E5M2);
+            uint8_t converted;
+            if constexpr (std::is_same_v<std::decay_t<ValueType>, asnumpy::dtypes::float8_e5m2>) {
+                converted = value.rep();
+            } else {
+                float f_value = static_cast<float>(value);
+                asnumpy::dtypes::float8_e5m2 f8_value(f_value);
+                converted = f8_value.rep();
+            }
+            
+            aclScalar* result = aclCreateScalar(&converted, ACL_FLOAT8_E5M2);
+            if (result == nullptr) {
+                const char* error_msg = aclGetRecentErrMsg();
+                std::string full_error_msg = fmt::format(
+                    "aclCreateScalar failed for ACL_FLOAT8_E5M2: "
+                    "converted value: 0x{:02x} ({})",
+                    converted, converted
+                );
+                
+                if (error_msg != nullptr && std::strlen(error_msg) > 0) {
+                    full_error_msg += fmt::format(". Details: {}", error_msg);
+                } else {
+                    full_error_msg += ". ACL may not support scalar creation for this type.";
+                }
+                
+                throw std::runtime_error(full_error_msg);
+            }
+            return result;
         }
         case ACL_FLOAT8_E4M3FN: {
             auto converted = static_cast<uint8_t>(static_cast<float>(value));
@@ -185,7 +226,9 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
         }
         case ACL_STRING: {
             // 对于字符串类型，创建一个简单的字符串表示
-            std::string str_value = std::to_string(static_cast<double>(value));
+            // 对于 float8_e5m2，先转换为 float，再转换为 double
+            double d_value = safe_cast<double>(value);
+            std::string str_value = std::to_string(d_value);
             // 使用const_cast来移除const限定符，因为aclCreateScalar需要void*
             return aclCreateScalar(const_cast<char*>(str_value.c_str()), ACL_STRING);
         }
@@ -215,6 +258,7 @@ template aclScalar* CreateScalar<uint32_t>(uint32_t);
 template aclScalar* CreateScalar<uint16_t>(uint16_t);
 template aclScalar* CreateScalar<uint8_t>(uint8_t);
 template aclScalar* CreateScalar<bool>(bool);
+template aclScalar* CreateScalar<asnumpy::dtypes::float8_e5m2>(asnumpy::dtypes::float8_e5m2);
 
 // 2) CreateScalar(ValueType value, aclDataType dtype) —— 显式 dtype 版本
 template aclScalar* CreateScalar<float>(float, aclDataType);
@@ -228,3 +272,4 @@ template aclScalar* CreateScalar<uint32_t>(uint32_t, aclDataType);
 template aclScalar* CreateScalar<uint16_t>(uint16_t, aclDataType);
 template aclScalar* CreateScalar<uint8_t>(uint8_t, aclDataType);
 template aclScalar* CreateScalar<bool>(bool, aclDataType);
+template aclScalar* CreateScalar<asnumpy::dtypes::float8_e5m2>(asnumpy::dtypes::float8_e5m2, aclDataType);

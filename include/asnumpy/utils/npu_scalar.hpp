@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <complex>
 #include <string>
+#include <asnumpy/dtypes/float_types.hpp>
 
 /**
  * @brief Template struct for mapping C++ types to ACL data types
@@ -43,6 +44,7 @@ template <> struct TypeToACLDtype<uint16_t> { static constexpr aclDataType value
 template <> struct TypeToACLDtype<uint32_t> { static constexpr aclDataType value = ACL_UINT32; };
 template <> struct TypeToACLDtype<uint64_t> { static constexpr aclDataType value = ACL_UINT64; };
 template <> struct TypeToACLDtype<bool> { static constexpr aclDataType value = ACL_BOOL; };
+template <> struct TypeToACLDtype<asnumpy::dtypes::float8_e5m2> { static constexpr aclDataType value = ACL_FLOAT8_E5M2; };
 
 /**
  * @brief Creates a scalar object with automatic type deduction
