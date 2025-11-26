@@ -130,4 +130,16 @@ namespace asnumpy {
     * @throws std::runtime_error If ACL operations encounter errors
     */
     NPUArray Radians(const NPUArray& x);
+
+    /**
+    * @brief Convert angles from radians to degrees for each element in the input array.
+    * 
+    * Computes element-wise angle conversion using the formula:
+    *      degrees = radians * (180 / π)
+    * 
+    * @param x Input array containing angles in radians.
+    * @return NPUArray Array with element-wise angles in degrees.
+    * @throws std::runtime_error If ACL operation fails or unsupported dtype.
+    */
+    NPUArray Degrees(const NPUArray& x);
 }
