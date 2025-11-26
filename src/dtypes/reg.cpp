@@ -147,5 +147,5 @@ template int GetACLFloatTypeNum<float8_e5m2>();
 template PyObject* GetACLFloatTypeObject<float8_e5m2>();
 template PyArray_Descr* GetACLFloatDescr<float8_e5m2>();
 template bool IsACLFloatType<float8_e5m2>(int);
-}  // namespace dtypes
-}  // namespace asnumpy
+ }  // namespace dtypes
+ }  // namespace asnumpy

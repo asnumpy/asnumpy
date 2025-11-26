@@ -84,26 +84,19 @@ namespace dtypes {
     }
 
     static uint8_t encode_from_float(float f) {
-        uint32_t u = bit_cast<uint32_t>(f);
-        uint32_t sign = u >> constants::kFloat32SignShift;
-        uint32_t exp = (u >> constants::kFloat32ExponentShift) & constants::kFloat32ExponentMask;
-        uint32_t frac = u & constants::kFloat32MantissaMask;
+        Float32Components components = extract_float32_components(f);
+        uint32_t sign = components.sign;
+        uint32_t exp = components.exp;
+        uint32_t frac = components.frac;
 
         uint8_t special = encode_special_values(sign, exp, frac);
         if (special != 0) {
             return special;
         }
 
-        int e_unbiased;
-        float mant;
-        if (exp == static_cast<uint32_t>(0)) {
-            e_unbiased = constants::kFloat32SubnormalExponent;
-            mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
-        } else {
-            // 显式转换：从 uint32_t 到 int（改变符号，但需要用于有符号运算）
-            e_unbiased = static_cast<int>(static_cast<int32_t>(exp)) - constants::kFloat32ExponentBias;
-            mant = 1.0f + static_cast<float>(frac) * (1.0f / static_cast<float>(constants::kFloat32MantissaScale));
-        }
+        Float32Normalized normalized = normalize_float32_components(exp, frac);
+        int e_unbiased = normalized.e_unbiased;
+        float mant = normalized.mant;
 
         constexpr int bias = constants::kFloat6E2M3FnBias;
         if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat6E2M3FnSubnormalThreshold) {
@@ -148,17 +141,27 @@ public:
      explicit float6_e2m3fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit float6_e2m3fn(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
  
-     constexpr uint8_t rep() const { return rep_; }
+     constexpr uint8_t rep() const {
+         return rep_;
+     }
  
      static constexpr float6_e2m3fn FromRep(uint8_t rep) {
          return float6_e2m3fn(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const { return decode_to_float(rep_); }
-     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
-     explicit operator bool() const { return (rep_ & constants::kFloat6MantissaMask5) != 0; }
+     explicit operator float() const {
+         return decode_to_float(rep_);
+     }
+     explicit operator double() const {
+         return static_cast<double>(static_cast<float>(*this));
+     }
+     explicit operator bool() const {
+         return (rep_ & constants::kFloat6MantissaMask5) != 0;
+     }
 
-     float6_e2m3fn operator-() const { return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask)); }
+     float6_e2m3fn operator-() const {
+         return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask));
+     }
  
      float6_e2m3fn operator+(const float6_e2m3fn& other) const {
          return float6_e2m3fn(static_cast<float>(*this) + static_cast<float>(other));
@@ -178,7 +181,9 @@ public:
         float b = static_cast<float>(other);
         return (a == b) || (std::isnan(a) && std::isnan(b));
     }
-     bool operator!=(const float6_e2m3fn& other) const { return !(*this == other); }
+     bool operator!=(const float6_e2m3fn& other) const {
+         return !(*this == other);
+     }
     bool operator<(const float6_e2m3fn& other) const {
         float a = static_cast<float>(*this);
         float b = static_cast<float>(other);
@@ -198,9 +203,12 @@ public:
     }
  
      // ACL 枚举获取
-     static constexpr aclDataType getACLenum() { return ACL_FLOAT6_E2M3; }
+     static constexpr aclDataType getACLenum() {
+         return ACL_FLOAT6_E2M3;
+     }
  };
- 
+
+
  class float6_e3m2fn {
  private:
      uint8_t rep_;
@@ -260,26 +268,19 @@ public:
      }
 
      static uint8_t encode_from_float(float f) {
-         uint32_t u = bit_cast<uint32_t>(f);
-         uint32_t sign = u >> constants::kFloat32SignShift;
-         uint32_t exp = (u >> constants::kFloat32ExponentShift) & constants::kFloat32ExponentMask;
-         uint32_t frac = u & constants::kFloat32MantissaMask;
+         Float32Components components = extract_float32_components(f);
+         uint32_t sign = components.sign;
+         uint32_t exp = components.exp;
+         uint32_t frac = components.frac;
 
          uint8_t special = encode_special_values(sign, exp, frac);
          if (special != 0) {
              return special;
          }
 
-         int e_unbiased;
-         float mant;
-         if (exp == static_cast<uint32_t>(0)) {
-             e_unbiased = constants::kFloat32SubnormalExponent;
-             mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
-         } else {
-             // 显式转换：从 uint32_t 到 int（改变符号，但需要用于有符号运算）
-             e_unbiased = static_cast<int>(static_cast<int32_t>(exp)) - constants::kFloat32ExponentBias;
-             mant = 1.0f + static_cast<float>(frac) * (1.0f / static_cast<float>(constants::kFloat32MantissaScale));
-         }
+         Float32Normalized normalized = normalize_float32_components(exp, frac);
+         int e_unbiased = normalized.e_unbiased;
+         float mant = normalized.mant;
 
          constexpr int bias = constants::kFloat6E3M2FnBias;
          if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat6E3M2FnSubnormalThreshold) {
@@ -324,17 +325,27 @@ public:
      explicit float6_e3m2fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit float6_e3m2fn(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
  
-     constexpr uint8_t rep() const { return rep_; }
+     constexpr uint8_t rep() const {
+         return rep_;
+     }
  
      static constexpr float6_e3m2fn FromRep(uint8_t rep) {
          return float6_e3m2fn(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const { return decode_to_float(rep_); }
-     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
-     explicit operator bool() const { return (rep_ & constants::kFloat6MantissaMask5) != 0; }
+     explicit operator float() const {
+         return decode_to_float(rep_);
+     }
+     explicit operator double() const {
+         return static_cast<double>(static_cast<float>(*this));
+     }
+     explicit operator bool() const {
+         return (rep_ & constants::kFloat6MantissaMask5) != 0;
+     }
 
-     float6_e3m2fn operator-() const { return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask)); }
+     float6_e3m2fn operator-() const {
+         return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask));
+     }
  
      float6_e3m2fn operator+(const float6_e3m2fn& other) const {
          return float6_e3m2fn(static_cast<float>(*this) + static_cast<float>(other));
@@ -354,7 +365,9 @@ public:
         float b = static_cast<float>(other);
         return (a == b) || (std::isnan(a) && std::isnan(b));
     }
-     bool operator!=(const float6_e3m2fn& other) const { return !(*this == other); }
+     bool operator!=(const float6_e3m2fn& other) const {
+         return !(*this == other);
+     }
     bool operator<(const float6_e3m2fn& other) const {
         float a = static_cast<float>(*this);
         float b = static_cast<float>(other);
@@ -374,7 +387,9 @@ public:
     }
  
      // ACL 枚举获取
-     static constexpr aclDataType getACLenum() { return ACL_FLOAT6_E3M2; }
+     static constexpr aclDataType getACLenum() {
+         return ACL_FLOAT6_E3M2;
+     }
  };
 
 }  // namespace dtypes

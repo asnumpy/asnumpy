@@ -20,31 +20,55 @@
 #include <cstdint>
 #include <cmath>
 #include <type_traits>
-#include <cstring>
-#include <cstdlib>
+#include <bit>
 
 namespace asnumpy {
 namespace dtypes {
 
-// 安全 bit_cast（兼容 C++17）
-// 注意：使用 memcpy 是 C++17 之前实现 bit_cast 的标准方法
-// 在 C++20 中可以使用 std::bit_cast，但为了兼容性保留此实现
-// 警告：memcpy 被认为是不安全函数，但在此上下文中是必要的且安全的，
-// 因为我们已通过 static_assert 确保类型是 trivially copyable
+// 使用 C++20 的 std::bit_cast 实现类型安全的位转换
+// std::bit_cast 是类型安全的，不需要使用不安全的 memcpy
  template <class To, class From>
  inline auto bit_cast(const From& src) -> To {
      static_assert(sizeof(To) == sizeof(From), "bit_cast size mismatch");
      static_assert(std::is_trivially_copyable_v<To>, "To must be trivially copyable");
      static_assert(std::is_trivially_copyable_v<From>, "From must be trivially copyable");
-     To dst;
-     // 使用 memcpy 的返回值以满足 A0-1-2 规则
-     void* const result = std::memcpy(&dst, &src, sizeof(To));
-     // memcpy 在成功时返回目标指针，验证以确保正确性
-     if (result != static_cast<void*>(&dst)) {
-         std::abort();  // 不应该发生，但满足规则要求
-     }
-     return dst;
+     return std::bit_cast<To>(src);
  }
+
+// 从 float32 提取符号、指数和尾数组件
+struct Float32Components {
+    uint32_t sign;
+    uint32_t exp;
+    uint32_t frac;
+};
+
+inline Float32Components extract_float32_components(float f) {
+    uint32_t u = bit_cast<uint32_t>(f);
+    Float32Components components;
+    components.sign = u >> constants::kFloat32SignShift;
+    components.exp = (u >> constants::kFloat32ExponentShift) & constants::kFloat32ExponentMask;
+    components.frac = u & constants::kFloat32MantissaMask;
+    return components;
+}
+
+// 从 float32 组件计算无偏指数和尾数
+struct Float32Normalized {
+    int e_unbiased;
+    float mant;
+};
+
+inline Float32Normalized normalize_float32_components(uint32_t exp, uint32_t frac) {
+    Float32Normalized result;
+    if (exp == static_cast<uint32_t>(0)) {
+        result.e_unbiased = constants::kFloat32SubnormalExponent;
+        result.mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
+    } else {
+        // 显式转换：从 uint32_t 到 int（改变符号，但需要用于有符号运算）
+        result.e_unbiased = static_cast<int>(static_cast<int32_t>(exp)) - constants::kFloat32ExponentBias;
+        result.mant = 1.0f + static_cast<float>(frac) * (1.0f / static_cast<float>(constants::kFloat32MantissaScale));
+    }
+    return result;
+}
  
 inline int rne_to_int(double x) {
     double f = std::floor(x);

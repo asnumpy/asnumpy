@@ -49,7 +49,7 @@ namespace dtypes {
     // 从数组获取 float 数据
     template<typename T>
     std::vector<float> GetACLFloatArrayData(PyObject* array);
-    
+
     // 检查类型号是否是某个 ACL 浮点类型
     template<typename T>
     bool IsACLFloatType(int type_num);

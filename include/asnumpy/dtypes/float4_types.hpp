@@ -37,10 +37,10 @@ namespace dtypes {
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat4E2M1FnSignShift) | static_cast<uint8_t>(0b0'11'1));
          }
-         if (exp == 0 && frac == 0) {
-             // 显式转换：从 uint32_t 到 uint8_t
-             return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat4E2M1FnSignShift);
-         }
+        if (exp == 0u && frac == 0u) {
+            // 显式转换：从 uint32_t 到 uint8_t
+            return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat4E2M1FnSignShift);
+        }
          return static_cast<uint8_t>(0);  // 非特殊值
      }
 
@@ -84,31 +84,24 @@ namespace dtypes {
      }
 
      static uint8_t encode_from_float(float f) {
-         uint32_t u = bit_cast<uint32_t>(f);
-         uint32_t sign = u >> constants::kFloat32SignShift;
-         uint32_t exp = (u >> constants::kFloat32ExponentShift) & constants::kFloat32ExponentMask;
-         uint32_t frac = u & constants::kFloat32MantissaMask;
+         Float32Components components = extract_float32_components(f);
+         uint32_t sign = components.sign;
+         uint32_t exp = components.exp;
+         uint32_t frac = components.frac;
 
          uint8_t special = encode_special_values(sign, exp, frac);
          if (special != 0) {
              return special;
          }
 
-         int e_unbiased;
-         float mant;
-         if (exp == 0) {
-             e_unbiased = constants::kFloat32SubnormalExponent;
-             mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
-         } else {
-             // 显式转换：从 uint32_t 到 int（改变符号，但需要用于有符号运算）
-             e_unbiased = static_cast<int>(static_cast<int32_t>(exp)) - constants::kFloat32ExponentBias;
-             mant = 1.0f + static_cast<float>(frac) * (1.0f / static_cast<float>(constants::kFloat32MantissaScale));
-         }
+         Float32Normalized normalized = normalize_float32_components(exp, frac);
+         int e_unbiased = normalized.e_unbiased;
+         float mant = normalized.mant;
 
          constexpr int bias = constants::kFloat4E2M1FnBias;
-         if (exp == 0 || e_unbiased < constants::kFloat4E2M1FnSubnormalThreshold) {
-             return encode_subnormal(sign, mant, e_unbiased);
-         }
+         if (exp == 0u || e_unbiased < constants::kFloat4E2M1FnSubnormalThreshold) {
+            return encode_subnormal(sign, mant, e_unbiased);
+        }
 
          int e = e_unbiased;
          int m = rne_to_int(static_cast<double>(mant - 1.0f) * static_cast<double>(constants::kFloat4E2M1FnMantissaQuantization));
@@ -126,7 +119,7 @@ namespace dtypes {
         uint8_t mant = bits & constants::kFloat4E2M1FnMantissaMask;         // 1-bit mantissa
         constexpr int bias = constants::kFloat4E2M1FnBias;
 
-        if (exp == 0) {
+        if (exp == 0u) {
             float v = static_cast<float>(mant) * static_cast<float>(constants::kFloat4E2M1FnMantissaStep);  // 次正规
             return sign ? -v : v;
         }
@@ -148,17 +141,27 @@ public:
      explicit float4_e2m1fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit float4_e2m1fn(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
  
-     constexpr uint8_t rep() const { return rep_; }
+     constexpr uint8_t rep() const {
+         return rep_;
+     }
  
      static constexpr float4_e2m1fn FromRep(uint8_t rep) {
          return float4_e2m1fn(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const { return decode_to_float(rep_); }
-     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
-     explicit operator bool() const { return (rep_ & constants::kFloat4MantissaMask3) != 0; }
+     explicit operator float() const { 
+        return decode_to_float(rep_); 
+    }
+     explicit operator double() const {
+         return static_cast<double>(static_cast<float>(*this)); 
+    }
+     explicit operator bool() const {
+         return (rep_ & constants::kFloat4MantissaMask3) != 0; 
+    }
 
-     float4_e2m1fn operator-() const { return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat4SignBitMask)); }
+     float4_e2m1fn operator-() const {
+         return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat4SignBitMask)); 
+    }
  
      float4_e2m1fn operator+(const float4_e2m1fn& other) const {
          return float4_e2m1fn(static_cast<float>(*this) + static_cast<float>(other));
@@ -178,7 +181,9 @@ public:
         float b = static_cast<float>(other);
         return (a == b) || (std::isnan(a) && std::isnan(b));
     }
-     bool operator!=(const float4_e2m1fn& other) const { return !(*this == other); }
+     bool operator!=(const float4_e2m1fn& other) const {
+         return !(*this == other);
+     }
     bool operator<(const float4_e2m1fn& other) const {
         float a = static_cast<float>(*this);
         float b = static_cast<float>(other);
@@ -198,9 +203,12 @@ public:
     }
  
      // ACL 枚举获取
-     static constexpr aclDataType getACLenum() { return ACL_FLOAT4_E2M1; }
+     static constexpr aclDataType getACLenum() {
+         return ACL_FLOAT4_E2M1; 
+    }
  };
- 
+
+
  class float4_e1m2fn {
  private:
      uint8_t rep_;
@@ -213,10 +221,10 @@ public:
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat4E1M2FnSignShift) | static_cast<uint8_t>(0b0'1'11));
          }
-         if (exp == 0 && frac == 0) {
-             // 显式转换：从 uint32_t 到 uint8_t
-             return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat4E1M2FnSignShift);
-         }
+        if (exp == 0u && frac == 0u) {
+            // 显式转换：从 uint32_t 到 uint8_t
+            return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat4E1M2FnSignShift);
+        }
          return static_cast<uint8_t>(0);  // 非特殊值
      }
 
@@ -260,29 +268,22 @@ public:
      }
 
      static uint8_t encode_from_float(float f) {
-         uint32_t u = bit_cast<uint32_t>(f);
-         uint32_t sign = u >> constants::kFloat32SignShift;
-         uint32_t exp = (u >> constants::kFloat32ExponentShift) & constants::kFloat32ExponentMask;
-         uint32_t frac = u & constants::kFloat32MantissaMask;
+         Float32Components components = extract_float32_components(f);
+         uint32_t sign = components.sign;
+         uint32_t exp = components.exp;
+         uint32_t frac = components.frac;
 
          uint8_t special = encode_special_values(sign, exp, frac);
          if (special != 0) {
              return special;
          }
 
-         int e_unbiased;
-         float mant;
-         if (exp == 0) {
-             e_unbiased = constants::kFloat32SubnormalExponent;
-             mant = std::ldexp(static_cast<float>(frac), constants::kFloat32SubnormalLdexpOffset);
-         } else {
-             // 显式转换：从 uint32_t 到 int（改变符号，但需要用于有符号运算）
-             e_unbiased = static_cast<int>(static_cast<int32_t>(exp)) - constants::kFloat32ExponentBias;
-             mant = 1.0f + static_cast<float>(frac) * (1.0f / static_cast<float>(constants::kFloat32MantissaScale));
-         }
+         Float32Normalized normalized = normalize_float32_components(exp, frac);
+         int e_unbiased = normalized.e_unbiased;
+         float mant = normalized.mant;
 
-         constexpr int bias = constants::kFloat4E1M2FnBias;
-         if (exp == 0 || e_unbiased < constants::kFloat4E1M2FnSubnormalThreshold) {
+        constexpr int bias = constants::kFloat4E1M2FnBias;
+        if (exp == 0u || e_unbiased < constants::kFloat4E1M2FnSubnormalThreshold) {
              return encode_subnormal(sign, mant, e_unbiased);
          }
 
@@ -302,7 +303,7 @@ public:
         uint8_t mant = bits & constants::kFloat4E1M2FnMantissaMask;         // 2-bit mantissa
         constexpr int bias = constants::kFloat4E1M2FnBias;
 
-        if (exp == 0) {
+        if (exp == 0u) {
             float v = static_cast<float>(mant) * (1.0f / static_cast<float>(constants::kFloat4E1M2FnSubnormalGrid));  // 次正规
             return sign ? -v : v;
         }
@@ -324,17 +325,27 @@ public:
      explicit float4_e1m2fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit float4_e1m2fn(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
  
-     constexpr uint8_t rep() const { return rep_; }
+     constexpr uint8_t rep() const {
+         return rep_;
+     }
  
      static constexpr float4_e1m2fn FromRep(uint8_t rep) {
          return float4_e1m2fn(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const { return decode_to_float(rep_); }
-     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
-     explicit operator bool() const { return (rep_ & constants::kFloat4MantissaMask3) != 0; }
+     explicit operator float() const { 
+        return decode_to_float(rep_); 
+    }
+     explicit operator double() const { 
+        return static_cast<double>(static_cast<float>(*this)); 
+    }
+     explicit operator bool() const {
+         return (rep_ & constants::kFloat4MantissaMask3) != 0; 
+     }
 
-     float4_e1m2fn operator-() const { return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat4SignBitMask)); }
+     float4_e1m2fn operator-() const {
+         return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat4SignBitMask));
+     }
  
      float4_e1m2fn operator+(const float4_e1m2fn& other) const {
          return float4_e1m2fn(static_cast<float>(*this) + static_cast<float>(other));
@@ -354,7 +365,9 @@ public:
         float b = static_cast<float>(other);
         return (a == b) || (std::isnan(a) && std::isnan(b));
     }
-     bool operator!=(const float4_e1m2fn& other) const { return !(*this == other); }
+     bool operator!=(const float4_e1m2fn& other) const { 
+        return !(*this == other); 
+    }
     bool operator<(const float4_e1m2fn& other) const {
         float a = static_cast<float>(*this);
         float b = static_cast<float>(other);
@@ -374,7 +387,9 @@ public:
     }
  
      // ACL 枚举获取
-     static constexpr aclDataType getACLenum() { return ACL_FLOAT4_E1M2; }
+     static constexpr aclDataType getACLenum() {
+         return ACL_FLOAT4_E1M2;
+     }
  };
 
 }  // namespace dtypes

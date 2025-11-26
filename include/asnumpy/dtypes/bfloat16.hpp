@@ -60,11 +60,19 @@ public:
          return bfloat16(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const { return decode_to_float(rep_); }
-     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
-     explicit operator bool() const { return (rep_ & constants::kBfloat16MantissaMask15) != 0; }
+     explicit operator float() const {
+         return decode_to_float(rep_); 
+     }
+     explicit operator double() const { 
+        return static_cast<double>(static_cast<float>(*this)); 
+    }
+     explicit operator bool() const {
+         return (rep_ & constants::kBfloat16MantissaMask15) != 0; 
+    }
 
-     bfloat16 operator-() const { return FromRep(static_cast<uint16_t>(rep_ ^ constants::kBfloat16SignBitMask)); }
+     bfloat16 operator-() const {
+         return FromRep(static_cast<uint16_t>(rep_ ^ constants::kBfloat16SignBitMask)); 
+    }
  
      bfloat16 operator+(const bfloat16& other) const {
          return bfloat16(static_cast<float>(*this) + static_cast<float>(other));
@@ -84,7 +92,9 @@ public:
         float b = static_cast<float>(other);
         return (a == b) || (std::isnan(a) && std::isnan(b));
     }
-     bool operator!=(const bfloat16& other) const { return !(*this == other); }
+     bool operator!=(const bfloat16& other) const { 
+        return !(*this == other); 
+    }
     bool operator<(const bfloat16& other) const {
         float a = static_cast<float>(*this);
         float b = static_cast<float>(other);
@@ -104,7 +114,9 @@ public:
     }
  
      // ACL 枚举获取
-     static constexpr aclDataType getACLenum() { return ACL_BF16; }
+     static constexpr aclDataType getACLenum() { 
+        return ACL_BF16; 
+    }
  };
 
 }  // namespace dtypes

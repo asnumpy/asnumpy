@@ -20,7 +20,6 @@
 #include <asnumpy/dtypes/np_import.hpp>
 #include <asnumpy/dtypes/desc.hpp>
 #include <vector>
-#include <cstring>
 
 // NumPy 2.x 兼容：在 2.0 及以上使用 PyArray_DescrProto
 #if NPY_ABI_VERSION < 0x02000000
@@ -60,7 +59,9 @@ namespace dtypes {
         // 数组操作函数
         static void copyswap(void* dst, void* src, int swap, void* arr) {
             if (src != nullptr) {
-                std::memcpy(dst, src, sizeof(T));
+                auto* dst_ptr = static_cast<T*>(dst);
+                auto* src_ptr = static_cast<const T*>(src);
+                *dst_ptr = *src_ptr;
             }
             if (swap && sizeof(T) > 1) {
                 // 对于多字节类型才需要字节序转换

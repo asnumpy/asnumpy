@@ -54,7 +54,7 @@ def test_float8_e5m2_can_create_array():
     assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
     print(f"[PASS] 成功创建数组: {arr}, dtype: {arr.dtype}")
 
-def test_float8_e5m2_getACLenum():
+def test_float8_e5m2_get_acl_enum():
     """检查 float8_e5m2 的 getACLenum() 接口"""
     expected_acl_value = 35  # ACL_FLOAT8_E5M2
     
@@ -72,11 +72,8 @@ def test_float8_e5m2_getACLenum():
     
     print(f"[PASS] float8_e5m2 getACLenum() = {acl_enum} (期望: {expected_acl_value})")
 
-def test_float8_e5m2_GetACLDataType():
+def test_float8_e5m2_get_acl_data_type():
     """测试 GetACLDataType 函数是否能正确识别 float8_e5m2 并返回正确的 ACL 类型"""
-    import numpy as np
-    import asnumpy as ap
-    
     # 创建 float8_e5m2 类型的数组
     arr = np.array([1.0, 2.0, 3.14], dtype=ap.dtypes.float8_e5m2)
     assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
@@ -97,11 +94,8 @@ def test_float8_e5m2_GetACLDataType():
         print(f"[FAIL] GetACLDataType 测试失败: {e}")
         raise
 
-def test_float8_e5m2_static_getACLenum():
+def test_float8_e5m2_static_get_acl_enum():
     """测试静态方法 getACLenum 是否可以直接调用（C++层面）"""
-    import numpy as np
-    import asnumpy as ap
-    
     # 这个测试验证 Python 层面的接口
     # C++ 层面的静态方法调用需要通过 GetACLDataType 间接测试
     
@@ -125,9 +119,6 @@ def test_float8_e5m2_static_getACLenum():
 
 def test_float8_e5m2_array_creation_operators():
     """测试使用 float8_e5m2 类型调用 asnumpy 封装的算子（ones, zeros, full）"""
-    import numpy as np
-    import asnumpy as ap
-    
     # 将类型对象转换为 numpy.dtype（函数需要 numpy.dtype 对象）
     dtype = np.dtype(ap.dtypes.float8_e5m2)
     expected_acl_value = 35  # ACL_FLOAT8_E5M2
@@ -233,9 +224,9 @@ if __name__ == "__main__":
         test_float8_e5m2_is_bound,
         test_float8_e5m2_can_create_dtype,
         test_float8_e5m2_can_create_array,
-        test_float8_e5m2_getACLenum,
-        test_float8_e5m2_GetACLDataType,  
-        test_float8_e5m2_static_getACLenum,
+        test_float8_e5m2_get_acl_enum,
+        test_float8_e5m2_get_acl_data_type,  
+        test_float8_e5m2_static_get_acl_enum,
         test_float8_e5m2_array_creation_operators,
     ]
     total = len(tests)
