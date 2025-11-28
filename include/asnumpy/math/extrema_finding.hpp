@@ -17,36 +17,27 @@
 #pragma once
 
 #include <asnumpy/utils/npu_array.hpp>
-
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-
 #include <utility>
 
 namespace asnumpy {
 
-//NPUArray Convolve(const NPUArray& a, const NPUArray& v);
+NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
-NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max);
-NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max);
-NPUArray Clip(const NPUArray& a, float a_min, float a_max);
-NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max);
+NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
-NPUArray Sqrt(const NPUArray& x);
+NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
-NPUArray Square(const NPUArray& x);
+NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
-NPUArray Absolute(const NPUArray& x);
+NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims);
+double Max(const NPUArray& a);
 
-NPUArray Fabs(const NPUArray& x);
+NPUArray Amax(const NPUArray& a, int64_t axis, bool keepdims);
+double Amax(const NPUArray& a);
 
-NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object neginf);
+NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims);
+double Nanmax(const NPUArray& a);
 
-NPUArray Sign(const NPUArray& x);
-
-NPUArray Heaviside(const NPUArray& x1, const NPUArray& x2);
-
-NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
-
-NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 }
