@@ -80,6 +80,7 @@ void bind_trigonometric_functions(py::module_& math){
     math.def("hypot",&Hypot, py::arg("x1"), py::arg("x2"));
     math.def("radians",&Radians, py::arg("x"));
     math.def("degrees", &Degrees, py::arg("x"));
+    math.def("rad2deg", &Degrees, py::arg("x"));
 }
 
 
