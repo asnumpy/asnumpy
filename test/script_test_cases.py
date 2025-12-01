@@ -739,3 +739,16 @@ COPYSIGN_TEST_CASES = [
     (np.array([[np.nan], [0], [1]], dtype=np.float32),
      np.array([0.5, np.inf, -1.0], dtype=np.float32)),
 ]
+
+LINSPACE_TEST_CASES = [
+    (0, 10),
+    (0, 10, 2),
+    (1, 5, 0.5),
+    (-5, 5, 1),
+    (0, 10, 1, np.int32),
+    (0, 10, 1, np.float32),
+    (0, 10, 1, np.dtype("int32")),
+    (0, 10, 1, np.dtype("float32")),
+    (0, 10, 1, "int32"),
+    (0, 10, 1, "float32"),
+]
