@@ -38,6 +38,7 @@ __all__ = [
     "ones_like",
     "identity",
     "ndarray",
+    "linspace",
     "init",
     "finalize",
     "set_device",
