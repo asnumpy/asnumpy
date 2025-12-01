@@ -292,4 +292,43 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
  */
 std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
 
+/**
+ * @brief Element-wise power of two arrays with broadcasting.
+ *
+ * Computes x1 ** x2 element-wise on NPU using aclnnPowTensorTensor.
+ *
+ * @param x1 Base array.
+ * @param x2 Exponent array.
+ * @param dtype (optional) Target dtype for the output array.
+ * @return NPUArray Array with element-wise powers.
+ * @throws std::runtime_error If shapes are not broadcastable, dtype unsupported, or ACL op fails.
+ */
+NPUArray Pow(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype);
+
+/**
+ * @brief Scalar ** Tensor power.
+ *
+ * Computes scalar ** x2 element-wise on NPU using aclnnPowScalarTensor.
+ *
+ * @param x1 Scalar base (Python object convertible to number).
+ * @param x2 Exponent array.
+ * @param dtype (optional) Target dtype for the output array.
+ * @return NPUArray Array with element-wise powers.
+ * @throws std::runtime_error If conversion fails or ACL op fails.
+ */
+NPUArray Pow(const py::object& x1, const NPUArray& x2, std::optional<py::dtype> dtype);
+
+/**
+ * @brief Tensor ** Scalar power.
+ *
+ * Computes x1 ** scalar element-wise on NPU using aclnnPowTensorScalar.
+ *
+ * @param x1 Base array.
+ * @param x2 Scalar exponent (Python object convertible to number).
+ * @param dtype (optional) Target dtype for the output array.
+ * @return NPUArray Array with element-wise powers.
+ * @throws std::runtime_error If conversion fails or ACL op fails.
+ */
+NPUArray Pow(const NPUArray& x1, const py::object& x2, std::optional<py::dtype> dtype);
+
 }

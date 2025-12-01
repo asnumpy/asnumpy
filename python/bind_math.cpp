@@ -27,6 +27,7 @@
 #include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/math/handling_complex_numbers.hpp>
 #include <asnumpy/math/miscellaneous.hpp>
+#include <asnumpy/math/extrema_finding.hpp>
 
 
 namespace py = pybind11;
@@ -45,6 +46,7 @@ void bind_rational_routines(py::module_& math);
 void bind_arithmetic_operations(py::module_& math);
 void bind_handling_complex_numbers(py::module_& math);
 void bind_miscellaneous(py::module_& math);
+void bind_extrema_finding(py::module_& math);
 
 }
 
@@ -62,6 +64,7 @@ void bind_math(py::module_& math) {
     bind_arithmetic_operations(math);
     bind_handling_complex_numbers(math);
     bind_miscellaneous(math);
+    bind_extrema_finding(math);
 }
 
 
@@ -76,6 +79,8 @@ void bind_trigonometric_functions(py::module_& math){
     math.def("arctan2",&Arctan2, py::arg("x1"), py::arg("x2"));
     math.def("hypot",&Hypot, py::arg("x1"), py::arg("x2"));
     math.def("radians",&Radians, py::arg("x"));
+    math.def("degrees", &Degrees, py::arg("x"));
+    math.def("rad2deg", &Degrees, py::arg("x"));
 }
 
 
@@ -93,11 +98,10 @@ void bind_miscellaneous(py::module_& math){
     math.def("clip", py::overload_cast<const NPUArray&, const NPUArray&, float>(&Clip), 
             py::arg("a"), py::arg("a_min"), py::arg("a_max"));
     math.def("nan_to_num",&Nan_to_num, py::arg("x"), py::arg("nan"), py::arg("posinf"), py::arg("neginf"));
+    math.def("sqrt", &Sqrt, py::arg("x"));
     math.def("square", &Square, py::arg("x"));
-    math.def("maximum", &Maximum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("minimum", &Minimum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("fmax", &Fmax, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("fmin", &Fmin, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("relu", &Relu, py::arg("x"), py::arg("dtype") = py::none());
+    math.def("gelu", &Gelu, py::arg("x"), py::arg("dtype") = py::none());
 }
 
 void bind_arithmetic_operations(py::module_& math) {
@@ -124,6 +128,15 @@ void bind_arithmetic_operations(py::module_& math) {
         py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
     math.def("power",
         py::overload_cast<const NPUArray&, const py::object&, std::optional<py::dtype>>(&Power),
+        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("pow",
+        py::overload_cast<const NPUArray&, const NPUArray&, std::optional<py::dtype>>(&Pow),
+        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("pow",
+        py::overload_cast<const py::object&, const NPUArray&, std::optional<py::dtype>>(&Pow),
+        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("pow",
+        py::overload_cast<const NPUArray&, const py::object&, std::optional<py::dtype>>(&Pow),
         py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
 }
 
@@ -165,6 +178,8 @@ void bind_handling_complex_numbers(py::module_& math){
 
 void bind_floating_point_routines(py::module_& math){
     math.def("signbit", &Signbit, py::arg("x"));
+    math.def("ldexp", &Ldexp, py::arg("x1"), py::arg("x2"));
+    math.def("copysign", &Copysign, py::arg("x1"), py::arg("x2"));
 }
 
 void bind_hyperbolic_functions(py::module_& math){
@@ -193,6 +208,22 @@ void bind_rounding(py::module_& math){
     math.def("floor", &Floor, py::arg("x"), py::arg("dtype") = py::none());
     math.def("ceil", &Ceil, py::arg("x"), py::arg("dtype") = py::none());
     math.def("trunc", &Trunc, py::arg("x"), py::arg("dtype") = py::none());
+}
+
+void bind_extrema_finding(py::module_& math){
+    math.def("maximum", &Maximum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("minimum", &Minimum, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("fmax", &Fmax, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("fmin", &Fmin, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
+    math.def("max", py::overload_cast<const NPUArray&, int64_t, bool>(&Max), 
+            py::arg("a"), py::arg("axis"), py::arg("keepdims"));
+    math.def("max", py::overload_cast<const NPUArray&>(&Amax), py::arg("a"));
+    math.def("amax", py::overload_cast<const NPUArray&, int64_t, bool>(&Max), 
+            py::arg("a"), py::arg("axis"), py::arg("keepdims"));
+    math.def("amax", py::overload_cast<const NPUArray&>(&Amax), py::arg("a"));
+    math.def("nanmax", py::overload_cast<const NPUArray&, int64_t, bool>(&Nanmax), 
+            py::arg("a"), py::arg("axis"), py::arg("keepdims"));
+    math.def("nanmax", py::overload_cast<const NPUArray&>(&Nanmax), py::arg("a"));
 }
 
 }

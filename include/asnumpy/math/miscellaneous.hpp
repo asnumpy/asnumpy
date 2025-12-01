@@ -32,6 +32,8 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max);
 NPUArray Clip(const NPUArray& a, float a_min, float a_max);
 NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max);
 
+NPUArray Sqrt(const NPUArray& x);
+
 NPUArray Square(const NPUArray& x);
 
 NPUArray Absolute(const NPUArray& x);
@@ -44,12 +46,7 @@ NPUArray Sign(const NPUArray& x);
 
 NPUArray Heaviside(const NPUArray& x1, const NPUArray& x2);
 
-NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
+NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
-NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
-
-NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
-
-NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
-
+NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 }

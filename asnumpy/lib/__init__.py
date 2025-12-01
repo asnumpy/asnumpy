@@ -22,6 +22,7 @@ from .asnumpy_core.array import *
 from .asnumpy_core.logic import * 
 from .asnumpy_core.statistics import *
 from .asnumpy_core.nn import *
+from .asnumpy_core.sorting import * 
 from .asnumpy_core import linalg  
 # linalg模块内部分需要ap.linalg.xxx调用，部分ap.yyy调用，
 # yyy类函数分到了.asnumpy_core根模块中
@@ -68,6 +69,7 @@ __all__ = [
     "remainder",
     "modf",
     "divmod",
+    "pow",
     "positive",
     "negative",
     "reciprocal",
@@ -80,6 +82,8 @@ __all__ = [
     "hypot",
     "arctan2",
     "radians",
+    "degrees",
+    "rad2deg",
     "prod",
     "sum",
     "nanprod",
@@ -116,13 +120,21 @@ __all__ = [
     "arccosh",
     "arctanh",
     "signbit",
+    "ldexp",
+    "copysign",
     "clip",
+    "sqrt",
     "square",
     "nan_to_num",
     "maximum",
     "minimum",
     "fmax",
     "fmin",
+    "max",
+    "amax",
+    "nanmax",
+    "relu",
+    "gelu",
     "pareto",
     "rayleigh",
     "normal",
@@ -158,6 +170,8 @@ __all__ = [
     "mean",
     # nn
     "softmax",
+    # sorting
+    "sort"
 ]
 
 

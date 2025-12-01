@@ -625,8 +625,7 @@ NPUArray Power(const py::object& x1, const NPUArray& x2, std::optional<py::dtype
     }
 
     aclScalar* x1_scalar = CreateScalar(value, ACL_FLOAT);
-    py::dtype out_dtype = dtype.value_or(x2.dtype);
-    auto out = NPUArray(x2.shape, out_dtype);
+    auto out = NPUArray(x2.shape, ACL_DOUBLE);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -681,8 +680,7 @@ NPUArray Power(const NPUArray& x1, const py::object& x2, std::optional<py::dtype
     }
 
     aclScalar* x2_scalar = CreateScalar(value, ACL_FLOAT);
-    py::dtype out_dtype = dtype.value_or(x1.dtype);
-    auto out = NPUArray(x1.shape, out_dtype);
+    auto out = NPUArray(x1.shape, ACL_DOUBLE);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -1031,6 +1029,27 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     }
 
     return {quotient, remainder};
+}
+
+/**
+ * @brief Element-wise power using aclnnPowTensorTensor.
+ */
+NPUArray Pow(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
+    return Power(x1, x2, dtype);
+}
+
+/**
+ * @brief Scalar ** Tensor power using aclnnPowScalarTensor.
+ */
+NPUArray Pow(const py::object& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
+    return Power(x1, x2, dtype); 
+}
+
+/**
+ * @brief Tensor ** Scalar power using aclnnPowTensorScalar.
+ */
+NPUArray Pow(const NPUArray& x1, const py::object& x2, std::optional<py::dtype> dtype) {
+    return Power(x1, x2, dtype);
 }
 
 }
