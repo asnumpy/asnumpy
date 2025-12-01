@@ -21,7 +21,7 @@
 namespace py = pybind11;
 using namespace asnumpy;
 
-void bind_array(pybind11::module_& array) {
+void bind_array(py::module_& array) {
     array.doc() = "array module of asnumpy";
     array.def("zeros", &Zeros, py::arg("shape"), py::arg("dtype"));
     array.def("zeros_like", &Zeros_like, py::arg("other"), py::arg("dtype"));
@@ -34,4 +34,5 @@ void bind_array(pybind11::module_& array) {
     array.def("ones_like", &ones_like, py::arg("other"), py::arg("dtype"));
     array.def("identity", &Identity, py::arg("n"), py::arg("dtype"));
     array.def("linspace", &Linspace, py::arg("start"), py::arg("end"), py::arg("steps") = 50, py::arg("dtype") = py::none());
+    array.def("arange", &Arange, py::arg("start"), py::arg("end"), py::arg("step") = 1, py::arg("dtype") = py::none());
 }

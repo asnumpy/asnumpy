@@ -35,7 +35,8 @@ How to use:
 # MATMUL_DOT_TEST_CASES、MATRIX_POWER_TEST_CASES: 矩阵乘法等对输入张量格式有要求的数据集
 
 ARRAY_FUNCTIONS = [
-    ("linspace", np.linspace, ap.linspace, LINSPACE_TEST_CASES),
+    ("linspace", np.linspace, ap.linspace, ARANGE_LINSPACE_TEST_CASES),
+    ("arange", np.arange, ap.arange, ARANGE_LINSPACE_TEST_CASES),
 ]
 
 MATH_FUNCTIONS = [
