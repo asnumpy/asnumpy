@@ -37,6 +37,7 @@ __all__ = [
     "ones",
     "ones_like",
     "identity",
+    "arange",
     "ndarray",
     "linspace",
     "init",

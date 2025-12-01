@@ -740,7 +740,6 @@ COPYSIGN_TEST_CASES = [
      np.array([0.5, np.inf, -1.0], dtype=np.float32)),
 ]
 
-# 在script_test_cases.py中添加
 DEGREES_TEST_CASES = [
     np.array([0]),
     np.array([np.pi]),
@@ -751,7 +750,7 @@ DEGREES_TEST_CASES = [
     np.array([np.pi / 4]),
 ]
 
-LINSPACE_TEST_CASES = [
+ARANGE_LINSPACE_TEST_CASES = [
     (0, 10),
     (0, 10, 2),
     (1, 5, 0.5),

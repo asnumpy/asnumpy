@@ -21,7 +21,8 @@
 #include "../utils/npu_scalar.hpp"
 
 namespace asnumpy {
-    NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype);
+
+NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype);
 
 NPUArray Zeros_like(const NPUArray& other, py::dtype dtype);
 
@@ -43,4 +44,6 @@ NPUArray ones_like(const NPUArray& other, py::dtype dtype);
 
 NPUArray Linspace(const py::object& start, const py::object& end, const py::object& steps, const py::object& dtype);
 
-}
+NPUArray Arange(const py::object& start, const py::object& end, const py::object& step, const py::object& dtype);
+
+} 
