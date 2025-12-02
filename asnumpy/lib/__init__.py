@@ -80,6 +80,7 @@ __all__ = [
     "hypot",
     "arctan2",
     "radians",
+    "deg2rad",
     "degrees",
     "rad2deg",
     "prod",
