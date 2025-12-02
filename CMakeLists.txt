@@ -31,6 +31,11 @@ FetchContent_Declare(
     URL file://${CMAKE_SOURCE_DIR}/third_party/pybind11/pybind11-3.0.1.tar.gz
 )
 
+# Disable tests and other unnecessary components for third-party libraries
+set(FMT_TEST OFF CACHE BOOL "" FORCE)
+set(FMT_DOC OFF CACHE BOOL "" FORCE)
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(fmt pybind11)
 
 project(ascend_numpy)
@@ -48,3 +53,14 @@ include_directories(${Python3_NumPy_INCLUDE_DIRS})
 include_directories(include)
 add_subdirectory(src)
 add_subdirectory(python)
+
+# Install Python package files
+if(SKBUILD)
+    message(STATUS "Building with scikit-build-core")
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/asnumpy/"
+            DESTINATION "asnumpy"
+            FILES_MATCHING
+            PATTERN "*.py"
+            PATTERN "__pycache__" EXCLUDE
+            PATTERN "*.pyc" EXCLUDE)
+endif()
