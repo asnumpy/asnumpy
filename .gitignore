@@ -19,3 +19,11 @@ core/.xmake
 
 cmake-build-debug
 asnumpy.egg-info
+
+# Python packaging
+dist/
+_skbuild/
+*.egg-info/
+
+# Backup files
+*.backup

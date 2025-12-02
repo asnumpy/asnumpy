@@ -16,18 +16,14 @@
 
 [build-system]
 requires = [
-  "setuptools>=61",
-  "wheel",
-  "build",
+  "scikit-build-core>=0.8.0",
   "numpy>=1.26",
-  "cmake>=3.22",
-  "ninja",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "asnumpy"
-dynamic = ["version"]
+version = "0.2.0"
 description = "A NumPy-like library accelerated by Ascend NPU"
 readme = "README.md"
 authors = [{ name = "神里绫华的狗", email = "wuzhenqing@stu.hit.edu.cn" }]
@@ -43,8 +39,31 @@ dependencies = [
     "numpy>=1.26.0"
 ]
 
-[tool.setuptools]
-packages = ["asnumpy", "asnumpy.lib"]
+[project.urls]
+Homepage = "https://gitcode.com/cann/asnumpy"
+Repository = "https://gitcode.com/cann/asnumpy"
 
-[tool.setuptools.dynamic]
-version = { attr = "asnumpy.__version__" }
+# scikit-build-core configuration
+[tool.scikit-build.wheel]
+packages = ["asnumpy"]
+exclude = ["**/*.pyc", "**/__pycache__", "**/test", "**/tests"]
+
+[tool.scikit-build.install]
+components = ["python"]
+
+# CMake configuration
+[tool.scikit-build.cmake]
+version = ">=3.22"
+build-type = "Release"
+
+[tool.scikit-build.cmake.define]
+CMAKE_EXPORT_COMPILE_COMMANDS = "ON"
+
+# Ninja configuration
+[tool.scikit-build.ninja]
+make-fallback = true
+
+# Development mode configuration (pip install -e .)
+[tool.scikit-build.editable]
+mode = "redirect"
+verbose = true
