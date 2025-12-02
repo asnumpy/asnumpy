@@ -79,6 +79,7 @@ void bind_trigonometric_functions(py::module_& math){
     math.def("arctan2",&Arctan2, py::arg("x1"), py::arg("x2"));
     math.def("hypot",&Hypot, py::arg("x1"), py::arg("x2"));
     math.def("radians",&Radians, py::arg("x"));
+    math.def("deg2rad", &Radians, py::arg("x"));
     math.def("degrees", &Degrees, py::arg("x"));
     math.def("rad2deg", &Degrees, py::arg("x"));
 }
