@@ -1031,25 +1031,4 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     return {quotient, remainder};
 }
 
-/**
- * @brief Element-wise power using aclnnPowTensorTensor.
- */
-NPUArray Pow(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    return Power(x1, x2, dtype);
-}
-
-/**
- * @brief Scalar ** Tensor power using aclnnPowScalarTensor.
- */
-NPUArray Pow(const py::object& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    return Power(x1, x2, dtype); 
-}
-
-/**
- * @brief Tensor ** Scalar power using aclnnPowTensorScalar.
- */
-NPUArray Pow(const NPUArray& x1, const py::object& x2, std::optional<py::dtype> dtype) {
-    return Power(x1, x2, dtype);
-}
-
 }
