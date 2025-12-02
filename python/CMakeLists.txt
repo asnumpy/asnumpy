@@ -47,6 +47,7 @@ target_link_libraries(asnumpy_core
     PUBLIC
     array
     cann
+    dtypes
     utils
     linalg
     random
@@ -54,3 +55,8 @@ target_link_libraries(asnumpy_core
     logic
     sorting
 )
+
+# Install the compiled module
+install(TARGETS asnumpy_core
+        LIBRARY DESTINATION "asnumpy/lib"
+        COMPONENT python)
