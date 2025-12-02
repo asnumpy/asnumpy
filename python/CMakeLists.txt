@@ -47,6 +47,7 @@ target_link_libraries(asnumpy_core
     PUBLIC
     array
     cann
+    dtypes
     utils
     linalg
     random
