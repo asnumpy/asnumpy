@@ -111,7 +111,6 @@ MATH_FUNCTIONS = [
     ("log1p", np.log1p, ap.log1p, LOG_UNARY_TEST_CASES),
     ("logaddexp", np.logaddexp, ap.logaddexp, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("logaddexp2", np.logaddexp2, ap.logaddexp2, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
-    ("pow", np.power, ap.pow, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("ldexp", np.ldexp, ap.ldexp, LDEXP_TEST_CASES),
     ("copysign", np.copysign, ap.copysign, COPYSIGN_TEST_CASES),
     ("max", np.max, ap.max, UNARY_TEST_CASES + PROD_DIM_TEST_CASES),

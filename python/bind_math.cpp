@@ -130,15 +130,6 @@ void bind_arithmetic_operations(py::module_& math) {
     math.def("power",
         py::overload_cast<const NPUArray&, const py::object&, std::optional<py::dtype>>(&Power),
         py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("pow",
-        py::overload_cast<const NPUArray&, const NPUArray&, std::optional<py::dtype>>(&Pow),
-        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("pow",
-        py::overload_cast<const py::object&, const NPUArray&, std::optional<py::dtype>>(&Pow),
-        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
-    math.def("pow",
-        py::overload_cast<const NPUArray&, const py::object&, std::optional<py::dtype>>(&Pow),
-        py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
 }
 
 void bind_sums_products_differences(py::module_& math){

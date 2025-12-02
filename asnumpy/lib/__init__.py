@@ -67,7 +67,6 @@ __all__ = [
     "remainder",
     "modf",
     "divmod",
-    "pow",
     "positive",
     "negative",
     "reciprocal",
