@@ -368,11 +368,7 @@ NPUArray ones_like(const NPUArray& other, py::dtype dtype) {
     return array;
 }
 
-NPUArray Linspace(const py::object& start,
-                  const py::object& end,
-                  const py::object& steps,
-                  const py::object& dtype)
-{
+NPUArray Linspace(const py::object& start, const py::object& end, const py::object& steps, const py::object& dtype) {
     double start_val = 0.0, end_val = 0.0;
     int64_t steps_val = 0;
 
