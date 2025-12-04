@@ -311,6 +311,10 @@ namespace dtypes {
         template<typename U>
         static void RegisterConversionIfRegistered(int type_num) {
             if (ACLFloatManager<U>::npy_type != NPY_NOTYPE) {
+                // 避免注册自转换（类型到自身的转换），NumPy 会自动处理
+                if (type_num == ACLFloatManager<U>::npy_type) {
+                    return;
+                }
                 // 注册 T -> U 的转换
                 PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), ACLFloatManager<U>::npy_type,
                                          reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_acl_type<U>));

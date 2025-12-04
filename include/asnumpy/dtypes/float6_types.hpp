@@ -80,7 +80,7 @@ namespace dtypes {
         // 显式转换：从 int 到 uint8_t（改变符号）
         uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
         // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
-        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E2M3FnSignShift) | (e_bits << constants::kFloat6E2M3FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & constants::kFloat6E2M3FnMantissaMask));
+        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E2M3FnSignShift) | static_cast<uint8_t>(e_bits << constants::kFloat6E2M3FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat6E2M3FnMantissaMask)));
     }
 
     static uint8_t encode_from_float(float f) {
@@ -90,7 +90,7 @@ namespace dtypes {
         uint32_t frac = components.frac;
 
         uint8_t special = encode_special_values(sign, exp, frac);
-        if (special != 0) {
+        if (special != static_cast<uint8_t>(0)) {
             return special;
         }
 
@@ -114,9 +114,9 @@ namespace dtypes {
      }
  
     static float decode_to_float(uint8_t bits) {
-        uint8_t sign = (bits >> constants::kFloat6E2M3FnSignShift) & 0x1u;
-        uint8_t exp = (bits >> constants::kFloat6E2M3FnExponentShift) & constants::kFloat6E2M3FnExponentMask;  // 2-bit exponent
-        uint8_t mant = bits & constants::kFloat6E2M3FnMantissaMask;         // 3-bit mantissa
+        uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat6E2M3FnSignShift) & static_cast<uint8_t>(0x1u));
+        uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat6E2M3FnExponentShift) & constants::kFloat6E2M3FnExponentMask);  // 2-bit exponent
+        uint8_t mant = static_cast<uint8_t>(bits & constants::kFloat6E2M3FnMantissaMask);         // 3-bit mantissa
         constexpr int bias = constants::kFloat6E2M3FnBias;
 
         if (exp == static_cast<uint8_t>(0)) {
@@ -135,7 +135,7 @@ public:
     static constexpr int kExponentBias = constants::kFloat6E2M3FnBias;
     static constexpr int kMantissaBits = constants::kFloat6E2M3FnMantissaBits;
  
-     constexpr float6_e2m3fn() : rep_(0) {}
+     constexpr float6_e2m3fn() : rep_(static_cast<uint8_t>(0)) {}
  
      explicit float6_e2m3fn(float f) : rep_(encode_from_float(f)) {}
      explicit float6_e2m3fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
@@ -156,7 +156,7 @@ public:
          return static_cast<double>(static_cast<float>(*this));
      }
      explicit operator bool() const {
-         return (rep_ & constants::kFloat6MantissaMask5) != 0;
+         return static_cast<uint8_t>(rep_ & constants::kFloat6MantissaMask5) != static_cast<uint8_t>(0);
      }
 
      float6_e2m3fn operator-() const {
@@ -262,9 +262,9 @@ public:
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E3M2FnSignShift) | static_cast<uint8_t>(static_cast<unsigned int>(sub)));
          }
          // 显式转换：从 int 到 uint8_t（改变符号）
-         uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
-         // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
-         return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E3M2FnSignShift) | (e_bits << constants::kFloat6E3M2FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & constants::kFloat6E3M2FnMantissaMask));
+        uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
+        // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
+        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat6E3M2FnSignShift) | static_cast<uint8_t>(e_bits << constants::kFloat6E3M2FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat6E3M2FnMantissaMask)));
      }
 
      static uint8_t encode_from_float(float f) {
@@ -273,16 +273,16 @@ public:
          uint32_t exp = components.exp;
          uint32_t frac = components.frac;
 
-         uint8_t special = encode_special_values(sign, exp, frac);
-         if (special != 0) {
-             return special;
-         }
+        uint8_t special = encode_special_values(sign, exp, frac);
+        if (special != static_cast<uint8_t>(0)) {
+            return special;
+        }
 
-         Float32Normalized normalized = normalize_float32_components(exp, frac);
-         int e_unbiased = normalized.e_unbiased;
-         float mant = normalized.mant;
+        Float32Normalized normalized = normalize_float32_components(exp, frac);
+        int e_unbiased = normalized.e_unbiased;
+        float mant = normalized.mant;
 
-         constexpr int bias = constants::kFloat6E3M2FnBias;
+        constexpr int bias = constants::kFloat6E3M2FnBias;
          if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat6E3M2FnSubnormalThreshold) {
              return encode_subnormal(sign, mant, e_unbiased);
          }
@@ -298,9 +298,9 @@ public:
      }
  
      static float decode_to_float(uint8_t bits) {
-         uint8_t sign = (bits >> constants::kFloat6E3M2FnSignShift) & 0x1u;
-         uint8_t exp = (bits >> constants::kFloat6E3M2FnExponentShift) & constants::kFloat6E3M2FnExponentMask;  // 3-bit exponent
-         uint8_t mant = bits & constants::kFloat6E3M2FnMantissaMask;         // 2-bit mantissa
+         uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat6E3M2FnSignShift) & static_cast<uint8_t>(0x1u));
+         uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat6E3M2FnExponentShift) & constants::kFloat6E3M2FnExponentMask);  // 3-bit exponent
+         uint8_t mant = static_cast<uint8_t>(bits & constants::kFloat6E3M2FnMantissaMask);         // 2-bit mantissa
          constexpr int bias = constants::kFloat6E3M2FnBias;
 
          if (exp == static_cast<uint8_t>(0)) {
@@ -319,7 +319,7 @@ public:
      static constexpr int kExponentBias = constants::kFloat6E3M2FnBias;
      static constexpr int kMantissaBits = constants::kFloat6E3M2FnMantissaBits;
  
-     constexpr float6_e3m2fn() : rep_(0) {}
+     constexpr float6_e3m2fn() : rep_(static_cast<uint8_t>(0)) {}
  
      explicit float6_e3m2fn(float f) : rep_(encode_from_float(f)) {}
      explicit float6_e3m2fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
@@ -340,7 +340,7 @@ public:
          return static_cast<double>(static_cast<float>(*this));
      }
      explicit operator bool() const {
-         return (rep_ & constants::kFloat6MantissaMask5) != 0;
+         return static_cast<uint8_t>(rep_ & constants::kFloat6MantissaMask5) != static_cast<uint8_t>(0);
      }
 
      float6_e3m2fn operator-() const {

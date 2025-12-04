@@ -84,6 +84,19 @@ inline int rne_to_int(double x) {
                                              : static_cast<int>(f);
 }
 
+// 浮点类型转换操作符的辅助函数模板
+// 用于消除不同浮点类型类中重复的类型转换操作符实现
+template<float (*DecodeToFloat)(uint8_t), uint8_t MantissaMask>
+struct FloatConversionOps {
+    static double to_double(uint8_t rep) {
+        return static_cast<double>(DecodeToFloat(rep));
+    }
+    
+    static bool to_bool(uint8_t rep) {
+        return static_cast<uint8_t>(rep & MantissaMask) != static_cast<uint8_t>(0);
+    }
+};
+
 }  // namespace dtypes
 }  // namespace asnumpy
 

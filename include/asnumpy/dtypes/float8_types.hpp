@@ -86,7 +86,7 @@ namespace dtypes {
         // 显式转换：从 int 到 uint8_t（改变符号）
         uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
         // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
-        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | (e_bits << constants::kFloat8E5M2ExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & constants::kFloat8E5M2MantissaMask));
+        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(e_bits << constants::kFloat8E5M2ExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat8E5M2MantissaMask)));
     }
 
     static uint8_t encode_from_float(float f) {
@@ -123,13 +123,13 @@ namespace dtypes {
      }
  
     static float decode_to_float(uint8_t bits) {
-        uint8_t sign = (bits >> constants::kFloat8E5M2SignShift) & 0x1u;
-        uint8_t exp = (bits >> constants::kFloat8E5M2ExponentShift) & constants::kFloat8E5M2ExponentMask;
-        uint8_t mant = bits & constants::kFloat8E5M2MantissaMask;
+        uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat8E5M2SignShift) & static_cast<uint8_t>(0x1u));
+        uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat8E5M2ExponentShift) & constants::kFloat8E5M2ExponentMask);
+        uint8_t mant = static_cast<uint8_t>(bits & constants::kFloat8E5M2MantissaMask);
         constexpr int bias = constants::kFloat8E5M2Bias;
 
-        if (exp == constants::kFloat8E5M2MaxExponentValue) {
-            if (mant == 0) {
+        if (static_cast<unsigned int>(exp) == static_cast<unsigned int>(constants::kFloat8E5M2MaxExponentValue)) {
+            if (mant == static_cast<uint8_t>(0)) {
                 return sign ? -std::numeric_limits<float>::infinity()
                             : std::numeric_limits<float>::infinity();
             }
@@ -151,7 +151,7 @@ public:
     static constexpr int kExponentBias = constants::kFloat8E5M2Bias;
     static constexpr int kMantissaBits = constants::kFloat8E5M2MantissaBits;
  
-     constexpr float8_e5m2() : rep_(0) {}
+     constexpr float8_e5m2() : rep_(static_cast<uint8_t>(0)) {}
  
      explicit float8_e5m2(float f) : rep_(encode_from_float(f)) {}
      explicit float8_e5m2(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
@@ -172,7 +172,7 @@ public:
          return static_cast<double>(static_cast<float>(*this));
      }
      explicit operator bool() const {
-         return (rep_ & constants::kFloat8MantissaMask7) != 0;
+         return static_cast<uint8_t>(rep_ & constants::kFloat8MantissaMask7) != static_cast<uint8_t>(0);
      }
 
      float8_e5m2 operator-() const {
@@ -294,22 +294,22 @@ public:
 
          // 显式转换：从 int 到 uint8_t（改变符号）
          uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
-         if (e_bits == constants::kFloat8E4M3FnMaxExponentValue && (m & constants::kFloat8E4M3FnMantissaMask) == constants::kFloat8E4M3FnMaxMantissa) {
+         if (static_cast<unsigned int>(e_bits) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxExponentValue) && static_cast<unsigned int>(m & constants::kFloat8E4M3FnMantissaMask) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxMantissa)) {
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(0b0'1111'111));
          }
          // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
-         return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | (e_bits << constants::kFloat8E4M3FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & constants::kFloat8E4M3FnMantissaMask));
+         return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(e_bits << constants::kFloat8E4M3FnExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat8E4M3FnMantissaMask)));
      }
  
     static float decode_to_float(uint8_t bits) {
-        uint8_t sign = (bits >> constants::kFloat8E4M3FnSignShift) & 0x1u;
-        uint8_t exp = (bits >> constants::kFloat8E4M3FnExponentShift) & constants::kFloat8E4M3FnExponentMask;
-        uint8_t mant = bits & constants::kFloat8E4M3FnMantissaMask;
+        uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat8E4M3FnSignShift) & static_cast<uint8_t>(0x1u));
+        uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat8E4M3FnExponentShift) & constants::kFloat8E4M3FnExponentMask);
+        uint8_t mant = static_cast<uint8_t>(bits & constants::kFloat8E4M3FnMantissaMask);
         constexpr int bias = constants::kFloat8E4M3FnBias;
 
         // 外层 NaN
-        if (exp == constants::kFloat8E4M3FnMaxExponentValue && mant == constants::kFloat8E4M3FnMaxMantissa) {
+        if (static_cast<unsigned int>(exp) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxExponentValue) && static_cast<int>(mant) == constants::kFloat8E4M3FnMaxMantissa) {
             return std::numeric_limits<float>::quiet_NaN();
         }
         if (exp == static_cast<uint8_t>(0)) {
@@ -328,7 +328,7 @@ public:
     static constexpr int kExponentBias = constants::kFloat8E4M3FnBias;
     static constexpr int kMantissaBits = constants::kFloat8E4M3FnMantissaBits;
  
-     constexpr float8_e4m3fn() : rep_(0) {}
+     constexpr float8_e4m3fn() : rep_(static_cast<uint8_t>(0)) {}
  
      explicit float8_e4m3fn(float f) : rep_(encode_from_float(f)) {}
      explicit float8_e4m3fn(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
@@ -349,7 +349,7 @@ public:
          return static_cast<double>(static_cast<float>(*this));
      }
      explicit operator bool() const {
-         return (rep_ & constants::kFloat8MantissaMask7) != 0;
+         return static_cast<uint8_t>(rep_ & constants::kFloat8MantissaMask7) != static_cast<uint8_t>(0);
      }
 
      float8_e4m3fn operator-() const {
@@ -449,7 +449,7 @@ public:
     static constexpr int kExponentBias = constants::kFloat8E8M0Bias;
     static constexpr int kMantissaBits = 0;
  
-     constexpr float8_e8m0() : rep_(0) {}
+     constexpr float8_e8m0() : rep_(static_cast<uint8_t>(0)) {}
  
      explicit float8_e8m0(float f) : rep_(encode_from_float(f)) {}
      explicit float8_e8m0(double d) : rep_(encode_from_float(static_cast<float>(d))) {}

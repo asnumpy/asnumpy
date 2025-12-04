@@ -14,23 +14,31 @@
 # limitations under the License.
 # *****************************************************************************
 
+import logging
 import numpy as np
 
 import asnumpy as ap
+
+# 配置日志记录
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def test_float8_e5m2_is_registered():
     """检查 float8_e5m2 是否已注册"""
     is_registered = ap.dtypes.check_float8_e5m2_registered()
     assert is_registered, "float8_e5m2 应该已注册"
-    print(f"[PASS] float8_e5m2 注册状态: {is_registered}")
+    logger.info(f"[PASS] float8_e5m2 注册状态: {is_registered}")
 
 
 def test_float8_e5m2_type_num():
     """检查 float8_e5m2 的类型号"""
     type_num = ap.dtypes.get_float8_e5m2_type_num()
     assert type_num != -1, "float8_e5m2 类型号应该有效"
-    print(f"[PASS] float8_e5m2 类型号: {type_num}")
+    logger.info(f"[PASS] float8_e5m2 类型号: {type_num}")
 
 
 def test_float8_e5m2_is_bound():
@@ -38,21 +46,21 @@ def test_float8_e5m2_is_bound():
     assert hasattr(ap.dtypes, "float8_e5m2"), "float8_e5m2 应该绑定到 ap.dtypes"
     dtype_obj = ap.dtypes.float8_e5m2
     assert dtype_obj is not None, "float8_e5m2 类型对象不应为空"
-    print(f"[PASS] float8_e5m2 已绑定到子模块: {dtype_obj}")
+    logger.info(f"[PASS] float8_e5m2 已绑定到子模块: {dtype_obj}")
 
 
 def test_float8_e5m2_can_create_dtype():
     """检查是否可以使用 float8_e5m2 创建 numpy dtype"""
     dtype = np.dtype(ap.dtypes.float8_e5m2)
     assert dtype is not None, "应该能够创建 numpy dtype"
-    print(f"[PASS] 成功创建 numpy dtype: {dtype}")
+    logger.info(f"[PASS] 成功创建 numpy dtype: {dtype}")
 
 
 def test_float8_e5m2_can_create_array():
     """检查是否可以使用 float8_e5m2 创建数组"""
     arr = np.array([1.0, 2.0, 3.14], dtype=ap.dtypes.float8_e5m2)
     assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
-    print(f"[PASS] 成功创建数组: {arr}, dtype: {arr.dtype}")
+    logger.info(f"[PASS] 成功创建数组: {arr}, dtype: {arr.dtype}")
 
 def test_float8_e5m2_get_acl_enum():
     """检查 float8_e5m2 的 getACLenum() 接口"""
@@ -70,7 +78,7 @@ def test_float8_e5m2_get_acl_enum():
     acl_enum2 = scalar2.getACLenum()
     assert acl_enum == acl_enum2, "不同标量值的ACL枚举值应该一致"
     
-    print(f"[PASS] float8_e5m2 getACLenum() = {acl_enum} (期望: {expected_acl_value})")
+    logger.info(f"[PASS] float8_e5m2 getACLenum() = {acl_enum} (期望: {expected_acl_value})")
 
 def test_float8_e5m2_get_acl_data_type():
     """测试 GetACLDataType 函数是否能正确识别 float8_e5m2 并返回正确的 ACL 类型"""
@@ -87,11 +95,11 @@ def test_float8_e5m2_get_acl_data_type():
         assert npu_arr.aclDtype == expected_acl_value, \
             f"ACL类型应该为 {expected_acl_value}，实际为 {npu_arr.aclDtype}"
         
-        print(f"[PASS] GetACLDataType 正确识别 float8_e5m2: ACL类型 = {npu_arr.aclDtype}")
-        print(f"[PASS] NPUArray 创建成功: shape={npu_arr.shape}, dtype={npu_arr.dtype}")
+        logger.info(f"[PASS] GetACLDataType 正确识别 float8_e5m2: ACL类型 = {npu_arr.aclDtype}")
+        logger.info(f"[PASS] NPUArray 创建成功: shape={npu_arr.shape}, dtype={npu_arr.dtype}")
         
     except Exception as e:
-        print(f"[FAIL] GetACLDataType 测试失败: {e}")
+        logger.error(f"[FAIL] GetACLDataType 测试失败: {e}")
         raise
 
 def test_float8_e5m2_static_get_acl_enum():
@@ -114,7 +122,7 @@ def test_float8_e5m2_static_get_acl_enum():
         assert npu_arr.aclDtype == 35, \
             f"所有 float8_e5m2 数组的 ACL 类型应该为 35，实际为 {npu_arr.aclDtype}"
     
-    print(f"[PASS] 静态方法 getACLenum 通过 GetACLDataType 间接测试成功")
+    logger.info(f"[PASS] 静态方法 getACLenum 通过 GetACLDataType 间接测试成功")
 
 
 def test_float8_e5m2_array_creation_operators():
@@ -124,7 +132,7 @@ def test_float8_e5m2_array_creation_operators():
     expected_acl_value = 35  # ACL_FLOAT8_E5M2
     
     # 测试 ones
-    print("\n测试 ones 算子:")
+    logger.info("\n测试 ones 算子:")
     try:
         ones_arr = ap.ones(shape=(3, 4), dtype=dtype)
         assert ones_arr.aclDtype == expected_acl_value, \
@@ -133,13 +141,13 @@ def test_float8_e5m2_array_creation_operators():
         ones_cpu = ones_arr.to_numpy()
         assert ones_cpu.dtype == dtype, \
             f"ones 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {ones_cpu.dtype}"
-        print(f"[PASS] ones 创建成功: shape={ones_arr.shape}, aclDtype={ones_arr.aclDtype}")
-        print(f"[PASS] 转换到 numpy: dtype={ones_cpu.dtype}, shape={ones_cpu.shape}")
+        logger.info(f"[PASS] ones 创建成功: shape={ones_arr.shape}, aclDtype={ones_arr.aclDtype}")
+        logger.info(f"[PASS] 转换到 numpy: dtype={ones_cpu.dtype}, shape={ones_cpu.shape}")
     except Exception as e:
-        print(f"[FAIL] ones 测试失败: {e}")
+        logger.error(f"[FAIL] ones 测试失败: {e}")
     
     # 测试 NPUArray 构造函数
-    print("\n测试 NPUArray 构造函数:")
+    logger.info("\n测试 NPUArray 构造函数:")
     npu_arr = ap.ndarray(shape=(2, 3), dtype=dtype)
     assert npu_arr.aclDtype == expected_acl_value, \
         f"构造函数创建的数组 ACL 类型应该为 {expected_acl_value}，实际为 {npu_arr.aclDtype}"
@@ -147,11 +155,11 @@ def test_float8_e5m2_array_creation_operators():
     npu_cpu = npu_arr.to_numpy()
     assert npu_cpu.dtype == dtype, \
         f"构造函数创建的数组转换后 dtype 应该为 float8_e5m2，实际为 {npu_cpu.dtype}"
-    print(f"[PASS] NPUArray 构造函数成功: shape={npu_arr.shape}, aclDtype={npu_arr.aclDtype}")
-    print(f"[PASS] 转换到 numpy: dtype={npu_cpu.dtype}, shape={npu_cpu.shape}")
+    logger.info(f"[PASS] NPUArray 构造函数成功: shape={npu_arr.shape}, aclDtype={npu_arr.aclDtype}")
+    logger.info(f"[PASS] 转换到 numpy: dtype={npu_cpu.dtype}, shape={npu_cpu.shape}")
     
     # 测试 zeros
-    print("\n测试 zeros 算子:")
+    logger.info("\n测试 zeros 算子:")
     try:
         zeros_arr = ap.zeros(shape=(2, 3), dtype=dtype)
         assert zeros_arr.aclDtype == expected_acl_value, \
@@ -160,13 +168,13 @@ def test_float8_e5m2_array_creation_operators():
         zeros_cpu = zeros_arr.to_numpy()
         assert zeros_cpu.dtype == dtype, \
             f"zeros 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {zeros_cpu.dtype}"
-        print(f"[PASS] zeros 创建成功: shape={zeros_arr.shape}, aclDtype={zeros_arr.aclDtype}")
-        print(f"[PASS] 转换到 numpy: dtype={zeros_cpu.dtype}, shape={zeros_cpu.shape}")
+        logger.info(f"[PASS] zeros 创建成功: shape={zeros_arr.shape}, aclDtype={zeros_arr.aclDtype}")
+        logger.info(f"[PASS] 转换到 numpy: dtype={zeros_cpu.dtype}, shape={zeros_cpu.shape}")
     except Exception as e:
-        print(f"[FAIL] zeros 测试失败: {e}")
+        logger.error(f"[FAIL] zeros 测试失败: {e}")
     
     # 测试 full
-    print("\n测试 full 算子:")
+    logger.info("\n测试 full 算子:")
     try:
         full_value = 2.5
         full_arr = ap.full(shape=(2, 2), value=full_value, dtype=dtype)
@@ -176,13 +184,13 @@ def test_float8_e5m2_array_creation_operators():
         full_cpu = full_arr.to_numpy()
         assert full_cpu.dtype == dtype, \
             f"full 转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {full_cpu.dtype}"
-        print(f"[PASS] full 创建成功: shape={full_arr.shape}, aclDtype={full_arr.aclDtype}, value={full_value}")
-        print(f"[PASS] 转换到 numpy: dtype={full_cpu.dtype}, shape={full_cpu.shape}")
+        logger.info(f"[PASS] full 创建成功: shape={full_arr.shape}, aclDtype={full_arr.aclDtype}, value={full_value}")
+        logger.info(f"[PASS] 转换到 numpy: dtype={full_cpu.dtype}, shape={full_cpu.shape}")
     except Exception as e:
-        print(f"[FAIL] full 测试失败: {e}")
+        logger.error(f"[FAIL] full 测试失败: {e}")
     
     # 测试不同形状
-    print("\n测试不同形状:")
+    logger.info("\n测试不同形状:")
     test_shapes = [
         (5,),
         (2, 3),
@@ -198,22 +206,22 @@ def test_float8_e5m2_array_creation_operators():
             test_cpu = test_arr.to_numpy()
             assert test_cpu.dtype == dtype, \
                 f"转换后的 numpy 数组 dtype 应该为 float8_e5m2，实际为 {test_cpu.dtype}"
-            print(f"[PASS] 形状 {shape} 测试通过")
+            logger.info(f"[PASS] 形状 {shape} 测试通过")
         except Exception as e:
-            print(f"[FAIL] 形状 {shape} 测试失败: {e}")
+            logger.error(f"[FAIL] 形状 {shape} 测试失败: {e}")
     
-    print(f"\n[PASS] float8_e5m2 数组创建算子测试成功（ones, zeros, full）")
+    logger.info(f"\n[PASS] float8_e5m2 数组创建算子测试成功（ones, zeros, full）")
 
 
 def _run_test(func):
     try:
         func()
-        print(f"[PASS] {func.__name__}")
+        logger.info(f"[PASS] {func.__name__}")
         return True
     except AssertionError as err:
-        print(f"[FAIL] {func.__name__}: {err}")
+        logger.error(f"[FAIL] {func.__name__}: {err}")
     except Exception as err:
-        print(f"[ERROR] {func.__name__}: {err}")
+        logger.error(f"[ERROR] {func.__name__}: {err}")
     return False
 
 
@@ -231,6 +239,6 @@ if __name__ == "__main__":
     ]
     total = len(tests)
     passed = sum(_run_test(func) for func in tests)
-    print(f"\nSummary: {passed}/{total} tests passed")
+    logger.info(f"\nSummary: {passed}/{total} tests passed")
     raise SystemExit(0 if passed == total else 1)
 

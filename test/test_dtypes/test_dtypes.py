@@ -15,7 +15,15 @@
 # *****************************************************************************
 
 
+import logging
 import numpy as np
+
+# 配置日志记录
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def test_dtypes_is_submodule():
     import sys, types, importlib
@@ -36,7 +44,7 @@ def test_float8_e5m2_basic():
     assert hasattr(asnumpy.dtypes, 'float8_e5m2'), "float8_e5m2 类型对象未绑定"
     dt = np.dtype(asnumpy.dtypes.float8_e5m2)
     assert dt is not None, "np.dtype 未能识别 float8_e5m2 类型对象"
-    print("✓ float8_e5m2 类型对象已绑定且可被 numpy.dtype 识别")
+    logger.info("✓ float8_e5m2 类型对象已绑定且可被 numpy.dtype 识别")
 
 def test_float8_e5m2_scalar():
     """测试 float8_e5m2 标量创建"""
@@ -45,14 +53,14 @@ def test_float8_e5m2_scalar():
     try:
         # 创建标量
         scalar = asnumpy.dtypes.float8_e5m2(3.14)
-        print(f"✓ 成功创建 float8_e5m2 标量: {scalar}")
+        logger.info(f"✓ 成功创建 float8_e5m2 标量: {scalar}")
         
         # 检查类型
         assert type(scalar).__name__ == 'acl_float8_e5m2'
-        print(f"✓ 标量类型正确: {type(scalar).__name__}")
+        logger.info(f"✓ 标量类型正确: {type(scalar).__name__}")
         
     except Exception as e:
-        print(f"✗ 标量创建失败: {e}")
+        logger.error(f"✗ 标量创建失败: {e}")
         raise
 
 def test_float8_e5m2_array():
@@ -62,29 +70,29 @@ def test_float8_e5m2_array():
     try:
         # 创建 float32 数组
         float32_arr = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
-        print(f"原始 float32 数组: {float32_arr}")
+        logger.info(f"原始 float32 数组: {float32_arr}")
         
         # 转换为 float8_e5m2（直接使用类型对象作为 dtype）
         float8_arr = float32_arr.astype(asnumpy.dtypes.float8_e5m2)
-        print(f"✓ 成功转换为 float8_e5m2 数组: {float8_arr}")
-        print(f"数组 dtype: {float8_arr.dtype}")
+        logger.info(f"✓ 成功转换为 float8_e5m2 数组: {float8_arr}")
+        logger.info(f"数组 dtype: {float8_arr.dtype}")
         
         # 检查形状和大小
         assert float8_arr.shape == float32_arr.shape
         assert float8_arr.itemsize == 1  # float8 应该是 1 字节
-        print(f"✓ 数组形状: {float8_arr.shape}, 元素大小: {float8_arr.itemsize} 字节")
+        logger.info(f"✓ 数组形状: {float8_arr.shape}, 元素大小: {float8_arr.itemsize} 字节")
         
         # 转换回 float32 验证
         recovered = float8_arr.astype(np.float32)
-        print(f"转换回 float32: {recovered}")
+        logger.info(f"转换回 float32: {recovered}")
         
         # 检查精度损失在合理范围内
         max_diff = np.max(np.abs(float32_arr - recovered))
-        print(f"最大精度损失: {max_diff}")
+        logger.info(f"最大精度损失: {max_diff}")
         assert max_diff < 1.0, f"精度损失过大: {max_diff}"
         
     except Exception as e:
-        print(f"✗ 数组操作失败: {e}")
+        logger.error(f"✗ 数组操作失败: {e}")
         raise
 
 def test_numpy_float8_e5m2_alias():
@@ -94,12 +102,12 @@ def test_numpy_float8_e5m2_alias():
     try:
         assert hasattr(np, 'float8_e5m2'), "np.float8_e5m2 别名不存在"
         float8_e5m2_arr = np.array(values, dtype=np.float8_e5m2)
-        print("✓ 使用 np.float8_e5m2 创建数组成功")
+        logger.info("✓ 使用 np.float8_e5m2 创建数组成功")
         # 校验 dtype 与我们注册的类型一致
         assert float8_e5m2_arr.dtype == np.dtype(asnumpy.dtypes.float8_e5m2)
-        print("数组: ", float8_e5m2_arr)
+        logger.info(f"数组: {float8_e5m2_arr}")
     except Exception as e:
-        print(f"✗ 使用 np.float8_e5m2/asnumpy.dtypes.float8_e5m2 失败: {e}")
+        logger.error(f"✗ 使用 np.float8_e5m2/asnumpy.dtypes.float8_e5m2 失败: {e}")
         raise
 
 def test_float8_e5m2_dtype_properties():
@@ -113,15 +121,15 @@ def test_float8_e5m2_dtype_properties():
     assert dtype.itemsize == 1, f"预期元素大小为 1，实际为 {dtype.itemsize}"
     assert dtype.kind == 'f', f"预期种类为 'f'，实际为 '{dtype.kind}'"
     
-    print(f"✓ dtype 属性正确:")
-    print(f"  - 元素大小: {dtype.itemsize} 字节")
-    print(f"  - 种类: '{dtype.kind}' (浮点)")
-    print(f"  - 名称: {dtype.name}")
+    logger.info(f"✓ dtype 属性正确:")
+    logger.info(f"  - 元素大小: {dtype.itemsize} 字节")
+    logger.info(f"  - 种类: '{dtype.kind}' (浮点)")
+    logger.info(f"  - 名称: {dtype.name}")
 
     # 通过类型对象静态方法获取 ACL 枚举常量
     assert hasattr(asnumpy.dtypes.float8_e5m2, 'GetACLDataType'), "缺少 GetACLDataType 方法"
     acl_enum = asnumpy.dtypes.float8_e5m2.GetACLDataType()
-    print(f"  - ACL 枚举常量: {acl_enum}")
+    logger.info(f"  - ACL 枚举常量: {acl_enum}")
 
 def run_all_tests():
     """运行所有测试"""
@@ -134,20 +142,20 @@ def run_all_tests():
         test_float8_e5m2_dtype_properties,
     ]
     
-    print("运行 float8_e5m2 dtype 测试...")
-    print("=" * 50)
+    logger.info("运行 float8_e5m2 dtype 测试...")
+    logger.info("=" * 50)
     
     for test in tests:
         try:
-            print(f"\n运行测试: {test.__name__}")
+            logger.info(f"\n运行测试: {test.__name__}")
             test()
-            print(f"✓ {test.__name__} 通过")
+            logger.info(f"✓ {test.__name__} 通过")
         except Exception as e:
-            print(f"✗ {test.__name__} 失败: {e}")
+            logger.error(f"✗ {test.__name__} 失败: {e}")
             raise
     
-    print("\n" + "=" * 50)
-    print("✓ 所有测试通过!")
+    logger.info("\n" + "=" * 50)
+    logger.info("✓ 所有测试通过!")
 
 if __name__ == "__main__":
     run_all_tests()

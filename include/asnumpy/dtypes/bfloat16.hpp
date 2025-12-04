@@ -35,12 +35,12 @@ namespace dtypes {
         uint32_t u = bit_cast<uint32_t>(f);
         // bfloat16: 1符号位 + 8指数位 + 7尾数位
         // 直接截取 float32 的高16位
-        return static_cast<uint16_t>(u >> constants::kBfloat16BitShift);
+        return static_cast<uint16_t>(u >> static_cast<uint32_t>(constants::kBfloat16BitShift));
     }
 
     static float decode_to_float(uint16_t bits) {
         // 将 bfloat16 位模式扩展到 float32
-        uint32_t u = static_cast<uint32_t>(bits) << constants::kBfloat16BitShift;
+        uint32_t u = static_cast<uint32_t>(bits) << static_cast<uint32_t>(constants::kBfloat16BitShift);
         return bit_cast<float>(u);
     }
 
@@ -49,7 +49,7 @@ public:
     static constexpr int kExponentBias = constants::kBfloat16ExponentBias;
     static constexpr int kMantissaBits = constants::kBfloat16MantissaBits;
  
-     constexpr bfloat16() : rep_(0) {}
+     constexpr bfloat16() : rep_(static_cast<uint16_t>(0)) {}
      explicit bfloat16(float f) : rep_(encode_from_float(f)) {}
      explicit bfloat16(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit bfloat16(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
@@ -67,7 +67,7 @@ public:
         return static_cast<double>(static_cast<float>(*this)); 
     }
      explicit operator bool() const {
-         return (rep_ & constants::kBfloat16MantissaMask15) != 0; 
+         return (rep_ & constants::kBfloat16MantissaMask15) != static_cast<uint16_t>(0); 
     }
 
      bfloat16 operator-() const {

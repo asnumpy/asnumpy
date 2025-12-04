@@ -15,9 +15,17 @@
 # *****************************************************************************
 
 import importlib
+import logging
 import types
 
 import asnumpy
+
+# 配置日志记录
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def test_asnumpy_exposes_dtypes_submodule():
@@ -35,12 +43,12 @@ def test_asnumpy_dtypes_is_importable():
 def _run_test(func):
     try:
         func()
-        print(f"[PASS] {func.__name__}")
+        logger.info(f"[PASS] {func.__name__}")
         return True
     except AssertionError as err:
-        print(f"[FAIL] {func.__name__}: {err}")
+        logger.error(f"[FAIL] {func.__name__}: {err}")
     except Exception as err:
-        print(f"[ERROR] {func.__name__}: {err}")
+        logger.error(f"[ERROR] {func.__name__}: {err}")
     return False
 
 
@@ -51,5 +59,5 @@ if __name__ == "__main__":
     ]
     total = len(tests)
     passed = sum(_run_test(func) for func in tests)
-    print(f"\nSummary: {passed}/{total} tests passed")
+    logger.info(f"\nSummary: {passed}/{total} tests passed")
     raise SystemExit(0 if passed == total else 1)
