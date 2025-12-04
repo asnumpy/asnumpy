@@ -15,6 +15,12 @@
 # *****************************************************************************
 
 cmake_minimum_required(VERSION 3.22)
+
+# Set policy for FetchContent timestamp handling (CMake 3.24+)
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -24,11 +30,13 @@ include(FetchContent)
 FetchContent_Declare(
     fmt
     URL file://${CMAKE_SOURCE_DIR}/third_party/fmt/fmt-12.0.0.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 FetchContent_Declare(
     pybind11
     URL file://${CMAKE_SOURCE_DIR}/third_party/pybind11/pybind11-3.0.1.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 # Disable tests and other unnecessary components for third-party libraries

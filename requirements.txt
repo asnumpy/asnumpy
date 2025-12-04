@@ -1,5 +1,0 @@
-cmake
-ninja
-wheel
-build
-numpy>=1.26
