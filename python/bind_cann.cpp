@@ -23,6 +23,13 @@ void bind_cann(pybind11::module_& cann) {
     cann.def("set_device", &aclrtSetDevice, pybind11::arg("device_id"));
     cann.def("reset_device", &aclrtResetDevice, pybind11::arg("device_id"));
     cann.def("reset_device_force", &aclrtResetDeviceForce, pybind11::arg("device_id"));
-    cann.def("init", &asnumpy::cann::init);
-    cann.def("finalize", &asnumpy::cann::finalize);
+    cann.def("init", &asnumpy::cann::init, "Initialize the CANN runtime environment");
+    cann.def("finalize", &asnumpy::cann::finalize, "Finalize the CANN runtime environment");
+    
+    // Device detection functions
+    cann.def("get_device_count", &asnumpy::cann::get_device_count,
+             "Get the number of available NPU devices");
+    cann.def("is_device_available", &asnumpy::cann::is_device_available,
+             pybind11::arg("device_id"),
+             "Check if the specified device ID is valid and available");
 }

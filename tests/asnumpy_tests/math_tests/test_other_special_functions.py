@@ -21,7 +21,6 @@
 """
 
 import numpy
-import pytest
 from asnumpy import testing
 
 # ========== 辅助函数 ==========
