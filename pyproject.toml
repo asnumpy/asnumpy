@@ -67,3 +67,11 @@ make-fallback = true
 [tool.scikit-build.editable]
 mode = "redirect"
 verbose = true
+
+# pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--import-mode=importlib",
+    "-v"
+]

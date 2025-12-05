@@ -23,8 +23,28 @@
 namespace asnumpy {
 namespace cann {
 
+/**
+ * @brief Initialize the CANN runtime environment
+ */
 void init();
+
+/**
+ * @brief Finalize the CANN runtime environment
+ */
 void finalize();
+
+/**
+ * @brief Get the number of available NPU devices
+ * @return Number of NPU devices, or 0 if query fails
+ */
+int get_device_count();
+
+/**
+ * @brief Check if the specified device ID is valid and available
+ * @param device_id Device ID to check
+ * @return true if device is available, false otherwise
+ */
+bool is_device_available(int device_id);
 
 }
 }
