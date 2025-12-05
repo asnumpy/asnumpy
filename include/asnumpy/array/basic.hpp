@@ -20,7 +20,8 @@
 #include "../utils/npu_array.hpp"
 #include "../utils/npu_scalar.hpp"
 
-NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype);
+namespace asnumpy {
+    NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype);
 
 NPUArray Zeros_like(const NPUArray& other, py::dtype dtype);
 
@@ -39,3 +40,7 @@ NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype);
 NPUArray Identity(int64_t n, py::dtype dtype);
 
 NPUArray ones_like(const NPUArray& other, py::dtype dtype);
+
+NPUArray Linspace(const py::object& start, const py::object& end, const py::object& steps, const py::object& dtype);
+
+}
