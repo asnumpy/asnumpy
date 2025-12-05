@@ -34,6 +34,10 @@ How to use:
 # BROADCAST_TEST_CASES: 双操作数广播测试数据集
 # MATMUL_DOT_TEST_CASES、MATRIX_POWER_TEST_CASES: 矩阵乘法等对输入张量格式有要求的数据集
 
+ARRAY_FUNCTIONS = [
+    ("linspace", np.linspace, ap.linspace, LINSPACE_TEST_CASES),
+]
+
 MATH_FUNCTIONS = [
     ("fabs", np.fabs, ap.fabs, UNARY_TEST_CASES),
     ("absolute", np.absolute, ap.absolute, UNARY_TEST_CASES),
@@ -157,7 +161,7 @@ SORTING_FUNCTIONS = [
 ]
 
 # 总表
-FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
+FUNCTIONS_TABLE = ARRAY_FUNCTIONS + MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
 
 # =========================测试函数本体======================
 
