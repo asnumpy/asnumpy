@@ -16,12 +16,15 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+project(ascend_numpy LANGUAGES CXX)
+
 # Set policy for FetchContent timestamp handling (CMake 3.24+)
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -46,12 +49,18 @@ set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(fmt pybind11)
 
-project(ascend_numpy)
-
 find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
-set(ASCEND_CANN_PACKAGE_PATH "/usr/local/Ascend/ascend-toolkit/latest"
-    CACHE STRING "ASCEND CANN package installation directory")
+# CANN SDK path: prefer environment variable, fallback to default
+if(DEFINED ENV{ASCEND_TOOLKIT_HOME})
+    set(ASCEND_CANN_PACKAGE_PATH "$ENV{ASCEND_TOOLKIT_HOME}"
+        CACHE STRING "ASCEND CANN package installation directory")
+else()
+    set(ASCEND_CANN_PACKAGE_PATH "/usr/local/Ascend/ascend-toolkit/latest"
+        CACHE STRING "ASCEND CANN package installation directory")
+endif()
+
+message(STATUS "Using CANN SDK at: ${ASCEND_CANN_PACKAGE_PATH}")
 
 include_directories(${ASCEND_CANN_PACKAGE_PATH}/include)
 link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)

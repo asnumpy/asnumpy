@@ -26,7 +26,6 @@
 9. radians(x)
 """
 
-import numpy
 from asnumpy import testing
 
 

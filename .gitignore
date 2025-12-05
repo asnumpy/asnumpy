@@ -28,5 +28,10 @@ _skbuild/
 # Backup files
 *.backup
 
+# Claude Code generated files
+CLAUDE.md
+.claude/
+.spec-workflow/
+
 # Sphinx build files
 docs/source/reference/generated/
