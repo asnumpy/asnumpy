@@ -19,6 +19,7 @@ import logging
 import types
 
 import asnumpy
+from test_utils import main
 
 # 配置日志记录
 logging.basicConfig(
@@ -40,24 +41,9 @@ def test_asnumpy_dtypes_is_importable():
     assert imported is asnumpy.dtypes, "asnumpy.dtypes 应该与 importlib.import_module 返回的模块一致"
 
 
-def _run_test(func):
-    try:
-        func()
-        logger.info(f"[PASS] {func.__name__}")
-        return True
-    except AssertionError as err:
-        logger.error(f"[FAIL] {func.__name__}: {err}")
-    except Exception as err:
-        logger.error(f"[ERROR] {func.__name__}: {err}")
-    return False
-
-
 if __name__ == "__main__":
     tests = [
         test_asnumpy_exposes_dtypes_submodule,
         test_asnumpy_dtypes_is_importable,
     ]
-    total = len(tests)
-    passed = sum(_run_test(func) for func in tests)
-    logger.info(f"\nSummary: {passed}/{total} tests passed")
-    raise SystemExit(0 if passed == total else 1)
+    main(tests)

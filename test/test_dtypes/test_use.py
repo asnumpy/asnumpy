@@ -20,6 +20,7 @@ import types
 import numpy as np
 
 import asnumpy as ap
+from test_utils import main
 
 # 配置日志记录
 logging.basicConfig(
@@ -46,24 +47,9 @@ def test_dtypes_int32_can_be_used_in_array_creation():
     assert ones_arr.dtype == ap.dtypes.int32
 
 
-def _run_test(func):
-    try:
-        func()
-        logger.info(f"[PASS] {func.__name__}")
-        return True
-    except AssertionError as err:
-        logger.error(f"[FAIL] {func.__name__}: {err}")
-    except Exception as err:
-        logger.error(f"[ERROR] {func.__name__}: {err}")
-    return False
-
-
 if __name__ == "__main__":
     tests = [
         test_dtypes_module_has_int32,
         test_dtypes_int32_can_be_used_in_array_creation,
     ]
-    total = len(tests)
-    passed = sum(_run_test(func) for func in tests)
-    logger.info(f"\nSummary: {passed}/{total} tests passed")
-    raise SystemExit(0 if passed == total else 1)
+    main(tests)

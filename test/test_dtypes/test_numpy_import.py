@@ -18,6 +18,7 @@ import logging
 import numpy as np
 
 import asnumpy as ap
+from test_utils import main
 
 # 配置日志记录
 logging.basicConfig(
@@ -39,25 +40,10 @@ def test_debug_numpy_create_array():
     assert np_arr.shape == (3,)
 
 
-def _run_test(func):
-    try:
-        func()
-        logger.info(f"[PASS] {func.__name__}")
-        return True
-    except AssertionError as err:
-        logger.error(f"[FAIL] {func.__name__}: {err}")
-    except Exception as err:
-        logger.error(f"[ERROR] {func.__name__}: {err}")
-    return False
-
-
 if __name__ == "__main__":
     tests = [
         test_debug_numpy_dtype_str,
         test_debug_numpy_create_array,
     ]
-    total = len(tests)
-    passed = sum(_run_test(func) for func in tests)
-    logger.info(f"\nSummary: {passed}/{total} tests passed")
-    raise SystemExit(0 if passed == total else 1)
+    main(tests)
 

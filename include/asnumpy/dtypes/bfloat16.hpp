@@ -54,7 +54,9 @@ public:
      explicit bfloat16(double d) : rep_(encode_from_float(static_cast<float>(d))) {}
      explicit bfloat16(int i) : rep_(encode_from_float(static_cast<float>(i))) {}
  
-     constexpr uint16_t rep() const { return rep_; }
+     constexpr uint16_t rep() const {
+         return rep_; 
+    }
  
      static constexpr bfloat16 FromRep(uint16_t rep) {
          return bfloat16(rep, ConstructFromRepTag{});

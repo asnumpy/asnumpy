@@ -67,59 +67,30 @@ namespace dtypes {
 
     // 编码正规数
     static uint8_t encode_normal(uint32_t sign, int e, int m, int bias, float mant) {
-        if (e > constants::kFloat8E5M2MaxExponent) {
-            // 显式转换：从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(0b0'11111'00));
-        }
-        if (e < constants::kFloat8E5M2SubnormalThreshold) {
-            int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + constants::kFloat8E5M2SubnormalLdexpOffset)));
-            if (sub <= 0) {
-                // 显式转换：从 uint32_t 到 uint8_t（改变大小，但符号不变）
-                return static_cast<uint8_t>(static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift);
-            }
-            if (sub > constants::kFloat8E5M2MaxMantissa) {
-                sub = constants::kFloat8E5M2MaxMantissa;
-            }
-            // 显式转换：从 int 到 uint8_t（改变符号），从 uint32_t 到 uint8_t
-            return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(static_cast<unsigned int>(sub)));
-        }
-        // 显式转换：从 int 到 uint8_t（改变符号）
-        uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
-        // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
-        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E5M2SignShift) | static_cast<uint8_t>(e_bits << constants::kFloat8E5M2ExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat8E5M2MantissaMask)));
+        return encode_normal_impl<constants::kFloat8E5M2MaxExponent,
+            constants::kFloat8E5M2SubnormalThreshold,
+            constants::kFloat8E5M2MaxMantissa,
+            constants::kFloat8E5M2SubnormalLdexpOffset,
+            constants::kFloat8E5M2SignShift,
+            constants::kFloat8E5M2ExponentShift,
+            constants::kFloat8E5M2MantissaMask,
+            static_cast<uint8_t>(0b0'11111'00)>(sign, e, m, bias, mant);
     }
 
     static uint8_t encode_from_float(float f) {
-        Float32Components components = extract_float32_components(f);
-        uint32_t sign = components.sign;
-        uint32_t exp = components.exp;
-        uint32_t frac = components.frac;
-
-        uint8_t special = encode_special_values(sign, exp, frac);
-        if (special != static_cast<uint8_t>(0)) {
-            return special;
-        }
-
-        Float32Normalized normalized = normalize_float32_components(exp, frac);
-        int e_unbiased = normalized.e_unbiased;
-        float a = normalized.mant;
-
-        constexpr int bias = constants::kFloat8E5M2Bias;
-        if (exp == static_cast<uint32_t>(0) || e_unbiased < constants::kFloat8E5M2SubnormalThreshold) {
-            return encode_subnormal(sign, a, e_unbiased);
-        }
-
-        // 正规数：mantissa in [1,2)
-        int e = e_unbiased;
-        float mant = a;
-        // 量化到 2-bit 尾数 (步长 1/4)
-        int m = rne_to_int(static_cast<double>(mant - 1.0f) * static_cast<double>(constants::kFloat8E5M2MantissaQuantization));
-        if (m >= constants::kFloat8E5M2MantissaQuantization) {
-            m = 0;
-            ++e;
-        }
-
-        return encode_normal(sign, e, m, bias, mant);
+        return encode_from_float_impl<constants::kFloat8E5M2Bias,
+            constants::kFloat8E5M2SubnormalThreshold,
+            constants::kFloat8E5M2MantissaQuantization>(
+            f,
+            [](uint32_t s, uint32_t e, uint32_t fr) {
+                return encode_special_values(s, e, fr);
+            },
+            [](uint32_t s, float m, int e) {
+                return encode_subnormal(s, m, e);
+            },
+            [](uint32_t s, int e, int m, int b, float mant) {
+                return encode_normal(s, e, m, b, mant);
+            });
      }
  
     static float decode_to_float(uint8_t bits) {
@@ -294,7 +265,7 @@ public:
 
          // 显式转换：从 int 到 uint8_t（改变符号）
          uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
-         if (static_cast<unsigned int>(e_bits) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxExponentValue) && static_cast<unsigned int>(m & constants::kFloat8E4M3FnMantissaMask) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxMantissa)) {
+         if (static_cast<unsigned int>(e_bits) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxExponentValue) && static_cast<unsigned int>(static_cast<unsigned int>(m) & static_cast<unsigned int>(constants::kFloat8E4M3FnMantissaMask)) == static_cast<unsigned int>(constants::kFloat8E4M3FnMaxMantissa)) {
              // 显式转换：从 uint32_t 到 uint8_t
              return static_cast<uint8_t>((static_cast<uint8_t>(sign) << constants::kFloat8E4M3FnSignShift) | static_cast<uint8_t>(0b0'1111'111));
          }

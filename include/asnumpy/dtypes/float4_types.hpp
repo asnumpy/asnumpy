@@ -26,42 +26,6 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 辅助函数：提取 encode_from_float 的公共逻辑
-template<int Bias, int SubnormalThreshold, int MantissaQuantization,
-         typename EncodeSpecialFunc, typename EncodeSubnormalFunc, typename EncodeNormalFunc>
-static uint8_t encode_from_float_impl(float f,
-                                      EncodeSpecialFunc encode_special,
-                                      EncodeSubnormalFunc encode_subnormal,
-                                      EncodeNormalFunc encode_normal) {
-    Float32Components components = extract_float32_components(f);
-    uint32_t sign = components.sign;
-    uint32_t exp = components.exp;
-    uint32_t frac = components.frac;
-
-    uint8_t special = encode_special(sign, exp, frac);
-    if (special != static_cast<uint8_t>(0)) {
-        return special;
-    }
-
-    Float32Normalized normalized = normalize_float32_components(exp, frac);
-    int e_unbiased = normalized.e_unbiased;
-    float mant = normalized.mant;
-
-    constexpr int bias = Bias;
-    if (exp == static_cast<uint32_t>(0) || e_unbiased < SubnormalThreshold) {
-        return encode_subnormal(sign, mant, e_unbiased);
-    }
-
-    int e = e_unbiased;
-    int m = rne_to_int(static_cast<double>(mant - 1.0f) * static_cast<double>(MantissaQuantization));
-    if (m >= MantissaQuantization) {
-        m = 0;
-        ++e;
-    }
-
-    return encode_normal(sign, e, m, bias, mant);
-}
-
  class float4_e2m1fn {
  private:
      uint8_t rep_;
@@ -125,9 +89,15 @@ static uint8_t encode_from_float_impl(float f,
              constants::kFloat4E2M1FnSubnormalThreshold,
              constants::kFloat4E2M1FnMantissaQuantization>(
              f,
-             [](uint32_t s, uint32_t e, uint32_t fr) { return encode_special_values(s, e, fr); },
-             [](uint32_t s, float m, int e) { return encode_subnormal(s, m, e); },
-             [](uint32_t s, int e, int m, int b, float mant) { return encode_normal(s, e, m, b, mant); });
+             [](uint32_t s, uint32_t e, uint32_t fr) {
+                 return encode_special_values(s, e, fr);
+             },
+             [](uint32_t s, float m, int e) {
+                 return encode_subnormal(s, m, e);
+             },
+             [](uint32_t s, int e, int m, int b, float mant) {
+                 return encode_normal(s, e, m, b, mant);
+             });
      }
  
     static float decode_to_float(uint8_t bits) {
@@ -289,9 +259,15 @@ public:
              constants::kFloat4E1M2FnSubnormalThreshold,
              constants::kFloat4E1M2FnMantissaQuantization>(
              f,
-             [](uint32_t s, uint32_t e, uint32_t fr) { return encode_special_values(s, e, fr); },
-             [](uint32_t s, float m, int e) { return encode_subnormal(s, m, e); },
-             [](uint32_t s, int e, int m, int b, float mant) { return encode_normal(s, e, m, b, mant); });
+             [](uint32_t s, uint32_t e, uint32_t fr) {
+                 return encode_special_values(s, e, fr);
+             },
+             [](uint32_t s, float m, int e) {
+                 return encode_subnormal(s, m, e);
+             },
+             [](uint32_t s, int e, int m, int b, float mant) {
+                 return encode_normal(s, e, m, b, mant);
+             });
      }
  
     static float decode_to_float(uint8_t bits) {

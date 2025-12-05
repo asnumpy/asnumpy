@@ -18,6 +18,7 @@ import logging
 import numpy as np
 
 import asnumpy as ap
+from test_utils import main
 
 # 配置日志记录
 logging.basicConfig(
@@ -62,6 +63,7 @@ def test_float8_e5m2_can_create_array():
     assert arr.dtype == np.dtype(ap.dtypes.float8_e5m2), "数组 dtype 应该匹配"
     logger.info(f"[PASS] 成功创建数组: {arr}, dtype: {arr.dtype}")
 
+
 def test_float8_e5m2_get_acl_enum():
     """检查 float8_e5m2 的 getACLenum() 接口"""
     expected_acl_value = 35  # ACL_FLOAT8_E5M2
@@ -79,6 +81,7 @@ def test_float8_e5m2_get_acl_enum():
     assert acl_enum == acl_enum2, "不同标量值的ACL枚举值应该一致"
     
     logger.info(f"[PASS] float8_e5m2 getACLenum() = {acl_enum} (期望: {expected_acl_value})")
+
 
 def test_float8_e5m2_get_acl_data_type():
     """测试 GetACLDataType 函数是否能正确识别 float8_e5m2 并返回正确的 ACL 类型"""
@@ -101,6 +104,7 @@ def test_float8_e5m2_get_acl_data_type():
     except Exception as e:
         logger.error(f"[FAIL] GetACLDataType 测试失败: {e}")
         raise
+
 
 def test_float8_e5m2_static_get_acl_enum():
     """测试静态方法 getACLenum 是否可以直接调用（C++层面）"""
@@ -213,18 +217,6 @@ def test_float8_e5m2_array_creation_operators():
     logger.info(f"\n[PASS] float8_e5m2 数组创建算子测试成功（ones, zeros, full）")
 
 
-def _run_test(func):
-    try:
-        func()
-        logger.info(f"[PASS] {func.__name__}")
-        return True
-    except AssertionError as err:
-        logger.error(f"[FAIL] {func.__name__}: {err}")
-    except Exception as err:
-        logger.error(f"[ERROR] {func.__name__}: {err}")
-    return False
-
-
 if __name__ == "__main__":
     tests = [
         test_float8_e5m2_is_registered,
@@ -237,8 +229,5 @@ if __name__ == "__main__":
         test_float8_e5m2_static_get_acl_enum,
         test_float8_e5m2_array_creation_operators,
     ]
-    total = len(tests)
-    passed = sum(_run_test(func) for func in tests)
-    logger.info(f"\nSummary: {passed}/{total} tests passed")
-    raise SystemExit(0 if passed == total else 1)
+    main(tests)
 

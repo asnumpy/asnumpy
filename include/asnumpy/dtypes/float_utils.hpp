@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include "float_constants.hpp"
 #include <cstdint>
 #include <cmath>
 #include <type_traits>
 #include <bit>
+#include "float_constants.hpp"
 
 namespace asnumpy {
 namespace dtypes {
@@ -96,6 +96,73 @@ struct FloatConversionOps {
         return static_cast<uint8_t>(rep & MantissaMask) != static_cast<uint8_t>(0);
     }
 };
+
+// 编码正规数的通用模板函数
+// 用于消除不同浮点类型类中重复的 encode_normal 实现
+template<int MaxExponent, int SubnormalThreshold, int MaxMantissa, int SubnormalLdexpOffset,
+         uint8_t SignShift, uint8_t ExponentShift, uint8_t MantissaMask, uint8_t InfValue>
+inline uint8_t encode_normal_impl(uint32_t sign, int e, int m, int bias, float mant) {
+    if (e > MaxExponent) {
+        // 显式转换：从 uint32_t 到 uint8_t
+        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << SignShift) | static_cast<uint8_t>(InfValue));
+    }
+    if (e < SubnormalThreshold) {
+        int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + SubnormalLdexpOffset)));
+        if (sub <= 0) {
+            // 显式转换：从 uint32_t 到 uint8_t（改变大小，但符号不变）
+            return static_cast<uint8_t>(static_cast<uint8_t>(sign) << SignShift);
+        }
+        if (sub > MaxMantissa) {
+            sub = MaxMantissa;
+        }
+        // 显式转换：从 int 到 uint8_t（改变符号），从 uint32_t 到 uint8_t
+        return static_cast<uint8_t>((static_cast<uint8_t>(sign) << SignShift) | static_cast<uint8_t>(static_cast<unsigned int>(sub)));
+    }
+    // 显式转换：从 int 到 uint8_t（改变符号）
+    uint8_t e_bits = static_cast<uint8_t>(static_cast<unsigned int>(e + bias));
+    // 显式转换：从 uint32_t 到 uint8_t，从 int 到 uint8_t
+    return static_cast<uint8_t>((static_cast<uint8_t>(sign) << SignShift) | static_cast<uint8_t>(e_bits << ExponentShift) | static_cast<uint8_t>(static_cast<unsigned int>(m) & static_cast<unsigned int>(MantissaMask)));
+}
+
+// 编码浮点数的通用模板函数
+// 用于消除不同浮点类型类中重复的 encode_from_float 实现
+template<int Bias, int SubnormalThreshold, int MantissaQuantization,
+         typename EncodeSpecialFunc, typename EncodeSubnormalFunc, typename EncodeNormalFunc>
+inline uint8_t encode_from_float_impl(float f,
+                                      EncodeSpecialFunc encode_special,
+                                      EncodeSubnormalFunc encode_subnormal,
+                                      EncodeNormalFunc encode_normal) {
+    Float32Components components = extract_float32_components(f);
+    uint32_t sign = components.sign;
+    uint32_t exp = components.exp;
+    uint32_t frac = components.frac;
+
+    uint8_t special = encode_special(sign, exp, frac);
+    if (special != static_cast<uint8_t>(0)) {
+        return special;
+    }
+
+    Float32Normalized normalized = normalize_float32_components(exp, frac);
+    int e_unbiased = normalized.e_unbiased;
+    float a = normalized.mant;
+
+    constexpr int bias = Bias;
+    if (exp == static_cast<uint32_t>(0) || e_unbiased < SubnormalThreshold) {
+        return encode_subnormal(sign, a, e_unbiased);
+    }
+
+    // 正规数：mantissa in [1,2)
+    int e = e_unbiased;
+    float mant = a;
+    // 量化尾数
+    int m = rne_to_int(static_cast<double>(mant - 1.0f) * static_cast<double>(MantissaQuantization));
+    if (m >= MantissaQuantization) {
+        m = 0;
+        ++e;
+    }
+
+    return encode_normal(sign, e, m, bias, mant);
+}
 
 }  // namespace dtypes
 }  // namespace asnumpy
