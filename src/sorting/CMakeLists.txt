@@ -14,7 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-add_library(sorting OBJECT sorting.cpp)
+add_library(sorting OBJECT sorting.cpp searching.cpp)
 
 target_include_directories(sorting PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(sorting PUBLIC fmt::fmt ascend_sdk pybind11::pybind11)

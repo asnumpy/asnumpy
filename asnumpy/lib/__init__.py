@@ -165,8 +165,10 @@ __all__ = [
     "less_equal",
     "equal",
     "not_equal",
-    "sort"
+    "sort",
+    "argsort",
+    "argmax",
+    "argmin"
 ]
-
 
 

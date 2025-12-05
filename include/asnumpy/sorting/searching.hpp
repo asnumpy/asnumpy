@@ -18,14 +18,9 @@
 
 #include <asnumpy/utils/npu_array.hpp>
 
-#include <acl/acl.h>
-#include <aclnn/aclnn_base.h>
-
-#include <utility>
-
 namespace asnumpy {
 
-NPUArray Sort(const NPUArray& a, int axis, bool stable);
-NPUArray Argsort(const NPUArray& a, int64_t axis, bool descending);
+NPUArray ArgMax(const NPUArray& a, int64_t axis, bool keepdim);
+NPUArray ArgMin(const NPUArray& a, int64_t axis, bool keepdim);
 
 }

@@ -17,11 +17,16 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <asnumpy/sorting/sorting.hpp>
+#include <asnumpy/sorting/searching.hpp>
 
 using namespace asnumpy;
+namespace py = pybind11;
 
-void bind_sorting(pybind11::module_& random) {
-    random.doc() = "sorting module of asnumpy";
+void bind_sorting(pybind11::module_& sorting) {
+    sorting.doc() = "sorting module of asnumpy";
 
-    random.def("sort", &Sort, py::arg("a"), py::arg("axis"), py::arg("stable"));
+    sorting.def("sort", &Sort, py::arg("a"), py::arg("axis"), py::arg("stable"));
+    sorting.def("argsort", &Argsort, py::arg("a"), py::arg("axis"), py::arg("descending") = false);
+    sorting.def("argmax", &ArgMax, py::arg("a"), py::arg("axis"), py::arg("keepdim") = false);
+    sorting.def("argmin", &ArgMin, py::arg("a"), py::arg("axis"), py::arg("keepdim") = false);
 }

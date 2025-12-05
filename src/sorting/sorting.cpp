@@ -22,6 +22,7 @@
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_sort.h>
+#include <aclnnop/aclnn_argsort.h>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -48,6 +49,33 @@ NPUArray Sort(const NPUArray& a, int axis, bool stable) {
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
     return result;
+}
+
+NPUArray Argsort(const NPUArray& a, int64_t axis, bool descending) {
+    auto indices = NPUArray(a.shape, ACL_INT64);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor = nullptr;
+    auto error = aclnnArgsortGetWorkspaceSize(
+        a.tensorPtr, axis, descending, indices.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+
+    void* workspaceAddr = nullptr;
+    if (workspaceSize > 0ULL) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+
+    error = aclnnArgsort(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnArgsort error");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+
+    if (workspaceAddr != nullptr) {
+        aclrtFree(workspaceAddr);
+    }
+
+    return indices;
 }
 
 }
