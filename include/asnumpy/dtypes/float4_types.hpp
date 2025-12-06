@@ -32,6 +32,7 @@ namespace dtypes {
      struct ConstructFromRepTag {};
      constexpr float4_e2m1fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
  
+public:
      // 处理特殊值（Inf/NaN/Zero）
      static uint8_t encode_special_values(uint32_t sign, uint32_t exp, uint32_t frac) {
          if (exp == constants::kFloat32MaxExponent) {
@@ -85,21 +86,13 @@ namespace dtypes {
      }
 
      static uint8_t encode_from_float(float f) {
-         return encode_from_float_impl<constants::kFloat4E2M1FnBias,
+         return encode_from_float_helper<float4_e2m1fn,
+             constants::kFloat4E2M1FnBias,
              constants::kFloat4E2M1FnSubnormalThreshold,
-             constants::kFloat4E2M1FnMantissaQuantization>(
-             f,
-             [](uint32_t s, uint32_t e, uint32_t fr) {
-                 return encode_special_values(s, e, fr);
-             },
-             [](uint32_t s, float m, int e) {
-                 return encode_subnormal(s, m, e);
-             },
-             [](uint32_t s, int e, int m, int b, float mant) {
-                 return encode_normal(s, e, m, b, mant);
-             });
+             constants::kFloat4E2M1FnMantissaQuantization>(f);
      }
- 
+
+private:
     static float decode_to_float(uint8_t bits) {
         uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat4E2M1FnSignShift) & static_cast<uint8_t>(0x1u));
         uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat4E2M1FnExponentShift) & constants::kFloat4E2M1FnExponentMask);  // 2-bit exponent
@@ -202,6 +195,7 @@ public:
      struct ConstructFromRepTag {};
      constexpr float4_e1m2fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
  
+public:
      // 处理特殊值（Inf/NaN/Zero）
      static uint8_t encode_special_values(uint32_t sign, uint32_t exp, uint32_t frac) {
          if (exp == constants::kFloat32MaxExponent) {
@@ -255,21 +249,13 @@ public:
      }
 
      static uint8_t encode_from_float(float f) {
-         return encode_from_float_impl<constants::kFloat4E1M2FnBias,
+         return encode_from_float_helper<float4_e1m2fn,
+             constants::kFloat4E1M2FnBias,
              constants::kFloat4E1M2FnSubnormalThreshold,
-             constants::kFloat4E1M2FnMantissaQuantization>(
-             f,
-             [](uint32_t s, uint32_t e, uint32_t fr) {
-                 return encode_special_values(s, e, fr);
-             },
-             [](uint32_t s, float m, int e) {
-                 return encode_subnormal(s, m, e);
-             },
-             [](uint32_t s, int e, int m, int b, float mant) {
-                 return encode_normal(s, e, m, b, mant);
-             });
+             constants::kFloat4E1M2FnMantissaQuantization>(f);
      }
- 
+
+private:
     static float decode_to_float(uint8_t bits) {
         uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat4E1M2FnSignShift) & static_cast<uint8_t>(0x1u));
         uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat4E1M2FnExponentShift) & constants::kFloat4E1M2FnExponentMask);  // 1-bit exponent

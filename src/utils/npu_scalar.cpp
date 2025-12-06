@@ -127,13 +127,9 @@ aclScalar* create_scalar_undefined(ValueType /*value*/) {
     return aclCreateScalar(&converted, ACL_INT32);
 }
 
-/*
-    Creates an aclScalar object for a given value with explicit data type control.
-    Performs optimized value conversion when the input type matches the target data type.
-    Falls back to static_cast conversion when types differ.
-*/
+// 辅助函数：统一处理所有类型的标量创建
 template <typename ValueType>
-aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
+aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
     switch (dtype) {
         case ACL_FLOAT:
             return create_scalar_typed<ValueType, float, ACL_FLOAT>(value);
@@ -157,13 +153,13 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             return create_scalar_typed<ValueType, uint64_t, ACL_UINT64>(value);
         case ACL_BOOL:
             return create_scalar_typed<ValueType, bool, ACL_BOOL>(value);
-        case ACL_FLOAT16:
-        case ACL_BF16:
-            return create_scalar_float16_like(value, dtype);
         case ACL_INT4:
             return create_scalar_typed<ValueType, int8_t, ACL_INT4>(value);
         case ACL_UINT1:
             return create_scalar_typed<ValueType, uint8_t, ACL_UINT1>(value);
+        case ACL_FLOAT16:
+        case ACL_BF16:
+            return create_scalar_float16_like(value, dtype);
         case ACL_COMPLEX64:
         case ACL_COMPLEX128:
         case ACL_COMPLEX32:
@@ -185,6 +181,16 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
         default:
             throw std::runtime_error("Unsupported dtype: " + std::to_string(static_cast<int>(dtype)));
     }
+}
+
+/*
+    Creates an aclScalar object for a given value with explicit data type control.
+    Performs optimized value conversion when the input type matches the target data type.
+    Falls back to static_cast conversion when types differ.
+*/
+template <typename ValueType>
+aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
+    return create_scalar_impl(value, dtype);
 }
 
 // =====================

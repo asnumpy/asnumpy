@@ -15,7 +15,6 @@
 # *****************************************************************************
 
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +55,13 @@ def run_tests(tests):
 
 
 def main(tests):
-    """主函数，运行测试并退出。
+    """主函数，运行测试并返回退出码。
     
     Args:
         tests: 测试函数列表
+        
+    Returns:
+        int: 退出码，0 表示所有测试通过，1 表示有测试失败
     """
-    exit_code = run_tests(tests)
-    sys.exit(exit_code)
+    return run_tests(tests)
 

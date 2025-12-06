@@ -15,12 +15,13 @@
 # *****************************************************************************
 
 import logging
+import sys
 import types
 
 import numpy as np
 
-import asnumpy as ap
 from test_utils import main
+import asnumpy as ap
 
 # 配置日志记录
 logging.basicConfig(
@@ -52,4 +53,4 @@ if __name__ == "__main__":
         test_dtypes_module_has_int32,
         test_dtypes_int32_can_be_used_in_array_creation,
     ]
-    main(tests)
+    sys.exit(main(tests))

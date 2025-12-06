@@ -164,6 +164,36 @@ inline uint8_t encode_from_float_impl(float f,
     return encode_normal(sign, e, m, bias, mant);
 }
 
+// 辅助模板函数：自动调用类的静态方法创建 lambda
+// 用于消除 encode_from_float 中重复的 lambda 表达式
+template<typename FloatType, int Bias, int SubnormalThreshold, int MantissaQuantization>
+inline uint8_t encode_from_float_helper(float f) {
+    return encode_from_float_impl<Bias, SubnormalThreshold, MantissaQuantization>(
+        f,
+        [](uint32_t s, uint32_t e, uint32_t fr) {
+            return FloatType::encode_special_values(s, e, fr);
+        },
+        [](uint32_t s, float m, int e) {
+            return FloatType::encode_subnormal(s, m, e);
+        },
+        [](uint32_t s, int e, int m, int b, float mant) {
+            return FloatType::encode_normal(s, e, m, b, mant);
+        });
+}
+
+// 宏：生成类型转换操作符
+// 用于消除不同浮点类型类中重复的类型转换操作符实现
+#define FLOAT_TYPE_CONVERSION_OPERATORS(ClassName, DecodeToFloatFunc, MantissaMask) \
+    explicit operator float() const { \
+        return DecodeToFloatFunc(rep_); \
+    } \
+    explicit operator double() const { \
+        return static_cast<double>(static_cast<float>(*this)); \
+    } \
+    explicit operator bool() const { \
+        return static_cast<uint8_t>(rep_ & MantissaMask) != static_cast<uint8_t>(0); \
+    }
+
 }  // namespace dtypes
 }  // namespace asnumpy
 

@@ -31,6 +31,7 @@ namespace dtypes {
      struct ConstructFromRepTag {};
      constexpr float6_e2m3fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
  
+public:
     // 处理特殊值（Inf/NaN/Zero）
     static uint8_t encode_special_values(uint32_t sign, uint32_t exp, uint32_t frac) {
         if (exp == constants::kFloat32MaxExponent) {
@@ -72,21 +73,13 @@ namespace dtypes {
     }
 
     static uint8_t encode_from_float(float f) {
-        return encode_from_float_impl<constants::kFloat6E2M3FnBias,
+        return encode_from_float_helper<float6_e2m3fn,
+            constants::kFloat6E2M3FnBias,
             constants::kFloat6E2M3FnSubnormalThreshold,
-            constants::kFloat6E2M3FnMantissaQuantization>(
-            f,
-            [](uint32_t s, uint32_t e, uint32_t fr) {
-                return encode_special_values(s, e, fr);
-            },
-            [](uint32_t s, float m, int e) {
-                return encode_subnormal(s, m, e);
-            },
-            [](uint32_t s, int e, int m, int b, float mant) {
-                return encode_normal(s, e, m, b, mant);
-            });
+            constants::kFloat6E2M3FnMantissaQuantization>(f);
      }
- 
+
+private:
     static float decode_to_float(uint8_t bits) {
         uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat6E2M3FnSignShift) & static_cast<uint8_t>(0x1u));
         uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat6E2M3FnExponentShift) & constants::kFloat6E2M3FnExponentMask);  // 2-bit exponent
@@ -123,15 +116,7 @@ public:
          return float6_e2m3fn(rep, ConstructFromRepTag{});
      }
  
-     explicit operator float() const {
-         return decode_to_float(rep_);
-     }
-     explicit operator double() const {
-         return static_cast<double>(static_cast<float>(*this));
-     }
-     explicit operator bool() const {
-         return static_cast<uint8_t>(rep_ & constants::kFloat6MantissaMask5) != static_cast<uint8_t>(0);
-     }
+     FLOAT_TYPE_CONVERSION_OPERATORS(float6_e2m3fn, decode_to_float, constants::kFloat6MantissaMask5)
 
      float6_e2m3fn operator-() const {
          return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask));
@@ -189,6 +174,7 @@ public:
      struct ConstructFromRepTag {};
      constexpr float6_e3m2fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
  
+public:
      // 处理特殊值（Inf/NaN/Zero）
      static uint8_t encode_special_values(uint32_t sign, uint32_t exp, uint32_t frac) {
          if (exp == constants::kFloat32MaxExponent) {
@@ -230,21 +216,13 @@ public:
      }
 
      static uint8_t encode_from_float(float f) {
-         return encode_from_float_impl<constants::kFloat6E3M2FnBias,
+         return encode_from_float_helper<float6_e3m2fn,
+             constants::kFloat6E3M2FnBias,
              constants::kFloat6E3M2FnSubnormalThreshold,
-             constants::kFloat6E3M2FnMantissaQuantization>(
-             f,
-             [](uint32_t s, uint32_t e, uint32_t fr) {
-                 return encode_special_values(s, e, fr);
-             },
-             [](uint32_t s, float m, int e) {
-                 return encode_subnormal(s, m, e);
-             },
-             [](uint32_t s, int e, int m, int b, float mant) {
-                 return encode_normal(s, e, m, b, mant);
-             });
+             constants::kFloat6E3M2FnMantissaQuantization>(f);
      }
- 
+
+private:
      static float decode_to_float(uint8_t bits) {
          uint8_t sign = static_cast<uint8_t>((bits >> constants::kFloat6E3M2FnSignShift) & static_cast<uint8_t>(0x1u));
          uint8_t exp = static_cast<uint8_t>((bits >> constants::kFloat6E3M2FnExponentShift) & constants::kFloat6E3M2FnExponentMask);  // 3-bit exponent
@@ -280,16 +258,8 @@ public:
      static constexpr float6_e3m2fn FromRep(uint8_t rep) {
          return float6_e3m2fn(rep, ConstructFromRepTag{});
      }
- 
-     explicit operator float() const {
-         return decode_to_float(rep_);
-     }
-     explicit operator double() const {
-         return static_cast<double>(static_cast<float>(*this));
-     }
-     explicit operator bool() const {
-         return static_cast<uint8_t>(rep_ & constants::kFloat6MantissaMask5) != static_cast<uint8_t>(0);
-     }
+
+     FLOAT_TYPE_CONVERSION_OPERATORS(float6_e3m2fn, decode_to_float, constants::kFloat6MantissaMask5)
 
      float6_e3m2fn operator-() const {
          return FromRep(static_cast<uint8_t>(rep_ ^ constants::kFloat6SignBitMask));

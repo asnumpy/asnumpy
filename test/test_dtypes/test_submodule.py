@@ -16,10 +16,11 @@
 
 import importlib
 import logging
+import sys
 import types
 
-import asnumpy
 from test_utils import main
+import asnumpy
 
 # 配置日志记录
 logging.basicConfig(
@@ -46,4 +47,4 @@ if __name__ == "__main__":
         test_asnumpy_exposes_dtypes_submodule,
         test_asnumpy_dtypes_is_importable,
     ]
-    main(tests)
+    sys.exit(main(tests))

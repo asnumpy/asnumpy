@@ -15,10 +15,12 @@
 # *****************************************************************************
 
 import logging
+import sys
+
 import numpy as np
 
-import asnumpy as ap
 from test_utils import main
+import asnumpy as ap
 
 # 配置日志记录
 logging.basicConfig(
@@ -45,5 +47,5 @@ if __name__ == "__main__":
         test_debug_numpy_dtype_str,
         test_debug_numpy_create_array,
     ]
-    main(tests)
+    sys.exit(main(tests))
 
