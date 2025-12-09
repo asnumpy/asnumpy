@@ -43,3 +43,5 @@ if __name__ == "__main__":
     d = c_device.to_numpy()
     print("d.shape:", d.shape)
     print("type(d):", type(d))
+
+    
