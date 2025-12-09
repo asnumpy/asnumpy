@@ -15,19 +15,11 @@
 # *****************************************************************************
 
 import importlib
-import logging
 import sys
 import types
 
 from test_utils import main
 import asnumpy
-
-# 配置日志记录
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s'
-)
-logger = logging.getLogger(__name__)
 
 
 def test_asnumpy_exposes_dtypes_submodule():

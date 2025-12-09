@@ -16,6 +16,12 @@
 
 import logging
 
+# 配置日志记录（所有导入此模块的测试文件共享此配置）
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+
 logger = logging.getLogger(__name__)
 
 

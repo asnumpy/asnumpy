@@ -14,20 +14,12 @@
 # limitations under the License.
 # *****************************************************************************
 
-import logging
 import sys
 
 import numpy as np
 
 from test_utils import main
 import asnumpy as ap
-
-# 配置日志记录
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s'
-)
-logger = logging.getLogger(__name__)
 
 
 def test_debug_numpy_dtype_str():

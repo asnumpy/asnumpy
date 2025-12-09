@@ -127,14 +127,23 @@ aclScalar* create_scalar_undefined(ValueType /*value*/) {
     return aclCreateScalar(&converted, ACL_INT32);
 }
 
-// 辅助函数：统一处理所有类型的标量创建
+// 辅助函数：处理浮点类型
 template <typename ValueType>
-aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
+aclScalar* create_scalar_float_types(ValueType value, aclDataType dtype) {
     switch (dtype) {
         case ACL_FLOAT:
             return create_scalar_typed<ValueType, float, ACL_FLOAT>(value);
         case ACL_DOUBLE:
             return create_scalar_typed<ValueType, double, ACL_DOUBLE>(value);
+        default:
+            return nullptr;
+    }
+}
+
+// 辅助函数：处理有符号整数类型
+template <typename ValueType>
+aclScalar* create_scalar_signed_int_types(ValueType value, aclDataType dtype) {
+    switch (dtype) {
         case ACL_INT32:
             return create_scalar_typed<ValueType, int32_t, ACL_INT32>(value);
         case ACL_INT64:
@@ -143,6 +152,17 @@ aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
             return create_scalar_typed<ValueType, int8_t, ACL_INT8>(value);
         case ACL_INT16:
             return create_scalar_typed<ValueType, int16_t, ACL_INT16>(value);
+        case ACL_INT4:
+            return create_scalar_typed<ValueType, int8_t, ACL_INT4>(value);
+        default:
+            return nullptr;
+    }
+}
+
+// 辅助函数：处理无符号整数类型
+template <typename ValueType>
+aclScalar* create_scalar_unsigned_int_types(ValueType value, aclDataType dtype) {
+    switch (dtype) {
         case ACL_UINT8:
             return create_scalar_typed<ValueType, uint8_t, ACL_UINT8>(value);
         case ACL_UINT16:
@@ -151,19 +171,41 @@ aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
             return create_scalar_typed<ValueType, uint32_t, ACL_UINT32>(value);
         case ACL_UINT64:
             return create_scalar_typed<ValueType, uint64_t, ACL_UINT64>(value);
-        case ACL_BOOL:
-            return create_scalar_typed<ValueType, bool, ACL_BOOL>(value);
-        case ACL_INT4:
-            return create_scalar_typed<ValueType, int8_t, ACL_INT4>(value);
         case ACL_UINT1:
             return create_scalar_typed<ValueType, uint8_t, ACL_UINT1>(value);
+        default:
+            return nullptr;
+    }
+}
+
+// 辅助函数：处理基本数值类型
+template <typename ValueType>
+aclScalar* create_scalar_basic_types(ValueType value, aclDataType dtype) {
+    aclScalar* result = create_scalar_float_types(value, dtype);
+    if (result != nullptr) {
+        return result;
+    }
+    result = create_scalar_signed_int_types(value, dtype);
+    if (result != nullptr) {
+        return result;
+    }
+    result = create_scalar_unsigned_int_types(value, dtype);
+    if (result != nullptr) {
+        return result;
+    }
+    if (dtype == ACL_BOOL) {
+        return create_scalar_typed<ValueType, bool, ACL_BOOL>(value);
+    }
+    return nullptr;
+}
+
+// 辅助函数：处理特殊浮点类型
+template <typename ValueType>
+aclScalar* create_scalar_special_float_types(ValueType value, aclDataType dtype) {
+    switch (dtype) {
         case ACL_FLOAT16:
         case ACL_BF16:
             return create_scalar_float16_like(value, dtype);
-        case ACL_COMPLEX64:
-        case ACL_COMPLEX128:
-        case ACL_COMPLEX32:
-            return create_scalar_complex(value, dtype);
         case ACL_HIFLOAT8:
         case ACL_FLOAT8_E4M3FN:
         case ACL_FLOAT8_E8M0:
@@ -174,6 +216,32 @@ aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
             return create_scalar_float8_like(value, dtype);
         case ACL_FLOAT8_E5M2:
             return create_scalar_float8_e5m2(value);
+        default:
+            return nullptr;
+    }
+}
+
+// 辅助函数：统一处理所有类型的标量创建
+template <typename ValueType>
+aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
+    // 处理基本数值类型
+    aclScalar* result = create_scalar_basic_types(value, dtype);
+    if (result != nullptr) {
+        return result;
+    }
+    
+    // 处理特殊浮点类型
+    result = create_scalar_special_float_types(value, dtype);
+    if (result != nullptr) {
+        return result;
+    }
+    
+    // 处理复数类型
+    switch (dtype) {
+        case ACL_COMPLEX64:
+        case ACL_COMPLEX128:
+        case ACL_COMPLEX32:
+            return create_scalar_complex(value, dtype);
         case ACL_STRING:
             return create_scalar_string(value);
         case ACL_DT_UNDEFINED:

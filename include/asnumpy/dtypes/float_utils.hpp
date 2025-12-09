@@ -183,15 +183,17 @@ inline uint8_t encode_from_float_helper(float f) {
 
 // 宏：生成类型转换操作符
 // 用于消除不同浮点类型类中重复的类型转换操作符实现
+// 注意：此宏在类定义中使用，展开后生成正常的成员函数，return 语句在函数体内是必需的
+// 注意：ClassName 在 :: 操作符前不能加括号（C++ 语法要求），DecodeToFloatFunc 在 :: 后是标识符不需要括号
 #define FLOAT_TYPE_CONVERSION_OPERATORS(ClassName, DecodeToFloatFunc, MantissaMask) \
     explicit operator float() const { \
-        return DecodeToFloatFunc(rep_); \
+        return (DecodeToFloatFunc)(rep_); \
     } \
     explicit operator double() const { \
-        return static_cast<double>(static_cast<float>(*this)); \
+        return FloatConversionOps<&ClassName::DecodeToFloatFunc, (MantissaMask)>::to_double(rep_); \
     } \
     explicit operator bool() const { \
-        return static_cast<uint8_t>(rep_ & MantissaMask) != static_cast<uint8_t>(0); \
+        return FloatConversionOps<&ClassName::DecodeToFloatFunc, (MantissaMask)>::to_bool(rep_); \
     }
 
 }  // namespace dtypes
