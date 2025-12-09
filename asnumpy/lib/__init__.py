@@ -65,7 +65,6 @@ from .logic import (
     not_equal
 )
 
-# from .asnumpy_core.math import *
 from .math import (
     absolute,
     add,
