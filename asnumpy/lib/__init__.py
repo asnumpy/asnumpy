@@ -21,6 +21,7 @@ from .array import (
     full,
     full_like,
     identity,
+    linspace,
     ones,
     ones_like,
     zeros,
@@ -65,7 +66,6 @@ from .logic import (
     not_equal
 )
 
-# from .asnumpy_core.math import *
 from .math import (
     absolute,
     add,
@@ -185,6 +185,7 @@ __all__ = [
     "full",
     "full_like",
     "identity",
+    "linspace",
     "ones",
     "ones_like",
     "zeros",
