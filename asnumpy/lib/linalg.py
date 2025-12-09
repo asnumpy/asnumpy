@@ -1,32 +1,52 @@
+# *****************************************************************************
+# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+
 from typing import Optional, Union, Sequence
 from .asnumpy_core.linalg import (
-    matrix_power as ap_matrix_power,
-    qr as ap_qr,
-    norm as ap_norm,
     det as ap_det,
-    slogdet as ap_slogdet,
-    inv as ap_inv
+    inv as ap_inv,
+    matrix_power as ap_matrix_power,
+    norm as ap_norm,
+    qr as ap_qr,
+    slogdet as ap_slogdet
 )
 from .utils import ndarray
 
 
 def matrix_power(a: ndarray, n: int) -> ndarray:
-    return ndarray(ap_matrix_power(a._impl, n))
+    return ndarray(ap_matrix_power(a.impl, n))
+
 
 def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
-    arr, t = ap_qr(a._impl, mode)
-    return [ndarray(arr),t]
+    return ndarray(ap_qr(a.impl, mode))
+
 
 def norm(a: ndarray, ord: Optional[Union[str, int, float]] = None,
          axis: Optional[Union[int, Sequence[int]]] = None,
          keepdims: bool = False) -> ndarray:
-    return ndarray(ap_norm(a._impl, ord, axis, keepdims))
+    return ndarray(ap_norm(a.impl, ord, axis, keepdims))
+
 
 def det(a: ndarray) -> ndarray:
-    return ndarray(ap_det(a._impl))
+    return ndarray(ap_det(a.impl))
+
 
 def slogdet(a: ndarray) -> tuple:
-    return ap_slogdet(a._impl)
+    return ap_slogdet(a.impl)
+
 
 def inv(a: ndarray) -> ndarray:
-    return ndarray(ap_inv(a._impl))
+    return ndarray(ap_inv(a.impl))
