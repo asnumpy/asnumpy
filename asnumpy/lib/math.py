@@ -1,88 +1,88 @@
 from typing import Optional, Union, Sequence, Any
 import numpy as np
 from .asnumpy_core.math import (
-    sin as ap_sin,
-    cos as ap_cos,
-    tan as ap_tan,
-    arcsin as ap_arcsin,
+    absolute as ap_absolute,
+    add as ap_add,
+    amax as ap_amax,
+    around as ap_around,
     arccos as ap_arccos,
+    arccosh as ap_arccosh,
+    arcsin as ap_arcsin,
+    arcsinh as ap_arcsinh,
     arctan as ap_arctan,
     arctan2 as ap_arctan2,
-    hypot as ap_hypot,
-    radians as ap_radians,
-    degrees as ap_degrees,
-    absolute as ap_absolute,
-    fabs as ap_fabs,
-    sign as ap_sign,
-    heaviside as ap_heaviside,
+    arctanh as ap_arctanh,
+    ceil as ap_ceil,
     clip as ap_clip,
-    nan_to_num as ap_nan_to_num,
-    sqrt as ap_sqrt,
-    square as ap_square,
-    relu as ap_relu,
-    gelu as ap_gelu,
-    add as ap_add,
-    reciprocal as ap_reciprocal,
-    positive as ap_positive,
-    negative as ap_negative,
-    multiply as ap_multiply,
-    divide as ap_divide,
-    true_divide as ap_true_divide,
-    subtract as ap_subtract,
-    floor_divide as ap_floor_divide,
-    float_power as ap_float_power,
-    fmod as ap_fmod,
-    mod as ap_mod,
-    modf as ap_modf,
-    remainder as ap_remainder,
-    divmod as ap_divmod,
-    power as ap_power,
-    prod as ap_prod,
-    sum as ap_sum,
-    nanprod as ap_nanprod,
-    nansum as ap_nansum,
+    copysign as ap_copysign,
+    cos as ap_cos,
+    cosh as ap_cosh,
+    cross as ap_cross,
     cumprod as ap_cumprod,
     cumsum as ap_cumsum,
-    nancumprod as ap_nancumprod,
-    nancumsum as ap_nancumsum,
-    cross as ap_cross,
+    degrees as ap_degrees,
+    divide as ap_divide,
+    divmod as ap_divmod,
     exp as ap_exp,
-    expm1 as ap_expm1,
     exp2 as ap_exp2,
-    log as ap_log,
-    log10 as ap_log10,
-    log2 as ap_log2,
-    log1p as ap_log1p,
-    logaddexp as ap_logaddexp,
-    logaddexp2 as ap_logaddexp2,
-    real as ap_real,
-    signbit as ap_signbit,
-    ldexp as ap_ldexp,
-    copysign as ap_copysign,
-    sinh as ap_sinh,
-    cosh as ap_cosh,
-    tanh as ap_tanh,
-    arcsinh as ap_arcsinh,
-    arccosh as ap_arccosh,
-    arctanh as ap_arctanh,
-    sinc as ap_sinc,
-    gcd as ap_gcd,
-    lcm as ap_lcm,
-    around as ap_around,
-    rad2deg as ap_rad2deg,
-    round_ as ap_round_,
-    rint as ap_rint,
+    expm1 as ap_expm1,
+    fabs as ap_fabs,
     fix as ap_fix,
+    float_power as ap_float_power,
     floor as ap_floor,
-    ceil as ap_ceil,
-    trunc as ap_trunc,
-    maximum as ap_maximum,
-    minimum as ap_minimum,
+    floor_divide as ap_floor_divide,
     fmax as ap_fmax,
     fmin as ap_fmin,
+    fmod as ap_fmod,
+    gcd as ap_gcd,
+    gelu as ap_gelu,
+    heaviside as ap_heaviside,
+    hypot as ap_hypot,
+    lcm as ap_lcm,
+    ldexp as ap_ldexp,
+    log as ap_log,
+    log10 as ap_log10,
+    log1p as ap_log1p,
+    log2 as ap_log2,
+    logaddexp as ap_logaddexp,
+    logaddexp2 as ap_logaddexp2,
     max as ap_max,
-    amax as ap_amax,
-    nanmax as ap_nanmax
+    maximum as ap_maximum,
+    minimum as ap_minimum,
+    mod as ap_mod,
+    modf as ap_modf,
+    multiply as ap_multiply,
+    nan_to_num as ap_nan_to_num,
+    nancumprod as ap_nancumprod,
+    nancumsum as ap_nancumsum,
+    nanmax as ap_nanmax,
+    nanprod as ap_nanprod,
+    nansum as ap_nansum,
+    negative as ap_negative,
+    positive as ap_positive,
+    power as ap_power,
+    prod as ap_prod,
+    rad2deg as ap_rad2deg,
+    radians as ap_radians,
+    reciprocal as ap_reciprocal,
+    real as ap_real,
+    relu as ap_relu,
+    remainder as ap_remainder,
+    rint as ap_rint,
+    round_ as ap_round_,
+    sign as ap_sign,
+    signbit as ap_signbit,
+    sin as ap_sin,
+    sinc as ap_sinc,
+    sinh as ap_sinh,
+    sqrt as ap_sqrt,
+    square as ap_square,
+    subtract as ap_subtract,
+    sum as ap_sum,
+    tan as ap_tan,
+    tanh as ap_tanh,
+    true_divide as ap_true_divide,
+    trunc as ap_trunc
 )
 from .utils import ndarray, _convert_dtype
 
@@ -234,24 +234,24 @@ def power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.d
     return ndarray(ap_power(x1_impl, x2_impl, _convert_dtype(dtype)))
 
 # Sums, products, differences
-def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_prod(a._impl))
+        return ap_prod(a._impl)
     return ndarray(ap_prod(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_sum(a._impl))
+        return ap_sum(a._impl)
     return ndarray(ap_sum(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nanprod(a._impl))
+        return ap_nanprod(a._impl)
     return ndarray(ap_nanprod(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nansum(a._impl))
+        return ap_nansum(a._impl)
     return ndarray(ap_nansum(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
 def cumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
@@ -388,17 +388,17 @@ def fmin(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dt
     x2_impl = x2._impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_fmin(x1_impl, x2_impl, _convert_dtype(dtype)))
 
-def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_amax(a._impl))
+        return ap_amax(a._impl)
     return ndarray(ap_max(a._impl, axis, keepdims))
 
-def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_amax(a._impl))
+        return ap_amax(a._impl)
     return ndarray(ap_amax(a._impl, axis, keepdims))
 
-def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nanmax(a._impl))
+        return ap_nanmax(a._impl)
     return ndarray(ap_nanmax(a._impl, axis, keepdims))

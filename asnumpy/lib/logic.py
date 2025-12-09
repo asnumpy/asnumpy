@@ -3,19 +3,19 @@ import numpy as np
 from .asnumpy_core.logic import (
     all as ap_all,
     any as ap_any,
+    equal as ap_equal,
+    greater as ap_greater,
+    greater_equal as ap_greater_equal,
     isfinite as ap_isfinite,
     isinf as ap_isinf,
     isneginf as ap_isneginf,
     isposinf as ap_isposinf,
-    logical_and as ap_logical_and,
-    logical_or as ap_logical_or,
-    logical_not as ap_logical_not,
-    logical_xor as ap_logical_xor,
-    greater as ap_greater,
-    greater_equal as ap_greater_equal,
     less as ap_less,
     less_equal as ap_less_equal,
-    equal as ap_equal,
+    logical_and as ap_logical_and,
+    logical_not as ap_logical_not,
+    logical_or as ap_logical_or,
+    logical_xor as ap_logical_xor,
     not_equal as ap_not_equal
 )
 from .utils import ndarray

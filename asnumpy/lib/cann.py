@@ -1,9 +1,9 @@
 from .asnumpy_core.cann import (
-    set_device as ap_set_device,
+    finalize as ap_finalize,
+    init as ap_init,
     reset_device as ap_reset_device,
     reset_device_force as ap_reset_device_force,
-    init as ap_init,
-    finalize as ap_finalize
+    set_device as ap_set_device
 )
 
 def set_device(device_id: int) -> None:

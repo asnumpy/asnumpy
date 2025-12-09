@@ -1,20 +1,20 @@
 from typing import Union, Sequence
 import numpy as np
 from .asnumpy_core.random import (
-    pareto as ap_pareto,
-    rayleigh as ap_rayleigh,
-    normal as ap_normal,
-    uniform as ap_uniform,
-    standard_normal as ap_standard_normal,
-    standard_cauchy as ap_standard_cauchy,
-    weibull as ap_weibull,
     binomial as ap_binomial,
     exponential as ap_exponential,
     geometric as ap_geometric,
     gumbel as ap_gumbel,
     laplace as ap_laplace,
+    lognormal as ap_lognormal,
     logistic as ap_logistic,
-    lognormal as ap_lognormal
+    normal as ap_normal,
+    pareto as ap_pareto,
+    rayleigh as ap_rayleigh,
+    standard_cauchy as ap_standard_cauchy,
+    standard_normal as ap_standard_normal,
+    uniform as ap_uniform,
+    weibull as ap_weibull
 )
 from .utils import ndarray
 
