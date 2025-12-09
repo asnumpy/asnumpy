@@ -49,15 +49,14 @@ class ndarray:
     def impl(self):
         return self._impl
 
-    def to_numpy(self) -> np.ndarray:
-        return self._impl.to_numpy()
-
     @classmethod
     def from_numpy(cls, host_data: np.ndarray) -> 'ndarray':
         result = cls.__new__(cls)
         result._impl = _ndarray.from_numpy(host_data)
         return result
 
+    def to_numpy(self) -> np.ndarray:
+        return self._impl.to_numpy()
 
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
     return _broadcast_shape(shape_a, shape_b)
