@@ -234,24 +234,24 @@ def power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.d
     return ndarray(ap_power(x1_impl, x2_impl, _convert_dtype(dtype)))
 
 # Sums, products, differences
-def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_prod(a._impl))
+        return ap_prod(a._impl)
     return ndarray(ap_prod(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_sum(a._impl))
+        return ap_sum(a._impl)
     return ndarray(ap_sum(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nanprod(a._impl))
+        return ap_nanprod(a._impl)
     return ndarray(ap_nanprod(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
-def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> ndarray:
+def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nansum(a._impl))
+        return ap_nansum(a._impl)
     return ndarray(ap_nansum(a._impl, axis, keepdims, _convert_dtype(dtype)))
 
 def cumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
@@ -388,17 +388,17 @@ def fmin(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dt
     x2_impl = x2._impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_fmin(x1_impl, x2_impl, _convert_dtype(dtype)))
 
-def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_amax(a._impl))
+        return ap_amax(a._impl)
     return ndarray(ap_max(a._impl, axis, keepdims))
 
-def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_amax(a._impl))
+        return ap_amax(a._impl)
     return ndarray(ap_amax(a._impl, axis, keepdims))
 
-def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ndarray(ap_nanmax(a._impl))
+        return ap_nanmax(a._impl)
     return ndarray(ap_nanmax(a._impl, axis, keepdims))
