@@ -26,7 +26,7 @@ if __name__ == "__main__":
     dtype = np.float32
     zeros_npu = asnumpy.zeros(shape, dtype=dtype)
     print("NPUArray type:", type(zeros_npu))
-
+    
     # Convert to numpy
     zeros_cpu = zeros_npu.to_numpy()
     print("Numpy type:", type(zeros_cpu))

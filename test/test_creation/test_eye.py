@@ -25,7 +25,7 @@ if __name__ == "__main__":
         # Create an identity matrix on the NPU
         eye_npu = asnumpy.eye(n, dtype=dtype)
         print("NPUArray type:", type(eye_npu))
-
+        
         # Convert to numpy
         eye_cpu = eye_npu.to_numpy()
         print("Numpy type:", type(eye_cpu))
