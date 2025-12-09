@@ -38,6 +38,10 @@ class ndarray:
     @property
     def aclDtype(self) -> int:
         return self._impl.aclDtype
+
+    @property
+    def impl(self):
+        return self._impl
     
     def to_numpy(self) -> np.ndarray:
         return self._impl.to_numpy()

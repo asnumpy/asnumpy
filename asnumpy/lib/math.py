@@ -103,318 +103,397 @@ from .asnumpy_core.math import (
 from .utils import ndarray, _convert_dtype
 
 
-def _convert_axis(axis: Optional[Union[int, Sequence[int]]]) -> Optional[Union[int, Sequence[int]]]:
-    return axis
-
 # Trigonometric functions
 def sin(x: ndarray) -> ndarray:
-    return ndarray(ap_sin(x._impl))
+    return ndarray(ap_sin(x.impl))
+
 
 def cos(x: ndarray) -> ndarray:
-    return ndarray(ap_cos(x._impl))
+    return ndarray(ap_cos(x.impl))
+
 
 def tan(x: ndarray) -> ndarray:
-    return ndarray(ap_tan(x._impl))
+    return ndarray(ap_tan(x.impl))
+
 
 def arcsin(x: ndarray) -> ndarray:
-    return ndarray(ap_arcsin(x._impl))
+    return ndarray(ap_arcsin(x.impl))
+
 
 def arccos(x: ndarray) -> ndarray:
-    return ndarray(ap_arccos(x._impl))
+    return ndarray(ap_arccos(x.impl))
+
 
 def arctan(x: ndarray) ->ndarray:
-    return ndarray(ap_arctan(x._impl))
+    return ndarray(ap_arctan(x.impl))
+
 
 def arctan2(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_arctan2(x1._impl, x2._impl))
+    return ndarray(ap_arctan2(x1.impl, x2.impl))
+
 
 def hypot(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_hypot(x1._impl, x2._impl))
+    return ndarray(ap_hypot(x1.impl, x2.impl))
+
 
 def radians(x: ndarray) -> ndarray:
-    return ndarray(ap_radians(x._impl))
+    return ndarray(ap_radians(x.impl))
+
 
 def deg2rad(x: ndarray) -> ndarray:
-    return ndarray(ap_radians(x._impl))
+    return ndarray(ap_radians(x.impl))
+
 
 def degrees(x: ndarray) -> ndarray:
-    return ndarray(ap_degrees(x._impl))
+    return ndarray(ap_degrees(x.impl))
+
 
 def rad2deg(x: ndarray) -> ndarray:
-    return ndarray(ap_rad2deg(x._impl))
+    return ndarray(ap_rad2deg(x.impl))
+
 
 # Miscellaneous functions
 def absolute(x: ndarray) -> ndarray:
-    return ndarray(ap_absolute(x._impl))
+    return ndarray(ap_absolute(x.impl))
+
 
 def fabs(x: ndarray) -> ndarray:
-    return ndarray(ap_fabs(x._impl))
+    return ndarray(ap_fabs(x.impl))
+
 
 def sign(x: ndarray) -> ndarray:
-    return ndarray(ap_sign(x._impl))
+    return ndarray(ap_sign(x.impl))
+
 
 def heaviside(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_heaviside(x1._impl, x2._impl))
+    return ndarray(ap_heaviside(x1.impl, x2.impl))
+
 
 def clip(a: ndarray, a_min: Union[ndarray, float], a_max: Union[ndarray, float]) -> ndarray:
-    a_min_impl = a_min._impl if isinstance(a_min, ndarray) else a_min
-    a_max_impl = a_max._impl if isinstance(a_max, ndarray) else a_max
-    return ndarray(ap_clip(a._impl, a_min_impl, a_max_impl))
+    a_min_impl = a_min.impl if isinstance(a_min, ndarray) else a_min
+    a_max_impl = a_max.impl if isinstance(a_max, ndarray) else a_max
+    return ndarray(ap_clip(a.impl, a_min_impl, a_max_impl))
+
 
 def nan_to_num(x: ndarray, nan: float = 0.0, posinf: Optional[float] = None, neginf: Optional[float] = None) -> ndarray:
-    return ndarray(ap_nan_to_num(x._impl, nan, posinf, neginf))
+    return ndarray(ap_nan_to_num(x.impl, nan, posinf, neginf))
+
 
 def sqrt(x: ndarray) -> ndarray:
-    return ndarray(ap_sqrt(x._impl))
+    return ndarray(ap_sqrt(x.impl))
+
 
 def square(x: ndarray) -> ndarray:
-    return ndarray(ap_square(x._impl))
+    return ndarray(ap_square(x.impl))
+
 
 def relu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_relu(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_relu(x.impl, _convert_dtype(dtype)))
+
 
 def gelu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_gelu(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_gelu(x.impl, _convert_dtype(dtype)))
+
 
 # Arithmetic operations
 def add(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_add(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def reciprocal(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_reciprocal(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_reciprocal(x.impl, _convert_dtype(dtype)))
+
 
 def positive(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_positive(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_positive(x.impl, _convert_dtype(dtype)))
+
 
 def negative(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_negative(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_negative(x.impl, _convert_dtype(dtype)))
+
 
 def multiply(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_multiply(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_divide(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def true_divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_true_divide(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def subtract(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_subtract(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def floor_divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_floor_divide(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def float_power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_float_power(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def fmod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_fmod(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def mod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_mod(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def modf(x: ndarray) -> tuple:
-    return ndarray(ap_modf(x._impl))
+    return ndarray(ap_modf(x.impl))
+
 
 def remainder(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_remainder(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def divmod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> tuple:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_divmod(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_power(x1_impl, x2_impl, _convert_dtype(dtype)))
+
 
 # Sums, products, differences
 def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ap_prod(a._impl)
-    return ndarray(ap_prod(a._impl, axis, keepdims, _convert_dtype(dtype)))
+        return ap_prod(a.impl)
+    return ndarray(ap_prod(a.impl, axis, keepdims, _convert_dtype(dtype)))
+
 
 def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ap_sum(a._impl)
-    return ndarray(ap_sum(a._impl, axis, keepdims, _convert_dtype(dtype)))
+        return ap_sum(a.impl)
+    return ndarray(ap_sum(a.impl, axis, keepdims, _convert_dtype(dtype)))
+
 
 def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ap_nanprod(a._impl)
-    return ndarray(ap_nanprod(a._impl, axis, keepdims, _convert_dtype(dtype)))
+        return ap_nanprod(a.impl)
+    return ndarray(ap_nanprod(a.impl, axis, keepdims, _convert_dtype(dtype)))
+
 
 def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
     if axis is None:
-        return ap_nansum(a._impl)
-    return ndarray(ap_nansum(a._impl, axis, keepdims, _convert_dtype(dtype)))
+        return ap_nansum(a.impl)
+    return ndarray(ap_nansum(a.impl, axis, keepdims, _convert_dtype(dtype)))
+
 
 def cumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_cumprod(a._impl, axis, _convert_dtype(dtype)))
+    return ndarray(ap_cumprod(a.impl, axis, _convert_dtype(dtype)))
+
 
 def cumsum(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_cumsum(a._impl, axis, _convert_dtype(dtype)))
+    return ndarray(ap_cumsum(a.impl, axis, _convert_dtype(dtype)))
+
 
 def nancumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_nancumprod(a._impl, axis, _convert_dtype(dtype)))
+    return ndarray(ap_nancumprod(a.impl, axis, _convert_dtype(dtype)))
+
 
 def nancumsum(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_nancumsum(a._impl, axis, _convert_dtype(dtype)))
+    return ndarray(ap_nancumsum(a.impl, axis, _convert_dtype(dtype)))
+
 
 def cross(a: ndarray, b: ndarray, axis: Optional[int] = None) -> ndarray:
-    return ndarray(ap_cross(a._impl, b._impl, axis))
+    return ndarray(ap_cross(a.impl, b.impl, axis))
+
 
 # Exponents and logarithms
 def exp(x: ndarray) -> ndarray:
-    return ndarray(ap_exp(x._impl))
+    return ndarray(ap_exp(x.impl))
+
 
 def expm1(x: ndarray) -> ndarray:
-    return ndarray(ap_expm1(x._impl))
+    return ndarray(ap_expm1(x.impl))
+
 
 def exp2(x: ndarray) -> ndarray:
-    return ndarray(ap_exp2(x._impl))
+    return ndarray(ap_exp2(x.impl))
+
 
 def log(x: ndarray) -> ndarray:
-    return ndarray(ap_log(x._impl))
+    return ndarray(ap_log(x.impl))
+
 
 def log10(x: ndarray) -> ndarray:
-    return ndarray(ap_log10(x._impl))
+    return ndarray(ap_log10(x.impl))
+
 
 def log2(x: ndarray) -> ndarray:
-    return ndarray(ap_log2(x._impl))
+    return ndarray(ap_log2(x.impl))
+
 
 def log1p(x: ndarray) -> ndarray:
-    return ndarray(ap_log1p(x._impl))
+    return ndarray(ap_log1p(x.impl))
+
 
 def logaddexp(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_logaddexp(x1._impl, x2._impl))
+    return ndarray(ap_logaddexp(x1.impl, x2.impl))
+
 
 def logaddexp2(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_logaddexp2(x1._impl, x2._impl))
+    return ndarray(ap_logaddexp2(x1.impl, x2.impl))
+
 
 # Handling complex numbers
 def real(x: ndarray) -> ndarray:
-    return ndarray(ap_real(x._impl))
+    return ndarray(ap_real(x.impl))
+
 
 # Floating point routines
 def signbit(x: ndarray) -> ndarray:
-    return ndarray(ap_signbit(x._impl))
+    return ndarray(ap_signbit(x.impl))
+
 
 def ldexp(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_ldexp(x1._impl, x2._impl))
+    return ndarray(ap_ldexp(x1.impl, x2.impl))
+
 
 def copysign(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_copysign(x1._impl, x2._impl))
+    return ndarray(ap_copysign(x1.impl, x2.impl))
+
 
 # Hyperbolic functions
 def sinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_sinh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_sinh(x.impl, _convert_dtype(dtype)))
+
 
 def cosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_cosh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_cosh(x.impl, _convert_dtype(dtype)))
+
 
 def tanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_tanh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_tanh(x.impl, _convert_dtype(dtype)))
+
 
 def arcsinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_arcsinh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_arcsinh(x.impl, _convert_dtype(dtype)))
+
 
 def arccosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_arccosh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_arccosh(x.impl, _convert_dtype(dtype)))
+
 
 def arctanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_arctanh(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_arctanh(x.impl, _convert_dtype(dtype)))
+
 
 # Other special functions
 def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_sinc(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_sinc(x.impl, _convert_dtype(dtype)))
+
 
 # Rational routines
 def gcd(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_gcd(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def lcm(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_lcm(x1_impl, x2_impl, _convert_dtype(dtype)))
+
 
 # Rounding
 def around(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_around(x._impl, decimals, _convert_dtype(dtype)))
+    return ndarray(ap_around(x.impl, decimals, _convert_dtype(dtype)))
+
 
 def round_(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_round_(x._impl, decimals, _convert_dtype(dtype)))
+    return ndarray(ap_round_(x.impl, decimals, _convert_dtype(dtype)))
+
 
 def rint(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_rint(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_rint(x.impl, _convert_dtype(dtype)))
+
 
 def fix(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_fix(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_fix(x.impl, _convert_dtype(dtype)))
+
 
 def floor(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_floor(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_floor(x.impl, _convert_dtype(dtype)))
+
 
 def ceil(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_ceil(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_ceil(x.impl, _convert_dtype(dtype)))
+
 
 def trunc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    return ndarray(ap_trunc(x._impl, _convert_dtype(dtype)))
+    return ndarray(ap_trunc(x.impl, _convert_dtype(dtype)))
+
 
 # Extrema finding
 def maximum(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_maximum(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def minimum(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_minimum(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def fmax(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_fmax(x1_impl, x2_impl, _convert_dtype(dtype)))
 
+
 def fmin(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-    x1_impl = x1._impl if isinstance(x1, ndarray) else x1
-    x2_impl = x2._impl if isinstance(x2, ndarray) else x2
+    x1_impl = x1.impl if isinstance(x1, ndarray) else x1
+    x2_impl = x2.impl if isinstance(x2, ndarray) else x2
     return ndarray(ap_fmin(x1_impl, x2_impl, _convert_dtype(dtype)))
+
 
 def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ap_amax(a._impl)
-    return ndarray(ap_max(a._impl, axis, keepdims))
+        return ap_amax(a.impl)
+    return ndarray(ap_max(a.impl, axis, keepdims))
+
 
 def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ap_amax(a._impl)
-    return ndarray(ap_amax(a._impl, axis, keepdims))
+        return ap_amax(a.impl)
+    return ndarray(ap_amax(a.impl, axis, keepdims))
+
 
 def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Union[ndarray, float]:
     if axis is None:
-        return ap_nanmax(a._impl)
-    return ndarray(ap_nanmax(a._impl, axis, keepdims))
+        return ap_nanmax(a.impl)
+    return ndarray(ap_nanmax(a.impl, axis, keepdims))

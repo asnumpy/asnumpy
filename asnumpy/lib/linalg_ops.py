@@ -24,20 +24,26 @@ from .asnumpy_core import (
 )
 from .utils import ndarray
 
+
 def dot(a: ndarray, b: ndarray) -> ndarray:
-    return ndarray(ap_dot(a._impl, b._impl))
+    return ndarray(ap_dot(a.impl, b.impl))
+
 
 def inner(a: ndarray, b: ndarray) -> ndarray:
-    return ndarray(ap_inner(a._impl, b._impl))
+    return ndarray(ap_inner(a.impl, b.impl))
+
 
 def outer(a: ndarray, b: ndarray) -> ndarray:
-    return ndarray(ap_outer(a._impl, b._impl))
+    return ndarray(ap_outer(a.impl, b.impl))
+
 
 def vdot(a: ndarray, b: ndarray) -> ndarray:
-    return ndarray(ap_vdot(a._impl, b._impl))
+    return ndarray(ap_vdot(a.impl, b.impl))
+
 
 def matmul(x1: ndarray, x2: ndarray) -> ndarray:
-    return ndarray(ap_matmul(x1._impl, x2._impl))
+    return ndarray(ap_matmul(x1.impl, x2.impl))
+
 
 def einsum(subscripts: str, *operands: ndarray) -> ndarray:
     return ndarray(ap_einsum(subscripts, *operands))
