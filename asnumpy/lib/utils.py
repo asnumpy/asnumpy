@@ -27,22 +27,6 @@ class ndarray:
     def __init__(self, other: _ndarray):
         self._impl = other
     
-    @property
-    def shape(self) -> tuple:
-        return tuple(self._impl.shape)
-    
-    @property
-    def dtype(self) -> np.dtype:
-        return self._impl.dtype
-    
-    @property
-    def aclDtype(self) -> int:
-        return self._impl.aclDtype
-
-    @property
-    def impl(self):
-        return self._impl
-    
     def to_numpy(self) -> np.ndarray:
         return self._impl.to_numpy()
     
@@ -57,6 +41,22 @@ class ndarray:
     
     def __str__(self) -> str:
         return self.__repr__()
+    
+    @property
+    def shape(self) -> tuple:
+        return tuple(self._impl.shape)
+    
+    @property
+    def dtype(self) -> np.dtype:
+        return self._impl.dtype
+    
+    @property
+    def aclDtype(self) -> int:
+        return self._impl.aclDtype
+    
+    @property
+    def impl(self):
+        return self._impl
 
 
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
