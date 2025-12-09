@@ -28,10 +28,10 @@ except Exception:
     __version__ = "0.2.0"
 
 __all__ = [
+    'load',
     'save',
     'savez',
-    'savez_compressed',
-    'load'
+    'savez_compressed'
 ]
 
 __all__.extend(__lib_all__)
