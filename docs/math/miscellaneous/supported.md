@@ -1,6 +1,6 @@
 ## miscellaneous  
 
-**目前已完成的API：** [Clip (Tensor, Scalar, Scalar)](#Clip_Tensor_Scalar_Scalar), [Clip (Tensor, Scalar, Tensor)](#Clip_Tensor_Scalar_Tensor), [Clip (Tensor, Tensor, Scalar)](#Clip_Tensor_Tensor_Scalar), [Clip (Tensor, Tensor, Tensor)](#Clip_Tensor_Tensor_Tensor), [Fabs](#Fabs), [Fmax](#Fmax), [Fmin](#Fmin), [Maximum](#Maximum), [Minimum](#Minimum), [Nan_to_num](#Nan_to_num), [Square](#Square)  
+**目前已完成的API：** [Clip (Tensor, Scalar, Scalar)](#Clip_Tensor_Scalar_Scalar), [Clip (Tensor, Scalar, Tensor)](#Clip_Tensor_Scalar_Tensor), [Clip (Tensor, Tensor, Scalar)](#Clip_Tensor_Tensor_Scalar), [Clip (Tensor, Tensor, Tensor)](#Clip_Tensor_Tensor_Tensor), [Fabs](#Fabs), [Fmax](#Fmax), [Fmin](#Fmin), [Maximum](#Maximum), [Minimum](#Minimum), [Nan_to_num](#Nan_to_num), [Square](#Square), [Sqrt](#Sqrt)   
 
 <span id="Clip_Tensor_Scalar_Scalar">1. <mark>**Clip（Tensor, Scalar, Scalar）**</mark></span>  
 - **参数：**  
@@ -108,3 +108,11 @@
     NPUArray  
 - **功能：**  
     逐元素计算平方。  
+
+<span id="Sqrt">11. <mark>**Sqrt**</mark></span>  
+- **参数：**  
+    x：NPUArray，输入数组  
+- **返回类型：**  
+    NPUArray  
+- **功能：**  
+    逐元素计算非负平方根。

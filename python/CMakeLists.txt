@@ -24,6 +24,7 @@ pybind11_add_module(asnumpy_core
     bind_math.cpp
     bind_logic.cpp
     bind_random.cpp
+    bind_sorting.cpp
     bind_testing.cpp
     bind_utils.cpp
     bind_version.cpp)
@@ -46,9 +47,16 @@ target_link_libraries(asnumpy_core
     PUBLIC
     array
     cann
+    dtypes
     utils
     linalg
     random
     math
     logic
+    sorting
 )
+
+# Install the compiled module
+install(TARGETS asnumpy_core
+        LIBRARY DESTINATION "asnumpy/lib"
+        COMPONENT python)

@@ -15,7 +15,10 @@
  *****************************************************************************/
 
 
+#include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/math/floating_point_routines.hpp>
+#include <asnumpy/math/miscellaneous.hpp>
+#include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -23,6 +26,7 @@
 
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <pybind11/pytypes.h>
 #include <stdexcept>
 
 namespace asnumpy {
@@ -73,5 +77,21 @@ NPUArray Signbit(const NPUArray& x) {
 
     return result;
 }
+
+NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2) {
+    py::object base_scalar = py::float_(2.0);
+    NPUArray pow2 = Power(base_scalar, x2);
+    NPUArray result = Multiply(x1, pow2);
+
+    return result;
+}
+
+NPUArray Copysign(const NPUArray& x1, const NPUArray& x2) {
+    NPUArray temp1 = Absolute(x1);
+    NPUArray temp2 = Sign(x2);
+    NPUArray result = Multiply(temp1, temp2);
+
+    return result;
+}    
 
 }

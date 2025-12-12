@@ -34,4 +34,26 @@ namespace asnumpy {
  */
 NPUArray Signbit(const NPUArray& x);
 
+/**
+ * @brief Compute element-wise ldexp operation.
+ * 
+ * Equivalent to numpy.ldexp(x1, x2), computes x1 * (2 ** x2) element-wise.
+ * 
+ * @param x1 NPUArray, base array (numeric type)
+ * @param x2 NPUArray, exponent array (numeric type)
+ * @return NPUArray Resulting array after applying ldexp
+ */
+NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2);
+
+/**
+ * @brief Compute element-wise copysign operation.
+ * 
+ * Equivalent to numpy.copysign(x1, x2), returns an array with the magnitude of x1 and the sign of x2.
+ * 
+ * @param x1 NPUArray, magnitude array (numeric type)
+ * @param x2 NPUArray, sign array (numeric type)
+ * @return NPUArray Resulting array after applying copysign
+ */
+NPUArray Copysign(const NPUArray& x1, const NPUArray& x2);
+
 }

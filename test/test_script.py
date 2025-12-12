@@ -34,6 +34,10 @@ How to use:
 # BROADCAST_TEST_CASES: 双操作数广播测试数据集
 # MATMUL_DOT_TEST_CASES、MATRIX_POWER_TEST_CASES: 矩阵乘法等对输入张量格式有要求的数据集
 
+ARRAY_FUNCTIONS = [
+    ("linspace", np.linspace, ap.linspace, LINSPACE_TEST_CASES),
+]
+
 MATH_FUNCTIONS = [
     ("fabs", np.fabs, ap.fabs, UNARY_TEST_CASES),
     ("absolute", np.absolute, ap.absolute, UNARY_TEST_CASES),
@@ -89,6 +93,9 @@ MATH_FUNCTIONS = [
     ("hypot", np.hypot, ap.hypot, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("arctan2", np.arctan2, ap.arctan2, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("radians", np.radians, ap.radians, UNARY_TEST_CASES),
+    ("deg2rad", np.deg2rad, ap.deg2rad, UNARY_TEST_CASES),
+    ("degrees", np.degrees, ap.degrees, DEGREES_TEST_CASES),
+    ("rad2deg", np.rad2deg, ap.rad2deg, DEGREES_TEST_CASES),
     ("prod", np.prod, ap.prod, UNARY_TEST_CASES + PROD_DIM_TEST_CASES),
     ("sum", np.sum, ap.sum, UNARY_TEST_CASES + SUM_DIM_TEST_CASES),
     ("nanprod", np.nanprod, ap.nanprod, UNARY_TEST_CASES + NANPROD_DIM_TEST_CASES),
@@ -108,6 +115,11 @@ MATH_FUNCTIONS = [
     ("log1p", np.log1p, ap.log1p, LOG_UNARY_TEST_CASES),
     ("logaddexp", np.logaddexp, ap.logaddexp, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
     ("logaddexp2", np.logaddexp2, ap.logaddexp2, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
+    ("ldexp", np.ldexp, ap.ldexp, LDEXP_TEST_CASES),
+    ("copysign", np.copysign, ap.copysign, COPYSIGN_TEST_CASES),
+    ("max", np.max, ap.max, UNARY_TEST_CASES + PROD_DIM_TEST_CASES),
+    ("amax", np.amax, ap.amax, UNARY_TEST_CASES + PROD_DIM_TEST_CASES),
+    ("nanmax", np.nanmax, ap.nanmax, UNARY_TEST_CASES + NANPROD_DIM_TEST_CASES),
 ]
 
 LINALG_FUNCTIONS = [
@@ -144,8 +156,12 @@ LOGIC_FUNCTIONS = [
     ("not_equal", np.not_equal, ap.not_equal, BINARY_TEST_CASES + BROADCAST_TEST_CASES),
 ]
 
+SORTING_FUNCTIONS = [
+    ("sort", np.sort, ap.sort, SORT_TEST_CASES),
+]
+
 # 总表
-FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS
+FUNCTIONS_TABLE = ARRAY_FUNCTIONS + MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
 
 # =========================测试函数本体======================
 
@@ -170,15 +186,19 @@ def test_functions():
                         for arg in test_case
                     )
                     # === 特殊函数注释说明 ===
-                    # 测试 prod, sum, nanprod, nansum 时，可使用：np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
+                    # 测试 prod, sum, nanprod, nansum, max, amax 时，
+                    # 可使用：np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     # 测试 cross 时，可使用：np_func(test_case[0], test_case[1], axis=test_case[2])
                     # 测试 nan_to_num 时，可使用：np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
-                    if name == "prod" or name == "sum" or name == "nanprod" or name == "nansum":
+                    if name == "prod" or name == "sum" or name == "nanprod" or name == "nansum" or name == "max" \
+                    or name == "amax" or name == "nanmax":
                         np_result = np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     elif name == "cross":
                         np_result = np_func(test_case[0], test_case[1], axis=test_case[2])
                     elif name == "nan_to_num":
                         np_result = np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
+                    elif name == "sort":
+                        np_result = np_func(test_case[0], axis=test_case[1])
                     else:
                         np_result = np_func(*test_case)
                     ap_result = ap_func(*converted_args)

@@ -38,6 +38,7 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <stdexcept>
+#include <cmath>
 
 namespace asnumpy {
     NPUArray Sin(const NPUArray& x) {
@@ -532,5 +533,46 @@ namespace asnumpy {
         }
 
         return result;
+    }
+
+    NPUArray Degrees(const NPUArray& x) {
+        aclDataType aclType = ACL_DOUBLE;
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
+            aclType = x.aclDtype;
+        }
+        auto out = NPUArray(x.shape, aclType);
+        const double factor = 180.0 / M_PI;
+        auto factorArr = NPUArray({1}, aclType);
+        void* factorPtr = nullptr;
+        auto error = aclGetRawTensorAddr(factorArr.tensorPtr, &factorPtr);
+        CheckAclnnStatus(error, "Failed to get factor tensor pointer");
+        double hostValue = factor;
+        error = aclrtMemcpy(factorPtr, sizeof(double),
+                            &hostValue, sizeof(double),
+                            ACL_MEMCPY_HOST_TO_DEVICE);
+        CheckAclnnStatus(error, "Write const factor error");
+        uint64_t workspaceSize = 0;
+        aclOpExecutor* executor = nullptr;
+        error = aclnnMulGetWorkspaceSize(
+            x.tensorPtr,
+            factorArr.tensorPtr,
+            out.tensorPtr,
+            &workspaceSize,
+            &executor
+        );
+        CheckGetWorkspaceSizeAclnnStatus(error);
+        void* workspaceAddr = nullptr;
+        if (workspaceSize != 0ULL) {
+            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+            CheckMallocAclnnStatus(error);
+        }
+        error = aclnnMul(workspaceAddr, workspaceSize, executor, nullptr);
+        CheckAclnnStatus(error, "aclnnMul error");
+        error = aclrtSynchronizeDevice();
+        CheckSynchronizeDeviceAclnnStatus(error);
+        if (workspaceAddr) {
+            aclrtFree(workspaceAddr);
+        }
+        return out;
     }
 }

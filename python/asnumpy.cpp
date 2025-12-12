@@ -26,6 +26,7 @@ void bind_linalg_no_submodule(pybind11::module_& m);
 void bind_math(pybind11::module_& math);
 void bind_logic(pybind11::module_& logic);
 void bind_random(pybind11::module_& random);
+void bind_sorting(pybind11::module_& sorting);
 void bind_testing(pybind11::module_& testing);
 void bind_utils(pybind11::module_& utils);
 void bind_version(pybind11::module_& version);
@@ -41,6 +42,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
     auto math = module.def_submodule("math");
     auto logic = module.def_submodule("logic");
     auto random = module.def_submodule("random");
+    auto sorting = module.def_submodule("sorting");
     auto testing = module.def_submodule("testing");
     // auto utils = module.def_submodule("utils");
     auto version = module.def_submodule("version");
@@ -55,6 +57,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
     bind_math(math);
     bind_logic(logic);
     bind_random(random);
+    bind_sorting(sorting);
     bind_testing(testing);
     bind_utils(module);
     bind_version(version);
