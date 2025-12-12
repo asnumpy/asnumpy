@@ -37,6 +37,7 @@ __all__ = [
     'for_int_dtypes',
     'for_signed_dtypes', 
     'for_unsigned_dtypes',
+    'for_complex_dtypes',
     
     # order装饰器
     'for_orders', 
@@ -95,7 +96,7 @@ from asnumpy.testing._assertions import (
 # 装饰器 - dtype和order参数化
 from asnumpy.testing._loops import (
     for_dtypes, for_all_dtypes, for_float_dtypes, for_int_dtypes,
-    for_signed_dtypes, for_unsigned_dtypes,
+    for_signed_dtypes, for_unsigned_dtypes, for_complex_dtypes,
     for_orders, for_CF_orders,
     numpy_asnumpy_array_equal, numpy_asnumpy_allclose,
 )

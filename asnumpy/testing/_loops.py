@@ -21,7 +21,7 @@
 
 __all__ = [
     'for_dtypes', 'for_all_dtypes', 'for_float_dtypes', 'for_int_dtypes',
-    'for_signed_dtypes', 'for_unsigned_dtypes',
+    'for_signed_dtypes', 'for_unsigned_dtypes', 'for_complex_dtypes',
     'for_orders', 'for_CF_orders',
     'numpy_asnumpy_array_equal', 'numpy_asnumpy_allclose',
 ]
@@ -208,6 +208,22 @@ def for_unsigned_dtypes(name='dtype', no_uint32=True, no_uint64=True):
         dtypes.remove(numpy.uint32)
     if no_uint64 and numpy.uint64 in dtypes:
         dtypes.remove(numpy.uint64)
+    return for_dtypes(tuple(dtypes), name=name)
+
+
+def for_complex_dtypes(name='dtype', exclude=None):
+    """为复数类型参数化测试
+    
+    Args:
+        name: 参数名
+        exclude: 排除的类型列表，如 [numpy.complex64]
+        
+    Returns:
+        装饰器函数
+    """
+    dtypes = list(_complex_dtypes)
+    if exclude:
+        dtypes = [dt for dt in dtypes if dt not in exclude]
     return for_dtypes(tuple(dtypes), name=name)
 
 

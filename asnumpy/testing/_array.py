@@ -68,9 +68,22 @@ def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False):
     # 检查值
     if not np.array_equal(x, y):
         if verbose:
-            diff = x - y
-            msg = f"Arrays are not equal.\nMax absolute difference: {np.abs(diff).max()}"
+            msg = "Arrays are not equal."
+            try:
+                # 尝试计算差异，仅对数值类型有效
+                if x.dtype.kind in 'biu f': # bool, int, uint, float
+                    if x.dtype.kind == 'b':
+                        # 修复：布尔型使用异或(^)计算差异，避免减法报错
+                        diff = x ^ y
+                        msg += f"\nNumber of differing elements: {np.sum(diff)}"
+                    else:
+                        diff = x - y
+                        msg += f"\nMax absolute difference: {np.abs(diff).max()}"
+            except Exception:
+                pass # 如果计算差异失败，忽略，只打印数组内容
+            
             if x.size > 0:
+                # 找出差异的索引
                 msg += f"\nIndices where elements differ: {np.where(x != y)}"
             msg += f"\nNumPy:\n{x}\nAsNumPy:\n{y}"
         else:
@@ -79,20 +92,7 @@ def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False):
 
 
 def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_check=False):
-    """断言两个数组在误差范围内相等（用于浮点数比较）
-    
-    Args:
-        x: 第一个数组
-        y: 第二个数组
-        rtol: 相对容差
-        atol: 绝对容差
-        err_msg: 自定义错误消息
-        verbose: 是否显示详细错误信息
-        strides_check: 是否检查strides
-        
-    Raises:
-        AssertionError: 如果数组不在误差范围内
-    """
+    """断言两个数组在误差范围内相等（用于浮点数比较）"""
     # 转换为numpy数组
     if not isinstance(x, np.ndarray):
         if hasattr(x, 'to_numpy'):
@@ -124,8 +124,14 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_c
     # 检查值（在误差范围内）
     if not np.allclose(x, y, rtol=rtol, atol=atol, equal_nan=True):
         if verbose:
-            diff = x - y
-            msg = f"Arrays are not almost equal.\nMax absolute difference: {np.abs(diff).max()}"
+            msg = "Arrays are not almost equal."
+            try:
+                if x.dtype.kind in 'uif':
+                    diff = x - y
+                    msg += f"\nMax absolute difference: {np.abs(diff).max()}"
+            except Exception:
+                pass
+
             if x.size > 0:
                 mask = ~np.isclose(x, y, rtol=rtol, atol=atol, equal_nan=True)
                 msg += f"\nIndices where elements differ: {np.where(mask)}"
@@ -133,4 +139,3 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_c
         else:
             msg = "Arrays are not almost equal."
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
-
