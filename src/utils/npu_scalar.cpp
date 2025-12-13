@@ -19,6 +19,8 @@
 #include <fmt/core.h>
 #include <cstring>
 
+namespace asnumpy{
+
 /*
     Helper function to safely cast values to target types.
     For float8_e5m2 and bfloat16, converts to float first, then to target type.
@@ -33,16 +35,6 @@ auto safe_cast(SourceType value) -> TargetType {
         return static_cast<TargetType>(value);
     }
 }
-
-/*
-    Creates an aclScalar object by automatically determining the appropriate ACL data type
-    based on the C++ type of the input value. Uses TypeToACLDtype for compile-time mapping.
-*/
-template <typename T>
-aclScalar* CreateScalar(T value) {
-    return CreateScalar(value, TypeToACLDtype<std::decay_t<T>>::value);
-}
-
 
 // 辅助函数：处理类型匹配的标量创建
 template <typename ValueType, typename TargetType, aclDataType DType>
@@ -285,6 +277,17 @@ aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
     }
 }
 
+} // namespace asnumpy
+
+/*
+    Creates an aclScalar object by automatically determining the appropriate ACL data type
+    based on the C++ type of the input value. Uses TypeToACLDtype for compile-time mapping.
+*/
+template <typename T>
+aclScalar* CreateScalar(T value) {
+    return CreateScalar(value, TypeToACLDtype<std::decay_t<T>>::value);
+}
+
 /*
     Creates an aclScalar object for a given value with explicit data type control.
     Performs optimized value conversion when the input type matches the target data type.
@@ -292,7 +295,7 @@ aclScalar* create_scalar_impl(ValueType value, aclDataType dtype) {
 */
 template <typename ValueType>
 aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
-    return create_scalar_impl(value, dtype);
+    return asnumpy::create_scalar_impl(value, dtype);
 }
 
 // =====================

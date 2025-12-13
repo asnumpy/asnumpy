@@ -23,6 +23,7 @@
 #include <asnumpy/dtypes/float_types.hpp>
 
 namespace py = pybind11;
+namespace asnumpy {
 void bind_dtypes(py::module_& dtypes){
     dtypes.doc() = "dtypes module of asnumpy";
     
@@ -88,4 +89,5 @@ void bind_dtypes(py::module_& dtypes){
         }
         return py::reinterpret_steal<py::array>(arr);
     });
-} 
+}
+}  // namespace asnumpy 
