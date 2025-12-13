@@ -19,7 +19,7 @@
 
 void bind_array(pybind11::module_& array);
 void bind_cann(pybind11::module_& cann);
-void bind_dtypes(pybind11::module_& dtypes);
+namespace asnumpy { void bind_dtypes(pybind11::module_& dtypes); }
 void bind_fft(pybind11::module_& fft);
 void bind_linalg(pybind11::module_& linalg);
 void bind_linalg_no_submodule(pybind11::module_& m);
@@ -48,7 +48,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
 
     bind_array(array);
     bind_cann(cann);
-    bind_dtypes(dtypes);
+    asnumpy::bind_dtypes(dtypes);
     bind_fft(fft);
     bind_linalg(linalg);
     bind_linalg_no_submodule(module);
