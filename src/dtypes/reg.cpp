@@ -25,6 +25,7 @@
  
 // 显式特化所有 ACL 浮点类型的静态成员
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e5m2)
+EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(bfloat16)
  
  // TypeDescriptor 具体类型的特化实现
  // TypeDescriptor 对 float8_e5m2 的特化
@@ -42,11 +43,30 @@ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e5m2)
      static constexpr char kNpyDescrKind = 'f';
      static constexpr char kNpyDescrType = '5';
      static constexpr char kNpyDescrByteorder = '=';
-     static constexpr int kSize = sizeof(T);
-     static constexpr int kAlignment = alignof(T);
- };
- 
- 
+    static constexpr int kSize = sizeof(T);
+    static constexpr int kAlignment = alignof(T);
+};
+
+// TypeDescriptor 对 bfloat16 的特化
+template<>
+struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
+    using T = bfloat16;
+
+    static constexpr bool is_floating = true;
+    static constexpr bool is_integral = false;
+    static constexpr bool is_complex = false;
+    static constexpr const char* kTypeName = "bfloat16";
+    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.bfloat16";
+    static constexpr const char* kTpDoc = "Brain Floating Point 16-bit values";
+
+    static constexpr char kNpyDescrKind = 'f';
+    static constexpr char kNpyDescrType = '6';  // 使用 '6' 作为 bfloat16 的类型字符
+    static constexpr char kNpyDescrByteorder = '=';
+    static constexpr int kSize = sizeof(T);
+    static constexpr int kAlignment = alignof(T);
+};
+
+
 // 对外暴露统一初始化与注册入口
 void InitAndRegisterDtypes() {
     // 1) 确保只导入一次 NumPy C API
@@ -54,11 +74,13 @@ void InitAndRegisterDtypes() {
     
     // 2) 直接注册所有 ACL 浮点类型
     FloatTypeRegistrar<float8_e5m2>::RegisterDtype();
+    FloatTypeRegistrar<bfloat16>::RegisterDtype();
 }
  
 // 检查所有类型是否已注册
 bool AreAllACLFloatTypesRegistered() {
-    return ACLFloatManager<float8_e5m2>::npy_type != NPY_NOTYPE;
+    return ACLFloatManager<float8_e5m2>::npy_type != NPY_NOTYPE &&
+           ACLFloatManager<bfloat16>::npy_type != NPY_NOTYPE;
 }
  
  // 获取特定类型的 dtype 类型号
@@ -147,5 +169,10 @@ template int GetACLFloatTypeNum<float8_e5m2>();
 template PyObject* GetACLFloatTypeObject<float8_e5m2>();
 template PyArray_Descr* GetACLFloatDescr<float8_e5m2>();
 template bool IsACLFloatType<float8_e5m2>(int);
+
+template int GetACLFloatTypeNum<bfloat16>();
+template PyObject* GetACLFloatTypeObject<bfloat16>();
+template PyArray_Descr* GetACLFloatDescr<bfloat16>();
+template bool IsACLFloatType<bfloat16>(int);
  }  // namespace dtypes
  }  // namespace asnumpy

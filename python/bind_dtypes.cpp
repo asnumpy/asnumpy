@@ -26,13 +26,13 @@ namespace py = pybind11;
 void bind_dtypes(py::module_& dtypes){
     dtypes.doc() = "dtypes module of asnumpy";
     
-    // 1. 初始化并注册所有 dtype（包括 float8_e5m2）
+    // 1. 初始化并注册所有 dtype（包括 float8_e5m2 和 bfloat16）
     asnumpy::dtypes::InitAndRegisterDtypes();
     
     // 2. 检查注册是否成功
     bool is_registered = asnumpy::dtypes::AreAllACLFloatTypesRegistered();
     if (!is_registered) {
-        throw std::runtime_error("float8_e5m2 registration failed");
+        throw std::runtime_error("ACL float types registration failed");
     }
     
     // 3. 绑定标准类型
@@ -46,13 +46,29 @@ void bind_dtypes(py::module_& dtypes){
         throw std::runtime_error("float8_e5m2 type object is null");
     }
     
-    // 5. 添加检查注册状态的公共函数（用于测试）
+    // 5. 绑定 bfloat16
+    PyObject* bfloat16_type = asnumpy::dtypes::GetACLFloatTypeObject<asnumpy::dtypes::bfloat16>();
+    if (bfloat16_type != nullptr) {
+        dtypes.attr("bfloat16") = py::reinterpret_borrow<py::object>(bfloat16_type);
+    } else {
+        throw std::runtime_error("bfloat16 type object is null");
+    }
+    
+    // 6. 添加检查注册状态的公共函数（用于测试）
     dtypes.def("check_float8_e5m2_registered", []() {
         return asnumpy::dtypes::AreAllACLFloatTypesRegistered();
     });
     
     dtypes.def("get_float8_e5m2_type_num", []() {
         return asnumpy::dtypes::GetACLFloatTypeNum<asnumpy::dtypes::float8_e5m2>();
+    });
+    
+    dtypes.def("check_bfloat16_registered", []() {
+        return asnumpy::dtypes::GetACLFloatTypeNum<asnumpy::dtypes::bfloat16>() != NPY_NOTYPE;
+    });
+    
+    dtypes.def("get_bfloat16_type_num", []() {
+        return asnumpy::dtypes::GetACLFloatTypeNum<asnumpy::dtypes::bfloat16>();
     });
     dtypes.def("test_numpy_dtype_str", []() {
         asnumpy::dtypes::ImportNumpy();

@@ -20,7 +20,7 @@
 #include <asnumpy/dtypes/np_import.hpp>
 // 然后才能包含其他可能使用 NumPy 的头文件
 #include <asnumpy/dtypes/reg.hpp>
-#include <asnumpy/dtypes/float8_types.hpp>
+#include <asnumpy/dtypes/float_types.hpp>  // 包含所有浮点类型（包括 float8_e5m2 和 bfloat16）
 #include <numpy/arrayobject.h>
 #include <cstddef>
 
@@ -253,7 +253,8 @@ NPUArray NPUArray::FromNumpy(py::array hostData) {
     int type_num = descr->type_num;
     
     // 对于自定义类型，使用 NumPy C API 直接访问数据（因为 request() 不支持自定义 dtype）
-    if (asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::float8_e5m2>(type_num)) {
+    if (asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::float8_e5m2>(type_num) ||
+        asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::bfloat16>(type_num)) {
         PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(hostData.ptr());
         if (!PyArray_Check(arr)) {
             throw std::runtime_error("Input is not a NumPy array.");
@@ -314,12 +315,13 @@ py::array NPUArray::ToNumpy() const {
     auto error = aclGetRawTensorAddr(this->tensorPtr, &rawDataPtr);
     if (error != ACL_SUCCESS || !rawDataPtr) throw std::runtime_error(fmt::format("Failed to get tensor data pointer. error: {}", error));
     
-    // 检查是否是自定义类型（如 float8_e5m2）
+    // 检查是否是自定义类型（如 float8_e5m2 或 bfloat16）
     PyArray_Descr* descr = reinterpret_cast<PyArray_Descr*>(this->dtype.ptr());
     bool is_custom_type = false;
     if (descr != nullptr) {
         int type_num = descr->type_num;
-        is_custom_type = asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::float8_e5m2>(type_num);
+        is_custom_type = asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::float8_e5m2>(type_num) ||
+                         asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::bfloat16>(type_num);
     }
     
     // 创建结果数组
@@ -436,6 +438,12 @@ aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
         return asnumpy::dtypes::float8_e5m2::getACLenum();
     }
     
+    // 检查是否是注册的自定义类型 bfloat16
+    if (asnumpy::dtypes::IsACLFloatType<asnumpy::dtypes::bfloat16>(type_num)) {
+        // 使用静态方法 getACLenum 获取 ACL 枚举值
+        return asnumpy::dtypes::bfloat16::getACLenum();
+    }
+    
     throw std::runtime_error("Unsupported py::dtype for aclDataType.");
 }
 
@@ -463,7 +471,6 @@ py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
         case ACL_UINT64: return py::dtype::of<uint64_t>();
         case ACL_BOOL: return py::dtype::of<bool>();
         case ACL_FLOAT16: return py::dtype::of<float>();  // float16 映射到 float，保持浮点语义
-        case ACL_BF16: return py::dtype::of<float>();     // bf16 映射到 float，保持浮点语义
         case ACL_INT4: return py::dtype::of<uint8_t>();      // int4 映射到 uint8
         case ACL_UINT1: return py::dtype::of<uint8_t>();     // uint1 映射到 uint8
         case ACL_COMPLEX64: return py::dtype::of<std::complex<float>>();
@@ -472,6 +479,15 @@ py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
         case ACL_STRING: return py::dtype::of<char*>();      // 字符串指针
         case ACL_DT_UNDEFINED: return py::dtype::of<uint8_t>(); // 未定义类型映射到 uint8
         case ACL_HIFLOAT8: return py::dtype::of<uint8_t>();  // Float8 变体映射到 uint8
+        case ACL_BF16: {
+            // 返回注册的自定义类型 bfloat16
+            PyArray_Descr* descr = asnumpy::dtypes::GetACLFloatDescr<asnumpy::dtypes::bfloat16>();
+            if (descr != nullptr) {
+                return py::reinterpret_steal<py::dtype>(reinterpret_cast<PyObject*>(descr));
+            }
+            // 如果注册失败，回退到 float
+            return py::dtype::of<float>();
+        }
         case ACL_FLOAT8_E5M2: {
             // 返回注册的自定义类型 float8_e5m2
             PyArray_Descr* descr = asnumpy::dtypes::GetACLFloatDescr<asnumpy::dtypes::float8_e5m2>();

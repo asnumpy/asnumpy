@@ -23,11 +23,18 @@ from .asnumpy_core.logic import *
 from .asnumpy_core import linalg  
 # linalg模块内部分需要ap.linalg.xxx调用，部分ap.yyy调用，
 # yyy类函数分到了.asnumpy_core根模块中
+import numpy as np
 from .asnumpy_core import dtypes
-from .asnumpy_core.dtypes import *
+from .asnumpy_core.dtypes import float8_e5m2 as _float8_e5m2_type, bfloat16 as _bfloat16_type
+
+# 将类型对象转换为 dtype 对象，使其可以直接作为 numpy dtype 使用
+float8_e5m2 = np.dtype(_float8_e5m2_type)
+bfloat16 = np.dtype(_bfloat16_type)
 
 __all__ = [
     "dtypes",
+    "float8_e5m2",
+    "bfloat16",
     "zeros",
     "zeros_like",
     "full",

@@ -21,12 +21,13 @@
 
 /*
     Helper function to safely cast values to target types.
-    For float8_e5m2, converts to float first, then to target type.
+    For float8_e5m2 and bfloat16, converts to float first, then to target type.
     For other types, performs direct cast.
 */
 template<typename TargetType, typename SourceType>
 auto safe_cast(SourceType value) -> TargetType {
-    if constexpr (std::is_same_v<std::decay_t<SourceType>, asnumpy::dtypes::float8_e5m2>) {
+    if constexpr (std::is_same_v<std::decay_t<SourceType>, asnumpy::dtypes::float8_e5m2> ||
+                  std::is_same_v<std::decay_t<SourceType>, asnumpy::dtypes::bfloat16>) {
         return static_cast<TargetType>(static_cast<float>(value));
     } else {
         return static_cast<TargetType>(value);
@@ -72,6 +73,38 @@ aclScalar* create_scalar_float8_e5m2(ValueType value) {
         std::string full_error_msg = fmt::format(
             "aclCreateScalar failed for ACL_FLOAT8_E5M2: "
             "converted value: 0x{:02x} ({})",
+            converted, converted
+        );
+        
+        if (error_msg != nullptr && std::strlen(error_msg) > static_cast<size_t>(0)) {
+            full_error_msg += fmt::format(". Details: {}", error_msg);
+        } else {
+            full_error_msg += ". ACL may not support scalar creation for this type.";
+        }
+        
+        throw std::runtime_error(full_error_msg);
+    }
+    return result;
+}
+
+// 辅助函数：处理 bfloat16 类型
+template <typename ValueType>
+aclScalar* create_scalar_bfloat16(ValueType value) {
+    uint16_t converted;
+    if constexpr (std::is_same_v<std::decay_t<ValueType>, asnumpy::dtypes::bfloat16>) {
+        converted = value.rep();
+    } else {
+        float f_value = static_cast<float>(value);
+        asnumpy::dtypes::bfloat16 bf16_value(f_value);
+        converted = bf16_value.rep();
+    }
+    
+    aclScalar* result = aclCreateScalar(&converted, ACL_BF16);
+    if (result == nullptr) {
+        const char* error_msg = aclGetRecentErrMsg();
+        std::string full_error_msg = fmt::format(
+            "aclCreateScalar failed for ACL_BF16: "
+            "converted value: 0x{:04x} ({})",
             converted, converted
         );
         
@@ -204,8 +237,9 @@ template <typename ValueType>
 aclScalar* create_scalar_special_float_types(ValueType value, aclDataType dtype) {
     switch (dtype) {
         case ACL_FLOAT16:
-        case ACL_BF16:
             return create_scalar_float16_like(value, dtype);
+        case ACL_BF16:
+            return create_scalar_bfloat16(value);
         case ACL_HIFLOAT8:
         case ACL_FLOAT8_E4M3FN:
         case ACL_FLOAT8_E8M0:
@@ -278,6 +312,7 @@ template aclScalar* CreateScalar<uint16_t>(uint16_t);
 template aclScalar* CreateScalar<uint8_t>(uint8_t);
 template aclScalar* CreateScalar<bool>(bool);
 template aclScalar* CreateScalar<asnumpy::dtypes::float8_e5m2>(asnumpy::dtypes::float8_e5m2);
+template aclScalar* CreateScalar<asnumpy::dtypes::bfloat16>(asnumpy::dtypes::bfloat16);
 
 // 2) CreateScalar(ValueType value, aclDataType dtype) —— 显式 dtype 版本
 template aclScalar* CreateScalar<float>(float, aclDataType);
@@ -292,3 +327,4 @@ template aclScalar* CreateScalar<uint16_t>(uint16_t, aclDataType);
 template aclScalar* CreateScalar<uint8_t>(uint8_t, aclDataType);
 template aclScalar* CreateScalar<bool>(bool, aclDataType);
 template aclScalar* CreateScalar<asnumpy::dtypes::float8_e5m2>(asnumpy::dtypes::float8_e5m2, aclDataType);
+template aclScalar* CreateScalar<asnumpy::dtypes::bfloat16>(asnumpy::dtypes::bfloat16, aclDataType);

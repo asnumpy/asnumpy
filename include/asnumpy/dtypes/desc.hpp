@@ -20,6 +20,7 @@
 namespace asnumpy {
 namespace dtypes {
     class float8_e5m2;
+    class bfloat16;
     template <typename T>
     struct ACLFloatManager;
     template <typename T, typename Enable = void>
@@ -28,5 +29,7 @@ namespace dtypes {
     // 具体类型的特化声明（实现在 reg.cpp 中）
     template<>
     struct TypeDescriptor<float8_e5m2>;
+    template<>
+    struct TypeDescriptor<bfloat16>;
 }
 }

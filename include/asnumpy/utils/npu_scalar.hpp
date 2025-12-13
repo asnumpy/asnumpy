@@ -45,6 +45,7 @@ template <> struct TypeToACLDtype<uint32_t> { static constexpr aclDataType value
 template <> struct TypeToACLDtype<uint64_t> { static constexpr aclDataType value = ACL_UINT64; };
 template <> struct TypeToACLDtype<bool> { static constexpr aclDataType value = ACL_BOOL; };
 template <> struct TypeToACLDtype<asnumpy::dtypes::float8_e5m2> { static constexpr aclDataType value = ACL_FLOAT8_E5M2; };
+template <> struct TypeToACLDtype<asnumpy::dtypes::bfloat16> { static constexpr aclDataType value = ACL_BF16; };
 
 /**
  * @brief Creates a scalar object with automatic type deduction
