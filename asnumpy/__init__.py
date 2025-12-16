@@ -14,10 +14,165 @@
 # limitations under the License.
 # *****************************************************************************
 
-import atexit
-from .lib import *
-from .lib import __all__ as __lib_all__
+
+
+from .array import (
+    empty,
+    empty_like,
+    eye,
+    full,
+    full_like,
+    identity,
+    linspace,
+    ones,
+    ones_like,
+    zeros,
+    zeros_like
+)
+
+from .cann import (
+    finalize,
+    init,
+    reset_device,
+    reset_device_force,
+    set_device
+)
+
+from . import linalg
+
+from ._linalg import (
+    dot,
+    einsum,
+    inner,
+    matmul,
+    outer,
+    vdot
+)
+
+
+
+from .logic import (
+    all,
+    any,
+    equal,
+    greater,
+    greater_equal,
+    isfinite,
+    isinf,
+    isneginf,
+    isposinf,
+    less,
+    less_equal,
+    logical_and,
+    logical_not,
+    logical_or,
+    logical_xor,
+    not_equal
+)
+
+from .math import (
+    absolute,
+    add,
+    amax,
+    around,
+    arccos,
+    arccosh,
+    arcsin,
+    arcsinh,
+    arctan,
+    arctan2,
+    arctanh,
+    ceil,
+    clip,
+    copysign,
+    cos,
+    cosh,
+    cross,
+    cumprod,
+    cumsum,
+    deg2rad,
+    degrees,
+    divide,
+    divmod,
+    exp,
+    exp2,
+    expm1,
+    fabs,
+    fix,
+    floor,
+    floor_divide,
+    fmax,
+    fmin,
+    fmod,
+    float_power,
+    gelu,
+    gcd,
+    heaviside,
+    hypot,
+    lcm,
+    ldexp,
+    log,
+    log10,
+    log1p,
+    log2,
+    logaddexp,
+    logaddexp2,
+    max,
+    maximum,
+    minimum,
+    mod,
+    modf,
+    multiply,
+    nan_to_num,
+    nancumprod,
+    nancumsum,
+    nanmax,
+    nanprod,
+    nansum,
+    negative,
+    power,
+    positive,
+    prod,
+    rad2deg,
+    radians,
+    real,
+    reciprocal,
+    relu,
+    remainder,
+    rint,
+    round_,
+    sign,
+    signbit,
+    sin,
+    sinc,
+    sinh,
+    sqrt,
+    square,
+    subtract,
+    sum,
+    tan,
+    tanh,
+    true_divide,
+    trunc
+)
+
+# 不直接导入 random 模块中的函数，只能通过 asnumpy.random.binomial 调用
+from . import random
+
+from .sorting import sort
+
+from .utils import (
+    broadcast_shape,
+    ndarray
+)
+
 from .io import save, savez, savez_compressed, load
+
+import numpy as np
+
+# from numpy.typing import float32 # todo
+
+
 
 # Get version from package metadata (defined in pyproject.toml)
 try:
@@ -27,14 +182,154 @@ except Exception:
     # Fallback for development mode or if package is not installed
     __version__ = "0.2.0"
 
+
+
+
 __all__ = [
+    # .array
+    "empty",
+    "empty_like",
+    "eye",
+    "full",
+    "full_like",
+    "identity",
+    "linspace",
+    "ones",
+    "ones_like",
+    "zeros",
+    "zeros_like",
+    # .cann
+    "finalize",
+    "init",
+    "reset_device",
+    "reset_device_force",
+    "set_device",
+    # .linalg
+    "linalg",
+    # .linalg_ops
+    "dot",
+    "einsum",
+    "inner",
+    "matmul",
+    "outer",
+    "vdot",
+    # .logic
+    "all",
+    "any",
+    "equal",
+    "greater",
+    "greater_equal",
+    "isfinite",
+    "isinf",
+    "isneginf",
+    "isposinf",
+    "less",
+    "less_equal",
+    "logical_and",
+    "logical_not",
+    "logical_or",
+    "logical_xor",
+    "not_equal",
+    # .math
+    "absolute",
+    "add",
+    "amax",
+    "around",
+    "arccos",
+    "arccosh",
+    "arcsin",
+    "arcsinh",
+    "arctan",
+    "arctan2",
+    "arctanh",
+    "ceil",
+    "clip",
+    "copysign",
+    "cos",
+    "cosh",
+    "cross",
+    "cumprod",
+    "cumsum",
+    "deg2rad",
+    "degrees",
+    "divide",
+    "divmod",
+    "exp",
+    "exp2",
+    "expm1",
+    "fabs",
+    "fix",
+    "floor",
+    "floor_divide",
+    "fmax",
+    "fmin",
+    "fmod",
+    "float_power",
+    "gelu",
+    "gcd",
+    "heaviside",
+    "hypot",
+    "lcm",
+    "ldexp",
+    "log",
+    "log10",
+    "log1p",
+    "log2",
+    "logaddexp",
+    "logaddexp2",
+    "max",
+    "maximum",
+    "minimum",
+    "mod",
+    "modf",
+    "multiply",
+    "nan_to_num",
+    "nancumprod",
+    "nancumsum",
+    "nanmax",
+    "nanprod",
+    "nansum",
+    "negative",
+    "power",
+    "positive",
+    "prod",
+    "rad2deg",
+    "radians",
+    "real",
+    "reciprocal",
+    "relu",
+    "remainder",
+    "rint",
+    "round_",
+    "sign",
+    "signbit",
+    "sin",
+    "sinc",
+    "sinh",
+    "sqrt",
+    "square",
+    "subtract",
+    "sum",
+    "tan",
+    "tanh",
+    "true_divide",
+    "trunc",
+    # .random
+    "random",
+    # .sorting
+    "sort",
+    # .utils
+    "broadcast_shape",
+    "ndarray",
+    # .io
     'load',
     'save',
     'savez',
     'savez_compressed'
 ]
 
-__all__.extend(__lib_all__)
+
+import atexit
 
 
 @atexit.register

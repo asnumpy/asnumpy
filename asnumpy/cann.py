@@ -14,10 +14,30 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union, Sequence
-from .asnumpy_core.sorting import sort as ap_sort
-from .utils import ndarray
+from .lib.asnumpy_core.cann import (
+    finalize as _ap_finalize,
+    init as _ap_init,
+    reset_device as _ap_reset_device,
+    reset_device_force as _ap_reset_device_force,
+    set_device as _ap_set_device
+)
 
 
-def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
-    return ndarray(ap_sort(a.impl, axis, stable))
+def set_device(device_id: int) -> None:
+    return _ap_set_device(device_id)
+
+
+def reset_device(device_id: int) -> None:
+    return _ap_reset_device(device_id)
+
+
+def reset_device_force(device_id: int) -> None:
+    return _ap_reset_device_force(device_id)
+
+
+def init() -> None:
+    return _ap_init()
+
+
+def finalize() -> None:
+    return _ap_finalize()
