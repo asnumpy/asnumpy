@@ -19,7 +19,7 @@ from .lib.asnumpy_core.cann import (
     init as _ap_init,
     reset_device as _ap_reset_device,
     reset_device_force as _ap_reset_device_force,
-    set_device as _ap_set_device
+    set_device as _ap_set_device,
 )
 
 

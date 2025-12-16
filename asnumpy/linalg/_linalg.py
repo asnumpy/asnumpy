@@ -21,7 +21,7 @@ from ..lib.asnumpy_core.linalg import (
     matrix_power as ap_matrix_power,
     norm as ap_norm,
     qr as ap_qr,
-    slogdet as ap_slogdet
+    slogdet as ap_slogdet,
 )
 
 from ..utils import ndarray
@@ -35,9 +35,12 @@ def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
     return ndarray(ap_qr(a, mode))
 
 
-def norm(a: ndarray, ord: Optional[Union[str, int, float]] = None,
-         axis: Optional[Union[int, Sequence[int]]] = None,
-         keepdims: bool = False) -> ndarray:
+def norm(
+    a: ndarray,
+    ord: Optional[Union[str, int, float]] = None,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+) -> ndarray:
     return ndarray(ap_norm(a, ord, axis, keepdims))
 
 

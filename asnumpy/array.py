@@ -27,12 +27,14 @@ from .lib.asnumpy_core.array import (
     ones as _ap_ones,
     ones_like as _ap_ones_like,
     zeros as _ap_zeros,
-    zeros_like as _ap_zeros_like
+    zeros_like as _ap_zeros_like,
 )
 from .utils import ndarray, _convert_dtype
 
 
-def zeros(shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None) -> ndarray:
+def zeros(
+    shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_zeros(shape, _convert_dtype(dtype)))
 
 
@@ -40,7 +42,9 @@ def zeros_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     return ndarray(_ap_zeros_like(other, _convert_dtype(dtype)))
 
 
-def full(shape: Union[int, Sequence[int]], value: Any, dtype: Optional[np.dtype] = None) -> ndarray:
+def full(
+    shape: Union[int, Sequence[int]], value: Any, dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_full(shape, value, _convert_dtype(dtype)))
 
 
@@ -48,7 +52,9 @@ def full_like(other: Any, value: Any, dtype: Optional[np.dtype] = None) -> ndarr
     return ndarray(_ap_full_like(other, value, _convert_dtype(dtype)))
 
 
-def empty(shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None) -> ndarray:
+def empty(
+    shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_empty(shape, _convert_dtype(dtype)))
 
 
@@ -72,6 +78,10 @@ def identity(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
     return ndarray(_ap_identity(n, _convert_dtype(dtype)))
 
 
-def linspace(start: Union[int, float], end: Union[int, float], 
-             steps: int = 50, dtype: Optional[np.dtype] = None) -> ndarray:
+def linspace(
+    start: Union[int, float],
+    end: Union[int, float],
+    steps: int = 50,
+    dtype: Optional[np.dtype] = None,
+) -> ndarray:
     return ndarray(_ap_linspace(start, end, steps, _convert_dtype(dtype)))

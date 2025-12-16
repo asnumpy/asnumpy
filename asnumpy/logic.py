@@ -32,18 +32,22 @@ from .lib.asnumpy_core.logic import (
     logical_not as _ap_logical_not,
     logical_or as _ap_logical_or,
     logical_xor as _ap_logical_xor,
-    not_equal as _ap_not_equal
+    not_equal as _ap_not_equal,
 )
 from .utils import ndarray, _convert_dtype
 
 
-def all(x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def all(
+    x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> ndarray:
     if axis is None:
         return ndarray(_ap_all(x))
     return ndarray(_ap_all(x, axis, keepdims))
 
 
-def any(x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> ndarray:
+def any(
+    x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> ndarray:
     if axis is None:
         return ndarray(_ap_any(x))
     return ndarray(_ap_any(x, axis, keepdims))
@@ -81,25 +85,37 @@ def logical_xor(x1: ndarray, x2: ndarray) -> ndarray:
     return ndarray(_ap_logical_xor(x1, x2))
 
 
-def greater(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def greater(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_greater(x1, x2, _convert_dtype(dtype)))
 
 
-def greater_equal(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def greater_equal(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_greater_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def less(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def less(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_less(x1, x2, _convert_dtype(dtype)))
 
 
-def less_equal(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def less_equal(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_less_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def equal(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def equal(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def not_equal(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def not_equal(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_not_equal(x1, x2, _convert_dtype(dtype)))
