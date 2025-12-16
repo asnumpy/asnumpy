@@ -14,19 +14,33 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Sequence
+from typing import Sequence, Union, overload
 import numpy as np
-from .asnumpy_core import ndarray as _ndarray
-from .asnumpy_core import broadcast_shape as _broadcast_shape
+from .lib.asnumpy_core import ndarray as _ndarray
+from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
 
 
-class ndarray:
-    def __init__(self, shape: Sequence[int], dtype: np.dtype):
-        self._impl = _ndarray(shape, dtype)
-
-    def __init__(self, other: _ndarray):
-        self._impl = other
-
+class ndarray(_ndarray):
+    @overload
+    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: 
+        ...
+    
+    @overload
+    def __init__(self, other: _ndarray) -> None:
+        ...
+    
+    def __init__(self, shape_or_array, dtype: np.dtype = None):
+        if isinstance(shape_or_array, _ndarray):
+                super().__init__(shape_or_array)
+        elif isinstance(shape_or_array, (Sequence, int)):
+            # 从形状初始化
+            if dtype is None:
+                raise ValueError("dtype must be specified when initializing with shape")
+            shape = shape_or_array if isinstance(shape_or_array, Sequence) else (shape_or_array,)
+            super().__init__(shape, np.dtype(dtype))
+        else:
+            raise TypeError(f"Unsupported type for initialization: {type(shape_or_array)}")
+    
     def __repr__(self) -> str:
         return f"ndarray(shape={self.shape}, dtype={self.dtype})"
 
@@ -35,28 +49,23 @@ class ndarray:
 
     @property
     def shape(self) -> tuple:
-        return tuple(self._impl.shape)
+        return super().shape
 
     @property
     def dtype(self) -> np.dtype:
-        return self._impl.dtype
+        return super().dtype
 
     @property
     def acl_dtype(self) -> int:
-        return self._impl.aclDtype
-
-    @property
-    def impl(self):
-        return self._impl
+        return super().aclDtype
 
     @classmethod
     def from_numpy(cls, host_data: np.ndarray) -> 'ndarray':
-        result = cls.__new__(cls)
-        result._impl = _ndarray.from_numpy(host_data)
-        return result
+        base_obj = _ndarray.from_numpy(host_data)
+        return cls(base_obj)
 
     def to_numpy(self) -> np.ndarray:
-        return self._impl.to_numpy()
+        return super().to_numpy()
 
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
     return _broadcast_shape(shape_a, shape_b)

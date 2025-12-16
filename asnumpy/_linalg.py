@@ -14,30 +14,36 @@
 # limitations under the License.
 # *****************************************************************************
 
-from .asnumpy_core.cann import (
-    finalize as ap_finalize,
-    init as ap_init,
-    reset_device as ap_reset_device,
-    reset_device_force as ap_reset_device_force,
-    set_device as ap_set_device
+from .lib.asnumpy_core import (
+    dot as _ap_dot,
+    inner as _ap_inner,
+    outer as _ap_outer,
+    vdot as _ap_vdot,
+    matmul as _ap_matmul,
+    einsum as _ap_einsum
 )
+from .utils import ndarray
 
 
-def set_device(device_id: int) -> None:
-    return ap_set_device(device_id)
+def dot(a: ndarray, b: ndarray) -> ndarray:
+    return ndarray(_ap_dot(a, b))
 
 
-def reset_device(device_id: int) -> None:
-    return ap_reset_device(device_id)
+def inner(a: ndarray, b: ndarray) -> ndarray:
+    return ndarray(_ap_inner(a, b))
 
 
-def reset_device_force(device_id: int) -> None:
-    return ap_reset_device_force(device_id)
+def outer(a: ndarray, b: ndarray) -> ndarray:
+    return ndarray(_ap_outer(a, b))
 
 
-def init() -> None:
-    return ap_init()
+def vdot(a: ndarray, b: ndarray) -> ndarray:
+    return ndarray(_ap_vdot(a, b))
 
 
-def finalize() -> None:
-    return ap_finalize()
+def matmul(x1: ndarray, x2: ndarray) -> ndarray:
+    return ndarray(_ap_matmul(x1, x2))
+
+
+def einsum(subscripts: str, *operands: ndarray) -> ndarray:
+    return ndarray(_ap_einsum(subscripts, *operands))

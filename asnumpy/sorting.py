@@ -15,38 +15,9 @@
 # *****************************************************************************
 
 from typing import Optional, Union, Sequence
-from .asnumpy_core.linalg import (
-    det as ap_det,
-    inv as ap_inv,
-    matrix_power as ap_matrix_power,
-    norm as ap_norm,
-    qr as ap_qr,
-    slogdet as ap_slogdet
-)
+from .lib.asnumpy_core.sorting import sort as _ap_sort
 from .utils import ndarray
 
 
-def matrix_power(a: ndarray, n: int) -> ndarray:
-    return ndarray(ap_matrix_power(a.impl, n))
-
-
-def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
-    return ndarray(ap_qr(a.impl, mode))
-
-
-def norm(a: ndarray, ord: Optional[Union[str, int, float]] = None,
-         axis: Optional[Union[int, Sequence[int]]] = None,
-         keepdims: bool = False) -> ndarray:
-    return ndarray(ap_norm(a.impl, ord, axis, keepdims))
-
-
-def det(a: ndarray) -> ndarray:
-    return ndarray(ap_det(a.impl))
-
-
-def slogdet(a: ndarray) -> tuple:
-    return ap_slogdet(a.impl)
-
-
-def inv(a: ndarray) -> ndarray:
-    return ndarray(ap_inv(a.impl))
+def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
+    return ndarray(_ap_sort(a, axis, stable))

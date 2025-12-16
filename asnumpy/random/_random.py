@@ -15,77 +15,76 @@
 # *****************************************************************************
 
 from typing import Union, Sequence
-import numpy as np
-from .asnumpy_core.random import (
-    binomial as ap_binomial,
-    exponential as ap_exponential,
-    geometric as ap_geometric,
-    gumbel as ap_gumbel,
-    laplace as ap_laplace,
-    lognormal as ap_lognormal,
-    logistic as ap_logistic,
-    normal as ap_normal,
-    pareto as ap_pareto,
-    rayleigh as ap_rayleigh,
-    standard_cauchy as ap_standard_cauchy,
-    standard_normal as ap_standard_normal,
-    uniform as ap_uniform,
-    weibull as ap_weibull
+from ..lib.asnumpy_core.random import (
+    binomial as _ap_binomial,
+    exponential as _ap_exponential,
+    geometric as _ap_geometric,
+    gumbel as _ap_gumbel,
+    laplace as _ap_laplace,
+    lognormal as _ap_lognormal,
+    logistic as _ap_logistic,
+    normal as _ap_normal,
+    pareto as _ap_pareto,
+    rayleigh as _ap_rayleigh,
+    standard_cauchy as _ap_standard_cauchy,
+    standard_normal as _ap_standard_normal,
+    uniform as _ap_uniform,
+    weibull as _ap_weibull
 )
-from .utils import ndarray
+from ..utils import ndarray
 
 
 def pareto(a: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_pareto(a, size))
+    return ndarray(_ap_pareto(a, size))
 
 
 def rayleigh(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_rayleigh(scale, size))
+    return ndarray(_ap_rayleigh(scale, size))
 
 
 def normal(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_normal(loc, scale, size))
+    return ndarray(_ap_normal(loc, scale, size))
 
 
 def uniform(low: float, high: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_uniform(low, high, size))
+    return ndarray(_ap_uniform(low, high, size))
 
 
 def standard_normal(size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_standard_normal(size))
+    return ndarray(_ap_standard_normal(size))
 
 
 def standard_cauchy(size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_standard_cauchy(size))
+    return ndarray(_ap_standard_cauchy(size))
 
 
 def weibull(a: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_weibull(a, size))
+    return ndarray(_ap_weibull(a, size))
 
 
 def binomial(n: int, p: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_binomial(n, p, size))
+    return ndarray(_ap_binomial(n, p, size))
 
 
 def exponential(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_exponential(scale, size))
+    return ndarray(_ap_exponential(scale, size))
 
 
 def geometric(p: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_geometric(p, size))
+    return ndarray(_ap_geometric(p, size))
 
 
 def gumbel(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_gumbel(loc, scale, size))
+    return ndarray(_ap_gumbel(loc, scale, size))
 
 
 def laplace(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_laplace(loc, scale, size))
+    return ndarray(_ap_laplace(loc, scale, size))
 
 
 def logistic(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_logistic(loc, scale, size))
+    return ndarray(_ap_logistic(loc, scale, size))
 
 
 def lognormal(mean: float, sigma: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(ap_lognormal(mean, sigma, size))
+    return ndarray(_ap_lognormal(mean, sigma, size))

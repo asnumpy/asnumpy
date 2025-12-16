@@ -27,7 +27,7 @@ Implements:
 """
 
 import numpy as _np
-from .lib import ndarray as NPUArray
+from .lib.asnumpy_core import ndarray as NPUArray
 
 def _to_numpy(x):
     """
