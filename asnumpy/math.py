@@ -98,7 +98,7 @@ from .lib.asnumpy_core.math import (
     tan as _ap_tan,
     tanh as _ap_tanh,
     true_divide as _ap_true_divide,
-    trunc as _ap_trunc
+    trunc as _ap_trunc,
 )
 from .utils import ndarray, _convert_dtype
 
@@ -169,11 +169,18 @@ def heaviside(x1: ndarray, x2: ndarray) -> ndarray:
     return ndarray(_ap_heaviside(x1, x2))
 
 
-def clip(a: ndarray, a_min: Union[ndarray, float], a_max: Union[ndarray, float]) -> ndarray:
+def clip(
+    a: ndarray, a_min: Union[ndarray, float], a_max: Union[ndarray, float]
+) -> ndarray:
     return ndarray(_ap_clip(a, a_min, a_max))
 
 
-def nan_to_num(x: ndarray, nan: float = 0.0, posinf: Optional[float] = None, neginf: Optional[float] = None) -> ndarray:
+def nan_to_num(
+    x: ndarray,
+    nan: float = 0.0,
+    posinf: Optional[float] = None,
+    neginf: Optional[float] = None,
+) -> ndarray:
     return ndarray(_ap_nan_to_num(x, nan, posinf, neginf))
 
 
@@ -194,7 +201,9 @@ def gelu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
 
 
 # Arithmetic operations
-def add(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def add(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_add(x1, x2, _convert_dtype(dtype)))
 
 
@@ -210,35 +219,51 @@ def negative(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     return ndarray(_ap_negative(x, _convert_dtype(dtype)))
 
 
-def multiply(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def multiply(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_multiply(x1, x2, _convert_dtype(dtype)))
 
 
-def divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def divide(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_divide(x1, x2, _convert_dtype(dtype)))
 
 
-def true_divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def true_divide(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_true_divide(x1, x2, _convert_dtype(dtype)))
 
 
-def subtract(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def subtract(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_subtract(x1, x2, _convert_dtype(dtype)))
 
 
-def floor_divide(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def floor_divide(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_floor_divide(x1, x2, _convert_dtype(dtype)))
 
 
-def float_power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def float_power(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_float_power(x1, x2, _convert_dtype(dtype)))
 
 
-def fmod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def fmod(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_fmod(x1, x2, _convert_dtype(dtype)))
 
 
-def mod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def mod(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_mod(x1, x2, _convert_dtype(dtype)))
 
 
@@ -246,62 +271,90 @@ def modf(x: ndarray) -> tuple:
     return ndarray(_ap_modf(x))
 
 
-def remainder(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
-
+def remainder(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_remainder(x1, x2, _convert_dtype(dtype)))
 
 
-def divmod(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> tuple:
-
+def divmod(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> tuple:
     return ndarray(_ap_divmod(x1, x2, _convert_dtype(dtype)))
 
 
-def power(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def power(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_power(x1, x2, _convert_dtype(dtype)))
 
 
 # Sums, products, differences
-def prod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-         keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
+def prod(
+    a: ndarray,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+    dtype: Optional[np.dtype] = None,
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_prod(a)
     return ndarray(_ap_prod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
-def sum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-        keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
+def sum(
+    a: ndarray,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+    dtype: Optional[np.dtype] = None,
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_sum(a)
     return ndarray(_ap_sum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
-def nanprod(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-            keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
+def nanprod(
+    a: ndarray,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+    dtype: Optional[np.dtype] = None,
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_nanprod(a)
     return ndarray(_ap_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
-def nansum(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-           keepdims: bool = False, dtype: Optional[np.dtype] = None) -> Union[ndarray, float]:
+def nansum(
+    a: ndarray,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+    dtype: Optional[np.dtype] = None,
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_nansum(a)
     return ndarray(_ap_nansum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
-def cumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
+def cumprod(
+    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_cumprod(a, axis, _convert_dtype(dtype)))
 
 
-def cumsum(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
+def cumsum(
+    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_cumsum(a, axis, _convert_dtype(dtype)))
 
 
-def nancumprod(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
+def nancumprod(
+    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_nancumprod(a, axis, _convert_dtype(dtype)))
 
 
-def nancumsum(a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None) -> ndarray:
+def nancumsum(
+    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_nancumsum(a, axis, _convert_dtype(dtype)))
 
 
@@ -395,11 +448,15 @@ def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
 
 
 # Rational routines
-def gcd(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def gcd(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_gcd(x1, x2, _convert_dtype(dtype)))
 
 
-def lcm(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def lcm(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_lcm(x1, x2, _convert_dtype(dtype)))
 
 
@@ -433,38 +490,49 @@ def trunc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
 
 
 # Extrema finding
-def maximum(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def maximum(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_maximum(x1, x2, _convert_dtype(dtype)))
 
 
-def minimum(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def minimum(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_minimum(x1, x2, _convert_dtype(dtype)))
 
 
-def fmax(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def fmax(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_fmax(x1, x2, _convert_dtype(dtype)))
 
 
-def fmin(x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+def fmin(
+    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+) -> ndarray:
     return ndarray(_ap_fmin(x1, x2, _convert_dtype(dtype)))
 
 
-def max(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-        keepdims: bool = False) -> Union[ndarray, float]: # np.xxx
+def max(
+    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> Union[ndarray, float]:  # np.xxx
     if axis is None:
         return _ap_amax(a)
     return ndarray(_ap_max(a, axis, keepdims))
 
 
-def amax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-         keepdims: bool = False) -> Union[ndarray, float]:
+def amax(
+    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_amax(a)
     return ndarray(_ap_amax(a, axis, keepdims))
 
 
-def nanmax(a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, 
-           keepdims: bool = False) -> Union[ndarray, float]:
+def nanmax(
+    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> Union[ndarray, float]:
     if axis is None:
         return _ap_nanmax(a)
     return ndarray(_ap_nanmax(a, axis, keepdims))

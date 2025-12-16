@@ -29,7 +29,7 @@ from ..lib.asnumpy_core.random import (
     standard_cauchy as _ap_standard_cauchy,
     standard_normal as _ap_standard_normal,
     uniform as _ap_uniform,
-    weibull as _ap_weibull
+    weibull as _ap_weibull,
 )
 from ..utils import ndarray
 

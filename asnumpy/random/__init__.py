@@ -28,7 +28,7 @@ from ._random import (
     standard_cauchy,
     standard_normal,
     uniform,
-    weibull
+    weibull,
 )
 
 __all__ = [
@@ -45,5 +45,5 @@ __all__ = [
     "standard_cauchy",
     "standard_normal",
     "uniform",
-    "weibull"
+    "weibull",
 ]

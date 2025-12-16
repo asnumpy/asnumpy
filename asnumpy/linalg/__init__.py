@@ -14,20 +14,6 @@
 # limitations under the License.
 # *****************************************************************************
 
-from ._linalg import (
-    det,
-    inv,
-    matrix_power,
-    norm,
-    qr,
-    slogdet
-)
+from ._linalg import det, inv, matrix_power, norm, qr, slogdet
 
-__all__ = [
-    "det",
-    "inv",
-    "matrix_power",
-    "norm",
-    "qr",
-    "slogdet"
-]
+__all__ = ["det", "inv", "matrix_power", "norm", "qr", "slogdet"]

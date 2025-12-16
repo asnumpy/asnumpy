@@ -14,8 +14,6 @@
 # limitations under the License.
 # *****************************************************************************
 
-
-
 from .array import (
     empty,
     empty_like,
@@ -27,29 +25,14 @@ from .array import (
     ones,
     ones_like,
     zeros,
-    zeros_like
+    zeros_like,
 )
 
-from .cann import (
-    finalize,
-    init,
-    reset_device,
-    reset_device_force,
-    set_device
-)
+from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 from . import linalg
 
-from ._linalg import (
-    dot,
-    einsum,
-    inner,
-    matmul,
-    outer,
-    vdot
-)
-
-
+from ._linalg import dot, einsum, inner, matmul, outer, vdot
 
 from .logic import (
     all,
@@ -67,7 +50,7 @@ from .logic import (
     logical_not,
     logical_or,
     logical_xor,
-    not_equal
+    not_equal,
 )
 
 from .math import (
@@ -153,36 +136,26 @@ from .math import (
     tan,
     tanh,
     true_divide,
-    trunc
+    trunc,
 )
 
-# 不直接导入 random 模块中的函数，只能通过 asnumpy.random.binomial 调用
 from . import random
 
 from .sorting import sort
 
-from .utils import (
-    broadcast_shape,
-    ndarray
-)
+from .utils import broadcast_shape, ndarray
 
 from .io import save, savez, savez_compressed, load
-
-import numpy as np
-
-# from numpy.typing import float32 # todo
-
 
 
 # Get version from package metadata (defined in pyproject.toml)
 try:
     from importlib.metadata import version
+
     __version__ = version("asnumpy")
 except Exception:
     # Fallback for development mode or if package is not installed
     __version__ = "0.2.0"
-
-
 
 
 __all__ = [
@@ -322,10 +295,10 @@ __all__ = [
     "broadcast_shape",
     "ndarray",
     # .io
-    'load',
-    'save',
-    'savez',
-    'savez_compressed'
+    "load",
+    "save",
+    "savez",
+    "savez_compressed",
 ]
 
 
@@ -336,6 +309,7 @@ import atexit
 def reset():
     reset_device(0)
     finalize()
+
 
 init()
 set_device(0)

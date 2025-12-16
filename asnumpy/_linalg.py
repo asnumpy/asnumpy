@@ -20,7 +20,7 @@ from .lib.asnumpy_core import (
     outer as _ap_outer,
     vdot as _ap_vdot,
     matmul as _ap_matmul,
-    einsum as _ap_einsum
+    einsum as _ap_einsum,
 )
 from .utils import ndarray
 
