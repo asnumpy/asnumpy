@@ -61,12 +61,12 @@ struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
 
     static constexpr char kNpyDescrKind = 'f';
     static constexpr char kNpyDescrType = '6';  // 使用 '6' 作为 bfloat16 的类型字符
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ 
 // 对外暴露统一初始化与注册入口
 void InitAndRegisterDtypes() {
     // 1) 确保只导入一次 NumPy C API
