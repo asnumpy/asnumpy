@@ -42,6 +42,7 @@ bfloat16 = _CallableDtype(np.dtype(_bfloat16_type), _bfloat16_type)
 from ._pybind11_wrappers import (
     wrap_array_creation_functions,
     wrap_ndarray_class,
+    wrap_functions_with_optional_dtype,
 )
 
 # 包装数组创建函数
@@ -72,6 +73,34 @@ empty_like = _wrapped_functions['empty_like']
 
 # 包装 ndarray 类
 ndarray = wrap_ndarray_class(ndarray)
+
+# 包装带有可选 dtype 参数的函数
+_wrapped_dtype_functions = wrap_functions_with_optional_dtype(
+    add_func=add,
+    subtract_func=subtract,
+    multiply_func=multiply,
+    divide_func=divide,
+    power_func=power,
+    maximum_func=maximum,
+    minimum_func=minimum,
+    sum_func=sum,
+    prod_func=prod,
+    cumsum_func=cumsum,
+    cumprod_func=cumprod,
+)
+
+# 替换原始函数为包装后的版本
+add = _wrapped_dtype_functions['add']
+subtract = _wrapped_dtype_functions['subtract']
+multiply = _wrapped_dtype_functions['multiply']
+divide = _wrapped_dtype_functions['divide']
+power = _wrapped_dtype_functions['power']
+maximum = _wrapped_dtype_functions['maximum']
+minimum = _wrapped_dtype_functions['minimum']
+sum = _wrapped_dtype_functions['sum']
+prod = _wrapped_dtype_functions['prod']
+cumsum = _wrapped_dtype_functions['cumsum']
+cumprod = _wrapped_dtype_functions['cumprod']
 
 __all__ = [
     "dtypes",

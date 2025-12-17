@@ -160,3 +160,118 @@ def wrap_ndarray_class(ndarray_class):
     
     return NPUArrayWrapperFinal
 
+
+def wrap_functions_with_optional_dtype(add_func, subtract_func, multiply_func, divide_func,
+                                       power_func, maximum_func, minimum_func,
+                                       sum_func, prod_func, cumsum_func, cumprod_func):
+    """
+    包装带有可选 dtype 参数的函数，使其支持 _CallableDtype。
+    采用与 wrap_array_creation_functions 相同的方式。
+    
+    Args:
+        add_func, subtract_func, ...: 原始的 pybind11 函数
+        
+    Returns:
+        dict: 包含包装后的函数的字典
+    """
+    def wrap_add(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_subtract(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_multiply(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_divide(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_power(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_maximum(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_minimum(original_func):
+        def wrapper(x1, x2, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(x1, x2, dtype=dtype)
+        return wrapper
+    
+    def wrap_sum(original_func):
+        def wrapper(a, axis=None, keepdims=False, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            # sum 有多个重载：一个带 axis/keepdims/dtype，一个只有 a
+            if axis is not None:
+                return original_func(a, axis, keepdims, dtype)
+            else:
+                # 如果没有 axis，调用简单版本（不带 dtype）
+                return original_func(a)
+        return wrapper
+    
+    def wrap_prod(original_func):
+        def wrapper(a, axis=None, keepdims=False, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            # prod 有多个重载：一个带 axis/keepdims/dtype，一个只有 a
+            if axis is not None:
+                return original_func(a, axis, keepdims, dtype)
+            else:
+                # 如果没有 axis，调用简单版本（不带 dtype）
+                return original_func(a)
+        return wrapper
+    
+    def wrap_cumsum(original_func):
+        def wrapper(a, axis, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(a, axis, dtype=dtype)
+        return wrapper
+    
+    def wrap_cumprod(original_func):
+        def wrapper(a, axis, dtype=None):
+            if dtype is not None:
+                dtype = convert_dtype_for_pybind11(dtype)
+            return original_func(a, axis, dtype=dtype)
+        return wrapper
+    
+    return {
+        'add': wrap_add(add_func),
+        'subtract': wrap_subtract(subtract_func),
+        'multiply': wrap_multiply(multiply_func),
+        'divide': wrap_divide(divide_func),
+        'power': wrap_power(power_func),
+        'maximum': wrap_maximum(maximum_func),
+        'minimum': wrap_minimum(minimum_func),
+        'sum': wrap_sum(sum_func),
+        'prod': wrap_prod(prod_func),
+        'cumsum': wrap_cumsum(cumsum_func),
+        'cumprod': wrap_cumprod(cumprod_func),
+    }
+
