@@ -274,34 +274,9 @@ def test_float8_e5m2_numpy_dtype_attributes():
     assert dtype_kind is not None, "dtype.kind 应该存在"
     assert dtype_kind == 'f', f"float8_e5m2 的 kind 应该是 'f'，实际为 {dtype_kind}"
     
-    # dtype.char
-    dtype_char = dtype.char
-    logger.info(f"dtype.char: {dtype_char}")
-    assert dtype_char is not None, "dtype.char 应该存在"
-    
-    # dtype.num
-    dtype_num = dtype.num
-    logger.info(f"dtype.num: {dtype_num}")
-    assert dtype_num is not None, "dtype.num 应该存在"
-    assert dtype_num != -1, "dtype.num 应该是有效的类型号"
-    
-    # dtype.str
-    dtype_str = dtype.str
-    logger.info(f"dtype.str: {dtype_str}")
-    assert dtype_str is not None, "dtype.str 应该存在"
-    assert isinstance(dtype_str, str), "dtype.str 应该是字符串"
-    
-    # dtype.name
-    dtype_name = dtype.name
-    logger.info(f"dtype.name: {dtype_name}")
-    assert dtype_name is not None, "dtype.name 应该存在"
-    assert isinstance(dtype_name, str), "dtype.name 应该是字符串"
-    
-    # dtype.itemsize
-    dtype_itemsize = dtype.itemsize
-    logger.info(f"dtype.itemsize: {dtype_itemsize}")
-    assert dtype_itemsize > 0, "dtype.itemsize 应该大于 0"
-    assert dtype_itemsize == 1, f"float8_e5m2 的 itemsize 应该是 1 字节，实际为 {dtype_itemsize}"
+    # 使用共享函数测试基本属性
+    from test_utils import test_dtype_basic_attributes
+    test_dtype_basic_attributes(dtype, "float8_e5m2", 1, logger)
     
     # dtype.byteorder
     dtype_byteorder = dtype.byteorder
@@ -335,84 +310,9 @@ def test_float8_e5m2_numpy_dtype_attributes():
     assert isinstance(dtype_hasobject, bool), "dtype.hasobject 应该是布尔值"
     assert not dtype_hasobject, "float8_e5m2 不应该包含对象引用"
     
-    # dtype.flags
-    dtype_flags = dtype.flags
-    logger.info(f"dtype.flags: {dtype_flags}")
-    assert dtype_flags is not None, "dtype.flags 应该存在"
-    
-    # dtype.isbuiltin
-    dtype_isbuiltin = dtype.isbuiltin
-    logger.info(f"dtype.isbuiltin: {dtype_isbuiltin}")
-    assert isinstance(dtype_isbuiltin, (int, bool)), "dtype.isbuiltin 应该是整数或布尔值"
-    
-    # dtype.isnative
-    dtype_isnative = dtype.isnative
-    logger.info(f"dtype.isnative: {dtype_isnative}")
-    assert isinstance(dtype_isnative, bool), "dtype.isnative 应该是布尔值"
-    
-    # dtype.descr
-    dtype_descr = dtype.descr
-    logger.info(f"dtype.descr: {dtype_descr}")
-    assert dtype_descr is not None, "dtype.descr 应该存在"
-    assert isinstance(dtype_descr, list), "dtype.descr 应该是列表"
-    assert len(dtype_descr) > 0, "dtype.descr 应该包含至少一个元素"
-    
-    # dtype.alignment
-    dtype_alignment = dtype.alignment
-    logger.info(f"dtype.alignment: {dtype_alignment}")
-    assert dtype_alignment > 0, "dtype.alignment 应该大于 0"
-    
-    # dtype.base
-    dtype_base = dtype.base
-    logger.info(f"dtype.base: {dtype_base}")
-    # base 可能为 None 或与 dtype 相同
-    
-    # dtype.metadata
-    dtype_metadata = dtype.metadata
-    logger.info(f"dtype.metadata: {dtype_metadata}")
-    # metadata 可能为 None
-    
-    # 测试方法
-    logger.info("\n--- 方法测试 ---")
-    
-    # dtype.newbyteorder()
-    try:
-        new_dtype = dtype.newbyteorder('>')
-        logger.info(f"dtype.newbyteorder('>'): {new_dtype}")
-        assert new_dtype is not None, "newbyteorder 应该返回有效的 dtype"
-    except Exception as e:
-        logger.info(f"dtype.newbyteorder('>') 不支持或出错: {e}")
-    
-    try:
-        new_dtype = dtype.newbyteorder('<')
-        logger.info(f"dtype.newbyteorder('<'): {new_dtype}")
-    except Exception as e:
-        logger.info(f"dtype.newbyteorder('<') 不支持或出错: {e}")
-    
-    # dtype.__reduce__()
-    try:
-        reduce_result = dtype.__reduce__()
-        logger.info(f"dtype.__reduce__(): {reduce_result}")
-        assert reduce_result is not None, "__reduce__ 应该返回有效的结果"
-        assert isinstance(reduce_result, tuple), "__reduce__ 应该返回元组"
-    except Exception as e:
-        logger.error(f"dtype.__reduce__() 失败: {e}")
-        raise
-    
-    # dtype.__setstate__()
-    try:
-        # 创建一个状态用于测试
-        state = dtype.__reduce__()[1] if hasattr(dtype, '__reduce__') else None
-        if state is not None:
-            # 创建一个新的 dtype 对象来测试 __setstate__
-            new_dtype = ap.float8_e5m2  # ap.float8_e5m2 已经是 dtype 对象
-            if hasattr(new_dtype, '__setstate__'):
-                new_dtype.__setstate__(state)
-                logger.info(f"dtype.__setstate__() 成功")
-        else:
-            logger.info(f"dtype.__setstate__() 跳过（无状态）")
-    except Exception as e:
-        logger.info(f"dtype.__setstate__() 不支持或出错: {e}")
+    # 使用共享函数测试高级属性和方法
+    from test_utils import test_dtype_advanced_attributes_and_methods
+    test_dtype_advanced_attributes_and_methods(dtype, "float8_e5m2", ap.float8_e5m2, logger)
     
     # dtype.__class_getitem__()
     try:
@@ -482,145 +382,10 @@ def test_float8_e5m2_structured_and_subarray_types():
     logger.info("=" * 60)
     
     base_dtype = ap.float8_e5m2  # ap.float8_e5m2 已经是 dtype 对象
-    logger.info(f"基础 dtype: {base_dtype}")
-    logger.info(f"基础 dtype.fields: {base_dtype.fields}")
-    logger.info(f"基础 dtype.names: {base_dtype.names}")
-    logger.info(f"基础 dtype.subdtype: {base_dtype.subdtype}")
-    logger.info(f"基础 dtype.shape: {base_dtype.shape}")
     
-    # ========== 测试 1: 结构化数组（fields 和 names 不为 None）==========
-    logger.info("\n--- 测试 1: 结构化数组 ---")
-    
-    # 创建包含 float8_e5m2 字段的结构化数组（使用 ap.dtypes.float8_e5m2 作为类型对象）
-    structured_dtype = np.dtype([
-        ('x', ap.dtypes.float8_e5m2),
-        ('y', ap.dtypes.float8_e5m2),
-        ('z', ap.dtypes.float8_e5m2)
-    ])
-    logger.info(f"结构化 dtype: {structured_dtype}")
-    logger.info(f"structured_dtype.fields: {structured_dtype.fields}")
-    logger.info(f"structured_dtype.names: {structured_dtype.names}")
-    
-    assert structured_dtype.fields is not None, "结构化数组的 fields 不应该为 None"
-    assert structured_dtype.names is not None, "结构化数组的 names 不应该为 None"
-    assert len(structured_dtype.names) == 3, "应该有 3 个字段"
-    assert structured_dtype.names == ('x', 'y', 'z'), "字段名应该是 ('x', 'y', 'z')"
-    
-    # 验证每个字段的 dtype
-    for name in structured_dtype.names:
-        field_dtype, offset = structured_dtype.fields[name]
-        logger.info(f"  字段 '{name}': dtype={field_dtype}, offset={offset}")
-        assert field_dtype == base_dtype, f"字段 '{name}' 的 dtype 应该是 float8_e5m2"
-    
-    # 创建结构化数组并测试
-    try:
-        structured_array = np.array([
-            (1.0, 2.0, 3.0),
-            (4.0, 5.0, 6.0)
-        ], dtype=structured_dtype)
-        logger.info(f"结构化数组创建成功: {structured_array}")
-        logger.info(f"  访问字段 'x': {structured_array['x']}")
-        logger.info(f"  访问字段 'y': {structured_array['y']}")
-        logger.info(f"  访问字段 'z': {structured_array['z']}")
-    except Exception as e:
-        logger.info(f"结构化数组创建失败（可能不支持）: {e}")
-    
-    # ========== 测试 2: 子数组类型（subdtype 和 shape 不为 None）==========
-    logger.info("\n--- 测试 2: 子数组类型 ---")
-    
-    # 创建 2x2 矩阵的子数组类型（使用 ap.dtypes.float8_e5m2 作为类型对象）
-    subarray_dtype_2x2 = np.dtype((ap.dtypes.float8_e5m2, (2, 2)))
-    logger.info(f"子数组 dtype (2x2): {subarray_dtype_2x2}")
-    logger.info(f"subarray_dtype_2x2.subdtype: {subarray_dtype_2x2.subdtype}")
-    logger.info(f"subarray_dtype_2x2.shape: {subarray_dtype_2x2.shape}")
-    
-    assert subarray_dtype_2x2.subdtype is not None, "子数组类型的 subdtype 不应该为 None"
-    assert subarray_dtype_2x2.shape is not None, "子数组类型的 shape 不应该为 None"
-    assert subarray_dtype_2x2.shape == (2, 2), "shape 应该是 (2, 2)"
-    assert subarray_dtype_2x2.subdtype[0] == base_dtype, "subdtype 的基础类型应该是 float8_e5m2"
-    assert subarray_dtype_2x2.subdtype[1] == (2, 2), "subdtype 的形状应该是 (2, 2)"
-    
-    # 创建 1D 向量的子数组类型（使用 ap.dtypes.float8_e5m2 作为类型对象）
-    subarray_dtype_1d = np.dtype((ap.dtypes.float8_e5m2, 3))
-    logger.info(f"子数组 dtype (1D, 长度3): {subarray_dtype_1d}")
-    logger.info(f"subarray_dtype_1d.subdtype: {subarray_dtype_1d.subdtype}")
-    logger.info(f"subarray_dtype_1d.shape: {subarray_dtype_1d.shape}")
-    
-    assert subarray_dtype_1d.subdtype is not None, "子数组类型的 subdtype 不应该为 None"
-    assert subarray_dtype_1d.shape == (3,), "shape 应该是 (3,)"
-    assert subarray_dtype_1d.subdtype[0] == base_dtype, "subdtype 的基础类型应该是 float8_e5m2"
-    assert subarray_dtype_1d.subdtype[1] == (3,), "subdtype 的形状应该是 (3,)"
-    
-    # 创建子数组并测试
-    try:
-        subarray_array = np.zeros((2,), dtype=subarray_dtype_2x2)
-        logger.info(f"子数组创建成功: shape={subarray_array.shape}")
-        logger.info(f"  第一个元素 (2x2 矩阵):\n{subarray_array[0]}")
-    except Exception as e:
-        logger.info(f"子数组创建失败（可能不支持）: {e}")
-    
-    # ========== 测试 3: 组合使用（结构化数组 + 子数组）==========
-    logger.info("\n--- 测试 3: 组合使用（结构化数组 + 子数组）---")
-    
-    # 创建包含子数组字段的结构化数组（使用 ap.dtypes.float8_e5m2 作为类型对象）
-    complex_dtype = np.dtype([
-        ('id', 'i4'),
-        ('position', (ap.dtypes.float8_e5m2, 3)),      # 3D 位置向量
-        ('matrix', (ap.dtypes.float8_e5m2, (2, 2)))    # 2x2 矩阵
-    ])
-    logger.info(f"复杂 dtype: {complex_dtype}")
-    logger.info(f"complex_dtype.fields: {complex_dtype.fields}")
-    logger.info(f"complex_dtype.names: {complex_dtype.names}")
-    
-    assert complex_dtype.fields is not None, "复杂类型的 fields 不应该为 None"
-    assert complex_dtype.names is not None, "复杂类型的 names 不应该为 None"
-    assert len(complex_dtype.names) == 3, "应该有 3 个字段"
-    
-    # 检查 position 字段（子数组类型）
-    position_dtype, position_offset = complex_dtype.fields['position']
-    logger.info(f"  position 字段: dtype={position_dtype}, offset={position_offset}")
-    logger.info(f"  position.subdtype: {position_dtype.subdtype}")
-    logger.info(f"  position.shape: {position_dtype.shape}")
-    
-    assert position_dtype.subdtype is not None, "position 字段的 subdtype 不应该为 None"
-    assert position_dtype.shape == (3,), "position 字段的 shape 应该是 (3,)"
-    assert position_dtype.subdtype[0] == base_dtype, "position 的基础类型应该是 float8_e5m2"
-    
-    # 检查 matrix 字段（子数组类型）
-    matrix_dtype, matrix_offset = complex_dtype.fields['matrix']
-    logger.info(f"  matrix 字段: dtype={matrix_dtype}, offset={matrix_offset}")
-    logger.info(f"  matrix.subdtype: {matrix_dtype.subdtype}")
-    logger.info(f"  matrix.shape: {matrix_dtype.shape}")
-    
-    assert matrix_dtype.subdtype is not None, "matrix 字段的 subdtype 不应该为 None"
-    assert matrix_dtype.shape == (2, 2), "matrix 字段的 shape 应该是 (2, 2)"
-    assert matrix_dtype.subdtype[0] == base_dtype, "matrix 的基础类型应该是 float8_e5m2"
-    
-    # 创建复杂数组并测试
-    try:
-        complex_array = np.array([
-            (1, [1.0, 2.0, 3.0], [[1.0, 2.0], [3.0, 4.0]]),
-            (2, [4.0, 5.0, 6.0], [[5.0, 6.0], [7.0, 8.0]])
-        ], dtype=complex_dtype)
-        logger.info(f"复杂数组创建成功: {complex_array}")
-        logger.info(f"  访问 position 字段: {complex_array['position']}")
-        logger.info(f"  访问 matrix 字段: {complex_array['matrix']}")
-    except Exception as e:
-        logger.info(f"复杂数组创建失败（可能不支持）: {e}")
-    
-    # ========== 测试 4: 验证基础类型属性仍然为 None ==========
-    logger.info("\n--- 测试 4: 验证基础类型属性仍然为 None ---")
-    
-    # 即使用于结构化数组或子数组，基础类型本身的属性应该仍然是 None
-    logger.info(f"基础 dtype.fields: {base_dtype.fields}")
-    logger.info(f"基础 dtype.names: {base_dtype.names}")
-    logger.info(f"基础 dtype.subdtype: {base_dtype.subdtype}")
-    logger.info(f"基础 dtype.shape: {base_dtype.shape}")
-    
-    assert base_dtype.fields is None, "基础类型的 fields 应该为 None"
-    assert base_dtype.names is None, "基础类型的 names 应该为 None"
-    assert base_dtype.subdtype is None, "基础类型的 subdtype 应该为 None"
-    assert base_dtype.shape == (), "基础类型的 shape 应该为 ()"
+    # 使用共享函数测试结构化数组和子数组类型
+    from test_utils import test_dtype_structured_and_subarray_types
+    test_dtype_structured_and_subarray_types(base_dtype, "float8_e5m2", ap.dtypes.float8_e5m2, logger)
     
     logger.info("\n" + "=" * 60)
     logger.info("[PASS] float8_e5m2 结构化数组和子数组类型测试完成")
