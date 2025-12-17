@@ -22,16 +22,17 @@ from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
 
 class ndarray(_ndarray):
     @overload
-    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: ...
+    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: 
+        ...
 
     @overload
-    def __init__(self, other: _ndarray) -> None: ...
+    def __init__(self, other: _ndarray) -> None: 
+        ...
 
     def __init__(self, shape_or_array, dtype: np.dtype = None):
         if isinstance(shape_or_array, _ndarray):
             super().__init__(shape_or_array)
         elif isinstance(shape_or_array, (Sequence, int)):
-            # 从形状初始化
             if dtype is None:
                 raise ValueError("dtype must be specified when initializing with shape")
             shape = (
