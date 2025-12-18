@@ -32,7 +32,7 @@ from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 from . import linalg
 
-from ._linalg import dot, einsum, inner, matmul, outer, vdot
+from .linalg.direct import dot, einsum, inner, matmul, outer, vdot, _direct_all_
 
 from .logic import (
     all,
@@ -179,13 +179,6 @@ __all__ = [
     "set_device",
     # .linalg
     "linalg",
-    # .linalg_ops
-    "dot",
-    "einsum",
-    "inner",
-    "matmul",
-    "outer",
-    "vdot",
     # .logic
     "all",
     "any",
@@ -301,6 +294,7 @@ __all__ = [
     "savez_compressed",
 ]
 
+__all__.extend(_direct_all_)
 
 import atexit
 
