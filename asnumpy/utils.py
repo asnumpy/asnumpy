@@ -84,3 +84,10 @@ def _convert_dtype(dtype):
     if not isinstance(dtype, np.dtype):
         return np.dtype(dtype)
     return dtype
+
+
+def _convert_size(size: Union[int, Sequence[int]]) -> Sequence[int]:
+    """Convert size from int to tuple"""
+    if isinstance(size, int):
+        return (size,)
+    return size
