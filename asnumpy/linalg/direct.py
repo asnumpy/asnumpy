@@ -48,4 +48,12 @@ def matmul(x1: ndarray, x2: ndarray) -> ndarray:
 def einsum(subscripts: str, *operands: ndarray) -> ndarray:
     return ndarray(_ap_einsum(subscripts, *operands))
 
-_direct_all_ = ["dot", "einsum", "inner", "matmul", "outer", "vdot",]
+
+_direct_all_ = [
+    "dot",
+    "einsum",
+    "inner",
+    "matmul",
+    "outer",
+    "vdot",
+]

@@ -35,56 +35,56 @@ from ..utils import ndarray, _convert_size
 
 
 def pareto(a: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_pareto(a,  _convert_size(size)))
+    return ndarray(_ap_pareto(a, _convert_size(size)))
 
 
 def rayleigh(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_rayleigh(scale,  _convert_size(size)))
+    return ndarray(_ap_rayleigh(scale, _convert_size(size)))
 
 
 def normal(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_normal(loc, scale,  _convert_size(size)))
+    return ndarray(_ap_normal(loc, scale, _convert_size(size)))
 
 
 def uniform(low: float, high: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_uniform(low, high,  _convert_size(size)))
+    return ndarray(_ap_uniform(low, high, _convert_size(size)))
 
 
 def standard_normal(size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_standard_normal( _convert_size(size)))
+    return ndarray(_ap_standard_normal(_convert_size(size)))
 
 
 def standard_cauchy(size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_standard_cauchy( _convert_size(size)))
+    return ndarray(_ap_standard_cauchy(_convert_size(size)))
 
 
 def weibull(a: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_weibull(a,  _convert_size(size)))
+    return ndarray(_ap_weibull(a, _convert_size(size)))
 
 
 def binomial(n: int, p: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_binomial(n, p,  _convert_size(size)))
+    return ndarray(_ap_binomial(n, p, _convert_size(size)))
 
 
 def exponential(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_exponential(scale,  _convert_size(size)))
+    return ndarray(_ap_exponential(scale, _convert_size(size)))
 
 
 def geometric(p: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_geometric(p,  _convert_size(size)))
+    return ndarray(_ap_geometric(p, _convert_size(size)))
 
 
 def gumbel(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_gumbel(loc, scale,  _convert_size(size)))
+    return ndarray(_ap_gumbel(loc, scale, _convert_size(size)))
 
 
 def laplace(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_laplace(loc, scale,  _convert_size(size)))
+    return ndarray(_ap_laplace(loc, scale, _convert_size(size)))
 
 
 def logistic(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_logistic(loc, scale,  _convert_size(size)))
+    return ndarray(_ap_logistic(loc, scale, _convert_size(size)))
 
 
 def lognormal(mean: float, sigma: float, size: Union[int, Sequence[int]]) -> ndarray:
-    return ndarray(_ap_lognormal(mean, sigma,  _convert_size(size)))
+    return ndarray(_ap_lognormal(mean, sigma, _convert_size(size)))
