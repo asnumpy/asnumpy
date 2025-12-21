@@ -25,6 +25,8 @@
 #include <aclnnop/aclnn_amax.h>
 #include <aclnnop/aclnn_max.h>
 #include <aclnnop/aclnn_nan_to_num.h>
+#include <aclnnop/aclnn_amin.h>
+#include <aclnnop/aclnn_min.h>
 
 #include <cstdint>
 #include <fmt/base.h>
@@ -456,14 +458,6 @@ double Max(const NPUArray& a) {
     return 0;
 }
 
-NPUArray Amax(const NPUArray& a, int64_t axis, bool keepdims) {
-    return Max(a, axis, keepdims);
-}
-
-double Amax(const NPUArray& a) {
-    return Max(a);
-}
-
 NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims) {
     auto shape = a.shape;
     auto temp = NPUArray(a.shape, a.aclDtype);
@@ -582,6 +576,95 @@ double Nanmax(const NPUArray& a) {
         aclrtFree(workspaceAddr);
     }
 
+    py::array x = result.ToNumpy();
+    py::dtype dt = x.dtype();
+    py::buffer_info buf = x.request();
+    if (dt.is(py::dtype::of<int>())) {
+        int* results = static_cast<int*>(buf.ptr);
+        return results[0];
+    } 
+    else if (dt.is(py::dtype::of<double>())) {
+        double* results = static_cast<double*>(buf.ptr);
+        return results[0];
+    }
+    else if (dt.is(py::dtype::of<float>())) {
+        float* results = static_cast<float*>(buf.ptr);
+        return results[0];
+    }
+    else {
+        throw std::runtime_error("Unsupported array data type!");
+    }
+    return 0;
+}
+
+NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims) {
+    auto shape = a.shape;
+    int64_t ax = axis;
+    if (axis < 0) {
+        ax = shape.size() + axis;
+    }
+    if (keepdims) {
+        shape[ax] = 1;
+    }
+    else {
+        shape.erase(shape.begin() + ax);
+    }
+    std::vector<int64_t> data = {ax};
+    auto axis_array = aclCreateIntArray(data.data(), data.size());
+    auto result = NPUArray(shape, a.aclDtype);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnAminGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, 
+        result.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    if (workspaceSize < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](min) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    }
+
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0ULL) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+
+    error = aclnnAmin(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnAmin error");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) {
+        aclrtFree(workspaceAddr);
+    }
+    return result;
+}
+
+double Min(const NPUArray& a) {
+    std::vector<int64_t> shape = {1};
+    auto result = NPUArray(shape, a.aclDtype);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnMinGetWorkspaceSize(a.tensorPtr, result.tensorPtr, 
+        &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    if (workspaceSize < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](min) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    }
+
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0ULL) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+
+    error = aclnnMin(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnMin error");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) {
+        aclrtFree(workspaceAddr);
+    }
+    
     py::array x = result.ToNumpy();
     py::dtype dt = x.dtype();
     py::buffer_info buf = x.request();
