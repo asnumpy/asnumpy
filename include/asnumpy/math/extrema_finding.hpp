@@ -34,10 +34,10 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
 NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims);
 double Max(const NPUArray& a);
 
-NPUArray Amax(const NPUArray& a, int64_t axis, bool keepdims);
-double Amax(const NPUArray& a);
-
 NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims);
 double Nanmax(const NPUArray& a);
+
+NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims);
+double Min(const NPUArray& a);
 
 }

@@ -132,6 +132,8 @@ __all__ = [
     "max",
     "amax",
     "nanmax",
+    "min",
+    "amin",
     "relu",
     "gelu",
     "pareto",

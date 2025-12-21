@@ -209,13 +209,19 @@ void bind_extrema_finding(py::module_& math){
     math.def("fmin", &Fmin, py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
     math.def("max", py::overload_cast<const NPUArray&, int64_t, bool>(&Max), 
             py::arg("a"), py::arg("axis"), py::arg("keepdims"));
-    math.def("max", py::overload_cast<const NPUArray&>(&Amax), py::arg("a"));
+    math.def("max", py::overload_cast<const NPUArray&>(&Max), py::arg("a"));
     math.def("amax", py::overload_cast<const NPUArray&, int64_t, bool>(&Max), 
             py::arg("a"), py::arg("axis"), py::arg("keepdims"));
-    math.def("amax", py::overload_cast<const NPUArray&>(&Amax), py::arg("a"));
+    math.def("amax", py::overload_cast<const NPUArray&>(&Max), py::arg("a"));
     math.def("nanmax", py::overload_cast<const NPUArray&, int64_t, bool>(&Nanmax), 
             py::arg("a"), py::arg("axis"), py::arg("keepdims"));
     math.def("nanmax", py::overload_cast<const NPUArray&>(&Nanmax), py::arg("a"));
+    math.def("min", py::overload_cast<const NPUArray&, int64_t, bool>(&Min), 
+            py::arg("a"), py::arg("axis"), py::arg("keepdims"));
+    math.def("min", py::overload_cast<const NPUArray&>(&Min), py::arg("a"));
+    math.def("amin", py::overload_cast<const NPUArray&, int64_t, bool>(&Min), 
+            py::arg("a"), py::arg("axis"), py::arg("keepdims"));
+    math.def("amin", py::overload_cast<const NPUArray&>(&Min), py::arg("a"));
 }
 
 }
