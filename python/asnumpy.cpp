@@ -27,11 +27,14 @@ void bind_math(pybind11::module_& math);
 void bind_logic(pybind11::module_& logic);
 void bind_random(pybind11::module_& random);
 void bind_sorting(pybind11::module_& sorting);
-void bind_statistics(pybind11::module_& statistics);
-void bind_nn(pybind11::module_& nn);
 void bind_testing(pybind11::module_& testing);
 void bind_utils(pybind11::module_& utils);
 void bind_version(pybind11::module_& version);
+
+namespace asnumpy {
+void bind_statistics(pybind11::module_& statistics);
+void bind_nn(pybind11::module_& nn);
+}
 
 
 PYBIND11_MODULE(asnumpy_core, module) {
@@ -62,8 +65,8 @@ PYBIND11_MODULE(asnumpy_core, module) {
     bind_logic(logic);
     bind_random(random);
     bind_sorting(sorting);
-    bind_statistics(statistics);
-    bind_nn(nn);
+    asnumpy::bind_statistics(statistics);
+    asnumpy::bind_nn(nn);
     bind_testing(testing);
     bind_utils(module);
     bind_version(version);

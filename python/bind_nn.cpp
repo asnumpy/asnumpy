@@ -19,7 +19,8 @@
 #include <asnumpy/nn/activation.hpp>
 
 namespace py = pybind11;
-using namespace asnumpy;
+
+namespace asnumpy {
 
 void bind_nn(py::module_& nn) {
     nn.doc() = "neural network module of asnumpy";
@@ -27,5 +28,7 @@ void bind_nn(py::module_& nn) {
            py::arg("x"),
            py::arg("axis") = -1,
            py::arg("dtype") = py::none());
+}
+
 }
 

@@ -34,6 +34,62 @@
 #include <limits>
 
 namespace asnumpy {
+    namespace {
+        int64_t CalculateTotalElements(const std::vector<int64_t>& shape) {
+            int64_t total = 1;
+            for (size_t i = 0; i < shape.size(); i++) {
+                total *= shape[i];
+            }
+            return total;
+        }
+
+        NPUArray FlattenArray(const NPUArray& a) {
+            int64_t totalElements = CalculateTotalElements(a.shape);
+            std::vector<int64_t> flatShape = {1, totalElements};
+            auto temp = NPUArray(flatShape, a.aclDtype);
+            
+            uint64_t workspaceSize = 0;
+            aclOpExecutor* executor;
+            auto error = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, temp.tensorPtr, &workspaceSize, &executor);
+            CheckGetWorkspaceSizeAclnnStatus(error);
+            
+            void* workspaceAddr = nullptr;
+            if (workspaceSize != 0ULL) {
+                error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+                CheckMallocAclnnStatus(error);
+            }
+            
+            error = aclnnFlatten(workspaceAddr, workspaceSize, executor, nullptr);
+            CheckAclnnStatus(error, "aclnnFlatten error");
+            error = aclrtSynchronizeDevice();
+            CheckSynchronizeDeviceAclnnStatus(error);
+            
+            return temp;
+        }
+
+        double ExtractScalarValue(const NPUArray& result) {
+            py::array x = result.ToNumpy();
+            py::dtype dt = x.dtype();
+            py::buffer_info buf = x.request();
+            
+            if (dt.is(py::dtype::of<int>())) {
+                int* results = static_cast<int*>(buf.ptr);
+                return results[0];
+            } 
+            else if (dt.is(py::dtype::of<double>())) {
+                double* results = static_cast<double*>(buf.ptr);
+                return results[0];
+            }
+            else if (dt.is(py::dtype::of<float>())) {
+                float* results = static_cast<float*>(buf.ptr);
+                return results[0];
+            }
+            else {
+                throw std::runtime_error("Unsupported array data type!");
+            }
+        }
+    }
+
     NPUArray Mean(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
         py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
         auto shape = a.shape;
@@ -67,63 +123,29 @@ namespace asnumpy {
     }
 
     double Mean(const NPUArray& a) {
-        std::vector<int64_t> shape = a.shape;
-        int64_t pro = 1;
-        for (int i=0; i<shape.size(); i++){
-            pro = pro * shape[i];
-        }
-        shape = {1, pro};
-        auto temp = NPUArray(shape, a.aclDtype);
-        uint64_t workspaceSize1 = 0;
-        aclOpExecutor* executor1;
-        auto error1 = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, temp.tensorPtr, &workspaceSize1, &executor1);
-        CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnFlatten(workspaceAddr1, workspaceSize1, executor1, nullptr);
-        CheckAclnnStatus(error1, "aclnnFlatten error");
-        error1 = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error1);
+        auto temp = FlattenArray(a);
         
         std::vector<int64_t> tmp{1};
         aclIntArray* axis_array = aclCreateIntArray(tmp.data(), tmp.size());
         auto result = NPUArray({1}, a.aclDtype);
-        uint64_t workspaceSize2 = 0;
-        aclOpExecutor* executor2;
-        auto error2 = aclnnMeanGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
-        CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnMean(workspaceAddr2, workspaceSize2, executor2, nullptr);
-        CheckAclnnStatus(error2, "aclnnMean error");
-        error2 = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error2);
         
-        py::array x = result.ToNumpy();
-        py::dtype dt = x.dtype();
-        py::buffer_info buf = x.request();
-        if (dt.is(py::dtype::of<int>())) {
-            int* results = static_cast<int*>(buf.ptr);
-            return results[0];
-        } 
-        else if (dt.is(py::dtype::of<double>())) {
-            double* results = static_cast<double*>(buf.ptr);
-            return results[0];
+        uint64_t workspaceSize = 0;
+        aclOpExecutor* executor;
+        auto error = aclnnMeanGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        CheckGetWorkspaceSizeAclnnStatus(error);
+        
+        void* workspaceAddr = nullptr;
+        if (workspaceSize != 0ULL) {
+            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+            CheckMallocAclnnStatus(error);
         }
-        else if (dt.is(py::dtype::of<float>())) {
-            float* results = static_cast<float*>(buf.ptr);
-            return results[0];
-        }
-        else {
-            throw std::runtime_error("Unsupported array data type!");
-        }
-        return 0;
+        
+        error = aclnnMean(workspaceAddr, workspaceSize, executor, nullptr);
+        CheckAclnnStatus(error, "aclnnMean error");
+        error = aclrtSynchronizeDevice();
+        CheckSynchronizeDeviceAclnnStatus(error);
+        
+        return ExtractScalarValue(result);
     }
 }
 
