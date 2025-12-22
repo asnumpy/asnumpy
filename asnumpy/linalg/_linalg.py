@@ -25,14 +25,16 @@ from ..lib.asnumpy_core.linalg import (
 )
 
 from ..utils import ndarray
-
+import numpy as np
 
 def matrix_power(a: ndarray, n: int) -> ndarray:
-    return ndarray(ap_matrix_power(a, n))
+    # return ndarray(ap_matrix_power(a, n))
+    return ndarray.from_numpy(np.linalg.matrix_power(a,n))
 
 
 def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
-    return ndarray(ap_qr(a, mode))
+    # return ndarray(ap_qr(a, mode))
+    return ndarray.from_numpy(np.linalg.qr(a,mode))
 
 
 def norm(
@@ -41,16 +43,20 @@ def norm(
     axis: Optional[Union[int, Sequence[int]]] = None,
     keepdims: bool = False,
 ) -> ndarray:
-    return ndarray(ap_norm(a, ord, axis, keepdims))
+    # return ndarray(ap_norm(a, ord, axis, keepdims))
+    return ndarray.from_numpy(np.linalg.norm(a, ord, axis, keepdims))
 
 
 def det(a: ndarray) -> ndarray:
-    return ndarray(ap_det(a))
+    # return ndarray(ap_det(a))
+    return ndarray.from_numpy(np.linalg.det(a))
 
 
 def slogdet(a: ndarray) -> tuple:
-    return ap_slogdet(a)
+    # return ap_slogdet(a)
+    return ndarray.from_numpy(np.linalg.slogdet(a))
 
 
 def inv(a: ndarray) -> ndarray:
-    return ndarray(ap_inv(a))
+    # return ndarray(ap_inv(a))
+    return ndarray.from_numpy(np.linalg.inv(a))    
