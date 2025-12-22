@@ -20,6 +20,7 @@ from .lib.asnumpy_core.math import (
     absolute as _ap_absolute,
     add as _ap_add,
     amax as _ap_amax,
+    amin as _ap_amin,
     around as _ap_around,
     arccos as _ap_arccos,
     arccosh as _ap_arccosh,
@@ -64,6 +65,7 @@ from .lib.asnumpy_core.math import (
     logaddexp2 as _ap_logaddexp2,
     max as _ap_max,
     maximum as _ap_maximum,
+    min as _ap_min,
     minimum as _ap_minimum,
     mod as _ap_mod,
     modf as _ap_modf,
@@ -516,9 +518,9 @@ def fmin(
 
 def max(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
-) -> Union[ndarray, float]:  # np.xxx
+) -> Union[ndarray, float]:
     if axis is None:
-        return _ap_amax(a)
+        return _ap_max(a)
     return ndarray(_ap_max(a, axis, keepdims))
 
 
@@ -536,3 +538,19 @@ def nanmax(
     if axis is None:
         return _ap_nanmax(a)
     return ndarray(_ap_nanmax(a, axis, keepdims))
+
+
+def min(
+    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> Union[ndarray, float]:
+    if axis is None:
+        return _ap_min(a)
+    return ndarray(_ap_min(a, axis, keepdims))
+
+
+def amin(
+    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+) -> Union[ndarray, float]:
+    if axis is None:
+        return _ap_amin(a)
+    return ndarray(_ap_amin(a, axis, keepdims))
