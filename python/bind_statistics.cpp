@@ -19,12 +19,15 @@
 #include <asnumpy/statistics/averages_and_variances.hpp>
 
 namespace py = pybind11;
-using namespace asnumpy;
+
+namespace asnumpy {
 
 void bind_statistics(py::module_& statistics) {
     statistics.doc() = "statistics module of asnumpy";
     statistics.def("mean", py::overload_cast<const NPUArray&, int64_t, bool, std::optional<py::dtype>>(&Mean), 
             py::arg("a"), py::arg("axis"), py::arg("keepdims"), py::arg("dtype") = py::none());
     statistics.def("mean", py::overload_cast<const NPUArray&>(&Mean), py::arg("a"));
+}
+
 }
 

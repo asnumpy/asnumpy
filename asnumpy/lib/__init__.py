@@ -21,8 +21,8 @@ from .asnumpy_core.cann import *
 from .asnumpy_core.array import *
 from .asnumpy_core.logic import * 
 from .asnumpy_core.sorting import * 
-from .asnumpy_core.statistics import *
-from .asnumpy_core.nn import *
+from .asnumpy_core.statistics import mean
+from .asnumpy_core.nn import softmax
 from .asnumpy_core import linalg  
 # linalg模块内部分需要ap.linalg.xxx调用，部分ap.yyy调用，
 # yyy类函数分到了.asnumpy_core根模块中
