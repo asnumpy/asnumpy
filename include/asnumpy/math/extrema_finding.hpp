@@ -40,4 +40,7 @@ double Nanmax(const NPUArray& a);
 NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims);
 double Min(const NPUArray& a);
 
+NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims);
+double Nanmin(const NPUArray& a);
+
 }

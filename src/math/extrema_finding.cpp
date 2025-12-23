@@ -686,4 +686,143 @@ double Min(const NPUArray& a) {
     return 0;
 }
 
+NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims) {
+    auto shape = a.shape;
+    auto temp = NPUArray(a.shape, a.aclDtype);
+    int64_t ax = axis;
+    if (axis < 0) {
+        ax = shape.size() + axis;
+    }
+    if (keepdims) {
+        shape[ax] = 1;
+    }
+    else {
+        shape.erase(shape.begin() + ax);
+    }
+    std::vector<int64_t> data = {ax};
+    auto axis_array = aclCreateIntArray(data.data(), data.size());
+    uint64_t workspaceSize1 = 0;
+    aclOpExecutor* executor1;
+    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
+        temp.tensorPtr, &workspaceSize1, &executor1);
+    CheckGetWorkspaceSizeAclnnStatus(error1);
+    if (workspaceSize1 < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](nanmax) Invalid workspaceSize: " + std::to_string(workspaceSize1));
+    }
+
+    void* workspaceAddr1 = nullptr;
+    if(workspaceSize1 > 0ULL) {
+        error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error1);
+    }
+
+    error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+    CheckAclnnStatus(error1, "aclnnNanToNum error");
+    error1 = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error1);
+    if (workspaceAddr1) {
+        aclrtFree(workspaceAddr1);
+    }
+
+    auto result = NPUArray(shape, a.aclDtype);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnAminGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, 
+        result.tensorPtr, &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    if (workspaceSize < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](nanmax) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    }
+
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0ULL) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+
+    error = aclnnAmin(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnAmax error");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) {
+        aclrtFree(workspaceAddr);
+    }
+    return result;
+}
+
+double Nanmin(const NPUArray& a) {
+    auto temp = NPUArray(a.shape, a.aclDtype);
+    uint64_t workspaceSize1 = 0;
+    aclOpExecutor* executor1;
+    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
+        temp.tensorPtr, &workspaceSize1, &executor1);
+    CheckGetWorkspaceSizeAclnnStatus(error1);
+    if (workspaceSize1 < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](nanmax) Invalid workspaceSize: " + std::to_string(workspaceSize1));
+    }
+
+    void* workspaceAddr1 = nullptr;
+    if(workspaceSize1 > 0ULL) {
+        error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error1);
+    }
+
+    error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+    CheckAclnnStatus(error1, "aclnnNanToNum error");
+    error1 = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error1);
+    if (workspaceAddr1) {
+        aclrtFree(workspaceAddr1);
+    }
+
+    std::vector<int64_t> shape = {1};
+    auto result = NPUArray(shape, a.aclDtype);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnMinGetWorkspaceSize(temp.tensorPtr, result.tensorPtr, 
+        &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    if (workspaceSize < 0ULL) {
+        throw std::runtime_error("[extrema_finding.cpp](max) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    }
+
+    void* workspaceAddr = nullptr;
+    if(workspaceSize > 0ULL) {
+        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        CheckMallocAclnnStatus(error);
+    }
+
+    error = aclnnMin(workspaceAddr, workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnMax error");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    if (workspaceAddr) {
+        aclrtFree(workspaceAddr);
+    }
+
+    py::array x = result.ToNumpy();
+    py::dtype dt = x.dtype();
+    py::buffer_info buf = x.request();
+    if (dt.is(py::dtype::of<int>())) {
+        int* results = static_cast<int*>(buf.ptr);
+        return results[0];
+    } 
+    else if (dt.is(py::dtype::of<double>())) {
+        double* results = static_cast<double*>(buf.ptr);
+        return results[0];
+    }
+    else if (dt.is(py::dtype::of<float>())) {
+        float* results = static_cast<float*>(buf.ptr);
+        return results[0];
+    }
+    else {
+        throw std::runtime_error("Unsupported array data type!");
+    }
+    return 0;
+}
+
 }
