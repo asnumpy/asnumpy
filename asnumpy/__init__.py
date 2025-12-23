@@ -145,6 +145,10 @@ from . import random
 
 from .sorting import sort
 
+from .statistics import mean
+
+from .nn import softmax
+
 from .utils import broadcast_shape, ndarray
 
 from .io import save, savez, savez_compressed, load
@@ -288,6 +292,10 @@ __all__ = [
     "random",
     # .sorting
     "sort",
+    # .statistics
+    "mean",
+    # .nn
+    "softmax",
     # .utils
     "broadcast_shape",
     "ndarray",

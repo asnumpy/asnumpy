@@ -13,3 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+
+from typing import Optional, Union, Sequence
+import numpy as np
+from .lib.asnumpy_core.statistics import mean as _ap_mean
+from .utils import ndarray, _convert_dtype
+
+
+def mean(
+    a: ndarray,
+    axis: Optional[Union[int, Sequence[int]]] = None,
+    keepdims: bool = False,
+    dtype: Optional[np.dtype] = None,
+) -> Union[ndarray, float]:
+    if axis is None:
+        return _ap_mean(a)
+    return ndarray(_ap_mean(a, axis, keepdims, _convert_dtype(dtype)))
