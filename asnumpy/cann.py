@@ -24,20 +24,50 @@ from .lib.asnumpy_core.cann import (
 
 
 def set_device(device_id: int) -> None:
+    """
+    Set the current device.
+
+    Parameters
+    ----------
+    device_id : int
+        ID of the device to set.
+    """
     return _ap_set_device(device_id)
 
 
 def reset_device(device_id: int) -> None:
+    """
+    Reset the current device.
+
+    Parameters
+    ----------
+    device_id : int
+        ID of the device to reset.
+    """
     return _ap_reset_device(device_id)
 
 
 def reset_device_force(device_id: int) -> None:
+    """
+    Force reset the current device.
+
+    Parameters
+    ----------
+    device_id : int
+        ID of the device to reset.
+    """
     return _ap_reset_device_force(device_id)
 
 
 def init() -> None:
+    """
+    Initialize the CANN backend.
+    """
     return _ap_init()
 
 
 def finalize() -> None:
+    """
+    Finalize the CANN backend.
+    """
     return _ap_finalize()

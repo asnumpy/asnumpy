@@ -21,12 +21,23 @@ from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
 
 
 class ndarray(_ndarray):
+    """
+    Multi-dimensional array on the device.
+
+    This class is a wrapper around the internal C++ implementation of the array.
+    It provides a NumPy-compatible interface for array operations on the device.
+
+    .. note::
+        This class is not intended to be instantiated directly by users.
+        Use array creation functions like :func:`asnumpy.zeros`, :func:`asnumpy.ones`,
+        or :meth:`asnumpy.ndarray.from_numpy` instead.
+    """
     @overload
-    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: 
+    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None:
         ...
 
     @overload
-    def __init__(self, other: _ndarray) -> None: 
+    def __init__(self, other: _ndarray) -> None:
         ...
 
     def __init__(self, shape_or_array, dtype: np.dtype = None):
@@ -54,22 +65,86 @@ class ndarray(_ndarray):
 
     @property
     def shape(self) -> tuple:
+        """
+        Tuple of array dimensions.
+
+        Returns
+        -------
+        tuple
+            The shape of the array.
+        """
         return super().shape
 
     @property
     def dtype(self) -> np.dtype:
+        """
+        Data-type of the array's elements.
+
+        Returns
+        -------
+        numpy.dtype
+            The data type of the array elements.
+        """
         return super().dtype
 
     @property
     def acl_dtype(self) -> int:
+        """
+        Internal ACL data type identifier.
+
+        Returns
+        -------
+        int
+            The ACL data type enum value.
+        """
         return super().aclDtype
 
     @classmethod
     def from_numpy(cls, host_data: np.ndarray) -> "ndarray":
+        """
+        Create an asnumpy.ndarray from a numpy.ndarray.
+
+        This function copies the data from the host (CPU) to the device (NPU).
+
+        Parameters
+        ----------
+        host_data : numpy.ndarray
+            The input NumPy array.
+
+        Returns
+        -------
+        asnumpy.ndarray
+            A new array on the device containing the same data as `host_data`.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import asnumpy as ap
+        >>> x_cpu = np.array([1, 2, 3])
+        >>> x_npu = ap.ndarray.from_numpy(x_cpu)
+        """
         base_obj = _ndarray.from_numpy(host_data)
         return cls(base_obj)
 
     def to_numpy(self) -> np.ndarray:
+        """
+        Return a copy of the array data as a numpy.ndarray on the host.
+
+        This function copies the data from the device (NPU) to the host (CPU).
+
+        Returns
+        -------
+        numpy.ndarray
+            A NumPy array containing the data from the device array.
+
+        Examples
+        --------
+        >>> import asnumpy as ap
+        >>> x_npu = ap.zeros(3)
+        >>> x_cpu = x_npu.to_numpy()
+        >>> type(x_cpu)
+        <class 'numpy.ndarray'>
+        """
         return super().to_numpy()
 
 
