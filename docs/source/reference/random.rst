@@ -1,0 +1,53 @@
+随机抽样
+========
+
+.. module:: asnumpy.random
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   rand
+   randn
+   randint
+   random_integers
+   random_sample
+   choice
+   bytes
+   shuffle
+   permutation
+   beta
+   binomial
+   chisquare
+   dirichlet
+   exponential
+   f
+   gamma
+   geometric
+   gumbel
+   hypergeometric
+   laplace
+   logistic
+   lognormal
+   logseries
+   multinomial
+   multivariate_normal
+   negative_binomial
+   noncentral_chisquare
+   noncentral_f
+   normal
+   pareto
+   poisson
+   power
+   rayleigh
+   standard_cauchy
+   standard_exponential
+   standard_gamma
+   standard_normal
+   standard_t
+   triangular
+   uniform
+   vonmises
+   wald
+   weibull
+   zipf
