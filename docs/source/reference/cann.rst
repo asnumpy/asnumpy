@@ -1,0 +1,14 @@
+CANN 接口
+=========
+
+.. currentmodule:: asnumpy
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   finalize
+   init
+   reset_device
+   reset_device_force
+   set_device
