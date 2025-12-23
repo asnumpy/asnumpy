@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,3 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
+
+from .lib.asnumpy_core.cann import (
+    finalize as _ap_finalize,
+    init as _ap_init,
+    reset_device as _ap_reset_device,
+    reset_device_force as _ap_reset_device_force,
+    set_device as _ap_set_device,
+)
+
+
+def set_device(device_id: int) -> None:
+    return _ap_set_device(device_id)
+
+
+def reset_device(device_id: int) -> None:
+    return _ap_reset_device(device_id)
+
+
+def reset_device_force(device_id: int) -> None:
+    return _ap_reset_device_force(device_id)
+
+
+def init() -> None:
+    return _ap_init()
+
+
+def finalize() -> None:
+    return _ap_finalize()

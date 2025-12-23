@@ -27,7 +27,8 @@ Implements:
 """
 
 import numpy as _np
-from .lib import ndarray as NPUArray
+from .lib.asnumpy_core import ndarray as NPUArray
+
 
 def _to_numpy(x):
     """
@@ -86,11 +87,14 @@ class _AsnpNpz:
     """
 
     def __init__(self, npz):
-        self._npz = npz       # numpy.lib.npyio.NpzFile object
-        self._cache = {}      # dict to store already converted NPUArray
+        self._npz = npz  # numpy.lib.npyio.NpzFile object
+        self._cache = {}  # dict to store already converted NPUArray
 
-    def __enter__(self): return self
-    def __exit__(self, exc_type, exc_val, exc_tb): self.close()
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def close(self):
         self._npz.close()
@@ -108,7 +112,7 @@ class _AsnpNpz:
 
     def __getitem__(self, key):
         if key not in self._cache:
-            host = self._npz[key]                  # lazy unzip → numpy.ndarray
+            host = self._npz[key]  # lazy unzip → numpy.ndarray
             self._cache[key] = NPUArray.from_numpy(host)  # upload to NPU
         return self._cache[key]
 
