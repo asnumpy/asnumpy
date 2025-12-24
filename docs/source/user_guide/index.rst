@@ -6,3 +6,4 @@
 
    overview
    install
+   basic

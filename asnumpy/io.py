@@ -52,6 +52,10 @@ def save(file, arr, allow_pickle=False):
         Array to save.
     allow_pickle : bool, default False
         Whether to allow saving object arrays using pickle.
+    
+    See Also
+    --------
+    numpy.save
     """
     host = _to_numpy(arr)
     return _np.save(file, host, allow_pickle=allow_pickle)
@@ -62,6 +66,17 @@ def savez(file, *args, **kwargs):
     Save multiple arrays into an .npz archive (uncompressed).
     Positional args are saved as arr_0, arr_1, ...
     Keyword args are saved with their given names.
+
+    Parameters
+    ----------
+    file : file or str
+        File or filename to save.
+    *args : Arrays with implicit keys.
+    **kwargs : Arrays with explicit keys.
+
+    See Also
+    --------
+    numpy.savez
     """
     conv_args = [_to_numpy(a) for a in args]
     conv_kwargs = {k: _to_numpy(v) for k, v in kwargs.items()}
@@ -71,6 +86,18 @@ def savez(file, *args, **kwargs):
 def savez_compressed(file, *args, **kwargs):
     """
     Save multiple arrays into a compressed .npz archive.
+
+    Parameters
+    ----------
+    file : file or str
+        File or filename to save.
+    *args : Arrays with implicit keys.
+    **kwargs : Arrays with explicit keys.
+    
+    See Also
+    --------
+    asnumpy.savez
+    numpy.savez_compressed
     """
     conv_args = [_to_numpy(a) for a in args]
     conv_kwargs = {k: _to_numpy(v) for k, v in kwargs.items()}
@@ -131,6 +158,10 @@ def load(file, mmap_mode=None, allow_pickle=False, **kwargs):
         Allow loading pickled object arrays.
     kwargs : dict
         Other keyword args passed to numpy.load.
+    
+    See Also
+    --------
+    numpy.load    
     """
     obj = _np.load(file, mmap_mode=mmap_mode, allow_pickle=allow_pickle, **kwargs)
 

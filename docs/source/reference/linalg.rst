@@ -1,21 +1,28 @@
 线性代数
 ========
 
-.. module:: asnumpy.linalg
-
 矩阵和向量积
 ------------
+
+.. currentmodule:: asnumpy
 
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
-   asnumpy.dot
-   asnumpy.vdot
-   asnumpy.inner
-   asnumpy.outer
-   asnumpy.matmul
-   asnumpy.einsum
+   dot
+   einsum
+   inner
+   matmul
+   outer
+   vdot
+   
+.. currentmodule:: asnumpy.linalg
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
    matrix_power
 
 分解
@@ -27,18 +34,6 @@
 
    qr
 
-矩阵特征值
-----------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   eig
-   eigh
-   eigvals
-   eigvalsh
-
 范数和其他数字
 --------------
 
@@ -49,7 +44,6 @@
    norm
    det
    slogdet
-   trace
 
 解方程和逆矩阵
 --------------
@@ -58,9 +52,4 @@
    :toctree: generated/
    :nosignatures:
 
-   solve
-   tensorsolve
-   lstsq
    inv
-   pinv
-   tensorinv

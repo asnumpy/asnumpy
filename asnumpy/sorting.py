@@ -20,4 +20,33 @@ from .utils import ndarray
 
 
 def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
+    """
+    Returns a sorted copy of an array with a stable sorting algorithm.
+
+    Parameters
+    ----------
+    a : ndarray
+        Array to be sorted.
+    axis : int or None, optional
+        Axis along which to sort. Default is -1, which means sort along the
+        last axis. If None is supplied, the array is flattened before sorting.
+    stable : bool, optional
+        If True, use a stable sorting algorithm. Default is False.
+        Note that unlike NumPy, AsNumPy uses a boolean flag for stability
+        instead of a 'kind' string parameter.
+
+    Returns
+    -------
+    sorted_array : ndarray
+        Array of the same type and shape as ``a``.
+
+    .. note::
+       For its implementation reason, ``asnumpy.sort`` currently does not fully
+       support ``kind`` and ``order`` parameters that ``numpy.sort`` does
+       support. Instead, it provides a ``stable`` boolean parameter.
+
+    See Also
+    --------
+    numpy.sort
+    """
     return ndarray(_ap_sort(a, axis, stable))

@@ -4,6 +4,7 @@ API 参考
 .. toctree::
    :maxdepth: 2
 
+   ndarray
    array
    math
    linalg
@@ -12,3 +13,4 @@ API 参考
    sorting
    io
    cann
+   utils

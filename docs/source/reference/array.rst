@@ -22,12 +22,3 @@
    zeros
    zeros_like
 
-数组属性与方法
---------------
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   broadcast_shape
-   ndarray

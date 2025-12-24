@@ -6,24 +6,9 @@ from datetime import datetime
 # Insert the project root directory into sys.path so that asnumpy can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from unittest.mock import MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-MOCK_MODULES = ['asnumpy.lib.asnumpy_core', 'asnumpy.lib.asnumpy_core.array', 'asnumpy.lib.asnumpy_core.cann', 'asnumpy.lib.asnumpy_core.linalg', 'asnumpy.lib.asnumpy_core.logic', 'asnumpy.lib.asnumpy_core.math', 'asnumpy.lib.asnumpy_core.random', 'asnumpy.lib.asnumpy_core.sorting', 'asnumpy.lib.asnumpy_core.utils']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
 import asnumpy
+__version__ = asnumpy.__version__
 
-try:
-    __version__ = asnumpy.__version__
-    if isinstance(__version__, Mock):
-        __version__ = "0.0.0"
-except AttributeError:
-    __version__ = "0.0.0"
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # -- General configuration ------------------------------------------------
@@ -46,13 +31,15 @@ master_doc = 'index'
 
 project = u'AsNumpy'
 year = datetime.now().year
-copyright = u'{}, AISS Group at Harbin Institute of Technology'.format(year)
-author = u'AISS Group at Harbin Institute of Technology'
+copyright = u'{}, AsNumpy Contributors'.format(year)
+author = u'AsNumpy Contributors'
 
 version = __version__
 release = __version__
 
 language = 'zh_CN'
+
+html_search_language = 'zh'
 
 exclude_patterns = []
 
@@ -72,13 +59,16 @@ copybutton_line_continuation_character = "\\"
 # Using pydata_sphinx_theme as a standard theme
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
-
+html_logo = '../images/asnumpy_logo.png'
 html_theme_options = {
+    "logo": {
+        "text": "AsNumpy",
+    },
     "icon_links": [
         {
-            "name": "GitHub",
-            "url": "https://github.com/your-repo/asnumpy",
-            "icon": "fab fa-github-square",
+            "name": "GitCode",
+            "url": "https://gitcode.com/cann/asnumpy",
+            "icon": "fab fa-git",
         },
     ],
 }
