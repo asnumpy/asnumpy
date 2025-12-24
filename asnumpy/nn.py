@@ -14,25 +14,13 @@
 # limitations under the License.
 # *****************************************************************************
 
-add_library(asnumpy INTERFACE)
-add_library(ascend_sdk INTERFACE)
+from typing import Optional
+import numpy as np
+from .lib.asnumpy_core.nn import softmax as _ap_softmax
+from .utils import ndarray, _convert_dtype
 
-target_include_directories(asnumpy INTERFACE ${CMAKE_SOURCE_DIR}/include)
 
-target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/include)
-target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PACKAGE_PATH}/lib64)
-target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi)
-
-add_subdirectory(array)
-add_subdirectory(cann)
-add_subdirectory(dtypes)
-add_subdirectory(linalg)
-add_subdirectory(random)
-add_subdirectory(math)
-add_subdirectory(logic)
-add_subdirectory(sorting)
-add_subdirectory(statistics)
-add_subdirectory(nn)
-add_subdirectory(utils)
-
-target_link_libraries(asnumpy INTERFACE array cann dtypes linalg random math logic sorting statistics nn utils)
+def softmax(
+    x: ndarray, axis: int = -1, dtype: Optional[np.dtype] = None
+) -> ndarray:
+    return ndarray(_ap_softmax(x, axis, _convert_dtype(dtype)))
