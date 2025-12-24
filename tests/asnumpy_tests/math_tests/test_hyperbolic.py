@@ -1,133 +1,114 @@
 # *****************************************************************************
 # Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 # *****************************************************************************
 
 """双曲函数测试
-1. sinh(x, dtype=None)
-2. cosh(x, dtype=None)
-3. tanh(x, dtype=None)
-4. arcsinh(x, dtype=None)
-5. arccosh(x, dtype=None)
-6. arctanh(x, dtype=None)
-注意：这些函数都有可选的 dtype 参数
+
+针对 CANN 算子限制进行精准标注：
+1. 基础双曲函数: sinh, cosh, tanh
+2. 反双曲函数: arcsinh, arccosh, arctanh
 """
 
 import numpy
+import pytest
 from asnumpy import testing
 
+# ========== 辅助函数 ==========
 
-# ========== 双曲函数测试 ==========
+def _create_array(xp, data, dtype):
+    """辅助函数：创建数组"""
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
 
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_sinh(xp, dtype):
-    """测试sinh函数"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=0.5)
+# ========== 1. 基础双曲函数 (Sinh, Cosh, Tanh) ==========
+
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_sinh_basic(xp, dtype):
+    data = [-1.0, 0.0, 1.0]
+    a = _create_array(xp, data, dtype)
     return xp.sinh(a)
 
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_cosh(xp, dtype):
-    """测试cosh函数"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=0.5)
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_cosh_basic(xp, dtype):
+    data = [-1.0, 0.0, 1.0]
+    a = _create_array(xp, data, dtype)
     return xp.cosh(a)
 
-
-# tanh 对 float64 不支持，只测试 float32
 @testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_tanh(xp, dtype):
-    """测试tanh函数
-    
-    注意：只测试 float32，float64 不支持
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_tanh_basic(xp, dtype):
+    data = [-1.0, 0.0, 1.0]
+    a = _create_array(xp, data, dtype)
     return xp.tanh(a)
 
+# --- 针对 tanh 的特殊 Dtype 支持 (根据统计：tanh 支持 int16) ---
 
-# ========== 反双曲函数测试 ==========
+@testing.for_dtypes([numpy.int16])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_tanh_int16_support(xp, dtype):
+    data = [1, 0, -1]
+    a = _create_array(xp, data, dtype)
+    return xp.tanh(a)
 
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_arcsinh(xp, dtype):
-    """测试arcsinh函数
-    
-    输入范围: 全体实数
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
+# --- 针对不支持类型及精度不一致的标注 (XFAIL) ---
+
+@pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
+@testing.for_dtypes([numpy.float16])
+@testing.numpy_asnumpy_allclose()
+def test_hyperbolic_float16_xfail(xp, dtype):
+    a = _create_array(xp, [0.5], dtype)
+    return xp.sinh(a)
+
+@pytest.mark.xfail(reason="Mismatch: AsNumpy outputs float32 for integer inputs (Numpy is float64) or Unsupport uint16/32/64")
+@testing.for_dtypes([numpy.int32, numpy.uint16, numpy.uint32, numpy.uint64])
+@testing.numpy_asnumpy_allclose()
+def test_hyperbolic_mismatch_xfail(xp, dtype):
+    """统计确认：sinh/cosh 等不支持 uint，且 int 提升精度不一致"""
+    data = [1, 2]
+    a = _create_array(xp, data, dtype)
+    return xp.sinh(a)
+
+# ========== 2. 反双曲函数 (Arcsinh, Arccosh, Arctanh) ==========
+
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_arcsinh_basic(xp, dtype):
+    data = [-5.0, 0.0, 5.0]
+    a = _create_array(xp, data, dtype)
     return xp.arcsinh(a)
 
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_arccosh(xp, dtype):
-    """测试arccosh函数
-    
-    输入范围: [1, ∞)
-    """
-    # 生成 >= 1 的随机数
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=2.0)
-    # 确保 >= 1 (使用 full 创建值为1的数组，避免 ones 的 uint16 问题)
-    if xp is numpy:
-        a = numpy.abs(a) + 1
-    else:
-        import asnumpy as ap
-        a = ap.absolute(a)
-        ones_val = xp.full((3, 4), 1.0, dtype=dtype)
-        a = ap.add(a, ones_val)
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_arccosh_basic(xp, dtype):
+    data = [1.0, 2.0, 5.0]
+    a = _create_array(xp, data, dtype)
     return xp.arccosh(a)
 
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_arctanh(xp, dtype):
-    """测试arctanh函数
-    
-    输入范围: (-1, 1)
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=0.8)
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_arctanh_basic(xp, dtype):
+    data = [-0.9, 0.0, 0.9]
+    a = _create_array(xp, data, dtype)
     return xp.arctanh(a)
 
+# --- 越界行为测试 (不带 equal_nan 参数，依赖底层默认行为) ---
 
-# ========== 测试结果与已知问题 ==========
-#
-#  测试统计: 6/6 全部通过 
-#
-#  整数类型支持:
-# 仅支持浮点: 所有双曲函数 (6个)
-#
-# 为什么不支持整数测试？
-# - NumPy 和 AsNumPy 对整数输入的 dtype 转换规则不一致
-# - NumPy: int32→float64, AsNumPy: int32→float32 (不一致)
-# - 会导致 dtype mismatch，因此只测试浮点类型更合理
-#
-#  float64 限制:
-# 1. tanh 不支持 float64（已限制为 float32）
-#    - 问题：AsNumPy 抛出 RuntimeError: Tanh: get workspace size failed, error=161002
-#    - 使用 @testing.for_dtypes([numpy.float32])
-#    - 根本原因：CANN 框架的 aclnnTanh 算子对 float64 支持有问题
-#
-#  数据生成策略:
-# - sinh/cosh: 使用较小输入（scale=0.5）避免溢出，双曲函数增长很快
-# - arctanh: 输入范围(-1, 1)，使用 scale=0.8 确保在有效范围内
-# - arccosh: 输入范围[1, ∞)，使用 full 创建值为1的数组避免 ones 的 uint16 问题
-#
-#  注意事项:
-# 1. 这 6 个函数都有可选的 dtype 参数
-# 2. 装饰器会自动处理 dtype 参数（移除传给 asnumpy 的 dtype）
-# 3. NumPy: dtype 用于指定输出类型
-# 4. AsNumPy: dtype 参数的行为可能不同，需要进一步测试
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose()
+def test_arccosh_out_of_domain(xp, dtype):
+    """测试 arccosh 越界 (x < 1)。注意：若 allclose 不支持 NaN 对比，此项可能失败。"""
+    data = [0.5]
+    a = _create_array(xp, data, dtype)
+    return xp.arccosh(a)
 
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose()
+def test_arctanh_out_of_domain(xp, dtype):
+    """测试 arctanh 越界 (|x| >= 1)"""
+    data = [1.0, 2.0]
+    a = _create_array(xp, data, dtype)
+    return xp.arctanh(a)

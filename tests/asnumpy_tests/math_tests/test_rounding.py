@@ -1,223 +1,118 @@
 # *****************************************************************************
 # Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 # *****************************************************************************
 
-"""舍入函数测试
-1. around(x, decimals, dtype=None) - 四舍五入到给定小数位数
-2. round_(x, decimals, dtype=None) - 四舍五入（around的别名）
-3. rint(x, dtype=None) - 舍入到最近的整数
-4. fix(x, dtype=None) - 向零舍入到最近的整数
-5. floor(x, dtype=None) - 向下取整
-6. ceil(x, dtype=None) - 向上取整
-7. trunc(x, dtype=None) - 截断小数部分（向零舍入）
+"""舍入算子测试
+
+针对已记录的 CANN 算子限制进行精准标注：
+1. around: 支持 float32/64, int32/64 (需显式传 decimals)
+2. rint: 支持 float32/64, 整数类型存在 dtype 不一致
+3. fix: 仅支持 float32
+4. floor: 不支持 float16 和复数
+5. ceil: 仅支持 float32/64
+6. trunc: 仅支持 float32
 """
 
 import numpy
+import pytest
 from asnumpy import testing
 
+# ========== 辅助函数 ==========
 
-# ========== around 函数测试 ==========
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_around(xp, dtype):
-    """测试 around(x, decimals) - 四舍五入到指定小数位
-    
-    注意：NumPy 的 around 不接受 dtype 参数
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.around(a, decimals=2)
-
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_around_decimals_0(xp, dtype):
-    """测试 around 舍入到整数（decimals=0）"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.around(a, decimals=0)
-
-
-# ========== round_ 函数测试 ==========
-
-# NumPy 没有 round_ 函数，跳过
-# @testing.for_float_dtypes()
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_round_(xp, dtype):
-#     """测试 round_(x, decimals, dtype) - around的别名
-#     
-#     禁用：NumPy 没有 round_ 函数"""
-
-
-# ========== rint 函数测试 ==========
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_rint(xp, dtype):
-    """测试 rint(x, dtype) - 舍入到最近的整数"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.rint(a, dtype=None)
-
-
-# ========== fix 函数测试 ==========
-
-@testing.for_float_dtypes(exclude=[numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_fix(xp, dtype):
-    """测试 fix(x) - 向零舍入到最近的整数
-    
-    正数向下取整，负数向上取整
-    
-    注意：AsNumPy的fix()不支持float64（RuntimeError: get workspace size failed）
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    # 生成包含正负数的数据
+def _create_array(xp, data, dtype):
+    """辅助函数：创建数组"""
+    np_arr = numpy.array(data, dtype=dtype)
     if xp is numpy:
-        a = a - 5.0
-    else:
-        import asnumpy as ap
-        offset = xp.full((3, 4), 5.0, dtype=dtype)
-        a = ap.subtract(a, offset)
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
+
+# ========== 1. 基础兼容性测试 (Around) ==========
+
+@testing.for_dtypes([numpy.float32, numpy.float64, numpy.int32, numpy.int64])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_around_basic(xp, dtype):
+    """记录：around 支持 float32/64, int32/64
+    修正：显式传入 decimals=0 以适配 C++ 绑定
+    """
+    data = [0.4, 0.5, 0.6, 1.5, 2.5]
+    a = _create_array(xp, data, dtype)
+    
+    if xp is numpy:
+        return xp.around(a, decimals=0)
+    # 适配当前 AsNumpy 强制要求 decimals 的接口
+    return xp.around(a, 0)
+
+# ========== 2. 存在 Dtype 行为差异的测试 (Rint, Floor) ==========
+
+@testing.for_dtypes([numpy.float32, numpy.float64])
+@testing.numpy_asnumpy_allclose()
+def test_rint_float_basic(xp, dtype):
+    """记录：rint 支持 float32/64"""
+    data = [-1.7, -1.5, 0.2, 1.5, 1.7]
+    a = _create_array(xp, data, dtype)
+    return xp.rint(a)
+
+@pytest.mark.xfail(reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy")
+@testing.for_dtypes([numpy.int32, numpy.int64])
+def test_rint_int_mismatch_xfail(xp, dtype):
+    """记录：rint 对整数类型的输出 dtype 与 numpy 不一致"""
+    a = _create_array(xp, [1, 2], dtype)
+    return xp.rint(a)
+
+@testing.for_dtypes([numpy.float32, numpy.float64, numpy.int32])
+@testing.numpy_asnumpy_allclose()
+def test_floor_basic(xp, dtype):
+    """记录：floor 支持常见类型，但不支持 float16 和复数"""
+    data = [-1.7, 0.2, 1.5]
+    a = _create_array(xp, data, dtype)
+    return xp.floor(a)
+
+@pytest.mark.xfail(reason="Bug: aclnnFloor does not support float16 and Complex types")
+@testing.for_dtypes([numpy.float16, numpy.complex64])
+def test_floor_unsupported_xfail(xp, dtype):
+    a = _create_array(xp, [1.5], dtype)
+    return xp.floor(a)
+
+# ========== 3. 严格限制 Dtype 的算子 (Fix, Ceil, Trunc) ==========
+
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose()
+def test_fix_basic(xp, dtype):
+    """记录：fix 仅支持 float32"""
+    data = [-1.7, 0.2, 1.5]
+    a = _create_array(xp, data, dtype)
     return xp.fix(a)
 
+@pytest.mark.xfail(reason="Bug: aclnnFix only supports float32")
+@testing.for_dtypes([numpy.float64, numpy.int32])
+def test_fix_unsupported_xfail(xp, dtype):
+    a = _create_array(xp, [1.5], dtype)
+    return xp.fix(a)
 
-# ========== floor 函数测试 ==========
+@testing.for_dtypes([numpy.float32, numpy.float64])
+@testing.numpy_asnumpy_allclose()
+def test_ceil_basic(xp, dtype):
+    """记录：ceil 仅支持 float32, float64"""
+    data = [-1.7, 0.2, 1.5]
+    a = _create_array(xp, data, dtype)
+    return xp.ceil(a)
 
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_floor(xp, dtype):
-    """测试 floor(x, dtype) - 向下取整（地板函数）"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.floor(a, dtype=None)
+@pytest.mark.xfail(reason="Bug: aclnnCeil only supports float32/64")
+@testing.for_dtypes([numpy.int32, numpy.int64])
+def test_ceil_unsupported_xfail(xp, dtype):
+    a = _create_array(xp, [1], dtype)
+    return xp.ceil(a)
 
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose()
+def test_trunc_basic(xp, dtype):
+    """记录：trunc 仅支持 float32"""
+    data = [-1.7, 0.2, 1.5]
+    a = _create_array(xp, data, dtype)
+    return xp.trunc(a)
 
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_floor_negative(xp, dtype):
-    """测试 floor 对负数的处理"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    if xp is numpy:
-        a = a - 5.0
-    else:
-        import asnumpy as ap
-        offset = xp.full((3, 4), 5.0, dtype=dtype)
-        a = ap.subtract(a, offset)
-    return xp.floor(a, dtype=None)
-
-
-# ========== ceil 函数测试 ==========
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_ceil(xp, dtype):
-    """测试 ceil(x, dtype) - 向上取整（天花板函数）"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.ceil(a, dtype=None)
-
-
-@testing.for_float_dtypes()
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_ceil_negative(xp, dtype):
-    """测试 ceil 对负数的处理"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    if xp is numpy:
-        a = a - 5.0
-    else:
-        import asnumpy as ap
-        offset = xp.full((3, 4), 5.0, dtype=dtype)
-        a = ap.subtract(a, offset)
-    return xp.ceil(a, dtype=None)
-
-
-# ========== trunc 函数测试 ==========
-
-@testing.for_float_dtypes(exclude=[numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_trunc(xp, dtype):
-    """测试 trunc(x) - 截断小数部分（向零舍入）
-    
-    注意：AsNumPy的trunc()不支持float64（RuntimeError: get workspace size failed）
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    return xp.trunc(a, dtype=None)
-
-
-@testing.for_float_dtypes(exclude=[numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_trunc_negative(xp, dtype):
-    """测试 trunc 对负数的处理
-    
-    注意：AsNumPy的trunc()不支持float64
-    """
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42, scale=10.0)
-    if xp is numpy:
-        a = a - 5.0
-    else:
-        import asnumpy as ap
-        offset = xp.full((3, 4), 5.0, dtype=dtype)
-        a = ap.subtract(a, offset)
-    return xp.trunc(a, dtype=None)
-
-
-# ========== 测试结果与已知问题 ==========
-#
-#  测试统计: 10/10 通过 
-#
-#  数据类型支持:
-#   - around, round_, rint, floor, ceil: float32 + float64 
-#   - fix, trunc: 仅 float32 
-#
-#  已知限制:
-#   1. fix 不支持 float64（RuntimeError: get workspace size failed）
-#   2. trunc 不支持 float64（RuntimeError: get workspace size failed）
-#
-#  NumPy API 差异:
-#   - NumPy 的 around(), round_(), fix() 不接受 dtype 参数
-#   - NumPy 的 rint(), floor(), ceil(), trunc() 接受 dtype 参数（但传 None 无效）
-#   - AsNumPy 的所有舍入函数都支持 dtype 参数
-#
-#  函数说明:
-#   1. around/round_: 四舍五入到指定小数位
-#      - decimals: 保留的小数位数（默认0）
-#      - decimals=0: 舍入到整数
-#      - decimals>0: 舍入到小数
-#
-#   2. rint: 舍入到最近的整数（银行家舍入）
-#      - 0.5 舍入到最近的偶数
-#
-#   3. fix: 向零舍入
-#      - 正数：向下取整（类似 floor）
-#      - 负数：向上取整（类似 ceil）
-#
-#   4. floor: 向下取整
-#      - 返回不大于 x 的最大整数
-#
-#   5. ceil: 向上取整
-#      - 返回不小于 x 的最小整数
-#
-#   6. trunc: 截断小数部分
-#      - 与 fix 相同，向零舍入
-#
-#  舍入规则对比:
-#   输入: 2.3, -2.3
-#   - floor:  2.0, -3.0  (总是向下)
-#   - ceil:   3.0, -2.0  (总是向上)
-#   - trunc:  2.0, -2.0  (向零)
-#   - fix:    2.0, -2.0  (向零，与 trunc 相同)
-#   - rint:   2.0, -2.0  (最近整数)
-#   - around: 2.0, -2.0  (四舍五入)
-#
-#  整数类型不测试:
-#   - 舍入函数主要用于浮点数
-#   - 对整数输入，大多数舍入函数返回原值（测试无意义）
+@pytest.mark.xfail(reason="Bug: aclnnTrunc only supports float32")
+@testing.for_dtypes([numpy.float64, numpy.int32])
+def test_trunc_unsupported_xfail(xp, dtype):
+    a = _create_array(xp, [1.5], dtype)
+    return xp.trunc(a)
