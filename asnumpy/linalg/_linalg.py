@@ -129,15 +129,10 @@ def norm(
         are computed.  If `axis` is None then either a vector norm (when `a`
         is 1-D) or a matrix norm (when `a` is 2-D) is returned. The default
         is None.
-
-        .. versionadded:: 1.8.0
-
     keepdims : bool, optional
         If this is set to True, the axes which are normed over are left in the
         result as dimensions with size one.  With this option the result will
         broadcast correctly against the original `a`.
-
-        .. versionadded:: 1.10.0
 
     Returns
     -------
