@@ -88,6 +88,7 @@ class CMakeBuild(build_ext):
         print(f"Building with CMake in {build_temp}...")
         subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=build_temp)
 
+
 npu_array_extension = Extension(
     name="asnumpy.lib.asnumpy_core",
     sources=[]
