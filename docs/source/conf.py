@@ -16,12 +16,12 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import asnumpy
 from datetime import datetime, timezone
 
 # Insert the project root directory into sys.path so that asnumpy can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
+import asnumpy
 __version__ = asnumpy.__version__
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 

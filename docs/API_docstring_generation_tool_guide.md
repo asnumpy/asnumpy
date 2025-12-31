@@ -88,6 +88,21 @@
     return ndarray(_ap_add(x1, x2, _convert_dtype(dtype)))
     ```
     3. 在/home/ma-user/work/asnumpy/docs/source/reference/math.rst合适位置添加add
+    4. **注 ：（可选）更新模块索引**：若项目新增或删除了 Python 模块，需在asnumpy/docs/source/reference添加对应的rst格式模块索引文件，以及需在asnumpy/docs/source/reference/index.rst中添加模块声明，确保该模块已被包含或已删除。 `rst` 文件格式示例如下。
+
+    ```shell
+    模块名称
+    =========
+
+    .. module:: asnumpy
+
+    .. autosummary::
+       :toctree: generated/
+       :nosignatures:
+
+       API名1
+       API名2
+    ```
 
 2.  **进入docs目录并重新生成文档**：在 `docs` 目录下执行如下文档生成命令，Sphinx 将自动识别代码变更并更新文档内容。根据需要执行相应命令。
 
