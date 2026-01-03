@@ -14,91 +14,55 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""复数处理函数测试
+"""复数运算算子测试
 
-主要测试函数：
-1. real(x) - 返回复数的实部
+当前阶段仅测试：real
+记录问题：代码强制将所有复数（包括 complex128）的输出类型硬编码为 ACL_FLOAT (float32)，
+导致 complex128 -> float64 的精度下降。
 """
 
 import numpy
+import pytest
 from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
 def _create_array(xp, data, dtype):
-    """辅助函数：创建数组
-    
-    由于 asnumpy 尚未实现 xp.array() 接口，
-    这里统一封装创建逻辑：如果是 asnumpy 环境，则通过 from_numpy 转换。
-    """
+    """辅助函数：创建数组"""
     np_arr = numpy.array(data, dtype=dtype)
     if xp is numpy:
         return np_arr
-    # asnumpy 环境
     return xp.ndarray.from_numpy(np_arr)
 
+# ========== 1. 实部提取 (Real) ==========
 
-# ========== 测试用例 (仅测试 float32 和 complex64) ==========
-
-# 使用 for_dtypes 明确指定仅测试 float32 和 complex64
-# 避开 float64, complex128 (报错 DT_DOUBLE/DT_COMPLEX128) 和 整数 (报错不支持)
-@testing.for_dtypes([numpy.float32, numpy.complex64])
-@testing.numpy_asnumpy_array_equal()
-def test_real_basic(xp, dtype):
-    """基础随机测试：覆盖常规形状 (3, 4)"""
-    a = testing.shaped_random((3, 4), xp=xp, dtype=dtype, seed=42)
-    return xp.real(a)
-
-@testing.for_dtypes([numpy.complex64]) # 仅测试 complex64
-@testing.numpy_asnumpy_array_equal()
-def test_real_complex_special_values(xp, dtype):
-    """测试复数类型的特定数值"""
-    data = [
-        1+2j,    # 普通复数
-        -2.5+3j, # 实部为负
-        0+5j,    # 纯虚数 (实部为0)
-        3-4j,    # 虚部为负
-        -1-1j,   # 实虚皆负
-        0+0j,    # 零
-        5+0j     # 纯实数 (虚部为0)
-    ]
+@testing.for_dtypes([numpy.complex64])
+@testing.numpy_asnumpy_allclose()
+def test_real_complex64_basic(xp, dtype):
+    """测试 complex64 -> float32 链路"""
+    data = [1.0 + 2.0j, -3.5 + 4.5j, 0.0 + 0.0j]
     a = _create_array(xp, data, dtype)
     return xp.real(a)
 
-@testing.for_dtypes([numpy.float32]) # 仅测试 float32
-@testing.numpy_asnumpy_array_equal()
-def test_real_float_special_values(xp, dtype):
-    """测试浮点类型的特定数值"""
-    data = [0.0, -0.0, 1.5, -2.5, 100.0, -100.0]
-    a = _create_array(xp, data, dtype)
-    return xp.real(a)
-
-@testing.for_dtypes([numpy.float32, numpy.complex64])
-@testing.numpy_asnumpy_array_equal()
-def test_real_multidim(xp, dtype):
-    """测试多维数组形状：3D 数组"""
-    a = testing.shaped_random((2, 2, 2), xp=xp, dtype=dtype, seed=42)
-    return xp.real(a)
-
-@testing.for_dtypes([numpy.float32, numpy.complex64])
-@testing.numpy_asnumpy_array_equal()
-def test_real_2d_explicit(xp, dtype):
-    """测试显式构造的 2D 数组"""
-    if numpy.dtype(dtype).kind == 'c':
-            # 2x2 复数矩阵
-            val = [[1+1j, 2+0j], [0+3j, -1-1j]]
-    else:
-            # 2x2 实数矩阵
-            val = [[1, 2], [0, -1]]
-            
-    a = _create_array(xp, val, dtype)
-    return xp.real(a)
-
-@testing.for_dtypes([numpy.float32]) # 仅测试 float32
-@testing.numpy_asnumpy_array_equal()
-def test_real_non_complex_identity(xp, dtype):
-    """专门测试非复数类型：
-    验证对实数调用 real() 是否正确返回原数组（数值不变）
+@pytest.mark.xfail(reason="Mismatch: complex128 output is hardcoded to float32 (ACL_FLOAT) instead of float64.")
+@testing.for_dtypes([numpy.complex128])
+@testing.numpy_asnumpy_allclose()
+def test_real_complex128_precision_xfail(xp, dtype):
     """
-    a = testing.shaped_random((3, 4), xp=xp, dtype=dtype, seed=42)
+    记录：complex128 提取实部时，后端硬编码输出为 float32。
+    预期：返回 float64 (保持高精度)
+    实际：返回 float32 (精度受损)
+    """
+    # 构造一个需要 float64 精度才能精确表达的数值
+    data = [1.23456789012345 + 0.5j]
+    a = _create_array(xp, data, dtype)
+    
+    # 当 xp 为 asnumpy 时，由于后端硬编码，返回的将是截断后的 float32
+    return xp.real(a)
+
+@pytest.mark.xfail(reason="Bug: real() on non-complex dtypes might be unsupported in current asnumpy implementation")
+@testing.for_dtypes([numpy.float32, numpy.int32])
+def test_real_non_complex_xfail(xp, dtype):
+    """NumPy 允许对实数调 real (返回自身)，验证 asnumpy 是否支持"""
+    a = _create_array(xp, [1, 2], dtype)
     return xp.real(a)

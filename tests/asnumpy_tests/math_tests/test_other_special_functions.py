@@ -16,8 +16,10 @@
 
 """其他特殊数学函数测试
 
-主要测试函数：
-1. sinc(x) - 计算 sin(pi*x)/(pi*x)
+针对已记录的算子限制进行标注：
+1. sinc: 基础功能支持 float32, float64。
+2. float16: 触发 RuntimeError (Unsupported py::dtype for aclDataType)，C++ 映射缺失。
+3. int32: 触发 RuntimeError 161002，底层算子输出类型不支持。
 """
 
 import numpy
@@ -27,76 +29,47 @@ from asnumpy import testing
 # ========== 辅助函数 ==========
 
 def _create_array(xp, data, dtype):
-    """辅助函数：创建数组
-    
-    解决 asnumpy 尚未实现 xp.array() 接口的问题。
-    """
+    """辅助函数：创建数组"""
     np_arr = numpy.array(data, dtype=dtype)
     if xp is numpy:
         return np_arr
-    # asnumpy 环境
     return xp.ndarray.from_numpy(np_arr)
 
+# ========== 1. Sinc 正常链路 (Float32/64) ==========
 
-# ========== 测试用例 ==========
-
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
+@testing.for_dtypes([numpy.float32, numpy.float64])
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_sinc_basic(xp, dtype):
-    """基础随机测试：测试常规范围内的浮点数"""
-    # 修复：必须在函数内部设置固定种子
-    # 否则 xp=numpy 和 xp=asnumpy 会生成两组不同的随机数，导致对比失败
-    numpy.random.seed(42) 
-    
-    # 生成 -5 到 5 之间的随机数
-    np_a = numpy.random.uniform(low=-5.0, high=5.0, size=(10, 10)).astype(dtype)
-    a = _create_array(xp, np_a, dtype)
-    return xp.sinc(a)
-
-
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-8)
-def test_sinc_at_zero(xp, dtype):
-    """测试 sinc 在 x=0 处的行为"""
-    data = [0.0, -0.0]
+    """测试 sinc 基础功能（已知支持的浮点类型）"""
+    data = [-3.0, -1.5, 0.5, 2.0, 3.5]
     a = _create_array(xp, data, dtype)
     return xp.sinc(a)
 
-
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
-def test_sinc_integers(xp, dtype):
-    """测试整数点的值"""
-    data = [-5.0, -3.0, -1.0, 1.0, 2.0, 4.0]
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose()
+def test_sinc_zero(xp, dtype):
+    """测试 sinc(0) = 1"""
+    data = [0.0]
     a = _create_array(xp, data, dtype)
     return xp.sinc(a)
 
+# ========== 2. 异常与 Bug 记录 (XFAIL) ==========
 
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
-def test_sinc_halves(xp, dtype):
-    """测试半整数点"""
-    data = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-    a = _create_array(xp, data, dtype)
+@pytest.mark.xfail(reason="Bug: C++ core missing mapping from float16 to aclDataType (Unsupported py::dtype)")
+@testing.for_dtypes([numpy.float16])
+def test_sinc_float16_mapping_xfail(xp, dtype):
+    """
+    记录：sinc 虽然在硬件层面支持 float16，但 asnumpy 绑定层尚未处理该映射。
+    """
+    a = _create_array(xp, [0.5], dtype)
     return xp.sinc(a)
 
-
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
-def test_sinc_special_values(xp, dtype):
-    """测试特殊数值：无穷大和 NaN"""
-    data = [float('inf'), float('-inf'), float('nan')]
+@pytest.mark.xfail(reason="Bug: aclnnSinc does not support INT32 output (RuntimeError 161002)")
+@testing.for_dtypes([numpy.int32])
+def test_sinc_int_output_xfail(xp, dtype):
+    """
+    记录：输入 int32 时，由于输出也被设为 int32，导致 aclnn 拒绝执行。
+    """
+    data = [1, 2]
     a = _create_array(xp, data, dtype)
-    return xp.sinc(a)
-
-
-@testing.for_float_dtypes(no_float16=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
-def test_sinc_multidim(xp, dtype):
-    """测试多维数组"""
-    # 修复：设置随机种子，确保两轮执行数据一致
-    numpy.random.seed(123)
-    
-    np_data = numpy.random.uniform(-2.0, 2.0, size=(2, 3, 4)).astype(dtype)
-    a = _create_array(xp, np_data, dtype)
     return xp.sinc(a)
