@@ -44,7 +44,7 @@ def _to_numpy(x):
 def save(file, arr, allow_pickle=False):
     """
     Save a single array to a .npy file.
-    Parameters
+    Arguments
     ----------
     file : str or file-like
         File path or file object.
@@ -67,7 +67,7 @@ def savez(file, *args, **kwargs):
     Positional args are saved as arr_0, arr_1, ...
     Keyword args are saved with their given names.
 
-    Parameters
+    Arguments
     ----------
     file : file or str
         File or filename to save.
@@ -87,7 +87,7 @@ def savez_compressed(file, *args, **kwargs):
     """
     Save multiple arrays into a compressed .npz archive.
 
-    Parameters
+    Arguments
     ----------
     file : file or str
         File or filename to save.
@@ -148,7 +148,7 @@ def load(file, mmap_mode=None, allow_pickle=False, **kwargs):
     """
     Load array(s) from .npy or .npz file.
 
-    Parameters
+    Arguments
     ----------
     file : str or file-like
         File path.

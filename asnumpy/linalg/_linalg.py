@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,74 +28,90 @@ from ..utils import ndarray
 
 def matrix_power(a: ndarray, n: int) -> ndarray:
     """
-    Raise a square matrix to the (integer) power `n`.
+    Compute the integer power of a square matrix.
 
-    For positive integers `n`, the power is computed by repeated matrix
-    squarings and matrix multiplications. If ``n == 0``, the identity matrix
-    of the same shape as ``a`` is returned. If ``n < 0``, the inverse
-    is computed and then raised to the ``abs(n)``.
+    This operation applies repeated matrix multiplication to obtain
+    an integer power of the input matrix. Special cases such as zero
+    and negative exponents are handled according to linear algebra
+    conventions.
 
-    Parameters
-    ----------
-    a : ndarray
-        Matrix to be "powered".
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input square matrix.
     n : int
-        The exponent can be any integer or long integer, positive,
-        negative, or zero.
+        Integer exponent applied to the matrix.
 
     Returns
     -------
-    a**n : ndarray
-        The return value is the same shape and type as ``a``;
-        if the exponent is positive or zero then the type of the
-        elements is the same as those of ``a``. If the exponent is
-        negative the elements are floating-point.
+    asnumpy.ndarray
+        Resulting matrix after applying the specified power operation.
 
     See Also
     --------
     numpy.linalg.matrix_power
+
+    Notes
+    -----
+    - A zero exponent produces an identity matrix with the same shape as ``a``.
+    - Negative exponents involve computing the matrix inverse, which may
+      promote the result to a floating-point data type.
+    - Computation may be executed on an accelerator device depending on
+      the asnumpy runtime configuration.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> m = ap.array([[1, 2], [0, 1]])
+    >>> ap.linalg.matrix_power(m, 2)
+    array([[1, 4],
+           [0, 1]])
     """
     return ndarray(ap_matrix_power(a, n))
 
 
 def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
     """
-    Compute the qr factorization of a matrix.
+    Perform QR factorization of a matrix.
 
-    Factor the matrix `a` as *qr*, where `q` is orthonormal and `r` is
-    upper-triangular.
+    Factor the input matrix into an orthonormal matrix `q` and an
+    upper-triangular matrix `r`. Different factorization modes
+    control which outputs are returned.
 
-    Parameters
-    ----------
-    a : array_like, shape (M, N)
-        Matrix to be factored.
-    mode : {'reduced', 'complete', 'r', 'raw'}, optional
-        If K = min(M, N), then
-
-        * 'reduced'  : returns q, r with dimensions (M, K), (K, N) (default)
-        * 'complete' : returns q, r with dimensions (M, M), (M, N)
-        * 'r'        : returns r only with dimensions (K, N)
-        * 'raw'      : returns h, tau with dimensions (N, M), (K,)
-
-        Note that array h returned in 'raw' mode is transposed for calling
-        Fortran. The 'economic' mode is deprecated.  The modes 'full' and
-        'economic' may be passed using the first letter for backwards
-        compatibility, but all others must be spelled out. See the Notes
-        for more explanation.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input matrix to be factored.
+    mode : str, optional
+        Factorization mode. Options include:
+        - 'reduced' (default): returns `q` and `r` with minimal size
+        - 'complete': returns full-size `q` and `r`
+        - 'r': returns `r` only
+        - 'raw': returns raw matrices `h` and `tau` used in computation
 
     Returns
     -------
-    q : ndarray of float or complex, optional
-        A matrix with orthonormal columns. When mode = 'complete' the
-        result is an orthogonal/unitary matrix depending on whether or not
-        a is real/complex. The determinant may be either +/- 1 in that
-        case.
-    r : ndarray of float or complex, optional
-        The upper-triangular matrix.
+    asnumpy.ndarray or tuple
+        Depending on `mode`, returns `r` alone, a tuple `(q, r)`, or
+        raw matrices `(h, tau)`.
 
     See Also
     --------
     numpy.linalg.qr
+
+    Notes
+    -----
+    - Raw mode returns a transposed matrix for Fortran compatibility.
+    - Computation may be performed on an accelerator device depending
+      on asnumpy runtime.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> mtx = ap.array([[1., 2.], [3., 4.]])
+    >>> q, r = ap.linalg.qr(mtx)
+    >>> q.shape, r.shape
+    ((2, 2), (2, 2))
     """
     return ndarray.from_numpy(np.linalg.qr(a, mode))
 
@@ -107,126 +123,162 @@ def norm(
     keepdims: bool = False,
 ) -> ndarray:
     """
-    Matrix or vector norm.
+    Compute the norm of a vector or matrix.
 
-    This function is able to return one of eight different matrix norms,
-    or one of an infinite number of vector norms (described below), depending
-    on the value of the ``ord`` parameter.
+    Calculates vector or matrix norms with various orders, including
+    Frobenius and nuclear norms. The type of norm is determined by
+    the `ord` and `axis` parameters.
 
-    Parameters
-    ----------
-    a : array_like, shape (M, N)
-        Input array.  If `axis` is None, `a` must be 1-D or 2-D, unless `ord`
-        is None. If both `axis` and `ord` are None, the 2-norm of
-        ``a.ravel`` will be returned.
-    ord : {non-zero int, inf, -inf, 'fro', 'nuc'}, optional
-        Order of the norm (see table under ``Notes``). inf means numpy's
-        `inf` object. The default is None.
-    axis : {None, int, 2-tuple of ints}, optional.
-        If `axis` is an integer, it specifies the axis of `a` along which to
-        compute the vector norms.  If `axis` is a 2-tuple, it specifies the
-        axes that hold 2-D matrices, and the matrix norms of these matrices
-        are computed.  If `axis` is None then either a vector norm (when `a`
-        is 1-D) or a matrix norm (when `a` is 2-D) is returned. The default
-        is None.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input vector or matrix.
+    ord : int, float, or str, optional
+        Order of the norm (e.g., 2, inf, -inf, 'fro', 'nuc'). Default is None.
+    axis : int or tuple of ints, optional
+        Axis or axes along which to compute the norm.
     keepdims : bool, optional
-        If this is set to True, the axes which are normed over are left in the
-        result as dimensions with size one.  With this option the result will
-        broadcast correctly against the original `a`.
+        If True, reduced axes are kept as size-one dimensions.
 
     Returns
     -------
-    n : float or ndarray
-        Norm of the matrix or vector(s).
+    asnumpy.ndarray
+        Norm values. Scalar if axis=None, otherwise array with reduced dimensions.
 
     See Also
     --------
     numpy.linalg.norm
+
+    Notes
+    -----
+    - Vector norms and matrix norms behave differently depending on `axis`.
+    - Computation may use accelerator devices if configured.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> v = ap.array([3., 4.])
+    >>> ap.linalg.norm(v)
+    5.0
+    >>> M = ap.array([[1., 2.], [3., 4.]])
+    >>> ap.linalg.norm(M, 'fro')
+    5.477225575051661
     """
     return ndarray(ap_norm(a, ord, axis, keepdims))
 
 
 def det(a: ndarray) -> ndarray:
     """
-    Compute the determinant of an array.
+    Compute the determinant of a square matrix.
 
-    Parameters
-    ----------
-    a : (..., M, M) array_like
-        Input array to compute determinants for.
+    Returns a scalar or array containing determinants of input matrices.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Square matrix or batch of square matrices.
 
     Returns
     -------
-    det : (...) ndarray
-        Determinant of `a`.
+    asnumpy.ndarray
+        Determinant value(s) for each matrix.
 
     See Also
     --------
-    slogdet : Another way to represent the determinant, more suitable
-      for large matrices where underflow/overflow may occur.
     numpy.linalg.det
+    slogdet
+
+    Notes
+    -----
+    - Use `slogdet` for better numerical stability on very large or small determinants.
+    - Computation may run on an accelerator device.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> mtx = ap.array([[1., 2.], [3., 4.]])
+    >>> ap.linalg.det(mtx)
+    -2.0
     """
     return ndarray(ap_det(a))
 
 
 def slogdet(a: ndarray) -> tuple:
     """
-    Compute the sign and (natural) logarithm of the determinant of an array.
+    Compute the sign and logarithm of the determinant.
 
-    If an array has a very small or very large determinant, then a call to
-    `det` may overflow or underflow. This routine is more robust against such
-    issues, because it computes the logarithm of the determinant rather than
-    the determinant itself.
+    Provides a numerically stable way to evaluate determinants, especially
+    for very large or small values.
 
-    Parameters
-    ----------
-    a : (..., M, M) array_like
-        Input array, has to be a square 2-D array.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input square matrix or batch of square matrices.
 
     Returns
     -------
-    sign : (...) ndarray
-        A number representing the sign of the determinant. For a real matrix,
-        this is 1, 0, or -1. For a complex matrix, this is a complex number
-        with absolute value 1 (i.e., it is on the unit circle), or else 0.
-    logdet : (...) ndarray
-        The natural log of the absolute value of the determinant.
-
-    If the determinant is zero, then `sign` will be 0 and `logdet` will be
-    -Inf. In all cases, the determinant is equal to ``sign * exp(logdet)``.
+    sign : asnumpy.ndarray
+        Sign of the determinant.
+    logdet : asnumpy.ndarray
+        Natural logarithm of the absolute value of the determinant.
 
     See Also
     --------
     det
     numpy.linalg.slogdet
+
+    Notes
+    -----
+    - If a determinant is zero, `sign` is 0 and `logdet` is -Inf.
+    - The original determinant can be recovered as `sign * exp(logdet)`.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> M = ap.array([[1., 2.], [3., 4.]])
+    >>> s, ld = ap.linalg.slogdet(M)
+    >>> s, ld
+    (-1.0, 0.6931471805599453)
     """
     return ap_slogdet(a)
 
 
 def inv(a: ndarray) -> ndarray:
     """
-    Compute the (multiplicative) inverse of a matrix.
+    Compute the multiplicative inverse of a square matrix.
 
-    Given a square matrix `a`, return the matrix `ainv` satisfying
-    ``dot(a, ainv) = dot(ainv, a) = eye(a.shape[0])``.
+    Returns a matrix that satisfies the property `dot(a, ainv) = eye(n)`.
 
-    Parameters
-    ----------
-    a : (..., M, M) array_like
-        Matrix to be inverted.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Square matrix or batch of square matrices to invert.
 
     Returns
     -------
-    ainv : (..., M, M) ndarray
-        (Multiplicative) inverse of the matrix `a`.
+    asnumpy.ndarray
+        Inverse of the input matrix or matrices.
 
     Raises
     ------
     LinAlgError
-        If `a` is not square or inversion fails.
+        If the matrix is not square or inversion fails.
 
     See Also
     --------
     numpy.linalg.inv
+
+    Notes
+    -----
+    - Computation may be performed on an accelerator device.
+    - Inversion promotes dtype to floating point if needed for stability.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> M = ap.array([[1., 2.], [3., 4.]])
+    >>> ap.linalg.inv(M)
+    array([[-2. ,  1. ],
+           [ 1.5, -0.5]])
     """
     return ndarray(ap_inv(a))

@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,98 +27,90 @@ from ..utils import ndarray
 
 def dot(a: ndarray, b: ndarray) -> ndarray:
     """
-    Dot product of two arrays.
+    Calculate the dot product of two arrays.
 
-    * If both `a` and `b` are 1-D arrays, it is inner product of vectors
-      (without complex conjugation).
-    * If both `a` and `b` are 2-D arrays, it is matrix multiplication,
-      but using :func:`matmul` or ``a @ b`` is preferred.
-    * If either `a` or `b` is 0-D (scalar), it is equivalent to
-      :func:`multiply` and using ``numpy.multiply(a, b)`` or ``a * b`` is
-      preferred.
-    * If `a` is an N-D array and `b` is a 1-D array, it is a sum product over
-      the last axis of `a` and `b`.
-    * If `a` is an N-D array and `b` is an M-D array (where ``M>=2``), it is a
-      sum product over the last axis of `a` and the second-to-last axis of
-      `b`::
+    This function computes the dot product based on the dimensionality of the input arrays `a` and `b`.
+    - For 1-D arrays, it computes the inner product of vectors.
+    - For 2-D arrays, it performs matrix multiplication.
+    - For 0-D (scalar) inputs, it performs scalar multiplication.
+    - For N-D arrays, it generally computes a sum product over the last axis of `a` and the second-to-last axis of `b`.
 
-        dot(a, b)[i,j,k,m] = sum(a[i,j,:] * b[k,:,m])
-
-    Parameters
-    ----------
-    a : ndarray
-        First argument.
-    b : ndarray
-        Second argument.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        The first input array.
+    b : asnumpy.ndarray
+        The second input array.
 
     Returns
     -------
-    output : ndarray
-        Returns the dot product of `a` and `b`.  If `a` and `b` are both
-        scalars or both 1-D arrays then a scalar is returned; otherwise
-        an array is returned.
-        If `out` is given, then it is returned.
+    asnumpy.ndarray
+        The dot product of `a` and `b`.
+        If both inputs are scalars or 1-D arrays, a scalar is returned.
+        Otherwise, an array is returned. The result may be allocated on the accelerator device.
 
     See Also
     --------
-    vdot : Complex-conjugating dot product.
-    tensordot : Sum products over arbitrary axes.
-    einsum : Einstein summation convention.
-    matmul : '@' operator as method with out parameter.
     numpy.dot
+    asnumpy.matmul
+    asnumpy.tensordot
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.dot(3, 4)
-    12
-    >>> ap.dot([2j, 3j], [2j, 3j])
-    (-13+0j)
-    >>> a = [[1, 0], [0, 1]]
-    >>> b = [[4, 1], [2, 2]]
-    >>> ap.dot(a, b)
-    array([[4, 1],
-           [2, 2]])
+    >>> ap.dot(5, 6)
+    30
+    >>> vec1 = ap.array([1, 2])
+    >>> vec2 = ap.array([3, 4])
+    >>> ap.dot(vec1, vec2)
+    11
+    >>> mat1 = ap.array([[1, 2], [3, 4]])
+    >>> mat2 = ap.array([[5, 6], [7, 8]])
+    >>> ap.dot(mat1, mat2)
+    array([[19, 22],
+           [43, 50]])
     """
     return ndarray(_ap_dot(a, b))
 
 
 def inner(a: ndarray, b: ndarray) -> ndarray:
     """
-    Inner product of two arrays.
+    Compute the inner product of two arrays.
 
-    Ordinary inner product of vectors for 1-D arrays (without complex
-    conjugation), in higher dimensions a sum product over the last axes.
+    Calculates the inner product by summing the product of elements over the last dimensions of the input arrays `a` and `b`.
+    For 1-D arrays, this is equivalent to the vector dot product.
+    For higher dimensions, it computes the sum product over the last axis of both arrays.
 
-    Parameters
-    ----------
-    a, b : ndarray
-        If `a` and `b` are nonscalar, their last dimensions must match.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        The first input array.
+    b : asnumpy.ndarray
+        The second input array. The last dimension must match the last dimension of `a`.
 
     Returns
     -------
-    out : ndarray
-        `out.shape = a.shape[:-1] + b.shape[:-1]`
+    asnumpy.ndarray
+        The inner product of the arrays.
+        The shape of the output is `a.shape[:-1] + b.shape[:-1]`.
 
     See Also
     --------
-    tensordot : Sum products over arbitrary axes.
-    dot : General function for matrix multiplication.
-    einsum : Einstein summation convention.
     numpy.inner
+    asnumpy.dot
+    asnumpy.tensordot
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> a = ap.array([1,2,3])
-    >>> b = ap.array([0,1,0])
+    >>> vec1 = ap.array([2, 3])
+    >>> vec2 = ap.array([4, 5])
+    >>> ap.inner(vec1, vec2)
+    23
+    >>> a = ap.arange(6).reshape((2, 3))
+    >>> b = ap.array([1, 2, 3])
     >>> ap.inner(a, b)
-    2
-    >>> a = ap.arange(24).reshape((2,3,4))
-    >>> b = ap.arange(4)
-    >>> ap.inner(a, b)
-    array([[ 14,  38,  62],
-           [ 86, 110, 134]])
+    array([14, 32])
     """
     return ndarray(_ap_inner(a, b))
 
@@ -127,211 +119,167 @@ def outer(a: ndarray, b: ndarray) -> ndarray:
     """
     Compute the outer product of two vectors.
 
-    Given two vectors, ``a = [a0, a1, ..., aM]`` and
-    ``b = [b0, b1, ..., bN]``,
-    the outer product [1]_ is::
+    Calculates the outer product of two vectors `a` and `b`.
+    If the inputs are not 1-D, they are flattened before computation.
+    The result is a matrix where the element at `(i, j)` is the product of `a[i]` and `b[j]`.
 
-      [[a0*b0  a0*b1 ... a0*bN ]
-       [a1*b0    .
-       [ ...          .
-       [aM*b0            aM*bN ]]
-
-    Parameters
-    ----------
-    a : (M,) ndarray
-        First input vector.  Input is flattened if
-        not already 1-dimensional.
-    b : (N,) ndarray
-        Second input vector.  Input is flattened if
-        not already 1-dimensional.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        The first input vector. Flattened if not 1-D.
+    b : asnumpy.ndarray
+        The second input vector. Flattened if not 1-D.
 
     Returns
     -------
-    out : (M, N) ndarray
-        ``out[i, j] = a[i] * b[j]``
+    asnumpy.ndarray
+        The outer product matrix.
+        If `a` has size M and `b` has size N, the result has shape (M, N).
 
     See Also
     --------
-    inner
-    einsum : Einstein summation convention.
     numpy.outer
-
-    References
-    ----------
-    .. [1] : G. H. Golub and C. F. Van Loan, *Matrix Computations*, 3rd
-             ed., Baltimore, MD, Johns Hopkins University Press, 1996,
-             pg. 8.
+    asnumpy.inner
+    asnumpy.einsum
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> rl = ap.outer(ap.ones((5,)), ap.linspace(-2, 2, 5))
-    >>> rl
-    array([[-2., -1.,  0.,  1.,  2.],
-           [-2., -1.,  0.,  1.,  2.],
-           [-2., -1.,  0.,  1.,  2.],
-           [-2., -1.,  0.,  1.,  2.],
-           [-2., -1.,  0.,  1.,  2.]])
+    >>> vec1 = ap.array([1, 2, 3])
+    >>> vec2 = ap.array([4, 5])
+    >>> ap.outer(vec1, vec2)
+    array([[ 4,  5],
+           [ 8, 10],
+           [12, 15]])
     """
     return ndarray(_ap_outer(a, b))
 
 
 def vdot(a: ndarray, b: ndarray) -> ndarray:
     """
-    Return the dot product of two vectors.
+    Compute the dot product of two vectors, conjugating the first.
 
-    The vdot(a, b) function handles complex numbers differently than dot(a, b).
-    If the first argument is complex the complex conjugate of the first argument
-    is used for the calculation of the dot product.
+    This function computes the dot product of two vectors.
+    Unlike `dot`, it flattens the input arrays into 1-D vectors first.
+    If the first argument `a` is complex, its complex conjugate is used for the calculation.
 
-    Note that `vdot` handles multidimensional arrays differently than `dot`:
-    it does *not* perform a matrix product, but flattens input arguments
-    to 1-D vectors first. Consequently, it should only be used for vectors.
-
-    Parameters
-    ----------
-    a : ndarray
-        If `a` is complex the complex conjugate is taken before calculation
-        of the dot product.
-    b : ndarray
-        Second argument to the dot product.
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        The first input array. Flattened if not 1-D.
+        If complex, the complex conjugate is used.
+    b : asnumpy.ndarray
+        The second input array. Flattened if not 1-D.
 
     Returns
     -------
-    output : ndarray
-        Dot product of `a` and `b`.  Can be an int, float, or complex
-        depending on the types of `a` and `b`.
+    asnumpy.ndarray
+        The dot product of the vectors.
+        The result is a scalar.
 
     See Also
     --------
-    dot : Return the dot product without using the complex conjugate of the
-          first argument.
     numpy.vdot
+    asnumpy.dot
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> a = ap.array([1+2j,3+4j])
-    >>> b = ap.array([5+6j,7+8j])
+    >>> a = ap.array([1+1j, 2+2j])
+    >>> b = ap.array([1+2j, 3+4j])
     >>> ap.vdot(a, b)
-    (70-8j)
+    (17+3j)
     >>> ap.vdot(b, a)
-    (70+8j)
+    (17-3j)
     """
     return ndarray(_ap_vdot(a, b))
 
 
 def matmul(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Matrix product of two arrays.
+    Compute the matrix product of two arrays.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays, scalars not allowed.
+    This function implements the matrix product of two arrays.
+    It supports standard matrix multiplication for 2-D arrays, vector-matrix multiplication, and broadcasting for higher-dimensional arrays.
+    Unlike `dot`, it does not support scalar multiplication.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        The first input array. Scalars are not allowed.
+    x2 : asnumpy.ndarray
+        The second input array. Scalars are not allowed.
 
     Returns
     -------
-    out : ndarray
+    asnumpy.ndarray
         The matrix product of the inputs.
-        This is a scalar only when both x1, x2 are 1-d vectors.
-
-    Raises
-    ------
-    ValueError
-        If the last dimension of `x1` is not the same size as
-        the second-to-last dimension of `x2`.
-
-        If a scalar value is passed in.
+        The result is a scalar only if both inputs are 1-D vectors.
 
     See Also
     --------
-    vdot : Complex-conjugating dot product.
-    tensordot : Sum products over arbitrary axes.
-    einsum : Einstein summation convention.
-    dot : Alternative matrix product with different broadcasting rules.
     numpy.matmul
+    asnumpy.dot
+    asnumpy.tensordot
+    asnumpy.einsum
 
     Examples
     --------
-    For 2-D arrays it is the matrix product:
-
     >>> import asnumpy as ap
-    >>> a = ap.array([[1, 0],
-    ...               [0, 1]])
-    >>> b = ap.array([[4, 1],
-    ...               [2, 2]])
-    >>> ap.matmul(a, b)
-    array([[4, 1],
-           [2, 2]])
+    >>> mat1 = ap.array([[1, 2], [3, 4]])
+    >>> mat2 = ap.array([[5, 6], [7, 8]])
+    >>> ap.matmul(mat1, mat2)
+    array([[19, 22],
+           [43, 50]])
 
-    For 2-D mixed with 1-D, the result is the usual.
-
-    >>> a = ap.array([[1, 0],
-    ...               [0, 1]])
-    >>> b = ap.array([1, 2])
-    >>> ap.matmul(a, b)
-    array([1, 2])
-    >>> ap.matmul(b, a)
-    array([1, 2])
+    >>> vec = ap.array([1, 2])
+    >>> ap.matmul(mat1, vec)
+    array([ 5, 11])
     """
     return ndarray(_ap_matmul(x1, x2))
 
 
 def einsum(subscripts: str, *operands: ndarray) -> ndarray:
     """
-    Evaluates the Einstein summation convention on the operands.
+    Evaluate the Einstein summation convention on the operands.
 
-    Using the Einstein summation convention, many common multi-dimensional,
-    linear algebraic array operations can be represented in a simple fashion.
+    Performs multi-dimensional linear algebraic array operations using the Einstein summation convention.
+    This allows for a concise representation of many common operations like dot products, traces, and tensor contractions.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     subscripts : str
-        Specifies the subscripts for summation as comma separated list of
-        subscript labels. An implicit (classical Einstein summation)
-        calculation is performed unless the explicit indicator '->' is
-        included as well as subscript labels of the precise output form.
-    operands : list of ndarray
-        These are the arrays for the operation.
+        A string specifying the subscripts for summation.
+        It consists of comma-separated subscript labels.
+        If '->' is included, it explicitly defines the output subscripts.
+        Otherwise, an implicit calculation is performed.
+    *operands : asnumpy.ndarray
+        The arrays to operate on.
 
     Returns
     -------
-    output : ndarray
-        The calculation based on the Einstein summation convention.
+    asnumpy.ndarray
+        The result of the Einstein summation.
 
     See Also
     --------
-    dot, inner, outer, tensordot, linalg.einsum_path
     numpy.einsum
+    asnumpy.dot
+    asnumpy.inner
+    asnumpy.outer
+    asnumpy.tensordot
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> a = ap.arange(25).reshape(5,5)
-    >>> b = ap.arange(5)
-    >>> c = ap.arange(6).reshape(2,3)
-
-    Trace of a matrix:
-
-    >>> ap.einsum('ii', a)
-    60
-    >>> ap.trace(a)
-    60
-
-    Extract the diagonal (requires explicit form):
-
-    >>> ap.einsum('ii->i', a)
-    array([ 0,  6, 12, 18, 24])
-    >>> ap.diag(a)
-    array([ 0,  6, 12, 18, 24])
-
-    Sum over an axis (requires explicit form):
-
-    >>> ap.einsum('ij->i', a)
-    array([ 10,  35,  60,  85, 110])
-    >>> ap.sum(a, axis=1)
-    array([ 10,  35,  60,  85, 110])
+    >>> a = ap.arange(9).reshape(3, 3)
+    >>> ap.einsum('ii', a)  # Trace
+    12
+    >>> ap.einsum('ii->i', a)  # Diagonal
+    array([0, 4, 8])
+    >>> b = ap.arange(3)
+    >>> ap.einsum('ij,j', a, b)  # Matrix-vector multiplication
+    array([ 5, 14, 23])
     """
     return ndarray(_ap_einsum(subscripts, *operands))
 

@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,74 +36,88 @@ def zeros(
     shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return a new array of given shape and type, filled with zeros.
+    Create an array initialized with zero values.
 
-    Parameters
-    ----------
-    shape : int or sequence of ints
-        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+    This function allocates a new :class:`asnumpy.ndarray` with the specified
+    shape and fills all elements with zeros. The array is created on the
+    current execution device used by asnumpy.
+
+    Arguments
+    ---------
+    shape : int or sequence of int
+        Specifies the dimensions of the output array. A single integer
+        creates a one-dimensional array, while a sequence defines a
+        multi-dimensional shape.
     dtype : data-type, optional
-        The desired data-type for the array.
+        Data type of the returned array. If not provided, the default
+        numeric type is used.
 
     Returns
     -------
-    out : ndarray
-        Array of zeros with the given shape, dtype, and order.
+    ndarray
+        An array whose elements are all set to zero and whose shape matches
+        the given ``shape`` argument.
 
     See Also
     --------
-    zeros_like : Return an array of zeros with shape and type of input.
-    ones : Return a new array setting values to one.
-    empty : Return a new uninitialized array.
+    numpy.zeros : NumPy equivalent for creating an array of zeros.
+
+    Notes
+    -----
+    - The returned array is allocated by asnumpy and may reside on an
+      accelerator device depending on the runtime configuration.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.zeros(5)
-    array([ 0.,  0.,  0.,  0.,  0.])
-    >>> ap.zeros((5,), dtype=int)
-    array([0, 0, 0, 0, 0])
-    >>> ap.zeros((2, 1))
-    array([[ 0.],
-           [ 0.]])
+    >>> ap.zeros(3)
+    array([0., 0., 0.])
+    >>> ap.zeros((2, 2), dtype=int)
+    array([[0, 0],
+           [0, 0]])
     """
     return ndarray(_ap_zeros(shape, _convert_dtype(dtype)))
 
 
 def zeros_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return an array of zeros with the same shape and type as a given array.
+    Create an array of zeros with the same shape as an existing array.
 
-    Parameters
-    ----------
+    This function returns a new :class:`asnumpy.ndarray` whose shape matches
+    that of the input object. All elements of the returned array are
+    initialized to zero. By default, the data type is inferred from the
+    input unless explicitly overridden.
+
+    Arguments
+    ---------
     other : array_like
-        The shape and data-type of `other` define these same attributes of
-        the returned array.
+        Reference object that provides the shape of the output array.
     dtype : data-type, optional
-        Overrides the data-type of the result.
+        Data type of the returned array. If specified, it overrides the
+        data type inferred from ``other``.
 
     Returns
     -------
-    out : ndarray
-        Array of zeros with the same shape and type as `other`.
+    ndarray
+        An array filled with zeros and having the same shape as ``other``.
 
     See Also
     --------
-    zeros : Return a new array setting values to zero.
-    ones_like : Return an array of ones with shape and type of input.
-    empty_like : Return an empty array with shape and type of input.
+    zeros
+    numpy.zeros_like
+
+    Notes
+    -----
+    - The returned array is allocated by asnumpy and may be placed on an
+      accelerator device depending on the current runtime configuration.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> x = ap.arange(6)
-    >>> x = x.reshape((2, 3))
-    >>> x
-    array([[0, 1, 2],
-           [3, 4, 5]])
+    >>> x = ap.arange(4).reshape(2, 2)
     >>> ap.zeros_like(x)
-    array([[0, 0, 0],
-           [0, 0, 0]])
+    array([[0, 0],
+           [0, 0]])
     """
     return ndarray(_ap_zeros_like(other, _convert_dtype(dtype)))
 
@@ -112,74 +126,76 @@ def full(
     shape: Union[int, Sequence[int]], value: Any, dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return a new array of given shape and type, filled with `fill_value`.
+    Create an array filled with a specific value.
 
-    Parameters
-    ----------
+    Returns a new asnumpy.ndarray where all elements are set to `value`.
+    Shape and dtype are controlled by the `shape` and `dtype` parameters.
+
+    Arguments
+    ---------
     shape : int or sequence of ints
-        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        Shape of the output array.
     value : scalar
-        Fill value.
+        Value to fill the array with.
     dtype : data-type, optional
-        The desired data-type for the array. 
+        Desired data type of the array.
 
     Returns
     -------
-    out : ndarray
-        Array of `fill_value` with the given shape, dtype, and order.
+    asnumpy.ndarray
+        Array filled with the specified value.
 
     See Also
     --------
-    full_like : Return a new array with shape of input filled with value.
-    zeros : Return a new array setting values to zero.
-    ones : Return a new array setting values to one.
-    empty : Return a new uninitialized array.
+    full_like : Create an array filled with value matching another array.
+    zeros : Create an array of zeros.
+    ones : Create an array of ones.
+    empty : Create an uninitialized array.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.full((2, 2), 10)
-    array([[10, 10],
-           [10, 10]])
-    >>> ap.full((2, 2), [1, 2])
-    array([[1, 2],
-           [1, 2]])
+    >>> ap.full((2, 2), 7)
+    array([[7, 7],
+           [7, 7]])
+    >>> ap.full((2, 3), 3.5)
+    array([[3.5, 3.5, 3.5],
+           [3.5, 3.5, 3.5]])
     """
     return ndarray(_ap_full(shape, value, _convert_dtype(dtype)))
 
 
 def full_like(other: Any, value: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return a full array with the same shape and type as a given array.
+    Create an array filled with a specific value, matching another array's shape.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     other : array_like
-        The shape and data-type of `other` define these same attributes of
-        the returned array.
+        Array whose shape is used for the output.
     value : scalar
-        Fill value.
+        Value to fill the array.
     dtype : data-type, optional
-        Overrides the data-type of the result.
+        Desired data type of the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of `fill_value` with the same shape and type as `other`.
+    asnumpy.ndarray
+        Array filled with `value` matching the shape of `other`.
 
     See Also
     --------
-    full : Return a new array of given shape filled with value.
-    zeros_like : Return an array of zeros with shape and type of input.
-    ones_like : Return an array of ones with shape and type of input.
-    empty_like : Return an empty array with shape and type of input.
+    full : Create a full array from shape.
+    zeros_like : Create a zeros array matching another array.
+    ones_like : Create an array of ones matching another array.
+    empty_like : Create an uninitialized array matching another array.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> x = ap.arange(6, dtype=int)
-    >>> ap.full_like(x, 1)
-    array([1, 1, 1, 1, 1, 1])
+    >>> x = ap.arange(4)
+    >>> ap.full_like(x, 9)
+    array([9, 9, 9, 9])
     """
     return ndarray(_ap_full_like(other, value, _convert_dtype(dtype)))
 
@@ -188,224 +204,198 @@ def empty(
     shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return a new array of given shape and type, without initializing entries.
+    Create an uninitialized array.
 
-    Parameters
-    ----------
-    shape : int or tuple of int
-        Shape of the empty array, e.g., ``(2, 3)`` or ``2``.
+    Returns a new asnumpy.ndarray with arbitrary content.
+    The array shape and dtype are determined by the parameters.
+
+    Arguments
+    ---------
+    shape : int or sequence of ints
+        Shape of the output array.
     dtype : data-type, optional
-        Desired output data-type for the array.
+        Desired data type of the array.
 
     Returns
     -------
-    out : ndarray
-        Array of uninitialized (arbitrary) data of the given shape, dtype, and
-        order.  Object arrays will be initialized to None.
+    asnumpy.ndarray
+        Array with uninitialized values (may contain random memory data).
 
     See Also
     --------
-    empty_like : Return an empty array with shape and type of input.
-    zeros : Return a new array setting values to zero.
-    ones : Return a new array setting values to one.
-    full : Return a new array of given shape filled with value.
+    empty_like : Create an uninitialized array matching another array.
+    zeros : Create a zeros array.
+    ones : Create a ones array.
+    full : Create a full array with specified value.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.empty([2, 2])
-    array([[ -9.74499359e+001,   6.69583040e-309],
-           [  2.13182611e-314,   3.06959433e-309]])         #random
-    >>> ap.empty([2, 2], dtype=int)
-    array([[-1073741821, -1067949133],
-           [  496041986,    19249760]])                     #random
+    >>> ap.empty((2, 2))
+    array([[... , ...],
+           [... , ...]])  # values arbitrary
     """
     return ndarray(_ap_empty(shape, _convert_dtype(dtype)))
 
 
 def empty_like(prototype: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return a new array with the same shape and type as a given array.
+    Create an uninitialized array matching another array's shape.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     prototype : array_like
-        The shape and data-type of `prototype` define these same attributes
-        of the returned array.
+        Array whose shape is used for the output.
     dtype : data-type, optional
-        Overrides the data-type of the result.
+        Desired data type of the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of uninitialized (arbitrary) data with the same shape and type
-        as `prototype`.
+    asnumpy.ndarray
+        Array with uninitialized values and same shape as `prototype`.
 
     See Also
     --------
-    ones_like : Return an array of ones with shape and type of input.
-    zeros_like : Return an array of zeros with shape and type of input.
-    full_like : Return a new array with shape of input filled with value.
-    empty : Return a new uninitialized array.
+    zeros_like : Create a zeros array matching another array.
+    ones_like : Create an array of ones matching another array.
+    full_like : Create a full array with specified value.
+    empty : Create an uninitialized array from shape.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> a = ([1,2,3], [4,5,6])                         # a is array-like
+    >>> a = ap.array([[1, 2], [3, 4]])
     >>> ap.empty_like(a)
-    array([[-1073741821, -1067949133,   496041986],
-           [   19249760, -1073741821, -1067949133]])    #random
-    >>> a = ap.array([[1., 2., 3.],[4., 5., 6.]])
-    >>> ap.empty_like(a)
-    array([[ -2.00000715e+000,   1.48219694e-323,  -2.00000572e+000],
-           [  4.38791518e-305,  -2.00000715e+000,   4.17269252e-309]]) #random
+    array([[... , ...],
+           [... , ...]])  # values arbitrary
     """
     return ndarray(_ap_empty_like(prototype, _convert_dtype(dtype)))
 
 
 def eye(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return a 2-D array with ones on the diagonal and zeros elsewhere.
+    Create a 2-D identity matrix.
 
-    Parameters
-    ----------
+    Returns a square asnumpy.ndarray with ones on the main diagonal
+    and zeros elsewhere.
+
+    Arguments
+    ---------
     n : int
-      Number of rows in the output.
+        Number of rows (and columns) of the matrix.
     dtype : data-type, optional
-      Data-type of the returned array.
+        Desired data type of the matrix.
 
     Returns
     -------
-    I : ndarray of shape (N,M)
-      An array where all elements are equal to zero, except for the $k$-th
-      diagonal, whose values are equal to one.
+    asnumpy.ndarray
+        Identity matrix of shape (n, n).
 
     See Also
     --------
-    identity : (almost) equivalent function
-    diag : diagonal 2-D array from a 1-D array specified by the user.
+    identity : Equivalent function to create identity array.
+    diag : Extract or create diagonal arrays.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.eye(2, dtype=int)
-    array([[1, 0],
-           [0, 1]])
     >>> ap.eye(3)
-    array([[1.,  0.,  0.],
-           [0.,  1.,  0.],
-           [0.,  0.,  1.]])
+    array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
     """
     return ndarray(_ap_eye(n, _convert_dtype(dtype)))
 
 
 def ones(shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return a new array of given shape and type, filled with ones.
+    Create an array filled with ones.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     shape : int or sequence of ints
-        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        Shape of the output array.
     dtype : data-type, optional
-        The desired data-type for the array.
+        Desired data type of the array.
 
     Returns
     -------
-    out : ndarray
-        Array of ones with the given shape, dtype, and order.
+    asnumpy.ndarray
+        Array of ones with specified shape and dtype.
 
     See Also
     --------
-    ones_like : Return an array of ones with shape and type of input.
-    zeros : Return a new array setting values to zero.
-    full : Return a new array of given shape filled with value.
-    empty : Return a new uninitialized array.
+    ones_like : Create an array of ones matching another array.
+    zeros : Create a zeros array.
+    full : Create a full array with specified value.
+    empty : Create an uninitialized array.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> ap.ones(5)
-    array([1., 1., 1., 1., 1.])
-    >>> ap.ones((5,), dtype=int)
-    array([1, 1, 1, 1, 1])
-    >>> ap.ones((2, 1))
-    array([[1.],
-           [1.]])
+    >>> ap.ones(4)
+    array([1., 1., 1., 1.])
     """
     return ndarray(_ap_ones(shape, _convert_dtype(dtype)))
 
 
 def ones_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return an array of ones with the same shape and type as a given array.
+    Create an array of ones matching another array's shape.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     other : array_like
-        The shape and data-type of `other` define these same attributes of
-        the returned array.
+        Array whose shape is used for output.
     dtype : data-type, optional
-        Overrides the data-type of the result.
+        Desired data type of the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of ones with the same shape and type as `other`.
+    asnumpy.ndarray
+        Array of ones with same shape (and optionally dtype) as `other`.
 
     See Also
     --------
-    empty_like : Return an empty array with shape and type of input.
-    zeros_like : Return an array of zeros with shape and type of input.
-    full_like : Return a new array with shape of input filled with value.
-    ones : Return a new array setting values to one.
+    zeros_like : Create a zeros array matching another array.
+    full_like : Create a full array with specified value.
+    empty_like : Create an uninitialized array.
+    ones : Create an array of ones from shape.
 
     Examples
     --------
     >>> import asnumpy as ap
-    >>> x = ap.arange(6)
-    >>> x = x.reshape((2, 3))
-    >>> x
-    array([[0, 1, 2],
-           [3, 4, 5]])
+    >>> x = ap.arange(6).reshape((2, 3))
     >>> ap.ones_like(x)
     array([[1, 1, 1],
            [1, 1, 1]])
-    >>> y = ap.arange(3, dtype=float)
-    >>> y
-    array([0., 1., 2.])
-    >>> ap.ones_like(y)
-    array([1.,  1.,  1.])
     """
     return ndarray(_ap_ones_like(other, _convert_dtype(dtype)))
 
 
 def identity(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the identity array.
+    Create a square identity matrix.
 
-    The identity array is a square array with ones on the main diagonal.
-
-    Parameters
-    ----------
+    Arguments
+    ---------
     n : int
-        Number of rows (and columns) in `n` x `n` output.
+        Number of rows and columns.
     dtype : data-type, optional
-        Data-type of the output.  Defaults to ``float``.
+        Desired data type of the matrix.
 
     Returns
     -------
-    out : ndarray
-        `n` x `n` array with its main diagonal set to one,
-        and all other elements 0.
+    asnumpy.ndarray
+        Identity matrix of shape (n, n).
 
     Examples
     --------
     >>> import asnumpy as ap
     >>> ap.identity(3)
-    array([[1.,  0.,  0.],
-           [0.,  1.,  0.],
-           [0.,  0.,  1.]])
+    array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
     """
     return ndarray(_ap_identity(n, _convert_dtype(dtype)))
 
@@ -417,30 +407,32 @@ def linspace(
     dtype: Optional[np.dtype] = None,
 ) -> ndarray:
     """
-    Return evenly spaced numbers over a specified interval.
+    Generate evenly spaced samples over an interval.
 
-    Generate `steps` evenly spaced samples over the interval
-    [`start`, `end`].
-
-    Parameters
-    ----------
-    start : float or int
-        The starting value of the sequence.
-    end : float or int
-        The end value of the sequence.
+    Arguments
+    ---------
+    start : int or float
+        Starting value of the sequence.
+    end : int or float
+        End value of the sequence.
     steps : int, optional
         Number of samples to generate. Default is 50.
-    dtype : dtype, optional
-        The type of the output array. If not specified, the dtype is
-        inferred from the inputs.
+    dtype : data-type, optional
+        Desired data type of the output array.
 
     Returns
     -------
-    samples : ndarray
-        An array of evenly spaced samples.
+    asnumpy.ndarray
+        Array of evenly spaced samples between start and end.
 
     See Also
     --------
-    arange
+    arange : Generate values with a fixed step size.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.linspace(0, 1, 5)
+    array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
     return ndarray(_ap_linspace(start, end, steps, _convert_dtype(dtype)))

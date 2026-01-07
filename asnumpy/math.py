@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -108,173 +108,268 @@ from .utils import ndarray, _convert_dtype
 # Trigonometric functions
 def sin(x: ndarray) -> ndarray:
     """
-    Trigonometric sine, element-wise.
+    Calculate the sine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Angle, in radians.
+    This function computes the sine for every element in the input array `x`.
+    Input values are assumed to be in radians.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array containing angles in radians.
 
     Returns
     -------
-    y : ndarray
-        The sine of each element of x.
+    asnumpy.ndarray
+        The sine of each element in `x`.
 
     See Also
     --------
     numpy.sin
+    asnumpy.cos
+    asnumpy.tan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.sin(ap.array([0, np.pi/6, np.pi/2]))
+    array([0. , 0.5, 1. ])
     """
     return ndarray(_ap_sin(x))
 
 
 def cos(x: ndarray) -> ndarray:
     """
-    Cosine element-wise.
+    Calculate the cosine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input array in radians.
+    This function computes the cosine for every element in the input array `x`.
+    Input values are assumed to be in radians.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array containing angles in radians.
 
     Returns
     -------
-    y : ndarray
-        The corresponding cosine values.
+    asnumpy.ndarray
+        The cosine of each element in `x`.
 
     See Also
     --------
     numpy.cos
+    asnumpy.sin
+    asnumpy.tan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.cos(ap.array([0, np.pi]))
+    array([ 1., -1.])
     """
     return ndarray(_ap_cos(x))
 
 
 def tan(x: ndarray) -> ndarray:
     """
-    Compute tangent element-wise.
+    Calculate the tangent of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input array in radians.
+    This function computes the tangent for every element in the input array `x`.
+    Input values are assumed to be in radians.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array containing angles in radians.
 
     Returns
     -------
-    y : ndarray
-        The corresponding tangent values.
+    asnumpy.ndarray
+        The tangent of each element in `x`.
 
     See Also
     --------
     numpy.tan
+    asnumpy.sin
+    asnumpy.cos
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.tan(ap.array([-np.pi/4, 0, np.pi/4]))
+    array([-1.,  0.,  1.])
     """
     return ndarray(_ap_tan(x))
 
 
 def arcsin(x: ndarray) -> ndarray:
     """
-    Inverse sine, element-wise.
+    Calculate the inverse sine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        y-coordinate on the unit circle.
+    This function computes the inverse sine (arcsine) for every element in `x`.
+    The domain is defined on [-1, 1]. The returned values are in radians, ranging from -pi/2 to pi/2.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array. Elements must be within [-1, 1].
 
     Returns
     -------
-    angle : ndarray
-        The inverse sine of each element in x, in radians and in the closed
-        interval ``[-pi/2, pi/2]``.
+    asnumpy.ndarray
+        The inverse sine of each element in `x`.
 
     See Also
     --------
     numpy.arcsin
+    asnumpy.sin
+    asnumpy.arccos
+    asnumpy.arctan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arcsin(ap.array([0, 0.5, 1]))
+    array([0.        , 0.52359878, 1.57079633])
     """
     return ndarray(_ap_arcsin(x))
 
 
 def arccos(x: ndarray) -> ndarray:
     """
-    Trigonometric inverse cosine, element-wise.
+    Calculate the inverse cosine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        x-coordinate on the unit circle. For real arguments, the domain is
-        [-1, 1].
+    This function computes the inverse cosine (arccosine) for every element in `x`.
+    The domain is defined on [-1, 1]. The returned values are in radians, ranging from 0 to pi.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array. Elements must be within [-1, 1].
 
     Returns
     -------
-    angle : ndarray
-        The angle of the ray intersecting the unit circle at the given
-        x-coordinate in radians [0, pi].
+    asnumpy.ndarray
+        The inverse cosine of each element in `x`.
 
     See Also
     --------
     numpy.arccos
+    asnumpy.cos
+    asnumpy.arcsin
+    asnumpy.arctan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arccos(ap.array([1, 0.5, 0]))
+    array([0.        , 1.04719755, 1.57079633])
     """
     return ndarray(_ap_arccos(x))
 
 
 def arctan(x: ndarray) -> ndarray:
     """
-    Trigonometric inverse tangent, element-wise.
+    Calculate the inverse tangent of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the inverse tangent (arctangent) for every element in `x`.
+    The returned values are in radians, ranging from -pi/2 to pi/2.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
 
     Returns
     -------
-    out : ndarray
-        Array of the same shape as `x`.
+    asnumpy.ndarray
+        The inverse tangent of each element in `x`.
 
     See Also
     --------
     numpy.arctan
+    asnumpy.tan
+    asnumpy.arcsin
+    asnumpy.arccos
+    asnumpy.arctan2
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arctan(ap.array([0, 1]))
+    array([0.        , 0.78539816])
     """
     return ndarray(_ap_arctan(x))
 
 
 def arctan2(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Element-wise arc tangent of ``x1/x2`` choosing the quadrant correctly.
+    Calculate the element-wise inverse tangent of the quotient `x1/x2`, adjusting for the quadrant.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        y-coordinates.
-    x2 : ndarray
-        x-coordinates.
+    This function computes the inverse tangent of `x1/x2`, using the signs of both arguments to determine the correct quadrant of the result.
+    The returned values are in radians, ranging from -pi to pi.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        Y-coordinates.
+    x2 : asnumpy.ndarray
+        X-coordinates.
 
     Returns
     -------
-    angle : ndarray
-        Array of angles in radians, in the range ``[-pi, pi]``.
+    asnumpy.ndarray
+        Angles in radians.
 
     See Also
     --------
     numpy.arctan2
+    asnumpy.arctan
+    asnumpy.tan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> y = ap.array([0, 1])
+    >>> x = ap.array([-1, 1])
+    >>> ap.arctan2(y, x)
+    array([3.14159265, 0.78539816])
     """
     return ndarray(_ap_arctan2(x1, x2))
 
 
 def hypot(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Given the "legs" of a right triangle, return its hypotenuse.
+    Calculate the hypotenuse given two sides of a right triangle.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Leg of the triangle(s).
+    This function computes the hypotenuse for the legs `x1` and `x2`.
+    It is mathematically equivalent to ``sqrt(x1**2 + x2**2)``.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        First leg.
+    x2 : asnumpy.ndarray
+        Second leg.
 
     Returns
     -------
-    z : ndarray
-        The hypotenuse of the triangle(s).
+    asnumpy.ndarray
+        The hypotenuse.
 
     See Also
     --------
     numpy.hypot
+    asnumpy.sqrt
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.hypot(3*ap.ones(2), 4*ap.ones(2))
+    array([5., 5.])
     """
     return ndarray(_ap_hypot(x1, x2))
 
@@ -283,19 +378,31 @@ def radians(x: ndarray) -> ndarray:
     """
     Convert angles from degrees to radians.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function converts each element in the input array `x` from degrees to radians.
+    The operation is performed element-wise.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array in degrees.
 
     Returns
     -------
-    y : ndarray
-        The corresponding radian values.
+    asnumpy.ndarray
+        Output array in radians.
 
     See Also
     --------
     numpy.radians
+    asnumpy.degrees
+    asnumpy.deg2rad
+    asnumpy.rad2deg
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.radians(ap.array([0, 90, 180]))
+    array([0.        , 1.57079633, 3.14159265])
     """
     return ndarray(_ap_radians(x))
 
@@ -304,19 +411,31 @@ def deg2rad(x: ndarray) -> ndarray:
     """
     Convert angles from degrees to radians.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function converts input angles from degrees to radians element-wise.
+    It is an alias for `radians`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array in degrees.
 
     Returns
     -------
-    y : ndarray
-        The corresponding radian values.
+    asnumpy.ndarray
+        Output array in radians.
 
     See Also
     --------
     numpy.deg2rad
+    asnumpy.radians
+    asnumpy.degrees
+    asnumpy.rad2deg
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.deg2rad(ap.array([0, 90, 180]))
+    array([0.        , 1.57079633, 3.14159265])
     """
     return ndarray(_ap_radians(x))
 
@@ -325,19 +444,32 @@ def degrees(x: ndarray) -> ndarray:
     """
     Convert angles from radians to degrees.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function converts each element in the input array `x` from radians to degrees.
+    The operation is performed element-wise.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array in radians.
 
     Returns
     -------
-    y : ndarray
-        The corresponding degree values.
+    asnumpy.ndarray
+        Output array in degrees.
 
     See Also
     --------
     numpy.degrees
+    asnumpy.radians
+    asnumpy.rad2deg
+    asnumpy.deg2rad
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.degrees(ap.array([0, np.pi/2, np.pi]))
+    array([  0.,  90., 180.])
     """
     return ndarray(_ap_degrees(x))
 
@@ -346,19 +478,32 @@ def rad2deg(x: ndarray) -> ndarray:
     """
     Convert angles from radians to degrees.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function converts each element in the input array `x` from radians to degrees.
+    It is an alias for :func:`asnumpy.degrees`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array in radians.
 
     Returns
     -------
-    y : ndarray
-        The corresponding degree values.
+    asnumpy.ndarray
+        Output array in degrees.
 
     See Also
     --------
     numpy.rad2deg
+    asnumpy.degrees
+    asnumpy.radians
+    asnumpy.deg2rad
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.rad2deg(ap.array([0, np.pi/2, np.pi]))
+    array([  0.,  90., 180.])
     """
     return ndarray(_ap_rad2deg(x))
 
@@ -366,63 +511,95 @@ def rad2deg(x: ndarray) -> ndarray:
 # Miscellaneous functions
 def absolute(x: ndarray) -> ndarray:
     """
-    Calculate the absolute value element-wise.
+    Calculate the absolute value of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the absolute value for every element in the input array `x`.
+    If the input is complex, the magnitude is returned.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
 
     Returns
     -------
-    absolute : ndarray
-        An ndarray containing the absolute value of each element in `x`.
+    asnumpy.ndarray
+        An array containing the absolute value of each element in `x`.
 
     See Also
     --------
     numpy.absolute
+    asnumpy.abs
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.absolute(ap.array([-2.5, 2.5]))
+    array([2.5, 2.5])
+    >>> ap.absolute(ap.array([3+4j]))
+    array([5.])
     """
     return ndarray(_ap_absolute(x))
 
 
 def fabs(x: ndarray) -> ndarray:
     """
-    Compute the absolute values element-wise.
+    Calculate the absolute value for real-valued elements.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the absolute value of each element in `x`.
+    It is designed for real numbers and does not handle complex conjugation.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
 
     Returns
     -------
-    y : ndarray
-        The absolute values of `x`.
+    asnumpy.ndarray
+        An array containing the absolute values of `x`.
 
     See Also
     --------
     numpy.fabs
+    asnumpy.absolute
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.fabs(ap.array([-2.5, 2.5]))
+    array([2.5, 2.5])
     """
     return ndarray(_ap_fabs(x))
 
 
 def sign(x: ndarray) -> ndarray:
     """
-    Returns an element-wise indication of the sign of a number.
+    Determine the sign of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function returns an element-wise indication of the sign of a number: -1 for negative, 0 for zero, and 1 for positive.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    y : ndarray
-        The sign of `x`.
+    asnumpy.ndarray
+        The sign of each element in `x`.
 
     See Also
     --------
     numpy.sign
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.sign(ap.array([-3., 2.]))
+    array([-1.,  1.])
+    >>> ap.sign(0)
+    0
     """
     return ndarray(_ap_sign(x))
 
@@ -431,21 +608,30 @@ def heaviside(x1: ndarray, x2: ndarray) -> ndarray:
     """
     Compute the Heaviside step function.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Input values.
-    x2 : ndarray
-        The value of the function when x1 is 0.
+    This function calculates the Heaviside step function for each element in `x1`.
+    The value is 0 for negative inputs, 1 for positive inputs, and `x2` when the input is zero.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        Input array.
+    x2 : asnumpy.ndarray
+        Value to use when `x1` is 0.
 
     Returns
     -------
-    out : ndarray
-        The output array, element-wise Heaviside step function of x1.
+    asnumpy.ndarray
+        The result of the Heaviside step function.
 
     See Also
     --------
     numpy.heaviside
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.heaviside(ap.array([-2.0, 0, 1.0]), 0.5)
+    array([0. , 0.5, 1. ])
     """
     return ndarray(_ap_heaviside(x1, x2))
 
@@ -454,25 +640,35 @@ def clip(
     a: ndarray, a_min: Union[ndarray, float], a_max: Union[ndarray, float]
 ) -> ndarray:
     """
-    Clip (limit) the values in an array.
+    Constrain array values to a given range.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function limits the values in `a` to be within the interval [`a_min`, `a_max`].
+    Any value less than `a_min` is set to `a_min`, and any value greater than `a_max` is set to `a_max`.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Array containing elements to clip.
-    a_min, a_max : ndarray or None
-        Minimum and maximum value. If ``None``, clipping is not performed on
-        corresponding edge. Only one of `a_min` and `a_max` may be ``None``.
+    a_min : array-like or scalar
+        Minimum value.
+    a_max : array-like or scalar
+        Maximum value.
 
     Returns
     -------
-    clipped_array : ndarray
-        An array with the elements of `a`, but where values < `a_min` are
-        replaced with `a_min`, and those > `a_max` with `a_max`.
+    asnumpy.ndarray
+        An array with the elements of `a` clipped to the specified range.
 
     See Also
     --------
     numpy.clip
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.arange(5)
+    >>> ap.clip(a, 1, 3)
+    array([1, 1, 2, 3, 3])
     """
     return ndarray(_ap_clip(a, a_min, a_max))
 
@@ -484,114 +680,151 @@ def nan_to_num(
     neginf: Optional[float] = None,
 ) -> ndarray:
     """
-    Replace NaN with zero and infinity with large finite numbers.
+    Replace NaN and infinity with finite values.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function replaces NaN with zero (or a specified value) and infinity with large finite numbers (or specified values).
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
-    nan : int, float, optional
-        Value to be used to fill NaN values. If no value is passed then NaN
-        values will be replaced with 0.0.
-    posinf : int, float, optional
-        Value to be used to fill positive infinity values. If no value is
-        passed then positive infinity values will be replaced with a very
-        large number.
-    neginf : int, float, optional
-        Value to be used to fill negative infinity values. If no value is
-        passed then negative infinity values will be replaced with a very
-        small (or negative) number.
+    nan : float, optional
+        Value to be used to fill NaN values. Default is 0.0.
+    posinf : float, optional
+        Value to be used to fill positive infinity values. Default is a very large number.
+    neginf : float, optional
+        Value to be used to fill negative infinity values. Default is a very small (negative) number.
 
     Returns
     -------
-    out : ndarray
-        Array with the same shape as `x` and dtype of the element in `x` with
-        the greatest precision.
+    asnumpy.ndarray
+        Array with the same shape as `x` and the same dtype, with replacements applied.
 
     See Also
     --------
     numpy.nan_to_num
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.nan_to_num(ap.array([np.inf, -np.inf, np.nan]))
+    array([ 1.79769313e+308, -1.79769313e+308,  0.00000000e+000])
     """
     return ndarray(_ap_nan_to_num(x, nan, posinf, neginf))
 
 
 def sqrt(x: ndarray) -> ndarray:
     """
-    Return the non-negative square-root of an array, element-wise.
+    Calculate the non-negative square root of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the square root for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         The values whose square-roots are required.
 
     Returns
     -------
-    y : ndarray
-        An array of the same shape as `x`, containing the positive
-        square-root of each element in `x`.
+    asnumpy.ndarray
+        An array of the same shape as `x`, containing the positive square-root of each element.
 
     See Also
     --------
     numpy.sqrt
+    asnumpy.square
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.sqrt(ap.array([1, 4, 16]))
+    array([1., 2., 4.])
     """
     return ndarray(_ap_sqrt(x))
 
 
 def square(x: ndarray) -> ndarray:
     """
-    Return the element-wise square of the input.
+    Calculate the square of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the square of the input `x` element-wise.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
 
     Returns
     -------
-    out : ndarray
+    asnumpy.ndarray
         Element-wise `x*x`, of the same shape and dtype as `x`.
 
     See Also
     --------
     numpy.square
+    asnumpy.sqrt
+    asnumpy.power
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.square(ap.array([2, 3, 4]))
+    array([ 4,  9, 16])
     """
     return ndarray(_ap_square(x))
 
 
 def relu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Rectified Linear Unit.
+    Calculate the Rectified Linear Unit (ReLU) activation.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function applies the ReLU operation element-wise, returning `x` if positive and 0 otherwise.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Output array.
+    asnumpy.ndarray
+        An array with the same shape as `x`, with negative values replaced by 0.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.relu(ap.array([-2, 0, 2]))
+    array([0, 0, 2])
     """
     return ndarray(_ap_relu(x, _convert_dtype(dtype)))
 
 
 def gelu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Gaussian Error Linear Unit.
+    Calculate the Gaussian Error Linear Unit (GELU) activation.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function applies the GELU operation, which weights inputs by their probability under a Gaussian distribution.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Output array.
+    asnumpy.ndarray
+        The result of the GELU function applied to `x`.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.gelu(ap.array([-1.0, 0.0, 1.0]))
+    array([-0.15865525,  0.        ,  0.84134475])
     """
     return ndarray(_ap_gelu(x, _convert_dtype(dtype)))
 
@@ -601,92 +834,130 @@ def add(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Add arguments element-wise.
+    Calculate the sum of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays to be added.
-    dtype : dtype, optional
-        The type of the output array.
+    This function adds `x1` and `x2` element by element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        First input array or scalar.
+    x2 : array-like or scalar
+        Second input array or scalar.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The sum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The sum of `x1` and `x2`.
 
     See Also
     --------
     numpy.add
+    asnumpy.subtract
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.add(ap.array([10, 20]), ap.array([5, 5]))
+    array([15, 25])
     """
     return ndarray(_ap_add(x1, x2, _convert_dtype(dtype)))
 
 
 def reciprocal(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the reciprocal of the argument, element-wise.
+    Calculate the reciprocal of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the multiplicative inverse, `1 / x`, for every element in the input array.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        Return the reciprocal of `x`.
+    asnumpy.ndarray
+        The reciprocal of each element in `x`.
 
     See Also
     --------
     numpy.reciprocal
+    asnumpy.divide
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.reciprocal(ap.array([1., 2., 4.]))
+    array([1.  , 0.5 , 0.25])
     """
     return ndarray(_ap_reciprocal(x, _convert_dtype(dtype)))
 
 
 def positive(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Numerical positive, element-wise.
+    Apply the unary positive operator element-wise.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function returns `+x` for each element. It effectively returns a copy of the array.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        Returned array or scalar: `y = +x`.
+    asnumpy.ndarray
+        The input array with the positive unary operator applied.
 
     See Also
     --------
     numpy.positive
+    asnumpy.negative
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.positive(ap.array([-5, 5]))
+    array([-5,  5])
     """
     return ndarray(_ap_positive(x, _convert_dtype(dtype)))
 
 
 def negative(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Numerical negative, element-wise.
+    Calculate the numerical negative element-wise.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function negates each element in the input array, returning `-x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        Returned array or scalar: `y = -x`.
+    asnumpy.ndarray
+        The negative of the input array.
 
     See Also
     --------
     numpy.negative
+    asnumpy.positive
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.negative(ap.array([10, -10]))
+    array([-10,  10])
     """
     return ndarray(_ap_negative(x, _convert_dtype(dtype)))
 
@@ -695,23 +966,34 @@ def multiply(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Multiply arguments element-wise.
+    Calculate the product of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays to be multiplied.
-    dtype : dtype, optional
-        The type of the output array.
+    This function multiplies `x1` and `x2` element by element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        First input array or scalar.
+    x2 : array-like or scalar
+        Second input array or scalar.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The product of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The product of `x1` and `x2`.
 
     See Also
     --------
     numpy.multiply
+    asnumpy.divide
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.multiply(ap.array([2.0, 4.0]), ap.array([3.0, 0.5]))
+    array([6., 2.])
     """
     return ndarray(_ap_multiply(x1, x2, _convert_dtype(dtype)))
 
@@ -720,25 +1002,36 @@ def divide(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Returns a true division of the inputs, element-wise.
+    Calculate the division of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend array.
-    x2 : ndarray
-        Divisor array.
-    dtype : dtype, optional
-        The type of the output array.
+    This function divides `x1` by `x2` element by element, performing true division.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The quotient `x1/x2`, element-wise.
+    asnumpy.ndarray
+        The quotient of `x1` divided by `x2`.
 
     See Also
     --------
     numpy.divide
+    asnumpy.multiply
+    asnumpy.floor_divide
+    asnumpy.true_divide
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.divide(ap.array([6, 12]), ap.array([3, 4]))
+    array([2., 3.])
     """
     return ndarray(_ap_divide(x1, x2, _convert_dtype(dtype)))
 
@@ -747,25 +1040,35 @@ def true_divide(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Returns a true division of the inputs, element-wise.
+    Calculate the true division of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend array.
-    x2 : ndarray
-        Divisor array.
-    dtype : dtype, optional
-        The type of the output array.
+    This function divides `x1` by `x2` element by element. It is an alias for `divide`.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The quotient `x1/x2`, element-wise.
+    asnumpy.ndarray
+        The quotient of `x1` divided by `x2`.
 
     See Also
     --------
     numpy.true_divide
+    asnumpy.divide
+    asnumpy.floor_divide
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.true_divide(ap.array([6, 12]), ap.array([3, 4]))
+    array([2., 3.])
     """
     return ndarray(_ap_true_divide(x1, x2, _convert_dtype(dtype)))
 
@@ -774,23 +1077,34 @@ def subtract(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Subtract arguments, element-wise.
+    Calculate the difference between two inputs element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays to be subtracted from each other.
-    dtype : dtype, optional
-        The type of the output array.
+    This function subtracts `x2` from `x1` element by element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The array to subtract from.
+    x2 : array-like or scalar
+        The array to subtract.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The difference of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The difference `x1 - x2`.
 
     See Also
     --------
     numpy.subtract
+    asnumpy.add
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.subtract(ap.array([10, 5]), ap.array([2, 2]))
+    array([8, 3])
     """
     return ndarray(_ap_subtract(x1, x2, _convert_dtype(dtype)))
 
@@ -799,25 +1113,37 @@ def floor_divide(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the largest integer smaller or equal to the division of the inputs.
+    Calculate the floor division of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Numerator.
-    x2 : ndarray
-        Denominator.
-    dtype : dtype, optional
-        The type of the output array.
+    This function divides `x1` by `x2` and rounds the quotient down to the nearest integer.
+    It corresponds to the `//` operator.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The floor division of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The result of floor division.
 
     See Also
     --------
     numpy.floor_divide
+    asnumpy.divide
+    asnumpy.floor
+    asnumpy.true_divide
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.floor_divide(ap.array([10, 10]), ap.array([3, 4]))
+    array([3, 2])
     """
     return ndarray(_ap_floor_divide(x1, x2, _convert_dtype(dtype)))
 
@@ -826,25 +1152,35 @@ def float_power(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    First array elements raised to powers from second array, element-wise.
+    Calculate the power of bases raised to exponents, promoting to float.
 
-    Parameters
-    ----------
-    x1 : ndarray
+    This function raises elements of `x1` to the power of elements of `x2`.
+    It ensures at least float64 precision for the calculation.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
         The bases.
-    x2 : ndarray
+    x2 : array-like or scalar
         The exponents.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The bases in `x1` raised to the exponents in `x2`.
+    asnumpy.ndarray
+        The result of `x1 ** x2`.
 
     See Also
     --------
     numpy.float_power
+    asnumpy.power
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.float_power(ap.array([2, 5]), ap.array([3, 2]))
+    array([ 8., 25.])
     """
     return ndarray(_ap_float_power(x1, x2, _convert_dtype(dtype)))
 
@@ -853,25 +1189,36 @@ def fmod(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the element-wise remainder of division.
+    Calculate the floating-point remainder of division.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend.
-    x2 : ndarray
-        Divisor.
-    dtype : dtype, optional
-        The type of the output array.
+    This function computes the remainder of `x1` divided by `x2`.
+    The result carries the sign of the dividend `x1`, consistent with the C `fmod` function.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The remainder of the division of `x1` by `x2`.
+    asnumpy.ndarray
+        The remainder of the division.
 
     See Also
     --------
     numpy.fmod
+    asnumpy.mod
+    asnumpy.remainder
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.fmod(ap.array([-4, -4, 4, 4]), ap.array([3, -3, 3, -3]))
+    array([-1, -1,  1,  1])
     """
     return ndarray(_ap_fmod(x1, x2, _convert_dtype(dtype)))
 
@@ -880,48 +1227,69 @@ def mod(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return element-wise remainder of division.
+    Calculate the remainder of division element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend.
-    x2 : ndarray
-        Divisor.
-    dtype : dtype, optional
-        The type of the output array.
+    This function computes the remainder of `x1` divided by `x2`.
+    It behaves like the Python `%` operator, where the result takes the sign of the divisor `x2`.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The remainder of the division of `x1` by `x2`.
+    asnumpy.ndarray
+        The remainder of the division.
 
     See Also
     --------
     numpy.mod
+    asnumpy.remainder
+    asnumpy.fmod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.mod(ap.array([-4, -4, 4, 4]), ap.array([3, -3, 3, -3]))
+    array([ 2, -1,  1, -2])
     """
     return ndarray(_ap_mod(x1, x2, _convert_dtype(dtype)))
 
 
 def modf(x: ndarray) -> tuple:
     """
-    Return the fractional and integral parts of an array, element-wise.
+    Separate the fractional and integral parts of elements.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function splits each element of `x` into its fractional and integral components.
+    Both returned parts have the same sign as the input.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
 
     Returns
     -------
-    y1 : ndarray
-        Fractional part of `x`.
-    y2 : ndarray
-        Integral part of `x`.
+    tuple of asnumpy.ndarray
+        A tuple containing:
+        - The fractional parts of `x`.
+        - The integral parts of `x`.
 
     See Also
     --------
     numpy.modf
+    asnumpy.divmod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.modf(ap.array([1.5, -2.5]))
+    (array([ 0.5, -0.5]), array([ 1., -2.]))
     """
     return ndarray(_ap_modf(x))
 
@@ -930,25 +1298,36 @@ def remainder(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return element-wise remainder of division.
+    Calculate the remainder of division element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend.
-    x2 : ndarray
-        Divisor.
-    dtype : dtype, optional
-        The type of the output array.
+    This function computes the remainder of `x1` divided by `x2`.
+    It is an alias for `mod`, and the result takes the sign of the divisor `x2`.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The remainder of the division of `x1` by `x2`.
+    asnumpy.ndarray
+        The remainder of the division.
 
     See Also
     --------
     numpy.remainder
+    asnumpy.mod
+    asnumpy.fmod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.remainder(ap.array([5, -5]), ap.array([3, 3]))
+    array([2, 1])
     """
     return ndarray(_ap_remainder(x1, x2, _convert_dtype(dtype)))
 
@@ -957,27 +1336,38 @@ def divmod(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> tuple:
     """
-    Return element-wise quotient and remainder simultaneously.
+    Calculate both the quotient and the remainder.
 
-    Parameters
-    ----------
-    x1 : ndarray
-        Dividend.
-    x2 : ndarray
-        Divisor.
-    dtype : dtype, optional
-        The type of the output array.
+    This function performs floor division and modulus simultaneously.
+    It returns the pair `(x1 // x2, x1 % x2)`.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The dividend.
+    x2 : array-like or scalar
+        The divisor.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    out1 : ndarray
-        Element-wise quotient.
-    out2 : ndarray
-        Element-wise remainder.
+    tuple of asnumpy.ndarray
+        A tuple containing:
+        - The element-wise floor quotient.
+        - The element-wise remainder.
 
     See Also
     --------
     numpy.divmod
+    asnumpy.floor_divide
+    asnumpy.remainder
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.divmod(ap.array([10, 11]), ap.array([3, 3]))
+    (array([3, 3]), array([1, 2]))
     """
     return ndarray(_ap_divmod(x1, x2, _convert_dtype(dtype)))
 
@@ -986,25 +1376,35 @@ def power(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    First array elements raised to powers from second array, element-wise.
+    Calculate the power of bases raised to exponents.
 
-    Parameters
-    ----------
-    x1 : ndarray
+    This function raises elements of `x1` to the power of elements of `x2`.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
         The bases.
-    x2 : ndarray
+    x2 : array-like or scalar
         The exponents.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The bases in `x1` raised to the exponents in `x2`.
+    asnumpy.ndarray
+        The result of `x1 ** x2`.
 
     See Also
     --------
     numpy.power
+    asnumpy.float_power
+    asnumpy.square
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.power(ap.array([2, 5]), ap.array([3, 2]))
+    array([ 8, 25])
     """
     return ndarray(_ap_power(x1, x2, _convert_dtype(dtype)))
 
@@ -1017,31 +1417,37 @@ def prod(
     dtype: Optional[np.dtype] = None,
 ) -> Union[ndarray, float]:
     """
-    Return the product of array elements over a given axis.
+    Calculate the product of elements.
 
-    Parameters
-    ----------
-    a : ndarray
-        Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which a product is performed. The default,
-        axis=None, will calculate the product of all the elements in the
-        input array.
+    This function multiplies elements in the input array `a`.
+    If an `axis` is provided, the multiplication is performed along that axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input array.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, the product of the flattened array is returned.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
-    dtype : dtype, optional
-        The type of the returned array and of the accumulator in which the
-        elements are multiplied.
+        If True, the axes which are reduced are left in the result as dimensions with size one.
+    dtype : data-type, optional
+        The type of the returned array and of the accumulator in which the elements are multiplied.
 
     Returns
     -------
-    product_along_axis : ndarray
-        An array shaped as `a` but with the specified axis removed.
+    asnumpy.ndarray or scalar
+        The product of the elements.
 
     See Also
     --------
     numpy.prod
+    asnumpy.sum
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.prod(ap.array([1., 2.]))
+    2.0
     """
     if axis is None:
         return _ap_prod(a)
@@ -1055,30 +1461,37 @@ def sum(
     dtype: Optional[np.dtype] = None,
 ) -> Union[ndarray, float]:
     """
-    Sum of array elements over a given axis.
+    Calculate the sum of elements.
 
-    Parameters
-    ----------
-    a : ndarray
-        Elements to sum.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which a sum is performed. The default, axis=None,
-        will sum all of the elements of the input array.
+    This function adds up elements in the input array `a`.
+    If an `axis` is provided, the summation is performed along that axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input array.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, the sum of the flattened array is returned.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
-    dtype : dtype, optional
-        The type of the returned array and of the accumulator in which the
-        elements are summed.
+        If True, the axes which are reduced are left in the result as dimensions with size one.
+    dtype : data-type, optional
+        The type of the returned array and of the accumulator in which the elements are summed.
 
     Returns
     -------
-    sum_along_axis : ndarray
-        An array with the same shape as `a`, with the specified axis removed.
+    asnumpy.ndarray or scalar
+        The sum of the elements.
 
     See Also
     --------
     numpy.sum
+    asnumpy.prod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.sum(ap.array([0.5, 1.5]))
+    2.0
     """
     if axis is None:
         return _ap_sum(a)
@@ -1092,30 +1505,38 @@ def nanprod(
     dtype: Optional[np.dtype] = None,
 ) -> Union[ndarray, float]:
     """
-    Return the product of array elements over a given axis treating Not a
-    Numbers (NaNs) as ones.
+    Calculate the product of elements, replacing NaNs with one.
 
-    Parameters
-    ----------
-    a : ndarray
-        Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which a product is performed.
+    This function multiplies elements in the input array `a`, treating any NaN values as 1.
+    This ensures that NaNs do not propagate into the result.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input array.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, the product of the flattened array is returned.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
-    dtype : dtype, optional
-        The type of the returned array and of the accumulator in which the
-        elements are multiplied.
+        If True, the axes which are reduced are left in the result as dimensions with size one.
+    dtype : data-type, optional
+        The type of the returned array and of the accumulator.
 
     Returns
     -------
-    product_along_axis : ndarray
-        An array shaped as `a` but with the specified axis removed.
+    asnumpy.ndarray or scalar
+        The product of the elements, with NaNs treated as 1.
 
     See Also
     --------
     numpy.nanprod
+    asnumpy.prod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.nanprod(ap.array([1, np.nan]))
+    1.0
     """
     if axis is None:
         return _ap_nanprod(a)
@@ -1129,30 +1550,38 @@ def nansum(
     dtype: Optional[np.dtype] = None,
 ) -> Union[ndarray, float]:
     """
-    Return the sum of array elements over a given axis treating Not a
-    Numbers (NaNs) as zero.
+    Calculate the sum of elements, replacing NaNs with zero.
 
-    Parameters
-    ----------
-    a : ndarray
-        Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which a sum is performed.
+    This function adds up elements in the input array `a`, treating any NaN values as 0.
+    This ensures that NaNs do not propagate into the result.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        Input array.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, the sum of the flattened array is returned.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
-    dtype : dtype, optional
-        The type of the returned array and of the accumulator in which the
-        elements are summed.
+        If True, the axes which are reduced are left in the result as dimensions with size one.
+    dtype : data-type, optional
+        The type of the returned array and of the accumulator.
 
     Returns
     -------
-    sum_along_axis : ndarray
-        An array shaped as `a` but with the specified axis removed.
+    asnumpy.ndarray or scalar
+        The sum of the elements, with NaNs treated as 0.
 
     See Also
     --------
     numpy.nansum
+    asnumpy.sum
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.nansum(ap.array([1, np.nan]))
+    1.0
     """
     if axis is None:
         return _ap_nansum(a)
@@ -1163,27 +1592,36 @@ def cumprod(
     a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the cumulative product of elements along a given axis.
+    Calculate the cumulative product of elements.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function computes the running product of elements along the specified axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input array.
     axis : int, optional
-        Axis along which the cumulative product is computed. By default the
-        input is flattened.
-    dtype : dtype, optional
-        Type of the returned array, as well as of the accumulator in which
-        the elements are multiplied.
+        Axis along which the cumulative product is computed. By default, the input is flattened.
+    dtype : data-type, optional
+        Type of the returned array and of the accumulator.
 
     Returns
     -------
-    out : ndarray
-        A new array holding the result.
+    asnumpy.ndarray
+        A new array containing the cumulative product.
 
     See Also
     --------
     numpy.cumprod
+    asnumpy.prod
+    asnumpy.cumsum
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.cumprod(a)
+    array([1, 2, 6])
     """
     return ndarray(_ap_cumprod(a, axis, _convert_dtype(dtype)))
 
@@ -1192,27 +1630,36 @@ def cumsum(
     a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the cumulative sum of the elements along a given axis.
+    Calculate the cumulative sum of elements.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function computes the running total of elements along the specified axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input array.
     axis : int, optional
-        Axis along which the cumulative sum is computed. By default the input
-        is flattened.
-    dtype : dtype, optional
-        Type of the returned array and of the accumulator in which the
-        elements are summed.
+        Axis along which the cumulative sum is computed. By default, the input is flattened.
+    dtype : data-type, optional
+        Type of the returned array and of the accumulator.
 
     Returns
     -------
-    out : ndarray
-        A new array holding the result.
+    asnumpy.ndarray
+        A new array containing the cumulative sum.
 
     See Also
     --------
     numpy.cumsum
+    asnumpy.sum
+    asnumpy.cumprod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.cumsum(a)
+    array([1, 3, 6])
     """
     return ndarray(_ap_cumsum(a, axis, _convert_dtype(dtype)))
 
@@ -1221,28 +1668,37 @@ def nancumprod(
     a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the cumulative product of array elements over a given axis treating
-    Not a Numbers (NaNs) as one.
+    Calculate the cumulative product of elements, treating NaNs as one.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function computes the running product of elements along the specified axis.
+    Any NaN values encountered are treated as 1.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input array.
     axis : int, optional
-        Axis along which the cumulative product is computed. By default the
-        input is flattened.
-    dtype : dtype, optional
-        Type of the returned array, as well as of the accumulator in which
-        the elements are multiplied.
+        Axis along which the cumulative product is computed. By default, the input is flattened.
+    dtype : data-type, optional
+        Type of the returned array and of the accumulator.
 
     Returns
     -------
-    out : ndarray
-        A new array holding the result.
+    asnumpy.ndarray
+        A new array containing the cumulative product.
 
     See Also
     --------
     numpy.nancumprod
+    asnumpy.cumprod
+    asnumpy.nanprod
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.nancumprod(ap.array([1, np.nan]))
+    array([1., 1.])
     """
     return ndarray(_ap_nancumprod(a, axis, _convert_dtype(dtype)))
 
@@ -1251,53 +1707,73 @@ def nancumsum(
     a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Return the cumulative sum of array elements over a given axis treating
-    Not a Numbers (NaNs) as zero.
+    Calculate the cumulative sum of elements, treating NaNs as zero.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function computes the running total of elements along the specified axis.
+    Any NaN values encountered are treated as 0.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input array.
     axis : int, optional
-        Axis along which the cumulative sum is computed. By default the input
-        is flattened.
-    dtype : dtype, optional
-        Type of the returned array and of the accumulator in which the
-        elements are summed.
+        Axis along which the cumulative sum is computed. By default, the input is flattened.
+    dtype : data-type, optional
+        Type of the returned array and of the accumulator.
 
     Returns
     -------
-    out : ndarray
-        A new array holding the result.
+    asnumpy.ndarray
+        A new array containing the cumulative sum.
 
     See Also
     --------
     numpy.nancumsum
+    asnumpy.cumsum
+    asnumpy.nansum
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.nancumsum(ap.array([1, np.nan]))
+    array([1., 1.])
     """
     return ndarray(_ap_nancumsum(a, axis, _convert_dtype(dtype)))
 
 
 def cross(a: ndarray, b: ndarray, axis: Optional[int] = None) -> ndarray:
     """
-    Return the cross product of two (arrays of) vectors.
+    Calculate the cross product of two vectors.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function computes the vector cross product of `a` and `b`.
+    It operates on vectors defined by the last axis (or a specified axis), supporting dimensions of 2 or 3.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Components of the first vector(s).
-    b : ndarray
+    b : asnumpy.ndarray
         Components of the second vector(s).
     axis : int, optional
-        Axis along which to take the cross product.
+        Axis that defines the vector(s). By default, the last axis.
 
     Returns
     -------
-    c : ndarray
+    asnumpy.ndarray
         Vector cross product(s).
 
     See Also
     --------
     numpy.cross
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> x = ap.array([1, 2, 3])
+    >>> y = ap.array([4, 5, 6])
+    >>> ap.cross(x, y)
+    array([-3,  6, -3])
     """
     return ndarray(_ap_cross(a, b, axis))
 
@@ -1305,189 +1781,283 @@ def cross(a: ndarray, b: ndarray, axis: Optional[int] = None) -> ndarray:
 # Exponents and logarithms
 def exp(x: ndarray) -> ndarray:
     """
-    Calculate the exponential of all elements in the input array.
+    Calculate the exponential of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes `e` raised to the power of each element in `x`, where `e` is the base of the natural logarithm.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    out : ndarray
-        Element-wise exponential of `x`.
+    asnumpy.ndarray
+        Element-wise exponential of ``x``.
 
     See Also
     --------
     numpy.exp
+    asnumpy.expm1
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.exp(ap.array([1., 2.]))
+    array([2.71828183, 7.3890561 ])
     """
     return ndarray(_ap_exp(x))
 
 
 def expm1(x: ndarray) -> ndarray:
     """
-    Calculate ``exp(x) - 1`` for all elements in the array.
+    Calculate `exp(x) - 1` for each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes the exponential of each element minus one.
+    It is designed to be more accurate than `exp(x) - 1` for values of `x` close to zero.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    out : ndarray
-        Element-wise exponential minus one: ``out = exp(x) - 1``.
+    asnumpy.ndarray
+        Element-wise exponential minus one.
 
     See Also
     --------
     numpy.expm1
+    asnumpy.exp
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.expm1(ap.array([1e-10]))
+    array([1.0000000e-10])
     """
     return ndarray(_ap_expm1(x))
 
 
 def exp2(x: ndarray) -> ndarray:
     """
-    Calculate `2**p` for all `p` in the input array.
+    Calculate 2 raised to the power of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes the base-2 exponential for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    out : ndarray
-        Element-wise 2 to the power `x`.
+    asnumpy.ndarray
+        Element-wise 2 to the power ``x``.
 
     See Also
     --------
     numpy.exp2
+    asnumpy.power
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.exp2(ap.array([3]))
+    array([8.])
     """
     return ndarray(_ap_exp2(x))
 
 
 def log(x: ndarray) -> ndarray:
     """
-    Natural logarithm, element-wise.
+    Calculate the natural logarithm of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input value.
+    This function computes the logarithm to the base `e` for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    y : ndarray
-        The natural logarithm of `x`, element-wise.
+    asnumpy.ndarray
+        The natural logarithm of ``x``, element-wise.
 
     See Also
     --------
     numpy.log
+    asnumpy.log10
+    asnumpy.log2
+    asnumpy.log1p
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.log(ap.array([ap.e]))
+    array([1.])
     """
     return ndarray(_ap_log(x))
 
 
 def log10(x: ndarray) -> ndarray:
     """
-    Return the base 10 logarithm of the input array, element-wise.
+    Calculate the base-10 logarithm of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes the common logarithm (base 10) for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    y : ndarray
-        The base 10 logarithm of `x`, element-wise.
+    asnumpy.ndarray
+        The base 10 logarithm of ``x``, element-wise.
 
     See Also
     --------
     numpy.log10
+    asnumpy.log
+    asnumpy.log2
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.log10(ap.array([100.]))
+    array([2.])
     """
     return ndarray(_ap_log10(x))
 
 
 def log2(x: ndarray) -> ndarray:
     """
-    Base-2 logarithm of `x`.
+    Calculate the base-2 logarithm of each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes the binary logarithm (base 2) for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    y : ndarray
-        Base-2 logarithm of `x`.
+    asnumpy.ndarray
+        Base-2 logarithm of ``x``.
 
     See Also
     --------
     numpy.log2
+    asnumpy.log
+    asnumpy.log10
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.log2(ap.array([8.]))
+    array([3.])
     """
     return ndarray(_ap_log2(x))
 
 
 def log1p(x: ndarray) -> ndarray:
     """
-    Return the natural logarithm of one plus the input array, element-wise.
+    Calculate the natural logarithm of `1 + x` for each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    This function computes `log(1 + x)` element-wise.
+    It is designed to provide better precision than `log(1 + x)` when `x` is close to zero.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    y : ndarray
-        Natural logarithm of `1 + x`, element-wise.
+    asnumpy.ndarray
+        Natural logarithm of ``1 + x``, element-wise.
 
     See Also
     --------
     numpy.log1p
+    asnumpy.log
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.log1p(ap.array([1e-99]))
+    array([1.e-99])
     """
     return ndarray(_ap_log1p(x))
 
 
 def logaddexp(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Logarithm of the sum of exponentiations of the inputs.
+    Calculate the logarithm of the sum of exponentials of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input values.
+    This function computes `log(exp(x1) + exp(x2))`.
+    It is numerically stable and useful for operations involving probabilities in log-space.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        Input array.
+    x2 : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    result : ndarray
+    asnumpy.ndarray
         Logarithm of ``exp(x1) + exp(x2)``.
 
     See Also
     --------
     numpy.logaddexp
+    asnumpy.logaddexp2
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.logaddexp(ap.array([0]), ap.array([0]))
+    array([0.69314718])
     """
     return ndarray(_ap_logaddexp(x1, x2))
 
 
 def logaddexp2(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Logarithm of the sum of exponentiations of the inputs in base-2.
+    Calculate the base-2 logarithm of the sum of base-2 exponentials of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input values.
+    This function computes `log2(2**x1 + 2**x2)`.
+    It is a base-2 analog of `logaddexp`.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        Input array.
+    x2 : asnumpy.ndarray
+        Input array.
 
     Returns
     -------
-    result : ndarray
+    asnumpy.ndarray
         Base-2 logarithm of ``2**x1 + 2**x2``.
 
     See Also
     --------
     numpy.logaddexp2
+    asnumpy.logaddexp
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.logaddexp2(ap.array([1]), ap.array([1]))
+    array([2.])
     """
     return ndarray(_ap_logaddexp2(x1, x2))
 
@@ -1497,19 +2067,28 @@ def real(x: ndarray) -> ndarray:
     """
     Return the real part of the complex argument.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function extracts the real component of the elements in `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
 
     Returns
     -------
-    out : ndarray
+    asnumpy.ndarray
         The real part of the complex argument.
 
     See Also
     --------
     numpy.real
+    asnumpy.imag
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.real(ap.array([1+5j]))
+    array([1.])
     """
     return ndarray(_ap_real(x))
 
@@ -1517,67 +2096,94 @@ def real(x: ndarray) -> ndarray:
 # Floating point routines
 def signbit(x: ndarray) -> ndarray:
     """
-    Returns element-wise True where signbit is set (less than zero).
+    Check if the sign bit is set for each element.
 
-    Parameters
-    ----------
-    x : ndarray
-        The input value(s).
+    This function returns True where the sign bit is set (indicating a negative number) and False otherwise.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array.
 
     Returns
     -------
-    result : ndarray
-        Output array, or reference to `out` if that was supplied.
+    asnumpy.ndarray
+        Boolean array with the same shape as ``x``.
 
     See Also
     --------
     numpy.signbit
+    asnumpy.sign
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.signbit(ap.array([-2.5, 3.5]))
+    array([ True, False])
     """
     return ndarray(_ap_signbit(x))
 
 
 def ldexp(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Returns x1 * 2**x2, element-wise.
+    Calculate `x1 * (2**x2)` element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
+    This function computes the product of `x1` and 2 raised to the power of `x2`.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
         Array of multipliers.
-    x2 : ndarray
+    x2 : asnumpy.ndarray
         Array of exponents.
 
     Returns
     -------
-    y : ndarray
+    asnumpy.ndarray
         The result of ``x1 * 2**x2``.
 
     See Also
     --------
     numpy.ldexp
+    asnumpy.frexp
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.ldexp(ap.array([3]), ap.array([2]))
+    array([12.])
     """
     return ndarray(_ap_ldexp(x1, x2))
 
 
 def copysign(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Change the sign of x1 to that of x2, element-wise.
+    Change the sign of `x1` to that of `x2` element-wise.
 
-    Parameters
-    ----------
-    x1 : ndarray
+    This function returns a value with the magnitude of `x1` and the sign of `x2`.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
         Values to change the sign of.
-    x2 : ndarray
-        The sign of `x2` is copied to `x1`.
+    x2 : asnumpy.ndarray
+        The sign of ``x2`` is copied to ``x1``.
 
     Returns
     -------
-    out : ndarray
-        The values of `x1` with the sign of `x2`.
+    asnumpy.ndarray
+        The values of ``x1`` with the sign of ``x2``.
 
     See Also
     --------
     numpy.copysign
+    asnumpy.sign
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.copysign(ap.array([1.5]), ap.array([-1]))
+    array([-1.5])
     """
     return ndarray(_ap_copysign(x1, x2))
 
@@ -1585,138 +2191,195 @@ def copysign(x1: ndarray, x2: ndarray) -> ndarray:
 # Hyperbolic functions
 def sinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Hyperbolic sine, element-wise.
+    Calculate the hyperbolic sine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the hyperbolic sine for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The corresponding hyperbolic sine values.
+    asnumpy.ndarray
+        An array containing the hyperbolic sine of each element in ``x``.
 
     See Also
     --------
     numpy.sinh
+    asnumpy.cosh
+    asnumpy.tanh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.sinh(ap.array([0., 1.]))
+    array([0.        , 1.17520119])
     """
     return ndarray(_ap_sinh(x, _convert_dtype(dtype)))
 
 
 def cosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Hyperbolic cosine, element-wise.
+    Calculate the hyperbolic cosine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the hyperbolic cosine for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Output array of same shape as `x`.
+    asnumpy.ndarray
+        An array containing the hyperbolic cosine of each element in ``x``.
 
     See Also
     --------
     numpy.cosh
+    asnumpy.sinh
+    asnumpy.tanh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.cosh(ap.array([0., 1.]))
+    array([1.        , 1.54308063])
     """
     return ndarray(_ap_cosh(x, _convert_dtype(dtype)))
 
 
 def tanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Compute hyperbolic tangent element-wise.
+    Calculate the hyperbolic tangent of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the hyperbolic tangent for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The corresponding hyperbolic tangent values.
+    asnumpy.ndarray
+        An array containing the hyperbolic tangent of each element in ``x``.
 
     See Also
     --------
     numpy.tanh
+    asnumpy.sinh
+    asnumpy.cosh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.tanh(ap.array([0., 1.]))
+    array([0.        , 0.76159416])
     """
     return ndarray(_ap_tanh(x, _convert_dtype(dtype)))
 
 
 def arcsinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Inverse hyperbolic sine element-wise.
+    Calculate the inverse hyperbolic sine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the inverse hyperbolic sine for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of the same shape as `x`.
+    asnumpy.ndarray
+        An array containing the inverse hyperbolic sine of each element in ``x``.
 
     See Also
     --------
     numpy.arcsinh
+    asnumpy.sinh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arcsinh(ap.array([0., 1.17520119]))
+    array([0., 1.])
     """
     return ndarray(_ap_arcsinh(x, _convert_dtype(dtype)))
 
 
 def arccosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Inverse hyperbolic cosine, element-wise.
+    Calculate the inverse hyperbolic cosine of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the inverse hyperbolic cosine for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of the same shape as `x`.
+    asnumpy.ndarray
+        An array containing the inverse hyperbolic cosine of each element in ``x``.
 
     See Also
     --------
     numpy.arccosh
+    asnumpy.cosh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arccosh(ap.array([1., 1.54308063]))
+    array([0., 1.])
     """
     return ndarray(_ap_arccosh(x, _convert_dtype(dtype)))
 
 
 def arctanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Inverse hyperbolic tangent element-wise.
+    Calculate the inverse hyperbolic tangent of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the inverse hyperbolic tangent for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Array of the same shape as `x`.
+    asnumpy.ndarray
+        An array containing the inverse hyperbolic tangent of each element in ``x``.
 
     See Also
     --------
     numpy.arctanh
+    asnumpy.tanh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.arctanh(ap.array([0., 0.76159416]))
+    array([0., 1.])
     """
     return ndarray(_ap_arctanh(x, _convert_dtype(dtype)))
 
@@ -1724,23 +2387,31 @@ def arctanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
 # Other special functions
 def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the sinc function.
+    Calculate the normalized sinc function of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function computes the normalized sinc function, `sin(pi * x) / (pi * x)`, for every element in the input array `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Sinc function of `x`.
+    asnumpy.ndarray
+        The normalized sinc function evaluated at ``x``.
 
     See Also
     --------
     numpy.sinc
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.sinc(ap.array([0., 0.5]))
+    array([1.        , 0.63661977])
     """
     return ndarray(_ap_sinc(x, _convert_dtype(dtype)))
 
@@ -1750,23 +2421,34 @@ def gcd(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Returns the greatest common divisor of ``|x1|`` and ``|x2|``.
+    Calculate the greatest common divisor of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Arrays of values.
-    dtype : dtype, optional
-        The type of the output array.
+    This function computes the greatest common divisor (GCD) of the absolute values of `x1` and `x2` element-wise.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        First input array.
+    x2 : array-like or scalar
+        Second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The greatest common divisor of the absolute value of the inputs.
+    asnumpy.ndarray
+        The greatest common divisor of the absolute values of the inputs.
 
     See Also
     --------
     numpy.gcd
+    asnumpy.lcm
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.gcd(ap.array([10]), ap.array([25]))
+    array([5])
     """
     return ndarray(_ap_gcd(x1, x2, _convert_dtype(dtype)))
 
@@ -1775,23 +2457,34 @@ def lcm(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Returns the lowest common multiple of ``|x1|`` and ``|x2|``.
+    Calculate the least common multiple of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Arrays of values.
-    dtype : dtype, optional
-        The type of the output array.
+    This function computes the least common multiple (LCM) of the absolute values of `x1` and `x2` element-wise.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        First input array.
+    x2 : array-like or scalar
+        Second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The lowest common multiple of the absolute value of the inputs.
+    asnumpy.ndarray
+        The least common multiple of the absolute values of the inputs.
 
     See Also
     --------
     numpy.lcm
+    asnumpy.gcd
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.lcm(ap.array([4]), ap.array([6]))
+    array([12])
     """
     return ndarray(_ap_lcm(x1, x2, _convert_dtype(dtype)))
 
@@ -1799,169 +2492,239 @@ def lcm(
 # Rounding
 def around(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Round an array to the given number of decimals.
+    Round elements to a specified number of decimal places.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function rounds each element in `x` to the given number of decimals.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
     decimals : int, optional
-        Number of decimal places to round to (default: 0). If decimals is
-        negative, it specifies the number of positions to the left of the
-        decimal point.
-    dtype : dtype, optional
-        The type of the output array.
+        Number of decimal places to round to (default: 0). If decimals is negative, it specifies the number of positions to the left of the decimal point.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    rounded_array : ndarray
-        An array of the same type as `x`, containing the rounded values.
+    asnumpy.ndarray
+        An array of the same type as ``x``, containing the rounded values.
 
     See Also
     --------
     numpy.around
+    asnumpy.round_
+    asnumpy.ceil
+    asnumpy.floor
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.around(ap.array([0.55, 1.55]), decimals=1)
+    array([0.6, 1.6])
     """
     return ndarray(_ap_around(x, decimals, _convert_dtype(dtype)))
 
 
 def round_(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Round an array to the given number of decimals.
+    Round elements to a specified number of decimal places.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function rounds each element in `x` to the given number of decimals. It is an alias for `around`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
     decimals : int, optional
-        Number of decimal places to round to (default: 0). If decimals is
-        negative, it specifies the number of positions to the left of the
-        decimal point.
-    dtype : dtype, optional
-        The type of the output array.
+        Number of decimal places to round to (default: 0). If decimals is negative, it specifies the number of positions to the left of the decimal point.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    rounded_array : ndarray
-        An array of the same type as `x`, containing the rounded values.
+    asnumpy.ndarray
+        An array of the same type as ``x``, containing the rounded values.
 
     See Also
     --------
     numpy.round_
+    asnumpy.around
+    asnumpy.ceil
+    asnumpy.floor
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.round_(ap.array([0.55, 1.55]), decimals=1)
+    array([0.6, 1.6])
     """
     return ndarray(_ap_round_(x, decimals, _convert_dtype(dtype)))
 
 
 def rint(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Round elements of the array to the nearest integer.
+    Round elements to the nearest integer.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function rounds each element in the input array `x` to the closest integer value.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input array.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
-        Output array is same shape and type as `x`.
+    asnumpy.ndarray
+        Output array with the same shape and type as ``x``.
 
     See Also
     --------
     numpy.rint
+    asnumpy.floor
+    asnumpy.ceil
+    asnumpy.trunc
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.rint(ap.array([-1.2, 1.2]))
+    array([-1.,  1.])
     """
     return ndarray(_ap_rint(x, _convert_dtype(dtype)))
 
 
 def fix(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Round to nearest integer towards zero.
+    Round elements towards zero.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function rounds each floating-point element to the nearest integer closer to zero.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         An array of floats to be rounded.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    out : ndarray
+    asnumpy.ndarray
         The array of rounded numbers.
 
     See Also
     --------
     numpy.fix
+    asnumpy.trunc
+    asnumpy.floor
+    asnumpy.ceil
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.fix(ap.array([2.9, -2.9]))
+    array([ 2., -2.])
     """
     return ndarray(_ap_fix(x, _convert_dtype(dtype)))
 
 
 def floor(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the floor of the input, element-wise.
+    Calculate the floor of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function returns the largest integer less than or equal to each element in `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The floor of each element in `x`.
+    asnumpy.ndarray
+        The floor of each element in ``x``.
 
     See Also
     --------
     numpy.floor
+    asnumpy.ceil
+    asnumpy.trunc
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.floor(ap.array([-1.5, 1.5]))
+    array([-2.,  1.])
     """
     return ndarray(_ap_floor(x, _convert_dtype(dtype)))
 
 
 def ceil(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the ceiling of the input, element-wise.
+    Calculate the ceiling of each element.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function returns the smallest integer greater than or equal to each element in `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The ceiling of each element in `x`.
+    asnumpy.ndarray
+        The ceiling of each element in ``x``.
 
     See Also
     --------
     numpy.ceil
+    asnumpy.floor
+    asnumpy.trunc
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.ceil(ap.array([-1.5, 1.5]))
+    array([-1.,  2.])
     """
     return ndarray(_ap_ceil(x, _convert_dtype(dtype)))
 
 
 def trunc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     """
-    Return the truncated value of the input, element-wise.
+    Truncate elements to their integer part.
 
-    Parameters
-    ----------
-    x : ndarray
+    This function returns the integer portion of each element in `x`, effectively discarding the fractional part.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
         Input data.
-    dtype : dtype, optional
-        The type of the output array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The truncated value of each element in `x`.
+    asnumpy.ndarray
+        The truncated value of each element in ``x``.
 
     See Also
     --------
     numpy.trunc
+    asnumpy.floor
+    asnumpy.ceil
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.trunc(ap.array([-1.5, 1.5]))
+    array([-1.,  1.])
     """
     return ndarray(_ap_trunc(x, _convert_dtype(dtype)))
 
@@ -1971,23 +2734,36 @@ def maximum(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Element-wise maximum of array elements.
+    Calculate the element-wise maximum of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays holding the elements to be compared.
-    dtype : dtype, optional
-        The type of the output array.
+    This function compares `x1` and `x2` and returns the larger value for each element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The first input array.
+    x2 : array-like or scalar
+        The second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The maximum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The maximum of ``x1`` and ``x2``, element-wise.
 
     See Also
     --------
     numpy.maximum
+    asnumpy.minimum
+    asnumpy.fmax
+    asnumpy.amax
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.maximum(ap.array([2, 3]), ap.array([1, 5]))
+    array([2, 5])
     """
     return ndarray(_ap_maximum(x1, x2, _convert_dtype(dtype)))
 
@@ -1996,23 +2772,36 @@ def minimum(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Element-wise minimum of array elements.
+    Calculate the element-wise minimum of the inputs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays holding the elements to be compared.
-    dtype : dtype, optional
-        The type of the output array.
+    This function compares `x1` and `x2` and returns the smaller value for each element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The first input array.
+    x2 : array-like or scalar
+        The second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The minimum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The minimum of ``x1`` and ``x2``, element-wise.
 
     See Also
     --------
     numpy.minimum
+    asnumpy.maximum
+    asnumpy.fmin
+    asnumpy.amin
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.minimum(ap.array([2, 3]), ap.array([1, 5]))
+    array([1, 3])
     """
     return ndarray(_ap_minimum(x1, x2, _convert_dtype(dtype)))
 
@@ -2021,23 +2810,38 @@ def fmax(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Element-wise maximum of array elements.
+    Calculate the element-wise maximum of the inputs, ignoring NaNs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays holding the elements to be compared.
-    dtype : dtype, optional
-        The type of the output array.
+    This function compares `x1` and `x2` and returns the larger value.
+    If a NaN is encountered, the other value is returned.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The first input array.
+    x2 : array-like or scalar
+        The second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The maximum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The maximum of ``x1`` and ``x2``, element-wise.
 
     See Also
     --------
     numpy.fmax
+    asnumpy.fmin
+    asnumpy.maximum
+    asnumpy.amax
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.fmax(ap.array([np.nan, 2]), ap.array([1, np.nan]))
+    array([1., 2.])
     """
     return ndarray(_ap_fmax(x1, x2, _convert_dtype(dtype)))
 
@@ -2046,23 +2850,38 @@ def fmin(
     x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
 ) -> ndarray:
     """
-    Element-wise minimum of array elements.
+    Calculate the element-wise minimum of the inputs, ignoring NaNs.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays holding the elements to be compared.
-    dtype : dtype, optional
-        The type of the output array.
+    This function compares `x1` and `x2` and returns the smaller value.
+    If a NaN is encountered, the other value is returned.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        The first input array.
+    x2 : array-like or scalar
+        The second input array.
+    dtype : data-type, optional
+        The desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The minimum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The minimum of ``x1`` and ``x2``, element-wise.
 
     See Also
     --------
     numpy.fmin
+    asnumpy.fmax
+    asnumpy.minimum
+    asnumpy.amin
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.fmin(ap.array([np.nan, 2]), ap.array([1, np.nan]))
+    array([1., 2.])
     """
     return ndarray(_ap_fmin(x1, x2, _convert_dtype(dtype)))
 
@@ -2071,27 +2890,38 @@ def max(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
-    Return the maximum of an array or maximum along an axis.
+    Calculate the maximum value of the array.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function finds the largest value in the array `a`.
+    If an `axis` is provided, the maximum is computed along that axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which to operate. By default, flattened input is
-        used.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, flattened input is used.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
+        If this is set to True, the axes which are reduced are left in the result as dimensions with size one.
 
     Returns
     -------
-    max : ndarray
-        Maximum of `a`.
+    asnumpy.ndarray or scalar
+        Maximum of ``a``.
 
     See Also
     --------
     numpy.max
+    asnumpy.min
+    asnumpy.maximum
+    asnumpy.amax
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.max(a)
+    3
     """
     if axis is None:
         return _ap_max(a)
@@ -2102,27 +2932,38 @@ def amax(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
-    Return the maximum of an array or maximum along an axis.
+    Calculate the maximum value of the array.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function finds the largest value in the array `a`.
+    It is an alias for `max`.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which to operate. By default, flattened input is
-        used.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, flattened input is used.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
+        If this is set to True, the axes which are reduced are left in the result as dimensions with size one.
 
     Returns
     -------
-    amax : ndarray
-        Maximum of `a`.
+    asnumpy.ndarray or scalar
+        Maximum of ``a``.
 
     See Also
     --------
     numpy.amax
+    asnumpy.amin
+    asnumpy.maximum
+    asnumpy.max
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.amax(a)
+    3
     """
     if axis is None:
         return _ap_amax(a)
@@ -2133,28 +2974,39 @@ def nanmax(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
-    Return the maximum of an array or maximum along an axis, ignoring any
-    NaNs.
+    Calculate the maximum value of the array, ignoring NaNs.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function finds the largest value in the array `a`, skipping any NaN values.
+    If an `axis` is provided, the maximum is computed along that axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which to operate. By default, flattened input is
-        used.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, flattened input is used.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
+        If this is set to True, the axes which are reduced are left in the result as dimensions with size one.
 
     Returns
     -------
-    nanmax : ndarray
-        Maximum of `a`.
+    asnumpy.ndarray or scalar
+        Maximum of ``a``.
 
     See Also
     --------
     numpy.nanmax
+    asnumpy.nanmin
+    asnumpy.max
+    asnumpy.amax
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> a = ap.array([1, np.nan])
+    >>> ap.nanmax(a)
+    1.0
     """
     if axis is None:
         return _ap_nanmax(a)
@@ -2165,27 +3017,38 @@ def min(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
-    Return the minimum of an array or minimum along an axis.
+    Calculate the minimum value of the array.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function finds the smallest value in the array `a`.
+    If an `axis` is provided, the minimum is computed along that axis.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which to operate. By default, flattened input is
-        used.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, flattened input is used.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
+        If this is set to True, the axes which are reduced are left in the result as dimensions with size one.
 
     Returns
     -------
-    min : ndarray
-        Minimum of `a`.
+    asnumpy.ndarray or scalar
+        Minimum of ``a``.
 
     See Also
     --------
     numpy.min
+    asnumpy.max
+    asnumpy.minimum
+    asnumpy.amin
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.min(a)
+    1
     """
     if axis is None:
         return _ap_min(a)
@@ -2196,27 +3059,38 @@ def amin(
     a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
-    Return the minimum of an array or minimum along an axis.
+    Calculate the minimum value of the array.
 
-    Parameters
-    ----------
-    a : ndarray
+    This function finds the smallest value in the array `a`.
+    It is an alias for `min`.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
         Input data.
-    axis : None or int or tuple of ints, optional
-        Axis or axes along which to operate. By default, flattened input is
-        used.
+    axis : int or sequence of ints, optional
+        Axis or axes along which to operate. By default, flattened input is used.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left in the
-        result as dimensions with size one.
+        If this is set to True, the axes which are reduced are left in the result as dimensions with size one.
 
     Returns
     -------
-    amin : ndarray
-        Minimum of `a`.
+    asnumpy.ndarray or scalar
+        Minimum of ``a``.
 
     See Also
     --------
     numpy.amin
+    asnumpy.amax
+    asnumpy.minimum
+    asnumpy.min
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> a = ap.array([1, 2, 3])
+    >>> ap.amin(a)
+    1
     """
     if axis is None:
         return _ap_amin(a)

@@ -21,32 +21,43 @@ from .utils import ndarray
 
 def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
     """
-    Returns a sorted copy of an array with a stable sorting algorithm.
+    Arrange array elements in ascending order.
 
-    Parameters
-    ----------
-    a : ndarray
-        Array to be sorted.
+    This function produces a new array with elements arranged from smallest to largest along the specified axis.
+    If no axis is given, the last axis is used by default. Flattening occurs when axis=None.
+    The `stable` flag ensures that the relative order of equal elements is preserved when set to True.
+
+    Arguments
+    ---------
+    a : asnumpy.ndarray
+        The input array whose elements will be rearranged.
     axis : int or None, optional
-        Axis along which to sort. Default is -1, which means sort along the
-        last axis. If None is supplied, the array is flattened before sorting.
+        Axis along which to sort. Default is -1 (last axis). If None, the array is flattened.
     stable : bool, optional
-        If True, use a stable sorting algorithm. Default is False.
-        Note that unlike NumPy, AsNumPy uses a boolean flag for stability
-        instead of a 'kind' string parameter.
+        Whether to perform a stable sort that preserves the order of equal elements.
 
     Returns
     -------
-    sorted_array : ndarray
-        Array of the same type and shape as ``a``.
-
-    .. note::
-       For its implementation reason, ``asnumpy.sort`` currently does not fully
-       support ``kind`` and ``order`` parameters that ``numpy.sort`` does
-       support. Instead, it provides a ``stable`` boolean parameter.
+    asnumpy.ndarray
+        A new array with elements sorted along the specified axis. Shape matches the input except when flattened.
 
     See Also
     --------
     numpy.sort
+
+    Notes
+    -----
+    AsNumPy does not currently implement `kind` or `order` parameters from NumPy. Use the `stable` boolean to control sorting stability.
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> arr = ap.array([[3, 1], [2, 4]])
+    >>> ap.sort(arr)
+    array([[1, 3],
+           [2, 4]])
+    >>> ap.sort(arr, axis=0, stable=True)
+    array([[2, 1],
+           [3, 4]])
     """
     return ndarray(_ap_sort(a, axis, stable))

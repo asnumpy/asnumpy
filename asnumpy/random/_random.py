@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,23 +36,33 @@ from ..utils import ndarray, _convert_size
 
 def pareto(a: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
-    Draw samples from a Pareto II or Lomax distribution with specified shape.
+    Draw random samples from a Pareto II (Lomax) distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a Pareto II distribution with the specified shape parameter `a`.
+    The samples are drawn such that they follow the probability density function defined by the shape parameter.
+
+    Arguments
+    ---------
     a : float
-        Shape of the distribution. Must be positive.
-    size : int or tuple of ints
-        Output shape.
+        The shape parameter of the distribution. Must be greater than zero.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized Pareto distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the Pareto distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.pareto
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.pareto(a=3.0, size=5)
+    array([0.123, 0.456, 0.789, 0.012, 0.345])  # random
     """
     return ndarray(_ap_pareto(a, _convert_size(size)))
 
@@ -61,21 +71,32 @@ def rayleigh(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
     Draw samples from a Rayleigh distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a Rayleigh distribution.
+    The distribution is determined by the `scale` parameter, which corresponds to the mode of the distribution.
+
+    Arguments
+    ---------
     scale : float
-        Scale, also equals the mode. Must be non-negative.
-    size : int or tuple of ints
-        Output shape.
+        The scale parameter of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized Rayleigh distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the Rayleigh distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.rayleigh
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.rayleigh(scale=2.0, size=(2, 2))
+    array([[1.5, 2.1],
+           [0.8, 3.2]])  # random
     """
     return ndarray(_ap_rayleigh(scale, _convert_size(size)))
 
@@ -84,24 +105,32 @@ def normal(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray
     """
     Draw random samples from a normal (Gaussian) distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a normal distribution characterized by its mean (`loc`) and standard deviation (`scale`).
+
+    Arguments
+    ---------
     loc : float
-        Mean ("centre") of the distribution.
+        The mean (center) of the distribution.
     scale : float
-        Standard deviation (spread or "width") of the distribution. Must be
-        non-negative.
-    size : int or tuple of ints
-        Output shape.
+        The standard deviation (spread) of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized normal distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the normal distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.normal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.normal(loc=0.0, scale=1.0, size=3)
+    array([-0.5,  1.2, -0.1])  # random
     """
     return ndarray(_ap_normal(loc, scale, _convert_size(size)))
 
@@ -110,67 +139,94 @@ def uniform(low: float, high: float, size: Union[int, Sequence[int]]) -> ndarray
     """
     Draw samples from a uniform distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a uniform distribution over the interval [`low`, `high`).
+    Any value within the given interval is equally likely to be drawn.
+
+    Arguments
+    ---------
     low : float
-        Lower boundary of the output interval. All values generated will be
-        greater than or equal to low.
+        The lower boundary of the output interval.
     high : float
-        Upper boundary of the output interval. All values generated will be
-        less than or equal to high.
-    size : int or tuple of ints
-        Output shape.
+        The upper boundary of the output interval.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized uniform distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the uniform distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.uniform
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.uniform(low=0.0, high=10.0, size=4)
+    array([2.5, 8.1, 0.3, 5.9])  # random
     """
     return ndarray(_ap_uniform(low, high, _convert_size(size)))
 
 
 def standard_normal(size: Union[int, Sequence[int]]) -> ndarray:
     """
-    Draw samples from a standard Normal distribution (mean=0, stdev=1).
+    Draw samples from a standard Normal distribution.
 
-    Parameters
-    ----------
-    size : int or tuple of ints
-        Output shape.
+    Generates random samples from a standard Normal distribution, which has a mean of 0 and a standard deviation of 1.
+
+    Arguments
+    ---------
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples.
+    asnumpy.ndarray
+        An array of random samples drawn from the standard Normal distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.standard_normal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.standard_normal(size=(2, 2))
+    array([[ 0.5, -1.2],
+           [ 0.1,  0.8]])  # random
     """
     return ndarray(_ap_standard_normal(_convert_size(size)))
 
 
 def standard_cauchy(size: Union[int, Sequence[int]]) -> ndarray:
     """
-    Draw samples from a standard Cauchy distribution with mode = 0.
+    Draw samples from a standard Cauchy distribution.
 
-    Parameters
-    ----------
-    size : int or tuple of ints
-        Output shape.
+    Generates random samples from a standard Cauchy distribution with mode equal to 0.
+
+    Arguments
+    ---------
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples.
+    asnumpy.ndarray
+        An array of random samples drawn from the standard Cauchy distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.standard_cauchy
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.standard_cauchy(size=3)
+    array([ 0.1, -2.5,  0.8])  # random
     """
     return ndarray(_ap_standard_cauchy(_convert_size(size)))
 
@@ -179,21 +235,30 @@ def weibull(a: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
     Draw samples from a Weibull distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a Weibull distribution with the specified shape parameter `a`.
+
+    Arguments
+    ---------
     a : float
-        Shape parameter of the distribution. Must be non-negative.
-    size : int or tuple of ints
-        Output shape.
+        The shape parameter of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized Weibull distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the Weibull distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.weibull
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.weibull(a=2.0, size=4)
+    array([0.5, 1.2, 0.8, 1.5])  # random
     """
     return ndarray(_ap_weibull(a, _convert_size(size)))
 
@@ -202,23 +267,33 @@ def binomial(n: int, p: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
     Draw samples from a binomial distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a binomial distribution.
+    This distribution models the number of successes in `n` independent trials, where each trial has a probability `p` of success.
+
+    Arguments
+    ---------
     n : int
-        Parameter of the distribution, >= 0.
+        The number of trials. Must be non-negative.
     p : float
-        Parameter of the distribution, >= 0 and <=1.
-    size : int or tuple of ints
-        Output shape.
+        The probability of success for each trial. Must be in the interval [0, 1].
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized binomial distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the binomial distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.binomial
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.binomial(n=10, p=0.5, size=5)
+    array([5, 6, 4, 5, 7])  # random
     """
     return ndarray(_ap_binomial(n, p, _convert_size(size)))
 
@@ -227,44 +302,64 @@ def exponential(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
     Draw samples from an exponential distribution.
 
-    Parameters
-    ----------
+    Generates random samples from an exponential distribution.
+    The distribution is characterized by the `scale` parameter, which is the inverse of the rate parameter lambda.
+
+    Arguments
+    ---------
     scale : float
-        The scale parameter, \beta = 1/\lambda. Must be non-negative.
-    size : int or tuple of ints
-        Output shape.
+        The scale parameter of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized exponential distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the exponential distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.exponential
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.exponential(scale=2.0, size=3)
+    array([1.5, 0.8, 3.2])  # random
     """
     return ndarray(_ap_exponential(scale, _convert_size(size)))
 
 
 def geometric(p: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
-    Draw samples from the geometric distribution.
+    Draw samples from a geometric distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a geometric distribution.
+    This distribution models the number of trials needed to achieve the first success, where each trial has a probability `p` of success.
+
+    Arguments
+    ---------
     p : float
-        The probability of success of an individual trial.
-    size : int or tuple of ints
-        Output shape.
+        The probability of success for an individual trial. Must be in the interval (0, 1].
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized geometric distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the geometric distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.geometric
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.geometric(p=0.3, size=4)
+    array([2, 5, 1, 3])  # random
     """
     return ndarray(_ap_geometric(p, _convert_size(size)))
 
@@ -273,49 +368,68 @@ def gumbel(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray
     """
     Draw samples from a Gumbel distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a Gumbel distribution.
+    This distribution is often used to model the distribution of the maximum (or the minimum) of a number of samples of various distributions.
+
+    Arguments
+    ---------
     loc : float
-        The location of the mode of the distribution.
+        The location parameter, representing the mode of the distribution.
     scale : float
-        The scale parameter of the distribution.
-    size : int or tuple of ints
-        Output shape.
+        The scale parameter of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized Gumbel distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the Gumbel distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.gumbel
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.gumbel(loc=0.0, scale=1.0, size=3)
+    array([0.5, 1.2, -0.3])  # random
     """
     return ndarray(_ap_gumbel(loc, scale, _convert_size(size)))
 
 
 def laplace(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
     """
-    Draw samples from the Laplace or double exponential distribution with
-    specified location (or mean) and scale (decay).
+    Draw samples from a Laplace distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a Laplace distribution, also known as the double exponential distribution.
+    It is specified by its location parameter (mean) and scale parameter (decay).
+
+    Arguments
+    ---------
     loc : float
-        The position, \mu, of the distribution peak.
+        The location parameter, representing the peak of the distribution.
     scale : float
-        The scale, \lambda, of the exponential decay.
-    size : int or tuple of ints
-        Output shape.
+        The scale parameter, representing the exponential decay. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized Laplace distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the Laplace distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.laplace
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.laplace(loc=0.0, scale=1.0, size=3)
+    array([0.2, -1.5, 0.8])  # random
     """
     return ndarray(_ap_laplace(loc, scale, _convert_size(size)))
 
@@ -324,23 +438,33 @@ def logistic(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarr
     """
     Draw samples from a logistic distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a logistic distribution.
+    This distribution is similar to the normal distribution but has heavier tails.
+
+    Arguments
+    ---------
     loc : float
-        Parameter of the distribution.
+        The location parameter of the distribution.
     scale : float
-        Parameter of the distribution.
-    size : int or tuple of ints
-        Output shape.
+        The scale parameter of the distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized logistic distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the logistic distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.logistic
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.logistic(loc=0.0, scale=1.0, size=3)
+    array([0.5, -0.2, 1.1])  # random
     """
     return ndarray(_ap_logistic(loc, scale, _convert_size(size)))
 
@@ -349,22 +473,32 @@ def lognormal(mean: float, sigma: float, size: Union[int, Sequence[int]]) -> nda
     """
     Draw samples from a log-normal distribution.
 
-    Parameters
-    ----------
+    Generates random samples from a log-normal distribution.
+    A variable is log-normally distributed if its natural logarithm is normally distributed.
+
+    Arguments
+    ---------
     mean : float
-        Mean value of the underlying normal distribution.
+        The mean of the underlying normal distribution.
     sigma : float
-        Standard deviation of the underlying normal distribution.
-    size : int or tuple of ints
-        Output shape.
+        The standard deviation of the underlying normal distribution. Must be non-negative.
+    size : int or sequence of ints
+        The shape of the output array.
 
     Returns
     -------
-    out : ndarray
-        Drawn samples from the parameterized log-normal distribution.
+    asnumpy.ndarray
+        An array of random samples drawn from the log-normal distribution.
+        The array may be allocated on the accelerator device.
 
     See Also
     --------
     numpy.random.lognormal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.random.lognormal(mean=0.0, sigma=1.0, size=3)
+    array([1.5, 0.6, 2.3])  # random
     """
     return ndarray(_ap_lognormal(mean, sigma, _convert_size(size)))

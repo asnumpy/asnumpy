@@ -22,15 +22,17 @@ from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
 
 class ndarray(_ndarray):
     """
-    Multi-dimensional array on the device.
+    Represent a multi-dimensional array on the device.
 
-    This class is a wrapper around the internal C++ implementation of the array.
-    It provides a NumPy-compatible interface for array operations on the device.
+    This class encapsulates a C++ backend array and provides a Python interface
+    for performing array operations directly on the accelerator (NPU).
+    Users interact with device-resident arrays through this class, enabling
+    efficient computations while maintaining a NumPy-like interface.
 
     .. note::
-        This class is not intended to be instantiated directly by users.
-        Use array creation functions like :func:`asnumpy.zeros`, :func:`asnumpy.ones`,
-        or :meth:`asnumpy.ndarray.from_numpy` instead.
+        This class is typically not created directly. Use array creation
+        routines such as :func:`asnumpy.zeros`, :func:`asnumpy.ones`, or
+        :meth:`asnumpy.ndarray.from_numpy` to construct arrays on the device.
     """
     @overload
     def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None:
@@ -106,7 +108,7 @@ class ndarray(_ndarray):
 
         This function copies the data from the host (CPU) to the device (NPU).
 
-        Parameters
+        Arguments
         ----------
         host_data : numpy.ndarray
             The input NumPy array.

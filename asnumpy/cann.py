@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ def set_device(device_id: int) -> None:
     """
     Set the current device.
 
-    Parameters
+    Arguments
     ----------
     device_id : int
         ID of the device to set.
@@ -39,7 +39,7 @@ def reset_device(device_id: int) -> None:
     """
     Reset the current device.
 
-    Parameters
+    Arguments
     ----------
     device_id : int
         ID of the device to reset.
@@ -51,7 +51,7 @@ def reset_device_force(device_id: int) -> None:
     """
     Force reset the current device.
 
-    Parameters
+    Arguments
     ----------
     device_id : int
         ID of the device to reset.

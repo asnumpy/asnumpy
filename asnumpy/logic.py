@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,31 +41,45 @@ def all(
     x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> ndarray:
     """
-    Test whether all array elements along a given axis evaluate to True.
+    Test if all elements evaluate to True.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input array.
-    axis : int or tuple of ints, optional
-        Axis or axes along which a logical AND reduction is performed.
-        The default (axis=None) is to perform a logical AND over all
-        the dimensions of the input array. `axis` may be negative, in
-        which case it counts from the last to the first axis.
+    Checks whether all elements in the input array `x` evaluate to True.
+    This check can be performed over the entire array or along a specified axis.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be checked.
+    axis : int or sequence of ints, optional
+        The axis or axes along which to perform the logical AND reduction.
+        If None, the reduction is performed over all dimensions.
+        Negative values count from the last axis.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left
-        in the result as dimensions with size one. With this option,
-        the result will broadcast correctly against the input array.
+        If True, the reduced axes are retained in the result as dimensions with size one.
+        This allows the result to broadcast correctly against the input array.
 
     Returns
     -------
-    out : ndarray
-        A new boolean or array is returned unless `out` is specified,
-        in which case a reference to `out` is returned.
+    asnumpy.ndarray
+        A boolean array or scalar indicating whether all elements evaluate to True.
+        If `axis` is None, a scalar boolean is returned.
+        Otherwise, an array of booleans is returned.
 
     See Also
     --------
     numpy.all
+    asnumpy.any
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.all(ap.array([True, True, True]))
+    array(True)
+    >>> ap.all(ap.array([True, False, True]))
+    array(False)
+    >>> mat = ap.array([[True, False], [True, True]])
+    >>> ap.all(mat, axis=0)
+    array([ True, False])
     """
     if axis is None:
         return ndarray(_ap_all(x))
@@ -76,31 +90,45 @@ def any(
     x: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
 ) -> ndarray:
     """
-    Test whether any array elements along a given axis evaluate to True.
+    Test if any element evaluates to True.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input array.
-    axis : int or tuple of ints, optional
-        Axis or axes along which a logical OR reduction is performed.
-        The default (axis=None) is to perform a logical OR over all
-        the dimensions of the input array. `axis` may be negative, in
-        which case it counts from the last to the first axis.
+    Checks whether any element in the input array `x` evaluates to True.
+    This check can be performed over the entire array or along a specified axis.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be checked.
+    axis : int or sequence of ints, optional
+        The axis or axes along which to perform the logical OR reduction.
+        If None, the reduction is performed over all dimensions.
+        Negative values count from the last axis.
     keepdims : bool, optional
-        If this is set to True, the axes which are reduced are left
-        in the result as dimensions with size one. With this option,
-        the result will broadcast correctly against the input array.
+        If True, the reduced axes are retained in the result as dimensions with size one.
+        This allows the result to broadcast correctly against the input array.
 
     Returns
     -------
-    out : ndarray
-        A new boolean or array is returned unless `out` is specified,
-        in which case a reference to `out` is returned.
+    asnumpy.ndarray
+        A boolean array or scalar indicating whether any element evaluates to True.
+        If `axis` is None, a scalar boolean is returned.
+        Otherwise, an array of booleans is returned.
 
     See Also
     --------
     numpy.any
+    asnumpy.all
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.any(ap.array([False, False, True]))
+    array(True)
+    >>> ap.any(ap.array([False, False, False]))
+    array(False)
+    >>> mat = ap.array([[True, False], [False, False]])
+    >>> ap.any(mat, axis=1)
+    array([ True, False])
     """
     if axis is None:
         return ndarray(_ap_any(x))
@@ -109,215 +137,294 @@ def any(
 
 def isfinite(x: ndarray) -> ndarray:
     """
-    Test element-wise for finiteness (not infinity and not Not a Number).
+    Test for finiteness element-wise.
 
-    The result is returned as a boolean array.
+    Determines whether each element of the input array `x` is finite.
+    An element is considered finite if it is not positive infinity, negative infinity, or NaN (Not a Number).
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values.
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be tested.
 
     Returns
     -------
-    y : ndarray, bool
-        True where ``x`` is not positive infinity, negative infinity,
-        or NaN; false otherwise.
+    asnumpy.ndarray
+        A boolean array with the same shape as `x`.
+        True where the element is finite, False otherwise.
 
     See Also
     --------
-    isinf, isneginf, isposinf, isnan
     numpy.isfinite
+    asnumpy.isinf
+    asnumpy.isneginf
+    asnumpy.isposinf
+    asnumpy.isnan
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.isfinite(ap.array([1, np.inf, -np.inf, np.nan]))
+    array([ True, False, False, False])
     """
     return ndarray(_ap_isfinite(x))
 
 
 def isinf(x: ndarray) -> ndarray:
     """
-    Test element-wise for positive or negative infinity.
+    Test for infinity element-wise.
 
-    Returns a boolean array of the same shape as `x`, true where ``x == +/-inf``,
-    otherwise false.
+    Determines whether each element of the input array `x` is positive or negative infinity.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input values
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be tested.
 
     Returns
     -------
-    y : ndarray, bool
-        For scalar input, the result is a new boolean with value True if
-        the input is positive or negative infinity; otherwise the value is
-        False.
-
-        For array input, the result is a boolean array with the same shape
-        as the input and the values are True where the corresponding
-        element of the input is positive or negative infinity; otherwise
-        the values are False.
+    asnumpy.ndarray
+        A boolean array with the same shape as `x`.
+        True where the element is positive or negative infinity, False otherwise.
 
     See Also
     --------
-    isneginf, isposinf, isnan, isfinite
     numpy.isinf
+    asnumpy.isneginf
+    asnumpy.isposinf
+    asnumpy.isnan
+    asnumpy.isfinite
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.isinf(ap.array([1, np.inf, -np.inf, np.nan]))
+    array([False,  True,  True, False])
     """
     return ndarray(_ap_isinf(x))
 
 
 def isneginf(x: ndarray) -> ndarray:
     """
-    Test element-wise for negative infinity, return result as bool array.
+    Test for negative infinity element-wise.
 
-    Parameters
-    ----------
-    x : ndarray
-        The input array.
+    Determines whether each element of the input array `x` is negative infinity.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be tested.
 
     Returns
     -------
-    y : ndarray, bool
-        A boolean array with the same dimensions as the input.
-        If second argument is not supplied then a numpy boolean array is
-        returned with values True where the corresponding element of the
-        input is negative infinity and values False where the element of
-        the input is not negative infinity.
-
-        If a second argument is supplied the result is stored there. If the
-        type of that array is a numeric type the result is represented as
-        zeros and ones, if the type is boolean then as False and True.
-        The return value `out` is then a reference to that array.
+    asnumpy.ndarray
+        A boolean array with the same shape as `x`.
+        True where the element is negative infinity, False otherwise.
 
     See Also
     --------
-    isinf, isposinf, isnan, isfinite
     numpy.isneginf
+    asnumpy.isinf
+    asnumpy.isposinf
+    asnumpy.isnan
+    asnumpy.isfinite
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.isneginf(ap.array([1, np.inf, -np.inf, np.nan]))
+    array([False, False,  True, False])
     """
     return ndarray(_ap_isneginf(x))
 
 
 def isposinf(x: ndarray) -> ndarray:
     """
-    Test element-wise for positive infinity, return result as bool array.
+    Test for positive infinity element-wise.
 
-    Parameters
-    ----------
-    x : ndarray
-        The input array.
+    Determines whether each element of the input array `x` is positive infinity.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array to be tested.
 
     Returns
     -------
-    y : ndarray, bool
-        A boolean array with the same dimensions as the input.
-        If second argument is not supplied then a boolean array is returned
-        with values True where the corresponding element of the input is
-        positive infinity and values False where the element of the input is
-        not positive infinity.
-
-        If a second argument is supplied the result is stored there. If the
-        type of that array is a numeric type the result is represented as
-        zeros and ones, if the type is boolean then as False and True.
-        The return value `out` is then a reference to that array.
+    asnumpy.ndarray
+        A boolean array with the same shape as `x`.
+        True where the element is positive infinity, False otherwise.
 
     See Also
     --------
-    isinf, isneginf, isnan, isfinite
     numpy.isposinf
+    asnumpy.isinf
+    asnumpy.isneginf
+    asnumpy.isnan
+    asnumpy.isfinite
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> import numpy as np
+    >>> ap.isposinf(ap.array([1, np.inf, -np.inf, np.nan]))
+    array([False,  True, False, False])
     """
     return ndarray(_ap_isposinf(x))
 
 
 def logical_and(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Compute the truth value of x1 AND x2 element-wise.
+    Compute the logical AND of two arrays element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
+    Performs the logical AND operation on the elements of `x1` and `x2`.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        The first input array.
+    x2 : asnumpy.ndarray
+        The second input array.
 
     Returns
     -------
-    y : ndarray, bool
-        Boolean result of the logical AND operation applied to the elements
-        of `x1` and `x2`; the shape is determined by broadcasting.
+    asnumpy.ndarray
+        A boolean array containing the result of the logical AND operation.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    logical_or, logical_not, logical_xor
-    bitwise_and
     numpy.logical_and
+    asnumpy.logical_or
+    asnumpy.logical_not
+    asnumpy.logical_xor
+    asnumpy.bitwise_and
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.logical_and(True, False)
+    array(False)
+    >>> ap.logical_and([True, False], [True, True])
+    array([ True, False])
     """
     return ndarray(_ap_logical_and(x1, x2))
 
 
 def logical_or(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Compute the truth value of x1 OR x2 element-wise.
+    Compute the logical OR of two arrays element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
+    Performs the logical OR operation on the elements of `x1` and `x2`.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        The first input array.
+    x2 : asnumpy.ndarray
+        The second input array.
 
     Returns
     -------
-    y : ndarray, bool
-        Boolean result of the logical OR operation applied to the elements
-        of `x1` and `x2`; the shape is determined by broadcasting.
+    asnumpy.ndarray
+        A boolean array containing the result of the logical OR operation.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    logical_and, logical_not, logical_xor
-    bitwise_or
     numpy.logical_or
+    asnumpy.logical_and
+    asnumpy.logical_not
+    asnumpy.logical_xor
+    asnumpy.bitwise_or
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.logical_or(True, False)
+    array(True)
+    >>> ap.logical_or([True, False], [False, False])
+    array([ True, False])
     """
     return ndarray(_ap_logical_or(x1, x2))
 
 
 def logical_not(x: ndarray) -> ndarray:
     """
-    Compute the truth value of NOT x element-wise.
+    Compute the logical NOT of an array element-wise.
 
-    Parameters
-    ----------
-    x : ndarray
-        Input array.
+    Performs the logical NOT operation on the elements of `x`.
+
+    Arguments
+    ---------
+    x : asnumpy.ndarray
+        The input array.
 
     Returns
     -------
-    y : ndarray, bool
-        Boolean result with the same shape as `x` of the NOT operation
-        on elements of `x`.
+    asnumpy.ndarray
+        A boolean array containing the result of the logical NOT operation.
+        The shape is the same as `x`.
 
     See Also
     --------
-    logical_and, logical_or, logical_xor
-    bitwise_not
     numpy.logical_not
+    asnumpy.logical_and
+    asnumpy.logical_or
+    asnumpy.logical_xor
+    asnumpy.bitwise_not
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.logical_not(True)
+    array(False)
+    >>> ap.logical_not([True, False])
+    array([False,  True])
     """
     return ndarray(_ap_logical_not(x))
 
 
 def logical_xor(x1: ndarray, x2: ndarray) -> ndarray:
     """
-    Compute the truth value of x1 XOR x2, element-wise.
+    Compute the logical XOR of two arrays element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
+    Performs the logical XOR (exclusive OR) operation on the elements of `x1` and `x2`.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : asnumpy.ndarray
+        The first input array.
+    x2 : asnumpy.ndarray
+        The second input array.
 
     Returns
     -------
-    y : ndarray, bool
-        Boolean result of the logical XOR operation applied to the elements
-        of `x1` and `x2`; the shape is determined by broadcasting.
+    asnumpy.ndarray
+        A boolean array containing the result of the logical XOR operation.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    logical_and, logical_or, logical_not
-    bitwise_xor
     numpy.logical_xor
+    asnumpy.logical_and
+    asnumpy.logical_or
+    asnumpy.logical_not
+    asnumpy.bitwise_xor
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.logical_xor(True, False)
+    array(True)
+    >>> ap.logical_xor([True, True, False, False], [True, False, True, False])
+    array([False,  True,  True, False])
     """
     return ndarray(_ap_logical_xor(x1, x2))
 
@@ -328,24 +435,41 @@ def greater(
     """
     Return the truth value of (x1 > x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
+    Compares two arrays element-wise and returns True where `x1` is greater than `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
 
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
 
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    greater_equal, less, less_equal, equal, not_equal
     numpy.greater
+    asnumpy.greater_equal
+    asnumpy.less
+    asnumpy.less_equal
+    asnumpy.equal
+    asnumpy.not_equal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.greater([4, 2], [2, 2])
+    array([ True, False])
+    >>> ap.greater([1, 2], [3, 1])
+    array([False,  True])
     """
     return ndarray(_ap_greater(x1, x2, _convert_dtype(dtype)))
 
@@ -356,24 +480,39 @@ def greater_equal(
     """
     Return the truth value of (x1 >= x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
+    Compares two arrays element-wise and returns True where `x1` is greater than or equal to `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
 
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
 
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    greater, less, less_equal, equal, not_equal
     numpy.greater_equal
+    asnumpy.greater
+    asnumpy.less
+    asnumpy.less_equal
+    asnumpy.equal
+    asnumpy.not_equal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.greater_equal([4, 2, 1], [2, 2, 2])
+    array([ True,  True, False])
     """
     return ndarray(_ap_greater_equal(x1, x2, _convert_dtype(dtype)))
 
@@ -384,24 +523,39 @@ def less(
     """
     Return the truth value of (x1 < x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
-    
+    Compares two arrays element-wise and returns True where `x1` is less than `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
-    
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
+
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    greater, greater_equal, less_equal, equal, not_equal
     numpy.less
+    asnumpy.greater
+    asnumpy.greater_equal
+    asnumpy.less_equal
+    asnumpy.equal
+    asnumpy.not_equal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.less([1, 2], [2, 2])
+    array([ True, False])
     """
     return ndarray(_ap_less(x1, x2, _convert_dtype(dtype)))
 
@@ -412,24 +566,39 @@ def less_equal(
     """
     Return the truth value of (x1 <= x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
-    
+    Compares two arrays element-wise and returns True where `x1` is less than or equal to `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
-    
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
+
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    greater, greater_equal, less, equal, not_equal
     numpy.less_equal
+    asnumpy.greater
+    asnumpy.greater_equal
+    asnumpy.less
+    asnumpy.equal
+    asnumpy.not_equal
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.less_equal([4, 2, 1], [2, 2, 2])
+    array([False,  True,  True])
     """
     return ndarray(_ap_less_equal(x1, x2, _convert_dtype(dtype)))
 
@@ -440,24 +609,39 @@ def equal(
     """
     Return (x1 == x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
-    
+    Compares two arrays element-wise and returns True where `x1` is equal to `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
 
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    not_equal, greater_equal, less_equal, greater, less
     numpy.equal
+    asnumpy.not_equal
+    asnumpy.greater_equal
+    asnumpy.less_equal
+    asnumpy.greater
+    asnumpy.less
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.equal([1, 2], [1, 3])
+    array([ True, False])
     """
     return ndarray(_ap_equal(x1, x2, _convert_dtype(dtype)))
 
@@ -468,23 +652,38 @@ def not_equal(
     """
     Return (x1 != x2) element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        Input arrays. `x1` and `x2` must be broadcastable to the same shape.
-    
+    Compares two arrays element-wise and returns True where `x1` is not equal to `x2`, and False otherwise.
+    The input arrays must be broadcastable to a common shape.
+
+    Arguments
+    ---------
+    x1 : array_like
+        First input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x2.
+    x2 : array_like
+        Second input. Can be an asnumpy.ndarray, Python scalar, or any object broadcastable to the shape of x1.
     dtype : data-type, optional
-        Desired data type for the output array. If not specified, defaults to boolean.
-        
+        The desired data type for the output array.
+        If not specified, the output is a boolean array.
+
     Returns
     -------
-    out : ndarray, bool
-        Output array, element-wise comparison of `x1` and `x2`.
-        Typically of type bool, unless ``dtype=object`` is passed.
+    asnumpy.ndarray
+        An array containing the result of the element-wise comparison.
+        The shape is determined by broadcasting `x1` and `x2`.
 
     See Also
     --------
-    equal, greater_equal, less_equal, greater, less
     numpy.not_equal
+    asnumpy.equal
+    asnumpy.greater_equal
+    asnumpy.less_equal
+    asnumpy.greater
+    asnumpy.less
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.not_equal([1, 2], [1, 3])
+    array([False,  True])
     """
     return ndarray(_ap_not_equal(x1, x2, _convert_dtype(dtype)))
