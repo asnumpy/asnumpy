@@ -65,25 +65,37 @@
     2. 在asnumpy/asnumpy/math.py内添加add as _ap_add和如下详细声明：
     ```python
     def add(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None) -> ndarray:
+        x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    ) -> ndarray:
     """
-    Add arguments element-wise.
+    Calculate the sum of two inputs element-wise.
 
-    Parameters
-    ----------
-    x1, x2 : ndarray
-        The arrays to be added.
-    dtype : dtype, optional
-        The type of the output array.
+    This function adds `x1` and `x2` element by element.
+
+    Arguments
+    ---------
+    x1 : array-like or scalar
+        First input array or scalar.
+    x2 : array-like or scalar
+        Second input array or scalar.
+    dtype : data-type, optional
+        Desired data type for the output array.
 
     Returns
     -------
-    y : ndarray
-        The sum of `x1` and `x2`, element-wise.
+    asnumpy.ndarray
+        The sum of `x1` and `x2`.
 
     See Also
     --------
     numpy.add
+    asnumpy.subtract
+
+    Examples
+    --------
+    >>> import asnumpy as ap
+    >>> ap.add(ap.array([10, 20]), ap.array([5, 5]))
+    array([15, 25])
     """
     return ndarray(_ap_add(x1, x2, _convert_dtype(dtype)))
     ```
