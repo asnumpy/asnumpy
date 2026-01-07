@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,20 +24,50 @@ from .lib.asnumpy_core.cann import (
 
 
 def set_device(device_id: int) -> None:
+    """
+    Set the current device.
+
+    Arguments
+    ----------
+    device_id : int
+        ID of the device to set.
+    """
     return _ap_set_device(device_id)
 
 
 def reset_device(device_id: int) -> None:
+    """
+    Reset the current device.
+
+    Arguments
+    ----------
+    device_id : int
+        ID of the device to reset.
+    """
     return _ap_reset_device(device_id)
 
 
 def reset_device_force(device_id: int) -> None:
+    """
+    Force reset the current device.
+
+    Arguments
+    ----------
+    device_id : int
+        ID of the device to reset.
+    """
     return _ap_reset_device_force(device_id)
 
 
 def init() -> None:
+    """
+    Initialize the CANN backend.
+    """
     return _ap_init()
 
 
 def finalize() -> None:
+    """
+    Finalize the CANN backend.
+    """
     return _ap_finalize()
