@@ -27,7 +27,8 @@ Implements:
 """
 
 import numpy as _np
-from .lib import ndarray as NPUArray
+from .lib.asnumpy_core import ndarray as NPUArray
+
 
 def _to_numpy(x):
     """
@@ -43,7 +44,7 @@ def _to_numpy(x):
 def save(file, arr, allow_pickle=False):
     """
     Save a single array to a .npy file.
-    Parameters
+    Arguments
     ----------
     file : str or file-like
         File path or file object.
@@ -51,6 +52,10 @@ def save(file, arr, allow_pickle=False):
         Array to save.
     allow_pickle : bool, default False
         Whether to allow saving object arrays using pickle.
+    
+    See Also
+    --------
+    numpy.save
     """
     host = _to_numpy(arr)
     return _np.save(file, host, allow_pickle=allow_pickle)
@@ -61,6 +66,17 @@ def savez(file, *args, **kwargs):
     Save multiple arrays into an .npz archive (uncompressed).
     Positional args are saved as arr_0, arr_1, ...
     Keyword args are saved with their given names.
+
+    Arguments
+    ----------
+    file : file or str
+        File or filename to save.
+    *args : Arrays with implicit keys.
+    **kwargs : Arrays with explicit keys.
+
+    See Also
+    --------
+    numpy.savez
     """
     conv_args = [_to_numpy(a) for a in args]
     conv_kwargs = {k: _to_numpy(v) for k, v in kwargs.items()}
@@ -70,6 +86,18 @@ def savez(file, *args, **kwargs):
 def savez_compressed(file, *args, **kwargs):
     """
     Save multiple arrays into a compressed .npz archive.
+
+    Arguments
+    ----------
+    file : file or str
+        File or filename to save.
+    *args : Arrays with implicit keys.
+    **kwargs : Arrays with explicit keys.
+    
+    See Also
+    --------
+    asnumpy.savez
+    numpy.savez_compressed
     """
     conv_args = [_to_numpy(a) for a in args]
     conv_kwargs = {k: _to_numpy(v) for k, v in kwargs.items()}
@@ -86,11 +114,14 @@ class _AsnpNpz:
     """
 
     def __init__(self, npz):
-        self._npz = npz       # numpy.lib.npyio.NpzFile object
-        self._cache = {}      # dict to store already converted NPUArray
+        self._npz = npz  # numpy.lib.npyio.NpzFile object
+        self._cache = {}  # dict to store already converted NPUArray
 
-    def __enter__(self): return self
-    def __exit__(self, exc_type, exc_val, exc_tb): self.close()
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def close(self):
         self._npz.close()
@@ -108,7 +139,7 @@ class _AsnpNpz:
 
     def __getitem__(self, key):
         if key not in self._cache:
-            host = self._npz[key]                  # lazy unzip → numpy.ndarray
+            host = self._npz[key]  # lazy unzip → numpy.ndarray
             self._cache[key] = NPUArray.from_numpy(host)  # upload to NPU
         return self._cache[key]
 
@@ -117,7 +148,7 @@ def load(file, mmap_mode=None, allow_pickle=False, **kwargs):
     """
     Load array(s) from .npy or .npz file.
 
-    Parameters
+    Arguments
     ----------
     file : str or file-like
         File path.
@@ -127,6 +158,10 @@ def load(file, mmap_mode=None, allow_pickle=False, **kwargs):
         Allow loading pickled object arrays.
     kwargs : dict
         Other keyword args passed to numpy.load.
+    
+    See Also
+    --------
+    numpy.load    
     """
     obj = _np.load(file, mmap_mode=mmap_mode, allow_pickle=allow_pickle, **kwargs)
 
