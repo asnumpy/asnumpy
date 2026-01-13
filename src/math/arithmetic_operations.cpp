@@ -15,6 +15,7 @@
  *****************************************************************************/
 
 
+#include "asnumpy/memory/MemoryPool.hpp"
 #include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
@@ -72,17 +73,14 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         aclDestroyScalar(alpha_scalar);
         throw std::runtime_error(msg);
     }
-
+    if (workspaceSize == 0) {
+        workspaceSize = 1024; 
+    }
+    // [修改点 1] 申请 Workspace：找内存池借，而不是找系统要
     void* workspaceAddr = nullptr;
     if (workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            const char* detail = aclGetRecentErrMsg();
-            std::string msg = "[arithmetic_operations.cpp](Add) aclrtMalloc error = " + std::to_string(error);
-            if (detail && strlen(detail) > 0) msg += " - " + std::string(detail);
-            aclDestroyScalar(alpha_scalar);
-            throw std::runtime_error(msg);
-        }
+        // 注意：malloc 内部失败会直接 throw 异常，所以不需要像 aclrtMalloc 那样检查返回值
+        workspaceAddr = asnumpy::memory::MemoryPool::instance().malloc(workspaceSize);
     }
 
     error = aclnnAdd(workspaceAddr, workspaceSize, executor, nullptr);
@@ -90,7 +88,7 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         const char* detail = aclGetRecentErrMsg();
         std::string msg = "[arithmetic_operations.cpp](Add) aclnnAdd error = " + std::to_string(error);
         if (detail && strlen(detail) > 0) msg += " - " + std::string(detail);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr) asnumpy::memory::MemoryPool::instance().free(workspaceAddr);
         aclDestroyScalar(alpha_scalar);
         throw std::runtime_error(msg);
     }
@@ -100,12 +98,14 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         const char* detail = aclGetRecentErrMsg();
         std::string msg = "[arithmetic_operations.cpp](Add) aclrtSynchronizeDevice error = " + std::to_string(error);
         if (detail && strlen(detail) > 0) msg += " - " + std::string(detail);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr) asnumpy::memory::MemoryPool::instance().free(workspaceAddr);
         aclDestroyScalar(alpha_scalar);
         throw std::runtime_error(msg);
     }
 
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    if (workspaceAddr) {
+        asnumpy::memory::MemoryPool::instance().free(workspaceAddr);
+    }
     aclDestroyScalar(alpha_scalar);
 
     return out;

@@ -17,6 +17,7 @@
 
 #include <asnumpy/utils/npu_array.hpp>
 #include <cstddef>
+#include <asnumpy/memory/MemoryPool.hpp>
 
 
 /**
@@ -36,12 +37,8 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, py::dtype dtype) {
     this->aclDtype = GetACLDataType(dtype);
     tensorSize = GetShapeSize(shape);
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-    this->devicePtr = nullptr;
-    auto error = aclrtMalloc(&this->devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
-    if(error != ACL_SUCCESS) {
-        std::cout << "error = " << error << std::endl;
-        throw std::runtime_error("NPUArray malloc error!");
-    }
+    // [修改] 使用内存池申请
+    this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
     this->strides.resize(this->shape.size());
     auto currentStride = 1;
     for(int64_t i = this->shape.size() - 1; i >= 0; i--) {
@@ -73,12 +70,10 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, aclDataType acl_type) {
     // 为了兼容性，创建一个空的 py::dtype 对象
     this->dtype = GetPyDtype(acl_type);
     
-    void *devicePtr = nullptr;
-    auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
-    if(error != ACL_SUCCESS) {
-        std::cout << "error = " << error << std::endl;
-        throw std::runtime_error("NPUArray malloc error!");
-    }
+    // [修改] 1. 向池申请并赋值给成员变量（防止内存泄漏）
+    this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+    // [修改] 2. 定义局部变量别名，为了兼容下面 aclCreateTensor 的调用
+    void *devicePtr = this->devicePtr;
     this->strides.resize(this->shape.size());
     auto currentStride = 1;
     for(int64_t i = this->shape.size() - 1; i >= 0; i--) {
@@ -105,14 +100,12 @@ NPUArray::NPUArray(const NPUArray& other) {
     this->tensorSize = other.tensorSize;
     this->strides = other.strides;
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-    void *devicePtr = nullptr;
-    auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error("NPUArray copy constructor malloc error!");
-    }
+    // [修改] 使用内存池
+    this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+    void *devicePtr = this->devicePtr;
     this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), devicePtr);
     void* srcPtr = nullptr;
-    error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
+    auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr); // [修改] 加上 auto 重新定义变量
     if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
     error = aclrtMemcpy(devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
@@ -165,14 +158,12 @@ NPUArray& NPUArray::operator=(const NPUArray& other) {
 
 
         auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-        void *devicePtr = nullptr;
-        auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) {
-            throw std::runtime_error("NPUArray copy assignment malloc error!");
-        }
+        // [修改] 使用内存池
+        this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+        void *devicePtr = this->devicePtr;
         this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), devicePtr);
         void* srcPtr = nullptr;
-        error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
+        auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr); // [修改] 加上 auto
         if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
         error = aclrtMemcpy(devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
@@ -221,8 +212,8 @@ NPUArray::~NPUArray() {
         this->tensorPtr = nullptr;
     }
     if (this->devicePtr) {
-        // fmt::println("析构函数：aclrtFree");
-        auto error = aclrtFree(this->devicePtr);
+        // [修改] 归还给内存池
+        asnumpy::memory::MemoryPool::instance().free(this->devicePtr);
         this->devicePtr = nullptr;
     }
 }

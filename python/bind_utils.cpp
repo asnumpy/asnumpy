@@ -28,6 +28,8 @@ void bind_utils(pybind11::module_& utils) {
         .def_static("from_numpy", &NPUArray::FromNumpy, py::arg("host_data"))
         .def_property_readonly("shape", [](const NPUArray& self) { return self.shape; })
         .def_property_readonly("dtype", [](const NPUArray& self) { return self.dtype; })
+        // ===【新增】暴露设备指针地址 ===
+        .def_property_readonly("device_ptr", [](const NPUArray& self) { return reinterpret_cast<uintptr_t>(self.device_address()); })
         .def_property_readonly("aclDtype", [](const NPUArray& self) { return static_cast<int>(self.aclDtype); });
     utils.def("broadcast_shape", &GetBroadcastShape, py::arg("a"), py::arg("b"));
 }
