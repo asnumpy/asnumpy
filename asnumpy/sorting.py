@@ -14,12 +14,13 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union, Sequence
-from .lib.asnumpy_core.sorting import sort as _ap_sort
+from typing import Optional
+from .lib.asnumpy_core.sorting import sort as _sort
 from .utils import ndarray
+from ._types import ArrayLike
 
 
-def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
+def sort(a: ArrayLike, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
     """
     Arrange array elements in ascending order.
 
@@ -47,7 +48,7 @@ def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
 
     Notes
     -----
-    AsNumPy does not currently implement `kind` or `order` parameters from NumPy. 
+    AsNumPy does not currently implement `kind` or `order` parameters from NumPy.
     Use the `stable` boolean to control sorting stability.
 
     Examples
@@ -61,4 +62,4 @@ def sort(a: ndarray, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
     array([[2, 1],
            [3, 4]])
     """
-    return ndarray(_ap_sort(a, axis, stable))
+    return ndarray(_sort(a, axis, stable))

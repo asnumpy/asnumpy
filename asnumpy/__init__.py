@@ -147,6 +147,15 @@ from .sorting import sort
 
 from .statistics import mean
 
+from ._types import (
+    ArrayLike,
+    DTypeLike,
+    ShapeLike,
+    AxisLike,
+    AxisOptional,
+    ScalarLike,
+)
+
 from .nn import softmax
 
 from .utils import broadcast_shape, ndarray
@@ -294,6 +303,13 @@ __all__ = [
     "sort",
     # .statistics
     "mean",
+    # types
+    "ArrayLike",
+    "DTypeLike",
+    "ShapeLike",
+    "AxisLike",
+    "AxisOptional",
+    "ScalarLike",
     # .nn
     "softmax",
     # .utils
