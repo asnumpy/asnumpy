@@ -2332,6 +2332,7 @@ def arcsinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     return ndarray(_arcsinh(x, _convert_dtype(dtype)))
 
+
 def arccosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the inverse hyperbolic cosine of each element.
