@@ -25,7 +25,9 @@ import numpy
 import pytest
 from asnumpy import testing
 
+
 # ========== 辅助函数 ==========
+
 
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
@@ -34,7 +36,9 @@ def _create_array(xp, data, dtype):
         return np_arr
     return xp.ndarray.from_numpy(np_arr)
 
+
 # ========== 1. 实部提取 (Real) ==========
+
 
 @testing.for_dtypes([numpy.complex64])
 @testing.numpy_asnumpy_allclose()
@@ -43,6 +47,7 @@ def test_real_complex64_basic(xp, dtype):
     data = [1.0 + 2.0j, -3.5 + 4.5j, 0.0 + 0.0j]
     a = _create_array(xp, data, dtype)
     return xp.real(a)
+
 
 @pytest.mark.xfail(reason="Mismatch: complex128 output is hardcoded to float32 (ACL_FLOAT) instead of float64.")
 @testing.for_dtypes([numpy.complex128])
@@ -56,9 +61,10 @@ def test_real_complex128_precision_xfail(xp, dtype):
     # 构造一个需要 float64 精度才能精确表达的数值
     data = [1.23456789012345 + 0.5j]
     a = _create_array(xp, data, dtype)
-    
+
     # 当 xp 为 asnumpy 时，由于后端硬编码，返回的将是截断后的 float32
     return xp.real(a)
+
 
 @pytest.mark.xfail(reason="Bug: real() on non-complex dtypes might be unsupported in current asnumpy implementation")
 @testing.for_dtypes([numpy.float32, numpy.int32])

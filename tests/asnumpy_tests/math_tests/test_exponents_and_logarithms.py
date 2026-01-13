@@ -24,17 +24,11 @@
 import numpy
 import pytest
 from asnumpy import testing
+from tests.asnumpy_tests.math_tests.conftest import _create_array
 
-# ========== 辅助函数 ==========
-
-def _create_array(xp, data, dtype):
-    """辅助函数：创建数组"""
-    np_arr = numpy.array(data, dtype=dtype)
-    if xp is numpy:
-        return np_arr
-    return xp.ndarray.from_numpy(np_arr)
 
 # ========== 1. 指数运算 (Exp, Expm1) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -42,6 +36,7 @@ def test_exp_basic(xp, dtype):
     data = [-1.0, 0.0, 1.0, 2.0]
     a = _create_array(xp, data, dtype)
     return xp.exp(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -51,7 +46,9 @@ def test_expm1_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.expm1(a)
 
+
 # ========== 2. 对数运算 (Log, Log10, Log1p) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -60,12 +57,14 @@ def test_log_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.log(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_log10_basic(xp, dtype):
     data = [0.1, 1.0, 10.0, 100.0]
     a = _create_array(xp, data, dtype)
     return xp.log10(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -75,7 +74,9 @@ def test_log1p_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.log1p(a)
 
+
 # ========== 3. 限制性测试 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
@@ -84,6 +85,7 @@ def test_exp_float16_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.exp(a)
 
+
 @pytest.mark.xfail(reason="Mismatch: AsNumpy outputs float32 for integer inputs (Numpy is float64)")
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_allclose()
@@ -91,6 +93,7 @@ def test_exp_int_mismatch_xfail(xp, dtype):
     data = [1, 2]
     a = _create_array(xp, data, dtype)
     return xp.exp(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()

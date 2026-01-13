@@ -29,7 +29,9 @@ import numpy
 import pytest
 from asnumpy import testing
 
+
 # ========== 辅助函数 ==========
+
 
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
@@ -38,7 +40,9 @@ def _create_array(xp, data, dtype):
         return np_arr
     return xp.ndarray.from_numpy(np_arr)
 
+
 # ========== 1. 基础兼容性测试 (Around) ==========
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64, numpy.int32, numpy.int64])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -48,13 +52,15 @@ def test_around_basic(xp, dtype):
     """
     data = [0.4, 0.5, 0.6, 1.5, 2.5]
     a = _create_array(xp, data, dtype)
-    
+
     if xp is numpy:
         return xp.around(a, decimals=0)
     # 适配当前 AsNumpy 强制要求 decimals 的接口
     return xp.around(a, 0)
 
+
 # ========== 2. 存在 Dtype 行为差异的测试 (Rint, Floor) ==========
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose()
@@ -64,12 +70,14 @@ def test_rint_float_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.rint(a)
 
+
 @pytest.mark.xfail(reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy")
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_rint_int_mismatch_xfail(xp, dtype):
     """记录：rint 对整数类型的输出 dtype 与 numpy 不一致"""
     a = _create_array(xp, [1, 2], dtype)
     return xp.rint(a)
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64, numpy.int32])
 @testing.numpy_asnumpy_allclose()
@@ -79,13 +87,16 @@ def test_floor_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.floor(a)
 
+
 @pytest.mark.xfail(reason="Bug: aclnnFloor does not support float16 and Complex types")
 @testing.for_dtypes([numpy.float16, numpy.complex64])
 def test_floor_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.5], dtype)
     return xp.floor(a)
 
+
 # ========== 3. 严格限制 Dtype 的算子 (Fix, Ceil, Trunc) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -95,11 +106,13 @@ def test_fix_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.fix(a)
 
+
 @pytest.mark.xfail(reason="Bug: aclnnFix only supports float32")
 @testing.for_dtypes([numpy.float64, numpy.int32])
 def test_fix_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.5], dtype)
     return xp.fix(a)
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose()
@@ -109,11 +122,13 @@ def test_ceil_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.ceil(a)
 
+
 @pytest.mark.xfail(reason="Bug: aclnnCeil only supports float32/64")
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_ceil_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1], dtype)
     return xp.ceil(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -122,6 +137,7 @@ def test_trunc_basic(xp, dtype):
     data = [-1.7, 0.2, 1.5]
     a = _create_array(xp, data, dtype)
     return xp.trunc(a)
+
 
 @pytest.mark.xfail(reason="Bug: aclnnTrunc only supports float32")
 @testing.for_dtypes([numpy.float64, numpy.int32])

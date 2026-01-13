@@ -25,7 +25,9 @@ import numpy
 import pytest
 from asnumpy import testing
 
+
 # ========== 辅助函数 ==========
+
 
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
@@ -34,7 +36,9 @@ def _create_array(xp, data, dtype):
         return np_arr
     return xp.ndarray.from_numpy(np_arr)
 
+
 # ========== 1. 基础公约数/公倍数 (Int32, Int64) ==========
+
 
 @testing.for_dtypes([numpy.int32, numpy.int64])
 @testing.numpy_asnumpy_array_equal()
@@ -44,6 +48,7 @@ def test_gcd_basic(xp, dtype):
     x2 = _create_array(xp, [18, 24, 16], dtype)
     return xp.gcd(x1, x2)
 
+
 @testing.for_dtypes([numpy.int32, numpy.int64])
 @testing.numpy_asnumpy_array_equal()
 def test_lcm_basic(xp, dtype):
@@ -52,7 +57,9 @@ def test_lcm_basic(xp, dtype):
     x2 = _create_array(xp, [18, 24, 16], dtype)
     return xp.lcm(x1, x2)
 
+
 # ========== 2. 针对低精度整数的 Bug 记录 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: aclnnGcd/Lcm throws RuntimeError 161002 (get workspace size failed) for Int8/Int16")
 @testing.for_dtypes([numpy.int8, numpy.int16])
@@ -66,7 +73,9 @@ def test_rational_low_precision_int_xfail(xp, dtype):
     x2 = _create_array(xp, [6, 12], dtype)
     return xp.gcd(x1, x2)
 
+
 # ========== 3. 其他硬件与行为限制 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: aclnnGcd/Lcm does not support Float types")
 @testing.for_dtypes([numpy.float32, numpy.float16])
@@ -74,6 +83,7 @@ def test_rational_float_xfail(xp, dtype):
     x1 = _create_array(xp, [12.0], dtype)
     x2 = _create_array(xp, [18.0], dtype)
     return xp.gcd(x1, x2)
+
 
 @pytest.mark.xfail(reason="Behavior Mismatch: Handling of negative inputs in GCD between NPU and NumPy")
 @testing.for_dtypes([numpy.int32])
@@ -85,6 +95,7 @@ def test_gcd_negative_behavior_xfail(xp, dtype):
     x1 = _create_array(xp, [-12], dtype)
     x2 = _create_array(xp, [18], dtype)
     return xp.gcd(x1, x2)
+
 
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()

@@ -22,17 +22,11 @@
 import numpy
 import pytest
 from asnumpy import testing
+from tests.asnumpy_tests.math_tests.conftest import _create_array
 
-# ========== 辅助函数 ==========
-
-def _create_array(xp, data, dtype):
-    """辅助函数：创建数组"""
-    np_arr = numpy.array(data, dtype=dtype)
-    if xp is numpy:
-        return np_arr
-    return xp.ndarray.from_numpy(np_arr)
 
 # ========== 1. 求和 (Sum) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -42,13 +36,16 @@ def test_sum_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.sum(a, axis=0, keepdims=False)
 
+
 @pytest.mark.xfail(reason="Bug: sum does not support axis=None in asnumpy/aclnn")
 @testing.for_dtypes([numpy.float32])
 def test_sum_axis_none_xfail(xp, dtype):
     a = _create_array(xp, [1.0, 2.0], dtype)
     return xp.sum(a, axis=None, keepdims=False)
 
+
 # ========== 2. 乘积 (Prod) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -58,13 +55,16 @@ def test_prod_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.prod(a, axis=0, keepdims=False)
 
+
 @pytest.mark.xfail(reason="Bug: prod does not support axis=None in asnumpy/aclnn")
 @testing.for_dtypes([numpy.float32])
 def test_prod_axis_none_xfail(xp, dtype):
     a = _create_array(xp, [1.0, 2.0], dtype)
     return xp.prod(a, axis=None, keepdims=False)
 
+
 # ========== 3. 归约 Dtype 限制 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Mismatch: asnumpy sum/prod keeps original dtype for int8/16/32, whereas numpy promotes")
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
@@ -72,13 +72,16 @@ def test_sum_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
     return xp.sum(a, axis=0, keepdims=False)
 
+
 @pytest.mark.xfail(reason="Bug: aclnnSum/Prod unsupported dtypes (float16, uint16/32/64)")
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.uint64])
 def test_sum_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1, 1], dtype)
     return xp.sum(a, axis=0, keepdims=False)
 
+
 # ========== 4. NaN 系列归约 (Nansum, Nanprod) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -87,6 +90,7 @@ def test_nansum_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.nansum(a, axis=0, keepdims=False)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_nanprod_basic(xp, dtype):
@@ -94,13 +98,16 @@ def test_nanprod_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.nanprod(a, axis=0, keepdims=False)
 
+
 @pytest.mark.xfail(reason="Bug: nansum/nanprod unsupported dtypes (float16/64, uints, complex)")
 @testing.for_dtypes([numpy.float16, numpy.float64, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_nan_reduction_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.nansum(a, axis=0, keepdims=False)
 
+
 # ========== 5. 累积运算 (Cumsum, Cumprod) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -110,6 +117,7 @@ def test_cumsum_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.cumsum(a, axis=0)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_cumprod_basic(xp, dtype):
@@ -118,11 +126,13 @@ def test_cumprod_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.cumprod(a, axis=0)
 
+
 @pytest.mark.xfail(reason="Mismatch: cumulative ops keep int8/16/32 dtypes, numpy promotes")
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
 def test_cumsum_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
     return xp.cumsum(a, axis=0)
+
 
 @pytest.mark.xfail(reason="Bug: cumprod/cumsum unsupported dtypes (float16, uints, complex)")
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.complex64])
@@ -130,7 +140,9 @@ def test_cumulative_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.cumprod(a, axis=0)
 
+
 # ========== 6. NaN 系列累积 (Nancumsum, Nancumprod) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -139,12 +151,14 @@ def test_nancumsum_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.nancumsum(a, axis=0)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_nancumprod_basic(xp, dtype):
     data = [1.0, numpy.nan, 3.0]
     a = _create_array(xp, data, dtype)
     return xp.nancumprod(a, axis=0)
+
 
 @pytest.mark.xfail(reason="Bug: nancumsum/nancumprod unsupported float64/uints/complex")
 @testing.for_dtypes([numpy.float64, numpy.uint16, numpy.uint32, numpy.complex64])

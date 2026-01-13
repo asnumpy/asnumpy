@@ -26,7 +26,9 @@ import numpy
 import pytest
 from asnumpy import testing
 
+
 # ========== 辅助函数 ==========
+
 
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
@@ -35,7 +37,9 @@ def _create_array(xp, data, dtype):
         return np_arr
     return xp.ndarray.from_numpy(np_arr)
 
+
 # ========== 1. Sinc 正常链路 (Float32/64) ==========
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -45,6 +49,7 @@ def test_sinc_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.sinc(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_sinc_zero(xp, dtype):
@@ -53,7 +58,9 @@ def test_sinc_zero(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.sinc(a)
 
+
 # ========== 2. 异常与 Bug 记录 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: C++ core missing mapping from float16 to aclDataType (Unsupported py::dtype)")
 @testing.for_dtypes([numpy.float16])
@@ -63,6 +70,7 @@ def test_sinc_float16_mapping_xfail(xp, dtype):
     """
     a = _create_array(xp, [0.5], dtype)
     return xp.sinc(a)
+
 
 @pytest.mark.xfail(reason="Bug: aclnnSinc does not support INT32 output (RuntimeError 161002)")
 @testing.for_dtypes([numpy.int32])

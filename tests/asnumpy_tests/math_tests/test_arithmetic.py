@@ -24,17 +24,11 @@
 import numpy
 import pytest
 from asnumpy import testing
+from tests.asnumpy_tests.math_tests.conftest import _create_array
 
-# ========== 辅助函数 ==========
-
-def _create_array(xp, data, dtype):
-    """辅助函数：创建数组"""
-    np_arr = numpy.array(data, dtype=dtype)
-    if xp is numpy:
-        return np_arr
-    return xp.ndarray.from_numpy(np_arr)
 
 # ========== 1. 基础四则运算 (Add, Sub, Mul, Div) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -43,12 +37,14 @@ def test_add_basic(xp, dtype):
     b = _create_array(xp, [4, 5, 6], dtype)
     return xp.add(a, b)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_subtract_basic(xp, dtype):
     a = _create_array(xp, [10, 20, 30], dtype)
     b = _create_array(xp, [1, 2, 3], dtype)
     return xp.subtract(a, b)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -57,6 +53,7 @@ def test_multiply_basic(xp, dtype):
     b = _create_array(xp, [5, 6, 7], dtype)
     return xp.multiply(a, b)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_divide_basic(xp, dtype):
@@ -64,7 +61,9 @@ def test_divide_basic(xp, dtype):
     b = _create_array(xp, [2, 4, 5], dtype)
     return xp.divide(a, b)
 
+
 # ========== 2. 整除与取余 (Floor_divide, Remainder) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
@@ -73,6 +72,7 @@ def test_floor_divide_basic(xp, dtype):
     b = _create_array(xp, [3, 2, 3], dtype)
     return xp.floor_divide(a, b)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_remainder_basic(xp, dtype):
@@ -80,7 +80,9 @@ def test_remainder_basic(xp, dtype):
     b = _create_array(xp, [3, 2, 3], dtype)
     return xp.remainder(a, b)
 
+
 # ========== 3. 一元运算 (Negative, Absolute, Reciprocal) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -88,13 +90,16 @@ def test_negative(xp, dtype):
     a = _create_array(xp, [-1, 0, 1], dtype)
     return xp.negative(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_absolute(xp, dtype):
     a = _create_array(xp, [-1.5, 0, 2.5], dtype)
     return xp.absolute(a)
 
+
 # ========== 4. 广播与特殊 Dtype 限制 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
@@ -103,6 +108,7 @@ def test_arithmetic_float16_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     b = _create_array(xp, [2.0], dtype)
     return xp.add(a, b)
+
 
 @pytest.mark.xfail(reason="Mismatch: AsNumpy outputs float32 for integer inputs (Numpy is float64)")
 @testing.for_dtypes([numpy.int32])
@@ -113,6 +119,7 @@ def test_arithmetic_int_mismatch_xfail(xp, dtype):
     b = _create_array(xp, [3, 4], dtype)
     return xp.add(a, b)
 
+
 @pytest.mark.xfail(reason="Bug: aclnnRemainder does not support BOOL type")
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
@@ -120,6 +127,7 @@ def test_remainder_bool_xfail(xp, dtype):
     a = _create_array(xp, [True, False], dtype)
     b = _create_array(xp, [True, True], dtype)
     return xp.remainder(a, b)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()

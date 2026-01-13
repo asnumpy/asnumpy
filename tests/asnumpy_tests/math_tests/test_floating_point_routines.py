@@ -23,7 +23,9 @@ import numpy
 import pytest
 from asnumpy import testing
 
+
 # ========== 辅助函数 ==========
+
 
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
@@ -32,7 +34,9 @@ def _create_array(xp, data, dtype):
         return np_arr
     return xp.ndarray.from_numpy(np_arr)
 
+
 # ========== 1. 状态检查 (isinf, isfinite) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -42,6 +46,7 @@ def test_isinf(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite(xp, dtype):
@@ -50,7 +55,9 @@ def test_isfinite(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.isfinite(a)
 
+
 # ========== 2. 符号处理与负零 Bug (signbit, copysign) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -59,6 +66,7 @@ def test_signbit_basic(xp, dtype):
     data = [-1.0, 1.0, -10.5, 10.5]
     a = _create_array(xp, data, dtype)
     return xp.signbit(a)
+
 
 @pytest.mark.xfail(reason="Bug: signbit(-0.0) returns False, violating IEEE 754 and mismatching NumPy")
 @testing.for_dtypes([numpy.float32])
@@ -72,6 +80,7 @@ def test_signbit_negative_zero_xfail(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.signbit(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_copysign_basic(xp, dtype):
@@ -80,7 +89,9 @@ def test_copysign_basic(xp, dtype):
     x2 = _create_array(xp, [-1, 1, -1], dtype)
     return xp.copysign(x1, x2)
 
+
 # ========== 3. 其他浮点 Routines (ldexp, fmod) ==========
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
@@ -90,6 +101,7 @@ def test_ldexp_basic(xp, dtype):
     x2 = _create_array(xp, [1, 2], numpy.int32)
     return xp.ldexp(x1, x2)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_fmod_basic(xp, dtype):
@@ -98,13 +110,16 @@ def test_fmod_basic(xp, dtype):
     x2 = _create_array(xp, [3, 3], dtype)
     return xp.fmod(x1, x2)
 
+
 # ========== 4. Dtype 与硬件限制 (XFAIL) ==========
+
 
 @pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
 def test_float_routines_float16_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.isinf(a)
+
 
 @pytest.mark.xfail(reason="Mismatch: isnan/isinf on Int dtypes might unsupported or return different types")
 @testing.for_dtypes([numpy.int32])
