@@ -14,18 +14,18 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union, Sequence
-import numpy as np
-from .lib.asnumpy_core.statistics import mean as _ap_mean
+from typing import Union
+from .lib.asnumpy_core.statistics import mean as _mean
 from .utils import ndarray, _convert_dtype
+from ._types import ArrayLike, AxisLike, DTypeLike
 
 
 def mean(
-    a: ndarray,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    a: ArrayLike,
+    axis: AxisLike = None,
     keepdims: bool = False,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     if axis is None:
-        return _ap_mean(a)
-    return ndarray(_ap_mean(a, axis, keepdims, _convert_dtype(dtype)))
+        return _mean(a)
+    return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))

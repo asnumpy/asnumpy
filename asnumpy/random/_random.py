@@ -14,27 +14,27 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union, Sequence
 from ..lib.asnumpy_core.random import (
-    binomial as _ap_binomial,
-    exponential as _ap_exponential,
-    geometric as _ap_geometric,
-    gumbel as _ap_gumbel,
-    laplace as _ap_laplace,
-    lognormal as _ap_lognormal,
-    logistic as _ap_logistic,
-    normal as _ap_normal,
-    pareto as _ap_pareto,
-    rayleigh as _ap_rayleigh,
-    standard_cauchy as _ap_standard_cauchy,
-    standard_normal as _ap_standard_normal,
-    uniform as _ap_uniform,
-    weibull as _ap_weibull,
+    binomial as _binomial,
+    exponential as _exponential,
+    geometric as _geometric,
+    gumbel as _gumbel,
+    laplace as _laplace,
+    lognormal as _lognormal,
+    logistic as _logistic,
+    normal as _normal,
+    pareto as _pareto,
+    rayleigh as _rayleigh,
+    standard_cauchy as _standard_cauchy,
+    standard_normal as _standard_normal,
+    uniform as _uniform,
+    weibull as _weibull,
 )
 from ..utils import ndarray, _convert_size
+from .._types import ShapeLike
 
 
-def pareto(a: float, size: Union[int, Sequence[int]]) -> ndarray:
+def pareto(a: float, size: ShapeLike) -> ndarray:
     """
     Draw random samples from a Pareto II (Lomax) distribution.
 
@@ -64,10 +64,10 @@ def pareto(a: float, size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.pareto(a=3.0, size=5)
     array([0.123, 0.456, 0.789, 0.012, 0.345])  # random
     """
-    return ndarray(_ap_pareto(a, _convert_size(size)))
+    return ndarray(_pareto(a, _convert_size(size)))
 
 
-def rayleigh(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def rayleigh(scale: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a Rayleigh distribution.
 
@@ -98,14 +98,14 @@ def rayleigh(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
     array([[1.5, 2.1],
            [0.8, 3.2]])  # random
     """
-    return ndarray(_ap_rayleigh(scale, _convert_size(size)))
+    return ndarray(_rayleigh(scale, _convert_size(size)))
 
 
-def normal(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def normal(loc: float, scale: float, size: ShapeLike) -> ndarray:
     """
     Draw random samples from a normal (Gaussian) distribution.
 
-    Generates random samples from a normal distribution characterized by 
+    Generates random samples from a normal distribution characterized by
     its mean (`loc`) and standard deviation (`scale`).
 
     Arguments
@@ -133,10 +133,10 @@ def normal(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray
     >>> ap.random.normal(loc=0.0, scale=1.0, size=3)
     array([-0.5,  1.2, -0.1])  # random
     """
-    return ndarray(_ap_normal(loc, scale, _convert_size(size)))
+    return ndarray(_normal(loc, scale, _convert_size(size)))
 
 
-def uniform(low: float, high: float, size: Union[int, Sequence[int]]) -> ndarray:
+def uniform(low: float, high: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a uniform distribution.
 
@@ -168,10 +168,10 @@ def uniform(low: float, high: float, size: Union[int, Sequence[int]]) -> ndarray
     >>> ap.random.uniform(low=0.0, high=10.0, size=4)
     array([2.5, 8.1, 0.3, 5.9])  # random
     """
-    return ndarray(_ap_uniform(low, high, _convert_size(size)))
+    return ndarray(_uniform(low, high, _convert_size(size)))
 
 
-def standard_normal(size: Union[int, Sequence[int]]) -> ndarray:
+def standard_normal(size: ShapeLike) -> ndarray:
     """
     Draw samples from a standard Normal distribution.
 
@@ -199,10 +199,10 @@ def standard_normal(size: Union[int, Sequence[int]]) -> ndarray:
     array([[ 0.5, -1.2],
            [ 0.1,  0.8]])  # random
     """
-    return ndarray(_ap_standard_normal(_convert_size(size)))
+    return ndarray(_standard_normal(_convert_size(size)))
 
 
-def standard_cauchy(size: Union[int, Sequence[int]]) -> ndarray:
+def standard_cauchy(size: ShapeLike) -> ndarray:
     """
     Draw samples from a standard Cauchy distribution.
 
@@ -229,10 +229,10 @@ def standard_cauchy(size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.standard_cauchy(size=3)
     array([ 0.1, -2.5,  0.8])  # random
     """
-    return ndarray(_ap_standard_cauchy(_convert_size(size)))
+    return ndarray(_standard_cauchy(_convert_size(size)))
 
 
-def weibull(a: float, size: Union[int, Sequence[int]]) -> ndarray:
+def weibull(a: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a Weibull distribution.
 
@@ -261,10 +261,10 @@ def weibull(a: float, size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.weibull(a=2.0, size=4)
     array([0.5, 1.2, 0.8, 1.5])  # random
     """
-    return ndarray(_ap_weibull(a, _convert_size(size)))
+    return ndarray(_weibull(a, _convert_size(size)))
 
 
-def binomial(n: int, p: float, size: Union[int, Sequence[int]]) -> ndarray:
+def binomial(n: int, p: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a binomial distribution.
 
@@ -297,10 +297,10 @@ def binomial(n: int, p: float, size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.binomial(n=10, p=0.5, size=5)
     array([5, 6, 4, 5, 7])  # random
     """
-    return ndarray(_ap_binomial(n, p, _convert_size(size)))
+    return ndarray(_binomial(n, p, _convert_size(size)))
 
 
-def exponential(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def exponential(scale: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from an exponential distribution.
 
@@ -330,10 +330,10 @@ def exponential(scale: float, size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.exponential(scale=2.0, size=3)
     array([1.5, 0.8, 3.2])  # random
     """
-    return ndarray(_ap_exponential(scale, _convert_size(size)))
+    return ndarray(_exponential(scale, _convert_size(size)))
 
 
-def geometric(p: float, size: Union[int, Sequence[int]]) -> ndarray:
+def geometric(p: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a geometric distribution.
 
@@ -364,10 +364,10 @@ def geometric(p: float, size: Union[int, Sequence[int]]) -> ndarray:
     >>> ap.random.geometric(p=0.3, size=4)
     array([2, 5, 1, 3])  # random
     """
-    return ndarray(_ap_geometric(p, _convert_size(size)))
+    return ndarray(_geometric(p, _convert_size(size)))
 
 
-def gumbel(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def gumbel(loc: float, scale: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a Gumbel distribution.
 
@@ -400,10 +400,10 @@ def gumbel(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray
     >>> ap.random.gumbel(loc=0.0, scale=1.0, size=3)
     array([0.5, 1.2, -0.3])  # random
     """
-    return ndarray(_ap_gumbel(loc, scale, _convert_size(size)))
+    return ndarray(_gumbel(loc, scale, _convert_size(size)))
 
 
-def laplace(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def laplace(loc: float, scale: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a Laplace distribution.
 
@@ -435,10 +435,10 @@ def laplace(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarra
     >>> ap.random.laplace(loc=0.0, scale=1.0, size=3)
     array([0.2, -1.5, 0.8])  # random
     """
-    return ndarray(_ap_laplace(loc, scale, _convert_size(size)))
+    return ndarray(_laplace(loc, scale, _convert_size(size)))
 
 
-def logistic(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarray:
+def logistic(loc: float, scale: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a logistic distribution.
 
@@ -470,10 +470,10 @@ def logistic(loc: float, scale: float, size: Union[int, Sequence[int]]) -> ndarr
     >>> ap.random.logistic(loc=0.0, scale=1.0, size=3)
     array([0.5, -0.2, 1.1])  # random
     """
-    return ndarray(_ap_logistic(loc, scale, _convert_size(size)))
+    return ndarray(_logistic(loc, scale, _convert_size(size)))
 
 
-def lognormal(mean: float, sigma: float, size: Union[int, Sequence[int]]) -> ndarray:
+def lognormal(mean: float, sigma: float, size: ShapeLike) -> ndarray:
     """
     Draw samples from a log-normal distribution.
 
@@ -505,4 +505,4 @@ def lognormal(mean: float, sigma: float, size: Union[int, Sequence[int]]) -> nda
     >>> ap.random.lognormal(mean=0.0, sigma=1.0, size=3)
     array([1.5, 0.6, 2.3])  # random
     """
-    return ndarray(_ap_lognormal(mean, sigma, _convert_size(size)))
+    return ndarray(_lognormal(mean, sigma, _convert_size(size)))
