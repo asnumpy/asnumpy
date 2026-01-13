@@ -15,17 +15,18 @@
 # *****************************************************************************
 
 from ..lib.asnumpy_core import (
-    dot as _ap_dot,
-    inner as _ap_inner,
-    outer as _ap_outer,
-    vdot as _ap_vdot,
-    matmul as _ap_matmul,
-    einsum as _ap_einsum,
+    dot as _dot,
+    inner as _inner,
+    outer as _outer,
+    vdot as _vdot,
+    matmul as _matmul,
+    einsum as _einsum,
 )
 from ..utils import ndarray
+from .._types import ArrayLike
 
 
-def dot(a: ndarray, b: ndarray) -> ndarray:
+def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
     """
     Calculate the dot product of two arrays.
 
@@ -70,14 +71,14 @@ def dot(a: ndarray, b: ndarray) -> ndarray:
     array([[19, 22],
            [43, 50]])
     """
-    return ndarray(_ap_dot(a, b))
+    return ndarray(_dot(a, b))
 
 
-def inner(a: ndarray, b: ndarray) -> ndarray:
+def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
     """
     Compute the inner product of two arrays.
 
-    Calculates the inner product by summing the product of elements 
+    Calculates the inner product by summing the product of elements
     over the last dimensions of the input arrays `a` and `b`.
     For 1-D arrays, this is equivalent to the vector dot product.
     For higher dimensions, it computes the sum product over the last axis of both arrays.
@@ -113,10 +114,10 @@ def inner(a: ndarray, b: ndarray) -> ndarray:
     >>> ap.inner(a, b)
     array([14, 32])
     """
-    return ndarray(_ap_inner(a, b))
+    return ndarray(_inner(a, b))
 
 
-def outer(a: ndarray, b: ndarray) -> ndarray:
+def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
     """
     Compute the outer product of two vectors.
 
@@ -153,10 +154,10 @@ def outer(a: ndarray, b: ndarray) -> ndarray:
            [ 8, 10],
            [12, 15]])
     """
-    return ndarray(_ap_outer(a, b))
+    return ndarray(_outer(a, b))
 
 
-def vdot(a: ndarray, b: ndarray) -> ndarray:
+def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
     """
     Compute the dot product of two vectors, conjugating the first.
 
@@ -193,15 +194,15 @@ def vdot(a: ndarray, b: ndarray) -> ndarray:
     >>> ap.vdot(b, a)
     (17-3j)
     """
-    return ndarray(_ap_vdot(a, b))
+    return ndarray(_vdot(a, b))
 
 
-def matmul(x1: ndarray, x2: ndarray) -> ndarray:
+def matmul(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Compute the matrix product of two arrays.
 
     This function implements the matrix product of two arrays.
-    It supports standard matrix multiplication for 2-D arrays, 
+    It supports standard matrix multiplication for 2-D arrays,
     vector-matrix multiplication, and broadcasting for higher-dimensional arrays.
     Unlike `dot`, it does not support scalar multiplication.
 
@@ -238,15 +239,15 @@ def matmul(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.matmul(mat1, vec)
     array([ 5, 11])
     """
-    return ndarray(_ap_matmul(x1, x2))
+    return ndarray(_matmul(x1, x2))
 
 
-def einsum(subscripts: str, *operands: ndarray) -> ndarray:
+def einsum(subscripts: str, *operands: ArrayLike) -> ndarray:
     """
     Evaluate the Einstein summation convention on the operands.
 
     Performs multi-dimensional linear algebraic array operations using the Einstein summation convention.
-    This allows for a concise representation of many common operations 
+    This allows for a concise representation of many common operations
     like dot products, traces, and tensor contractions.
 
     Arguments
@@ -284,7 +285,7 @@ def einsum(subscripts: str, *operands: ndarray) -> ndarray:
     >>> ap.einsum('ij,j', a, b)  # Matrix-vector multiplication
     array([ 5, 14, 23])
     """
-    return ndarray(_ap_einsum(subscripts, *operands))
+    return ndarray(_einsum(subscripts, *operands))
 
 
 _direct_all_ = [
