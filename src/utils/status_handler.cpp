@@ -55,3 +55,7 @@ void CheckMallocAclnnStatus(aclnnStatus status){
 void CheckSynchronizeDeviceAclnnStatus(aclnnStatus status){
     CheckAclnnStatus(status, "Failed to synchronize device.");
 }
+
+void CheckExecuteAclnnStatus(aclnnStatus status, const std::string& op_name) {
+    CheckAclnnStatus(status, op_name + " execute failed");
+}

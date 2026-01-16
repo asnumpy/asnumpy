@@ -53,3 +53,5 @@ void CheckGetWorkspaceSizeAclnnStatus(aclnnStatus status);
 void CheckMallocAclnnStatus(aclnnStatus status);
 // aclrtSynchronizeDevice
 void CheckSynchronizeDeviceAclnnStatus(aclnnStatus status);
+// aclnnXXX
+void CheckExecuteAclnnStatus(aclnnStatus status, const std::string& op_name);
