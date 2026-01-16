@@ -18,6 +18,8 @@
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/math/trigonometric_functions.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -43,35 +45,22 @@
 namespace asnumpy {
     NPUArray Sin(const NPUArray& x) {
         aclDataType aclType = ACL_DOUBLE;
-        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+            x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
-        auto out = NPUArray(x.shape, aclType);
-
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor = nullptr;
-        auto error = aclnnSinGetWorkspaceSize(
-            x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                           // input array
+            dtype,                                       // output dtype
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnSinGetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnSin(workspace, workspaceSize, executor, nullptr);
+            },
+            "Sin"                                        // operator name for logging
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
-
-        void* workspaceAddr = nullptr;
-        if (workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-
-        error = aclnnSin(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnSin error");
-
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-
-        if (workspaceAddr) {
-            aclrtFree(workspaceAddr);
-        }
-
-        return out;
     }
 
 
