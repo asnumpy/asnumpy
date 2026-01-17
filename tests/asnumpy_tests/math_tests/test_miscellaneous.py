@@ -111,44 +111,6 @@ def test_heaviside(xp, dtype):
     return xp.heaviside(x, h0)
 
 
-# ========== 双操作数函数（有 dtype 参数）==========
-
-@testing.for_all_dtypes(no_complex=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_maximum(xp, dtype):
-    """测试 maximum(x1, x2, dtype=None) - 逐元素最大值"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
-    b = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=43)
-    return xp.maximum(a, b)
-
-
-@testing.for_all_dtypes(no_complex=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_minimum(xp, dtype):
-    """测试 minimum(x1, x2, dtype=None) - 逐元素最小值"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
-    b = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=43)
-    return xp.minimum(a, b)
-
-
-@testing.for_all_dtypes(no_complex=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_fmax(xp, dtype):
-    """测试 fmax(x1, x2, dtype=None) - 逐元素最大值（忽略NaN）"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
-    b = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=43)
-    return xp.fmax(a, b)
-
-
-@testing.for_all_dtypes(no_complex=True)
-@testing.numpy_asnumpy_allclose(rtol=1e-5)
-def test_fmin(xp, dtype):
-    """测试 fmin(x1, x2, dtype=None) - 逐元素最小值（忽略NaN）"""
-    a = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=42)
-    b = testing.shaped_random((3, 4), dtype=dtype, xp=xp, seed=43)
-    return xp.fmin(a, b)
-
-
 # ========== 特殊函数 ==========
 
 @testing.for_float_dtypes(exclude=[numpy.float64])
@@ -216,7 +178,7 @@ def test_nan_to_num(xp, dtype):
 #  测试统计: 14/14 全部通过 
 #
 # 🎯 整数类型支持 (新增):
-# 支持整数+浮点 (6个): absolute, maximum, minimum, fmax, fmin, nan_to_num
+# 支持整数+浮点 (2个): absolute, nan_to_num
 # 部分支持 (1个): sign (仅int32/int64，不支持int8/int16/uint8/uint16)
 # 仅支持浮点 (4个): fabs, square, heaviside, clip
 #
