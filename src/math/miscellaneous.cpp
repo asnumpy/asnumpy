@@ -19,6 +19,8 @@
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_ops_macros.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -155,45 +157,15 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max) {
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
     auto error = aclnnClampTensorGetWorkspaceSize(a.tensorPtr, a_min.tensorPtr, a_max.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](clip) aclnnClampTensorGetWorkspaceSize error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        throw std::runtime_error(error_msg);
-    }
-    if (workspaceSize < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(error);
 
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = "[miscellaneous.cpp](clip) aclrtMalloc error = " + std::to_string(error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-            throw std::runtime_error(error_msg);
-        }
-    }
+    AclWorkspace workspace(workspaceSize);
 
-    error = aclnnClampTensor(workspaceAddr, workspaceSize, executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](clip) aclnnClampTensor error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
+    error = aclnnClampTensor(workspace.get(), workspaceSize, executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Clip");
 
     error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](clip) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        throw std::runtime_error(error_msg);
-    }
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    CheckSynchronizeDeviceAclnnStatus(error);
     return result;
 }
 
@@ -206,22 +178,14 @@ NPUArray Clip(const NPUArray& a, float a_min, float a_max) {
     aclOpExecutor* executor;
     auto error = aclnnClampGetWorkspaceSize(a.tensorPtr, amin_scalar, amax_scalar, result.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    if (workspaceSize < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize));
-    }
 
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
+    AclWorkspace workspace(workspaceSize);
 
-    error = aclnnClamp(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnClamp error");
+    error = aclnnClamp(workspace.get(), workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "Clip");
 
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
-    if (workspaceAddr) aclrtFree(workspaceAddr);
     return result;
 }
 
@@ -233,45 +197,27 @@ NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max) {
     aclOpExecutor* executor1;
     auto error1 = aclnnClampMinGetWorkspaceSize(a.tensorPtr, amin_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     CheckGetWorkspaceSizeAclnnStatus(error1);
-    if (workspaceSize1 < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize1));
-    }
 
-    void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0ULL) {
-        error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error1);
-    }
+    AclWorkspace workspace1(workspaceSize1);
 
-    error1 = aclnnClampMin(workspaceAddr1, workspaceSize1, executor1, nullptr);
+    error1 = aclnnClampMin(workspace1.get(), workspaceSize1, executor1, nullptr);
     CheckAclnnStatus(error1, "aclnnClampMin error");
     error1 = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error1);
-    if (workspaceAddr1) aclrtFree(workspaceAddr1);
 
-    auto broadcast = GetBroadcastShape(temp, a_max);
-    auto result = NPUArray(broadcast, ACL_FLOAT);
-    uint64_t workspaceSize2 = 0;
-    aclOpExecutor* executor2;
-    auto error2 = aclnnClampMaxTensorGetWorkspaceSize(temp.tensorPtr, a_max.tensorPtr, result.tensorPtr, &workspaceSize2, &executor2);
-    CheckGetWorkspaceSizeAclnnStatus(error2);
-    if (workspaceSize2 < 0) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize2));
-    }
-
-    void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
-        error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error2);
-    }
-
-    error2 = aclnnClampMaxTensor(workspaceAddr2, workspaceSize2, executor2, nullptr);
-    CheckAclnnStatus(error2, "aclnnClampMaxTensor error");
-
-    error2 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error2);
-    if (workspaceAddr2) aclrtFree(workspaceAddr2);
-    return result;
+    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+    return ExecuteBinaryOp(
+        temp,
+        a_max,                                           
+        dtype,                                     
+        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnClampMaxTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnClampMaxTensor(workspace, workspaceSize, executor, nullptr);
+        },
+        "Clip"
+    );
 }
 
 NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
@@ -282,68 +228,47 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
     aclOpExecutor* executor1;
     auto error1 = aclnnClampMaxGetWorkspaceSize(a.tensorPtr, amax_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     CheckGetWorkspaceSizeAclnnStatus(error1);
-    if (workspaceSize1 < 0ULL) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize1));
-    }
 
-    void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0ULL) {
-        error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error1);
-    }
+    AclWorkspace workspace1(workspaceSize1);
 
-    error1 = aclnnClampMax(workspaceAddr1, workspaceSize1, executor1, nullptr);
+    error1 = aclnnClampMax(workspace1.get(), workspaceSize1, executor1, nullptr);
     CheckAclnnStatus(error1, "aclnnClampMax error");
     error1 = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error1);
-    if (workspaceAddr1) aclrtFree(workspaceAddr1);
 
-    auto broadcast = GetBroadcastShape(a_min, temp);
-    auto result = NPUArray(broadcast, ACL_FLOAT);
-    uint64_t workspaceSize2 = 0;
-    aclOpExecutor* executor2;
-    auto error2 = aclnnClampMinTensorGetWorkspaceSize(temp.tensorPtr, a_min.tensorPtr, result.tensorPtr, &workspaceSize2, &executor2);
-    CheckGetWorkspaceSizeAclnnStatus(error2);
-    if (workspaceSize2 < 0) {
-        throw std::runtime_error("[miscellaneous.cpp](clip) Invalid workspaceSize: " + std::to_string(workspaceSize2));
-    }
-
-    void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
-        error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error2);
-    }
-
-    error2 = aclnnClampMinTensor(workspaceAddr2, workspaceSize2, executor2, nullptr);
-    CheckAclnnStatus(error2, "aclnnClampMinTensor error");
-
-    error2 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error2);
-    if (workspaceAddr2) aclrtFree(workspaceAddr2);
-    return result;
+    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+    return ExecuteBinaryOp(
+        temp,
+        a_min,                                           
+        dtype,                                     
+        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnClampMinTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnClampMinTensor(workspace, workspaceSize, executor, nullptr);
+        },
+        "Clip"
+    );
 }
 
 NPUArray Sqrt(const NPUArray& x) {
-    auto shape = x.shape;
     aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+        x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
         aclType = x.aclDtype;
     }
-    auto result = NPUArray(shape, aclType);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor* executor;
-    auto error = aclnnSqrtGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnSqrt(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnSqrt error");
-    error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
-    return result;
+    py::dtype dtype = NPUArray::GetPyDtype(aclType);
+    return ExecuteUnaryOp(
+        x,                                           
+        dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnSqrtGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnSqrt(workspace, workspaceSize, executor, nullptr);
+        },
+        "Sqrt"
+    );
 }
 
 NPUArray Square(const NPUArray& x) {
@@ -362,52 +287,20 @@ NPUArray Square(const NPUArray& x) {
     aclOpExecutor* executor = nullptr;
     auto error = aclnnPowTensorScalarGetWorkspaceSize(
         x.tensorPtr, scalar, result.tensorPtr, &workspaceSize, &executor);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](square) aclnnPowTensorScalarGetWorkspaceSize error = "
-                                + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        aclDestroyScalar(scalar);
-        throw std::runtime_error(error_msg);
-    }
+    CheckGetWorkspaceSizeAclnnStatus(error);
 
     // 分配 workspace
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = "[miscellaneous.cpp](square) aclrtMalloc error = " + std::to_string(error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-            aclDestroyScalar(scalar);
-            throw std::runtime_error(error_msg);
-        }
-    }
+    AclWorkspace workspace(workspaceSize);
 
     // 执行计算
-    error = aclnnPowTensorScalar(workspaceAddr, workspaceSize, executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](square) aclnnPowTensorScalar error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        aclDestroyScalar(scalar);
-        throw std::runtime_error(error_msg);
-    }
+    error = aclnnPowTensorScalar(workspace.get(), workspaceSize, executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Square");
 
     // 同步
     error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = "[miscellaneous.cpp](square) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        aclDestroyScalar(scalar);
-        throw std::runtime_error(error_msg);
-    }
+    CheckSynchronizeDeviceAclnnStatus(error);
 
     // 释放资源
-    if (workspaceAddr) aclrtFree(workspaceAddr);
     aclDestroyScalar(scalar);
 
     return result;
@@ -451,25 +344,14 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
         &executor
     );
     CheckGetWorkspaceSizeAclnnStatus(error);
-    if (workspaceSize < 0ULL) {
-        throw std::runtime_error("[floating_point_routines.cpp](nan_to_num) Invalid workspaceSize: " + std::to_string(workspaceSize));
-    }
 
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
+    AclWorkspace workspace(workspaceSize);
 
-    error = aclnnNanToNum(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnNanToNum error");
+    error = aclnnNanToNum(workspace.get(), workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "Nan_to_num error");
 
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
-
-    if (workspaceAddr) {
-        aclrtFree(workspaceAddr);
-    }
 
     return out;
 }
@@ -488,22 +370,17 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  */
  NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    auto out = NPUArray(x.shape, out_dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnReluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnRelu(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnRelu error");
-    error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
-    if (workspaceAddr) aclrtFree(workspaceAddr);
-    return out;
+    return ExecuteUnaryOp(
+        x,                                           
+        out_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnReluGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnRelu(workspace, workspaceSize, executor, nullptr);
+        },
+        "Relu"
+    );
 }
 
 
@@ -523,21 +400,16 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  */
  NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    auto out = NPUArray(x.shape, out_dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnGeluGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnGelu(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnGelu error");
-    error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
-    if (workspaceAddr) aclrtFree(workspaceAddr);
-    return out;
+    return ExecuteUnaryOp(
+        x,                                           
+        out_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnGeluGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnGelu(workspace, workspaceSize, executor, nullptr);
+        },
+        "Gelu"
+    );
 }
 }

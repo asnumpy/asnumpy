@@ -16,6 +16,8 @@
 
 
 #include <asnumpy/math/hyperbolic_functions.hpp>
+#include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -34,7 +36,6 @@ namespace asnumpy {
 
 NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
@@ -49,54 +50,22 @@ NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnSinhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnSinhGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnSinh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Sinh"                                       
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Sinh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Sinh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行双曲正弦计算
-    error = aclnnSinh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Sinh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 
 NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
@@ -111,54 +80,22 @@ NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnCoshGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnCoshGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnCosh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Cosh"
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Cosh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Cosh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行双曲余弦计算
-    error = aclnnCosh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Cosh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 
 NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
@@ -173,54 +110,22 @@ NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnTanhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnTanhGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnTanh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Tanh"
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Tanh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Tanh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行双曲正切计算
-    error = aclnnTanh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Tanh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 
 NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
@@ -235,54 +140,22 @@ NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnAsinhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnAsinhGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnAsinh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Arcsinh"
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arcsinh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Arcsinh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行反双曲正弦计算
-    error = aclnnAsinh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arcsinh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 
 NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
@@ -297,48 +170,17 @@ NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnAcoshGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnAcoshGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnAcosh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Arccosh"
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arccosh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Arccosh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行反双曲余弦计算
-    error = aclnnAcosh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arccosh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 
@@ -358,48 +200,17 @@ NPUArray Arctanh(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    NPUArray result(x.shape, out_py_dtype);
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnAtanhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    return ExecuteUnaryOp(
+        x,                                           
+        out_py_dtype,                                      
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnAtanhGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnAtanh(workspace, workspaceSize, executor, nullptr);
+        },
+        "Arctanh"
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arctanh: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Arctanh: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行反双曲正切计算
-    error = aclnnAtanh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Arctanh: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 }

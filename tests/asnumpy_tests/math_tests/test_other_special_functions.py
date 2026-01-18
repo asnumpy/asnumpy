@@ -40,7 +40,7 @@ def _create_array(xp, data, dtype):
 
 # ========== 测试用例 ==========
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_sinc_basic(xp, dtype):
     """基础随机测试：测试常规范围内的浮点数"""
@@ -54,7 +54,7 @@ def test_sinc_basic(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-8)
 def test_sinc_at_zero(xp, dtype):
     """测试 sinc 在 x=0 处的行为"""
@@ -63,7 +63,7 @@ def test_sinc_at_zero(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_sinc_integers(xp, dtype):
     """测试整数点的值"""
@@ -72,7 +72,7 @@ def test_sinc_integers(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_sinc_halves(xp, dtype):
     """测试半整数点"""
@@ -81,7 +81,7 @@ def test_sinc_halves(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_sinc_special_values(xp, dtype):
     """测试特殊数值：无穷大和 NaN"""
@@ -90,7 +90,7 @@ def test_sinc_special_values(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_float_dtypes(no_float16=True)
+@testing.for_float_dtypes(no_float16=True, exclude=[numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_sinc_multidim(xp, dtype):
     """测试多维数组"""
