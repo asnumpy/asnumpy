@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    <img src="docs/images/AsNumpy%20Logo.png" alt="AsNumpy Logo" width="72" style="vertical-align: middle; margin-right: 10px;" />
+    <img src="docs/images/AsNumpy%20Logo.png" alt="AsNumpy Logo" width="80" style="vertical-align: middle; margin-right: 10px;" />
     <span style="vertical-align: middle;">AsNumpy--昇腾NPU原生Numpy</span>
   </h1>
 </div>
