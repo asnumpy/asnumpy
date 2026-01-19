@@ -1,10 +1,7 @@
-<div align="center">
-  <h1>
-    <img src="docs/images/AsNumpy%20Logo.png" alt="AsNumpy Logo" width="56" style="vertical-align: middle; margin-right: 10px;" />
-    <span style="vertical-align: middle;"> AsNumpy--昇腾NPU原生Numpy</span>
-  </h1>
+<div style="display:flex; justify-content:center; align-items:center; gap:12px;">
+  <img src="docs/images/AsNumpy%20Logo.png" alt="AsNumpy Logo" width="56" />
+  <h1 style="margin:0;">AsNumpy--昇腾NPU原生Numpy</h1>
 </div>
-
 在人工智能与深度学习飞速发展的当下，高效、友好的计算工具成为开发者们的迫切需求。随着算力需求的不断攀升，专用计算芯片及相应的软件生态愈发重要。值得注意的是，**截至2025年8月2日，Python 以26.14% 的占比成为 Tiobe 历史上最受欢迎的编程语言**，在科学计算、数据分析与人工智能领域均占据主导地位。而在 Python 生态中，**Numpy 是基石性的数学运算库**，为后续的诸多深度学习框架和工具提供了底层支撑。
 
 > ❗ 为进一步提升开发者在昇腾 NPU 上的计算体验，哈尔滨工业大学计算学部苏统华教授团队联合华为团队打造了 **昇腾 NPU 原生 Numpy —— AsNumpy**。
