@@ -27,4 +27,4 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
 
 NPUArray Linalg_Det(const NPUArray& a);
 
-std::vector<NPUArray> Linalg_Slogdet(const NPUArray& a);
+std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a);
