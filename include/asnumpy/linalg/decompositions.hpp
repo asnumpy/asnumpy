@@ -23,4 +23,4 @@
 
 #include <utility>
 
-std::vector<NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode);
+std::pair<NPUArray, NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode);
