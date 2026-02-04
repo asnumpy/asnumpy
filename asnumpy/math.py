@@ -1294,7 +1294,8 @@ def modf(x: ArrayLike) -> tuple:
     >>> ap.modf(ap.array([1.5, -2.5]))
     (array([ 0.5, -0.5]), array([ 1., -2.]))
     """
-    return ndarray(_modf(x))
+    frac,inte = _modf(x)
+    return [ndarray(frac),ndarray(inte)]
 
 
 def remainder(
@@ -1372,7 +1373,9 @@ def divmod(
     >>> ap.divmod(ap.array([10, 11]), ap.array([3, 3]))
     (array([3, 3]), array([1, 2]))
     """
-    return ndarray(_divmod(x1, x2, _convert_dtype(dtype)))
+    res1,res2 = _divmod(x1,x2)
+    _type = _convert_dtype(dtype)
+    return [ndarray(res1, _type),ndarray(res2, _type)]
 
 
 def power(
