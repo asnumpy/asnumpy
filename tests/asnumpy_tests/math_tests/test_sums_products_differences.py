@@ -37,13 +37,16 @@ from asnumpy import testing
 
 # ========== prod 函数测试 ==========
 
-# @testing.for_dtypes([numpy.float32])
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_prod_no_axis(xp, dtype):
-#     """测试 prod(a) - 无axis参数，计算所有元素的乘积
+@testing.for_dtypes([numpy.float64])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
+def test_prod_no_axis(xp, dtype):
+    """测试 prod(a) - 无axis参数，计算所有元素的乘积"""
+    a = testing.shaped_arange((3, 4), dtype=dtype, xp=xp, start=1)
+    return xp.prod(a)
 
 
-@testing.for_dtypes([numpy.float32])
+
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_prod_with_axis(xp, dtype):
     """测试 prod(a, axis, keepdims, dtype) - 指定轴的乘积"""
@@ -51,7 +54,7 @@ def test_prod_with_axis(xp, dtype):
     return xp.prod(a, axis=0, keepdims=False, dtype=None)
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_prod_keepdims(xp, dtype):
     """测试 prod 的 keepdims 参数"""
@@ -67,7 +70,7 @@ def test_prod_keepdims(xp, dtype):
 #     """测试 sum(a) - 无axis参数，计算所有元素的和
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_sum_with_axis(xp, dtype):
     """测试 sum(a, axis, keepdims, dtype) - 指定轴的求和"""
@@ -75,7 +78,7 @@ def test_sum_with_axis(xp, dtype):
     return xp.sum(a, axis=0, keepdims=False, dtype=None)
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_sum_keepdims(xp, dtype):
     """测试 sum 的 keepdims 参数"""
@@ -91,10 +94,12 @@ def test_sum_keepdims(xp, dtype):
 #     """测试 nanprod(a) - 忽略NaN的乘积
 
 
-# @testing.for_float_dtypes()
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_nanprod_with_axis(xp, dtype):
-#     """测试 nanprod(a, axis, keepdims, dtype) - 指定轴
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
+def test_nanprod_with_axis(xp, dtype):
+    """测试 nanprod(a, axis, keepdims, dtype) - 指定轴"""
+    a = testing.shaped_arange((3, 4), dtype=dtype, xp=xp, start=1)
+    return xp.nanprod(a, axis=0, keepdims=False, dtype=None)
 
 
 # ========== nansum 函数测试 ==========
@@ -105,15 +110,17 @@ def test_sum_keepdims(xp, dtype):
 #     """测试 nansum(a) - 忽略NaN的求和
 
 
-# @testing.for_float_dtypes()
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_nansum_with_axis(xp, dtype):
-#     """测试 nansum(a, axis, keepdims, dtype) - 指定轴
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
+def test_nansum_with_axis(xp, dtype):
+    """测试 nansum(a, axis, keepdims, dtype) - 指定轴"""
+    a = testing.shaped_arange((3, 4), dtype=dtype, xp=xp, start=1)
+    return xp.nansum(a, axis=0, keepdims=False, dtype=None)
 
 
 # ========== cumprod 函数测试 ==========
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_cumprod(xp, dtype):
     """测试 cumprod(a, axis, dtype) - 累积乘积
@@ -124,7 +131,7 @@ def test_cumprod(xp, dtype):
     return xp.cumprod(a, axis=0, dtype=None)
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_cumprod_axis1(xp, dtype):
     """测试 cumprod 沿 axis=1"""
@@ -134,7 +141,7 @@ def test_cumprod_axis1(xp, dtype):
 
 # ========== cumsum 函数测试 ==========
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_cumsum(xp, dtype):
     """测试 cumsum(a, axis, dtype) - 累积求和
@@ -145,7 +152,7 @@ def test_cumsum(xp, dtype):
     return xp.cumsum(a, axis=0, dtype=None)
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_cumsum_axis1(xp, dtype):
     """测试 cumsum 沿 axis=1"""
@@ -155,18 +162,22 @@ def test_cumsum_axis1(xp, dtype):
 
 # ========== nancumprod 函数测试 ==========
 
-# @testing.for_float_dtypes()
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_nancumprod(xp, dtype):
-#     """测试 nancumprod(a, axis, dtype) - 忽略NaN的累积乘积
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
+def test_nancumprod(xp, dtype):
+    """测试 nancumprod(a, axis, dtype) - 忽略NaN的累积乘积"""
+    a = testing.shaped_arange((3, 4), dtype=dtype, xp=xp, start=1)
+    return xp.nancumprod(a, axis=0, dtype=None)
 
 
 # ========== nancumsum 函数测试 ==========
 
-# @testing.for_float_dtypes()
-# @testing.numpy_asnumpy_allclose(rtol=1e-5)
-# def test_nancumsum(xp, dtype):
-#     """测试 nancumsum(a, axis, dtype) - 忽略NaN的累积求和
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
+def test_nancumsum(xp, dtype):
+    """测试 nancumsum(a, axis, dtype) - 忽略NaN的累积求和"""
+    a = testing.shaped_arange((3, 4), dtype=dtype, xp=xp, start=1)
+    return xp.nancumsum(a, axis=0, dtype=None)
 
 
 # ========== cross 函数测试 ==========
@@ -185,7 +196,7 @@ def test_cross(xp, dtype):
 
 # ========== 测试结果与已知问题 ==========
 #
-#  测试统计: 9/17 通过 (52.9%), 8个禁用
+#  测试统计: 14/17 通过 (82.4%), 3个禁用
 #
 #  整数类型支持:
 # 仅测试 float32: 所有归约/累积函数 (prod, sum, cumprod, cumsum, nanprod, nansum, nancumprod, nancumsum)
@@ -197,16 +208,22 @@ def test_cross(xp, dtype):
 # - AsNumPy: int8→int64, float32→float64 (无axis时 float32→float64)
 # - 这导致即使只测试 float32 也会失败
 #
-#  已禁用的测试 (8个):
-# 1. prod/sum 无axis版本 - float32→float64 问题
-# 2. nanprod/nansum (2个版本) - dtype提升问题
-# 3. nancumprod/nancumsum - 函数不支持或RuntimeError
+#  nanprod, nancumprod, nancumsum 仅支持float32：
+# - API采用的AOL算子aclnnNanToNum不支持float64
 #
-#  通过的测试 (9个):
-# - prod_with_axis, prod_keepdims 
+#  sum不支持float64：
+# - API采用的AOL算子aclnnFlatten不支持float64
+#
+#  已禁用的测试 (3个):
+# 1. sum 无axis版本 - float32→float64 问题, 算子问题
+# 2. nanprod/nansum 无axis版本 - float32→float64 问题, 算子问题
+#
+#  通过的测试 (14个):
+# - prod_no_axis, prod_with_axis, prod_keepdims 
 # - sum_with_axis, sum_keepdims 
-# - cumprod axis=0/1 
-# - cumsum axis=0/1 
+# - nanprod_with_axis, nansum_with_axis
+# - cumprod, nancumprod axis=0/1 
+# - cumsum, nancumsum axis=0/1 
 # - cross 
 #
 #  函数说明:
