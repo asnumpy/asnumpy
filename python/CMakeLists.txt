@@ -31,19 +31,19 @@ pybind11_add_module(asnumpy_core
     bind_utils.cpp
     bind_version.cpp)
 
-target_include_directories(asnumpy_core 
-    PUBLIC 
+target_include_directories(asnumpy_core
+    PUBLIC
     ${CMAKE_SOURCE_DIR}/include
-    ${Python3_NumPy_INCLUDE_DIRS}
+    ${Python_NumPy_INCLUDE_DIRS}
 )
 
-target_link_libraries(asnumpy_core 
-    PUBLIC 
-    ascendcl 
-    runtime 
-    nnopbase 
+target_link_libraries(asnumpy_core
+    PUBLIC
+    ascendcl
+    runtime
+    nnopbase
     opapi
-    Python3::NumPy
+    Python::NumPy
 )
 target_link_libraries(asnumpy_core
     PUBLIC
