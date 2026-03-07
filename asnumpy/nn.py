@@ -14,13 +14,10 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional
-import numpy as np
-from .lib.asnumpy_core.nn import softmax as _ap_softmax
+from .lib.asnumpy_core.nn import softmax as _softmax
 from .utils import ndarray, _convert_dtype
+from ._types import ArrayLike, DTypeLike
 
 
-def softmax(
-    x: ndarray, axis: int = -1, dtype: Optional[np.dtype] = None
-) -> ndarray:
-    return ndarray(_ap_softmax(x, axis, _convert_dtype(dtype)))
+def softmax(x: ArrayLike, axis: int = -1, dtype: DTypeLike = None) -> ndarray:
+    return ndarray(_softmax(x, axis, _convert_dtype(dtype)))

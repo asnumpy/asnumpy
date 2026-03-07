@@ -14,19 +14,20 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union, Sequence
+from typing import Optional, Union
 import numpy as np
 from ..lib.asnumpy_core.linalg import (
-    det as ap_det,
-    inv as ap_inv,
-    matrix_power as ap_matrix_power,
-    norm as ap_norm,
-    slogdet as ap_slogdet,
+    det as _det,
+    inv as _inv,
+    matrix_power as _matrix_power,
+    norm as _norm,
+    slogdet as _slogdet,
 )
 from ..utils import ndarray
+from .._types import ArrayLike, AxisLike
 
 
-def matrix_power(a: ndarray, n: int) -> ndarray:
+def matrix_power(a: ArrayLike, n: int) -> ndarray:
     """
     Compute the integer power of a square matrix.
 
@@ -67,10 +68,10 @@ def matrix_power(a: ndarray, n: int) -> ndarray:
     array([[1, 4],
            [0, 1]])
     """
-    return ndarray(ap_matrix_power(a, n))
+    return ndarray(_matrix_power(a, n))
 
 
-def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
+def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
     """
     Perform QR factorization of a matrix.
 
@@ -117,9 +118,9 @@ def qr(a: ndarray, mode: str = "reduced") -> Union[ndarray, tuple]:
 
 
 def norm(
-    a: ndarray,
+    a: ArrayLike,
     ord: Optional[Union[str, int, float]] = None,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
     """
@@ -164,10 +165,10 @@ def norm(
     >>> ap.linalg.norm(M, 'fro')
     5.477225575051661
     """
-    return ndarray(ap_norm(a, ord, axis, keepdims))
+    return ndarray(_norm(a, ord, axis, keepdims))
 
 
-def det(a: ndarray) -> ndarray:
+def det(a: ArrayLike) -> ndarray:
     """
     Compute the determinant of a square matrix.
 
@@ -200,10 +201,10 @@ def det(a: ndarray) -> ndarray:
     >>> ap.linalg.det(mtx)
     -2.0
     """
-    return ndarray(ap_det(a))
+    return ndarray(_det(a))
 
 
-def slogdet(a: ndarray) -> tuple:
+def slogdet(a: ArrayLike) -> tuple:
     """
     Compute the sign and logarithm of the determinant.
 
@@ -240,10 +241,10 @@ def slogdet(a: ndarray) -> tuple:
     >>> s, ld
     (-1.0, 0.6931471805599453)
     """
-    return ap_slogdet(a)
+    return _slogdet(a)
 
 
-def inv(a: ndarray) -> ndarray:
+def inv(a: ArrayLike) -> ndarray:
     """
     Compute the multiplicative inverse of a square matrix.
 
@@ -281,4 +282,4 @@ def inv(a: ndarray) -> ndarray:
     array([[-2. ,  1. ],
            [ 1.5, -0.5]])
     """
-    return ndarray(ap_inv(a))
+    return ndarray(_inv(a))
