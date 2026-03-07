@@ -243,7 +243,7 @@ namespace asnumpy {
         auto broadcast = GetBroadcastShape(a, b);
 
         // 步骤1: 计算a的平方 (a²)
-        NPUArray a_squared(a.shape, a.dtype);
+        NPUArray a_squared(a.shape, a.dtype());
         uint64_t a_sq_workspace_size = 0;
         aclOpExecutor* a_sq_executor = nullptr;
         auto error = aclnnMulGetWorkspaceSize(
@@ -267,7 +267,7 @@ namespace asnumpy {
         CheckSynchronizeDeviceAclnnStatus(error);
 
         // 步骤2: 计算b的平方 (b²)
-        NPUArray b_squared(b.shape, b.dtype);
+        NPUArray b_squared(b.shape, b.dtype());
         uint64_t b_sq_workspace_size = 0;
         aclOpExecutor* b_sq_executor = nullptr;
         error = aclnnMulGetWorkspaceSize(
@@ -420,106 +420,44 @@ namespace asnumpy {
 
 
     NPUArray Radians(const NPUArray& x) {
-        // 业务参数校验
-        if (x.tensorSize == 0) {
-            throw std::runtime_error("Radians: input tensor has no elements");
-        }
         if (x.aclDtype != ACL_FLOAT && x.aclDtype != ACL_DOUBLE && x.aclDtype != ACL_FLOAT16) {
             throw std::runtime_error("Radians: input must be float, double or float16 type");
         }
 
-        // 初始化结果张量（与输入同形状同类型）
         NPUArray result(x.shape, x.aclDtype);
 
-        // 角度转弧度因子：π/180
-        NPUArray scalar_factor({}, x.aclDtype);
-        const double rad_factor = M_PI / 180.0;
-        void* scalar_factor_ptr = nullptr;
+        // 用 aclCreateScalar 创建 π/180 标量，避免 ForeachMulScalar 无 error 检查的问题
+        const double rad_factor_d = M_PI / 180.0;
+        const float  rad_factor_f = static_cast<float>(rad_factor_d);
+        aclScalar* scale = (x.aclDtype == ACL_DOUBLE)
+            ? aclCreateScalar(const_cast<double*>(&rad_factor_d), ACL_DOUBLE)
+            : aclCreateScalar(const_cast<float*>(&rad_factor_f),  ACL_FLOAT);
 
-        // 资源声明
-        aclrtStream stream = nullptr;
-        uint64_t workspace_size = 0;
-        aclOpExecutor *executor = nullptr;
-        void *workspace_addr = nullptr;
-        aclTensorList *input_list = nullptr;  // 输入张量列表
-        aclTensorList *output_list = nullptr; // 输出张量列表
-
-        try {
-            // 获取标量张量的设备指针
-            auto error = aclGetRawTensorAddr(scalar_factor.tensorPtr, &scalar_factor_ptr);
-            if (error != ACL_SUCCESS || !scalar_factor_ptr) {
-                throw std::runtime_error(fmt::format("Failed to get scalar factor pointer, error: {}", error));
-            }
-
-            // 拷贝转换因子到设备（按数据类型适配）
-            if (x.aclDtype == ACL_FLOAT) {
-                float factor = static_cast<float>(rad_factor);
-                aclrtMemcpy(scalar_factor_ptr, sizeof(float), &factor, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
-            } else if (x.aclDtype == ACL_DOUBLE) {
-                aclrtMemcpy(scalar_factor_ptr, sizeof(double), &rad_factor, sizeof(double), ACL_MEMCPY_HOST_TO_DEVICE);
-            } else if (x.aclDtype == ACL_FLOAT16) {
-                float factor_float = static_cast<float>(rad_factor);
-                uint32_t float_bits;
-                std::memcpy(&float_bits, &factor_float, sizeof(float_bits));
-                uint16_t fp16_bits = static_cast<uint16_t>(
-                    ((float_bits >> 16) & 0x8000U) |
-                    (((float_bits >> 13) - 0x1C000U) & 0x7C00U) |
-                    ((float_bits >> 13) & 0x03FFU)
-                );
-                aclrtMemcpy(scalar_factor_ptr, sizeof(uint16_t), &fp16_bits, sizeof(uint16_t), ACL_MEMCPY_HOST_TO_DEVICE);
-            }
-
-            // 创建执行流
-            aclrtCreateStream(&stream);
-
-            // 关键修复：将单个张量包装为张量列表（匹配接口参数要求）
-            // 输入张量列表（包含1个元素）
-            aclTensor* input_tensors[] = {x.tensorPtr};
-            input_list = aclCreateTensorList(input_tensors, 1);  // 直接用数组初始化列表
-            
-            // 输出张量列表（包含1个元素）
-            aclTensor* output_tensors[] = {result.tensorPtr};
-            output_list = aclCreateTensorList(output_tensors, 1);
-
-            // 获取工作空间大小（使用张量列表作为参数）
-            aclnnForeachMulScalarGetWorkspaceSize(
-                input_list,          // 输入张量列表（第一个参数类型匹配）
-                scalar_factor.tensorPtr,
-                output_list,         // 输出张量列表
-                &workspace_size,
-                &executor
-            );
-
-            // 分配工作空间
-            if (workspace_size != 0ULL) {
-                aclrtMalloc(&workspace_addr, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-            }
-
-            // 执行标量乘法
-            aclnnForeachMulScalar(
-                workspace_addr,
-                workspace_size,
-                executor,
-                stream
-            );
-            aclrtSynchronizeStream(stream);
+        uint64_t workspaceSize = 0;
+        aclOpExecutor* executor = nullptr;
+        auto error = aclnnMulsGetWorkspaceSize(x.tensorPtr, scale, result.tensorPtr,
+                                               &workspaceSize, &executor);
+        if (error != ACL_SUCCESS) {
+            aclDestroyScalar(scale);
+            throw std::runtime_error(fmt::format("Radians: get workspace size failed, error={}", error));
         }
-        catch (const std::exception& e) {
-            // 释放资源（包含张量列表）
-            if (workspace_addr != nullptr) {
-                aclrtFree(workspace_addr);
+
+        void* workspace = nullptr;
+        if (workspaceSize > 0) {
+            error = aclrtMalloc(&workspace, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
+            if (error != ACL_SUCCESS) {
+                aclDestroyScalar(scale);
+                throw std::runtime_error("Radians: malloc workspace failed");
             }
-            if (input_list != nullptr) {
-                aclDestroyTensorList(input_list);
-            }
-            if (output_list != nullptr) {
-                aclDestroyTensorList(output_list);
-            }
-            if (stream != nullptr) {
-                aclrtDestroyStream(stream);
-            }
-            throw;
         }
+
+        error = aclnnMuls(workspace, workspaceSize, executor, nullptr);
+        if (workspace) aclrtFree(workspace);
+        aclDestroyScalar(scale);
+        if (error != ACL_SUCCESS) {
+            throw std::runtime_error(fmt::format("Radians: computation failed, error={}", error));
+        }
+        aclrtSynchronizeDevice();
 
         return result;
     }

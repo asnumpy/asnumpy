@@ -28,7 +28,7 @@ namespace asnumpy {
  * @brief Element-wise sinc function using aclnnSinc.
  */
 NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype) {
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数

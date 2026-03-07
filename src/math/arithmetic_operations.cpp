@@ -48,7 +48,7 @@ namespace asnumpy {
  * @brief Element-wise addition using aclnnAdd.
  */
 NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype();
 
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(out_shape, out_dtype);
@@ -115,7 +115,7 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
  * @brief Element-wise reciprocal using aclnnReciprocal.
  */
 NPUArray Reciprocal(const NPUArray& x, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype();
     auto out = NPUArray(x.shape, out_dtype);
 
     uint64_t workspaceSize = 0;
@@ -169,9 +169,9 @@ NPUArray Reciprocal(const NPUArray& x, std::optional<py::dtype> dtype) {
  * @brief Positive operator: copy or cast input array.
  */
 NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype();
 
-    if (out_dtype.is(x.dtype)) {
+    if (out_dtype.is(x.dtype())) {
         return NPUArray(x);  // 深拷贝
     }
 
@@ -229,7 +229,7 @@ NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
  * @brief Unary negative operator using aclnnNeg.
  */
 NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
-    auto out_dtype = dtype.value_or(x.dtype);
+    auto out_dtype = dtype.value_or(x.dtype());
     auto out = NPUArray(x.shape, out_dtype);
 
     // 1. 获取 workspace
@@ -293,7 +293,7 @@ NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_dtype = dtype.value_or(x1.dtype());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. 获取 workspace
@@ -357,7 +357,7 @@ NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
 NPUArray Divide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_dtype = dtype.value_or(x1.dtype());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. 获取 workspace
@@ -428,7 +428,7 @@ NPUArray TrueDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
 NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_dtype = dtype.value_or(x1.dtype());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. 创建 alpha = 1 标量
@@ -507,7 +507,7 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
 NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_dtype = dtype.value_or(x1.dtype());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. 获取 workspace
@@ -572,7 +572,7 @@ NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::d
  * @brief Element-wise power using aclnnPowTensorTensor.
  */
 NPUArray Power(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.value_or(x1.dtype);
+    py::dtype out_dtype = dtype.value_or(x1.dtype());
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(out_shape, out_dtype);
 
@@ -969,7 +969,7 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
  * @brief Element-wise remainder, reusing Mod().
  */
 NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    return Mod(x1, x2, dtype.value_or(x1.dtype));
+    return Mod(x1, x2, dtype.value_or(x1.dtype()));
 }
 
 /**
@@ -977,7 +977,7 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
  */
 std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 1. 确定输出 dtype（默认和 x1 一致）
-    py::dtype out_dtype = dtype.value_or(x1.dtype);
+    py::dtype out_dtype = dtype.value_or(x1.dtype());
 
     // 2. 广播后的输出形状
     auto out_shape = GetBroadcastShape(x1, x2);

@@ -36,7 +36,6 @@ public:
     aclTensor* tensorPtr;
     std::vector<int64_t> shape;
     std::vector<int64_t> strides;
-    py::dtype dtype;
     aclDataType aclDtype;
     size_t tensorSize;
 
@@ -44,6 +43,12 @@ private:
     void* devicePtr;
 
 public:
+    /**
+     * @brief Get the py::dtype for this array (computed from aclDtype)
+     * @return py::dtype The Python dtype
+     */
+    py::dtype dtype() const { return GetPyDtype(aclDtype); }
+
     /**
      * @brief Constructor to create an empty NPUArray from shape and data type
      * @param shape Tensor shape

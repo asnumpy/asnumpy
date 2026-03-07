@@ -49,12 +49,12 @@ namespace asnumpy {
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
 NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
     auto temp = NPUArray::GetACLDataType(out_dtype);
     if (temp == ACL_INT16 || temp == ACL_INT32 || temp == ACL_INT64) {
-        out_dtype = x2.dtype;
+        out_dtype = x2.dtype();
     }
     if (dtype != std::nullopt) {
         out_dtype = *dtype;
@@ -142,12 +142,12 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
 NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
     auto temp = NPUArray::GetACLDataType(out_dtype);
     if (temp == ACL_INT16 || temp == ACL_INT32 || temp == ACL_INT64) {
-        out_dtype = x2.dtype;
+        out_dtype = x2.dtype();
     }
     if (dtype != std::nullopt) {
         out_dtype = *dtype;
@@ -218,12 +218,12 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
 }
 
 NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
     auto temp = NPUArray::GetACLDataType(out_dtype);
     if (temp == ACL_INT16 || temp == ACL_INT32 || temp == ACL_INT64) {
-        out_dtype = x2.dtype;
+        out_dtype = x2.dtype();
     }
     if (dtype != std::nullopt) {
         out_dtype = *dtype;
@@ -294,12 +294,12 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
 }
 
 NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
     auto temp = NPUArray::GetACLDataType(out_dtype);
     if (temp == ACL_INT16 || temp == ACL_INT32 || temp == ACL_INT64) {
-        out_dtype = x2.dtype;
+        out_dtype = x2.dtype();
     }
     if (dtype != std::nullopt) {
         out_dtype = *dtype;

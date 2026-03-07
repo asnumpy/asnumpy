@@ -502,7 +502,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
 
     // 初始化结果数组
     auto shape = a.shape;
-    auto dtype = a.dtype;
+    auto dtype = a.dtype();
     NPUArray result(shape, dtype);
 
     // 步骤1: 计算a的平方 (a²)
@@ -641,7 +641,7 @@ NPUArray Arctan2(const NPUArray& y, const NPUArray& x) {
 
     // 初始化结果数组
     auto shape = y.shape;
-    auto dtype = y.dtype;
+    auto dtype = y.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -690,7 +690,7 @@ NPUArray Arctan2(const NPUArray& y, const NPUArray& x) {
 NPUArray Radians(const NPUArray& x) {
     // 初始化结果数组
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     auto acl_dtype = x.aclDtype;
     NPUArray result(shape, dtype);
 
@@ -775,7 +775,7 @@ NPUArray Radians(const NPUArray& x) {
 NPUArray Sinh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -832,7 +832,7 @@ NPUArray Sinh(const NPUArray& x) {
 NPUArray Cosh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -889,7 +889,7 @@ NPUArray Cosh(const NPUArray& x) {
 NPUArray Tanh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -946,7 +946,7 @@ NPUArray Tanh(const NPUArray& x) {
 NPUArray Arcsinh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1003,7 +1003,7 @@ NPUArray Arcsinh(const NPUArray& x) {
 NPUArray Arccosh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1060,7 +1060,7 @@ NPUArray Arccosh(const NPUArray& x) {
 NPUArray Arctanh(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1117,7 +1117,7 @@ NPUArray Arctanh(const NPUArray& x) {
 NPUArray Ceil(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1174,7 +1174,7 @@ NPUArray Ceil(const NPUArray& x) {
 NPUArray Trunc(const NPUArray& x) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1303,7 +1303,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2) {
 
     // 初始化中间结果和最终结果数组
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
 
     // 步骤1: 计算x1和x2的乘积 (a * b)
@@ -1425,7 +1425,7 @@ NPUArray Gcd(const NPUArray& x1, const NPUArray& x2) {
 
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
     NPUArray result(shape, dtype);
 
     // 获取工作空间大小
@@ -1490,7 +1490,7 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2) {
 
     // 初始化中间结果和最终结果数组
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
     NPUArray result(shape, dtype);
 
     // 步骤1: 计算x1的自然对数 (ln(x1))
@@ -1615,7 +1615,7 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
 
     // 初始化中间结果和最终结果数组
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
 
     // 步骤1: 计算x1 / x2（浮点数除法）
     NPUArray division(shape, dtype);
@@ -1780,7 +1780,7 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
 
     // 初始化中间结果和最终结果数组
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
 
     // 步骤1: 计算x1 / x2（浮点数除法）
     NPUArray division(shape, dtype);
@@ -1938,7 +1938,7 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
  */
 std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
     auto shape = x.shape;
-    auto dtype = x.dtype;
+    auto dtype = x.dtype();
 
     // 步骤1: 计算输入的整数部分（向零取整）
     NPUArray integer_part(shape, dtype);
@@ -2042,7 +2042,7 @@ pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2) {
     }
 
     auto shape = x1.shape;
-    auto dtype = x1.dtype;
+    auto dtype = x1.dtype();
     NPUArray quotient(shape, dtype);  // 商
     NPUArray remainder(shape, dtype);  // 余数
 

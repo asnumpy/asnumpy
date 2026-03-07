@@ -32,7 +32,7 @@
 
 namespace asnumpy {
     NPUArray Softmax(const NPUArray& x, int64_t axis, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : x.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : x.dtype();
         auto shape = x.shape;
         
         // Normalize axis

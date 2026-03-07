@@ -33,7 +33,7 @@ namespace asnumpy {
 
 NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 初始化中间结果和最终结果数组
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
     if (dtype != std::nullopt) {
@@ -145,7 +145,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 
 NPUArray Gcd(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     // 初始化结果数组（广播输出形状）
-    auto out_dtype = x1.dtype;
+    auto out_dtype = x1.dtype();
     auto shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(shape, out_dtype);
     if (dtype != std::nullopt) {

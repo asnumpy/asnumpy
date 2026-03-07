@@ -35,7 +35,7 @@ namespace asnumpy {
 NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||
@@ -97,7 +97,7 @@ NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||
@@ -159,7 +159,7 @@ NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||
@@ -221,7 +221,7 @@ NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||
@@ -283,7 +283,7 @@ NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||
@@ -344,7 +344,7 @@ NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
 
 NPUArray Arctanh(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     if (in_dtype == ACL_INT8  || in_dtype == ACL_INT16 ||

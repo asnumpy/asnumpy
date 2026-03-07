@@ -50,7 +50,7 @@
 #define DEFINE_UNARY_OP(OpName, AclnnGetWorkspaceSizeFunc, AclnnFunc)                                                  \
 	NPUArray OpName(const NPUArray& x) {                                                                               \
 		auto shape = x.shape;                                                                                          \
-		auto dtype = x.dtype;                                                                                          \
+		auto dtype = x.dtype();                                                                                        \
 		auto result = NPUArray(shape, dtype);                                                                          \
 		uint64_t workspaceSize = 0;                                                                                    \
 		aclOpExecutor* executor;                                                                                       \
@@ -63,7 +63,7 @@
 #define DEFINE_BINARY_OP(OpName, AclnnGetWorkspaceSizeFunc, AclnnFunc)                                                 \
 	NPUArray OpName(const NPUArray& x1, const NPUArray& x2) {                                                          \
 		auto shape = GetBroadcastShape(x1, x2);                                                                        \
-		auto dtype = x1.dtype;                                                                                         \
+		auto dtype = x1.dtype();                                                                                       \
 		auto result = NPUArray(shape, dtype);                                                                          \
 		uint64_t workspaceSize = 0;                                                                                    \
 		aclOpExecutor* executor;                                                                                       \

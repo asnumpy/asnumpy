@@ -42,7 +42,7 @@
 
 namespace asnumpy {
     NPUArray Prod(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         int64_t ax = axis;
         if (axis < 0) {
@@ -110,7 +110,7 @@ namespace asnumpy {
     }
 
     NPUArray Sum(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         int64_t ax = axis;
         if (axis < 0) {
@@ -202,7 +202,7 @@ namespace asnumpy {
     }
 
     NPUArray Nanprod(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         int64_t ax = axis;
         if (axis < 0) {
@@ -304,7 +304,7 @@ namespace asnumpy {
     }
 
     NPUArray Nansum(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         float scalar = 0.0;
         int64_t ax = axis;
@@ -397,7 +397,7 @@ namespace asnumpy {
     }
 
     NPUArray Cumprod(const NPUArray& a, int64_t axis, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         auto axis_scalar = aclCreateScalar(&axis, ACL_INT64);
         auto result = NPUArray(shape, outDtype);
@@ -418,7 +418,7 @@ namespace asnumpy {
     }
 
     NPUArray Cumsum(const NPUArray& a, int64_t axis, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
@@ -438,7 +438,7 @@ namespace asnumpy {
     }
 
     NPUArray Nancumprod(const NPUArray& a, int64_t axis, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         auto axis_scalar = aclCreateScalar(&axis, ACL_INT64);
         float scalar = 1.0;
@@ -476,7 +476,7 @@ namespace asnumpy {
     }
 
     NPUArray Nancumsum(const NPUArray& a, int64_t axis, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         float scalar = 0.0;
         auto temp = NPUArray(shape, a.aclDtype);

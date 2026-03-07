@@ -33,7 +33,7 @@ namespace asnumpy {
 
 NPUArray Around(const NPUArray& x, int decimals, std::optional<py::dtype> dtype) {
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
@@ -114,7 +114,7 @@ NPUArray Round_(const NPUArray& x, int decimals, std::optional<py::dtype> dtype)
 
 NPUArray Rint(const NPUArray& x, std::optional<py::dtype> dtype) {
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
@@ -179,7 +179,7 @@ NPUArray Rint(const NPUArray& x, std::optional<py::dtype> dtype) {
 
 NPUArray Fix(const NPUArray& x, std::optional<py::dtype> dtype) {
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
@@ -244,7 +244,7 @@ NPUArray Fix(const NPUArray& x, std::optional<py::dtype> dtype) {
 
 NPUArray Floor(const NPUArray& x, std::optional<py::dtype> dtype) {
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
@@ -310,7 +310,7 @@ NPUArray Floor(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Ceil(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
@@ -367,7 +367,7 @@ NPUArray Ceil(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Trunc(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
     auto shape = x.shape;
-    py::dtype py_dtype = x.dtype;
+    py::dtype py_dtype = x.dtype();
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数

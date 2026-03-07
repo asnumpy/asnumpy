@@ -91,7 +91,7 @@ namespace asnumpy {
     }
 
     NPUArray Mean(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
-        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype();
         auto shape = a.shape;
         int64_t ax = axis;
         if (axis < 0) {

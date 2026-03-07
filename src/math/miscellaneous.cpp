@@ -100,7 +100,7 @@ namespace asnumpy {
     auto outPads = aclCreateIntArray(convOutPads.data(), 2);
     auto dilations = aclCreateIntArray(convDilations.data(), 2);
     auto result = NPUArray(shapeResult, ACL_FLOAT);
-    result.tensorPtr = aclCreateTensor(result.shape.data(), result.shape.size(), GetACLDataType(result.dtype), result.strides.data(), 0, ACL_FORMAT_NCHW, result.shape.data(), result.shape.size(), result.devicePtr);
+    result.tensorPtr = aclCreateTensor(result.shape.data(), result.shape.size(), GetACLDataType(result.dtype()), result.strides.data(), 0, ACL_FORMAT_NCHW, result.shape.data(), result.shape.size(), result.devicePtr);
     int8_t use_fp16 = 2;
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
@@ -348,7 +348,7 @@ NPUArray Sqrt(const NPUArray& x) {
 
 NPUArray Square(const NPUArray& x) {
     auto shape = x.shape;
-    auto dtype = NPUArray::GetACLDataType(x.dtype);
+    auto dtype = NPUArray::GetACLDataType(x.dtype());
     auto temp = ACL_FLOAT;
     if (dtype == ACL_DOUBLE) {
         temp = ACL_DOUBLE;
@@ -487,7 +487,7 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
  NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype();
     auto out = NPUArray(x.shape, out_dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -522,7 +522,7 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  * @throws std::runtime_error If ACL operation or memory allocation fails.
  */
  NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype();
     auto out = NPUArray(x.shape, out_dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;

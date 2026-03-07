@@ -305,7 +305,7 @@ NPUArray IsFinite(const NPUArray& x) {
     if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](IsFinite) GetWorkspaceSize failed, error={}, dtype={}",
-            error, std::string(py::str(py::cast<py::object>(x.dtype)))));
+            error, std::string(py::str(py::cast<py::object>(x.dtype())))));
     }
 
     // 分配 workspace
@@ -360,7 +360,7 @@ NPUArray IsInf(const NPUArray& x) {
     if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](IsInf) GetWorkspaceSize failed, error={}, dtype={}",
-            error, std::string(py::str(py::cast<py::object>(x.dtype)))));
+            error, std::string(py::str(py::cast<py::object>(x.dtype())))));
     }
 
     if (workspaceSize > 0) {
@@ -532,8 +532,8 @@ NPUArray LogicalAnd(const NPUArray& x, const NPUArray& y) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](LogicalAnd) GetWorkspaceSize failed, error={}, dtype_x={}, dtype_y={}",
             error,
-            std::string(py::str(py::cast<py::object>(x.dtype))),
-            std::string(py::str(py::cast<py::object>(y.dtype)))
+            std::string(py::str(py::cast<py::object>(x.dtype()))),
+            std::string(py::str(py::cast<py::object>(y.dtype())))
         ));
     }
 
@@ -582,8 +582,8 @@ NPUArray LogicalOr(const NPUArray& x, const NPUArray& y) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](LogicalOr) GetWorkspaceSize failed, error={}, dtype_x={}, dtype_y={}",
             error,
-            std::string(py::str(py::cast<py::object>(x.dtype))),
-            std::string(py::str(py::cast<py::object>(y.dtype)))
+            std::string(py::str(py::cast<py::object>(x.dtype()))),
+            std::string(py::str(py::cast<py::object>(y.dtype())))
         ));
     }
 
@@ -632,8 +632,7 @@ NPUArray LogicalNot(const NPUArray& x) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](LogicalNot) GetWorkspaceSize failed, error={}, dtype={}",
             error,
-            std::string(py::str(py::cast<py::object>(x.dtype)))
-        ));
+            std::string(py::str(py::cast<py::object>(x.dtype())))));
     }
 
     if (workspaceSize > 0) {
@@ -657,9 +656,7 @@ NPUArray LogicalNot(const NPUArray& x) {
             aclrtFree(workspaceAddr);
         }
         throw std::runtime_error(fmt::format("[logic.cpp](LogicalNot) sync device failed, error={}", error));
-    }{
-     }
-
+    }
 
     if (workspaceAddr) {
         aclrtFree(workspaceAddr);
@@ -683,8 +680,8 @@ NPUArray LogicalXor(const NPUArray& x, const NPUArray& y) {
         throw std::runtime_error(fmt::format(
             "[logic.cpp](LogicalXor) GetWorkspaceSize failed, error={}, dtype_x={}, dtype_y={}",
             error,
-            std::string(py::str(py::cast<py::object>(x.dtype))),
-            std::string(py::str(py::cast<py::object>(y.dtype)))
+            std::string(py::str(py::cast<py::object>(x.dtype()))),
+            std::string(py::str(py::cast<py::object>(y.dtype())))
         ));
     }
 

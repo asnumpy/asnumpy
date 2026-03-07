@@ -57,7 +57,7 @@ NPUArray Einsum(const char* subscripts, const std::vector<NPUArray>& operands) {
 	auto input = aclCreateTensorList(tmp.data(), tmp.size());
 	// TODO: reshape广播
 	auto broadcast = GetBroadcastShape(operands[0], operands[1]);
-	auto result = NPUArray(broadcast, operands[0].dtype);
+	auto result = NPUArray(broadcast, operands[0].dtype());
 	uint64_t workspaceSize = 0;
 	aclOpExecutor* executor;
 	auto error = aclnnEinsumGetWorkspaceSize(input, subscripts, result.tensorPtr, &workspaceSize, &executor);
@@ -163,7 +163,7 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 NPUArray dot(const NPUArray& a, const NPUArray& b) {
 	// case 1: both are scalars
 	if (a.shape.size() == 0 && b.shape.size() == 0) {
-		auto out = NPUArray({}, a.dtype);
+		auto out = NPUArray({}, a.dtype());
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		auto error = aclnnDotGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
@@ -192,7 +192,7 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
 
 	// case 2: 1D · 1D → scalar
 	if (a.shape.size() == 1 && b.shape.size() == 1) {
-		auto out = NPUArray({}, a.dtype);
+		auto out = NPUArray({}, a.dtype());
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		auto error = aclnnDotGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
@@ -222,7 +222,7 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
 	// case 3: 2D × 2D → matrix multiply
 	if (a.shape.size() == 2 && b.shape.size() == 2) {
 		std::vector<int64_t> out_shape = {a.shape[0], b.shape[1]};
-		auto out = NPUArray(out_shape, a.dtype);
+		auto out = NPUArray(out_shape, a.dtype());
 
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
@@ -270,8 +270,8 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 	// Step 1: Flatten
 	// ===================================================================================
 	std::vector<int64_t> flat_shape = {1, num_elements};
-	NPUArray a_flat(flat_shape, a.dtype);
-	NPUArray b_flat(flat_shape, b.dtype);
+	NPUArray a_flat(flat_shape, a.dtype());
+	NPUArray b_flat(flat_shape, b.dtype());
 
 	// Flatten 'a'
 	{
@@ -351,7 +351,7 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 	// ===================================================================================
 	// Step 3: Dot Product
 	// ===================================================================================
-	NPUArray out({}, a.dtype);
+	NPUArray out({}, a.dtype());
 
 	{
 		uint64_t workspaceSize = 0;
@@ -403,7 +403,7 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
  * @brief Compute the inner product of two arrays.
  */
 NPUArray inner(const NPUArray& a, const NPUArray& b) {
-	py::dtype dtype = a.dtype;
+	py::dtype dtype = a.dtype();
 	// case 1: 1D × 1D
 	if (a.shape.size() == 1 && b.shape.size() == 1) {
 		NPUArray out({}, dtype);
@@ -487,7 +487,7 @@ NPUArray inner(const NPUArray& a, const NPUArray& b) {
  * @brief Compute the outer product of two arrays.
  */
 NPUArray outer(const NPUArray& a, const NPUArray& b) {
-	py::dtype dtype = a.dtype;
+	py::dtype dtype = a.dtype();
 	// Step 1: flatten a -> (m, 1)
 	auto a_flat = NPUArray({static_cast<int64_t>(a.tensorSize), 1}, a.aclDtype);
 	{
