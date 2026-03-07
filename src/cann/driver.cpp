@@ -33,3 +33,22 @@ void asnumpy::cann::finalize() {
         fmt::println("{}", message);
     }
 }
+
+int asnumpy::cann::get_device_count() {
+    uint32_t count = 0;
+    auto ret = aclrtGetDeviceCount(&count);
+    if (ret != ACL_SUCCESS) {
+        // Return 0 if device count query fails
+        return 0;
+    }
+    return static_cast<int>(count);
+}
+
+bool asnumpy::cann::is_device_available(int device_id) {
+    uint32_t count = 0;
+    auto ret = aclrtGetDeviceCount(&count);
+    if (ret != ACL_SUCCESS) {
+        return false;
+    }
+    return device_id >= 0 && device_id < static_cast<int>(count);
+}
