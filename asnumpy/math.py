@@ -14,99 +14,99 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union, Sequence, Any
-import numpy as np
+from typing import Optional, Union
+from ._types import ArrayLike, AxisOptional, DTypeLike
 from .lib.asnumpy_core.math import (
-    absolute as _ap_absolute,
-    add as _ap_add,
-    amax as _ap_amax,
-    amin as _ap_amin,
-    around as _ap_around,
-    arccos as _ap_arccos,
-    arccosh as _ap_arccosh,
-    arcsin as _ap_arcsin,
-    arcsinh as _ap_arcsinh,
-    arctan as _ap_arctan,
-    arctan2 as _ap_arctan2,
-    arctanh as _ap_arctanh,
-    ceil as _ap_ceil,
-    clip as _ap_clip,
-    copysign as _ap_copysign,
-    cos as _ap_cos,
-    cosh as _ap_cosh,
-    cross as _ap_cross,
-    cumprod as _ap_cumprod,
-    cumsum as _ap_cumsum,
-    degrees as _ap_degrees,
-    divide as _ap_divide,
-    divmod as _ap_divmod,
-    exp as _ap_exp,
-    exp2 as _ap_exp2,
-    expm1 as _ap_expm1,
-    fabs as _ap_fabs,
-    fix as _ap_fix,
-    float_power as _ap_float_power,
-    floor as _ap_floor,
-    floor_divide as _ap_floor_divide,
-    fmax as _ap_fmax,
-    fmin as _ap_fmin,
-    fmod as _ap_fmod,
-    gcd as _ap_gcd,
-    gelu as _ap_gelu,
-    heaviside as _ap_heaviside,
-    hypot as _ap_hypot,
-    lcm as _ap_lcm,
-    ldexp as _ap_ldexp,
-    log as _ap_log,
-    log10 as _ap_log10,
-    log1p as _ap_log1p,
-    log2 as _ap_log2,
-    logaddexp as _ap_logaddexp,
-    logaddexp2 as _ap_logaddexp2,
-    max as _ap_max,
-    maximum as _ap_maximum,
-    min as _ap_min,
-    minimum as _ap_minimum,
-    mod as _ap_mod,
-    modf as _ap_modf,
-    multiply as _ap_multiply,
-    nan_to_num as _ap_nan_to_num,
-    nancumprod as _ap_nancumprod,
-    nancumsum as _ap_nancumsum,
-    nanmax as _ap_nanmax,
-    nanprod as _ap_nanprod,
-    nansum as _ap_nansum,
-    negative as _ap_negative,
-    positive as _ap_positive,
-    power as _ap_power,
-    prod as _ap_prod,
-    rad2deg as _ap_rad2deg,
-    radians as _ap_radians,
-    reciprocal as _ap_reciprocal,
-    real as _ap_real,
-    relu as _ap_relu,
-    remainder as _ap_remainder,
-    rint as _ap_rint,
-    round_ as _ap_round_,
-    sign as _ap_sign,
-    signbit as _ap_signbit,
-    sin as _ap_sin,
-    sinc as _ap_sinc,
-    sinh as _ap_sinh,
-    sqrt as _ap_sqrt,
-    square as _ap_square,
-    subtract as _ap_subtract,
-    sum as _ap_sum,
-    tan as _ap_tan,
-    tanh as _ap_tanh,
-    true_divide as _ap_true_divide,
-    trunc as _ap_trunc,
+    absolute as _absolute,
+    add as _add,
+    amax as _amax,
+    amin as _amin,
+    around as _around,
+    arccos as _arccos,
+    arccosh as _arccosh,
+    arcsin as _arcsin,
+    arcsinh as _arcsinh,
+    arctan as _arctan,
+    arctan2 as _arctan2,
+    arctanh as _arctanh,
+    ceil as _ceil,
+    clip as _clip,
+    copysign as _copysign,
+    cos as _cos,
+    cosh as _cosh,
+    cross as _cross,
+    cumprod as _cumprod,
+    cumsum as _cumsum,
+    degrees as _degrees,
+    divide as _divide,
+    divmod as _divmod,
+    exp as _exp,
+    exp2 as _exp2,
+    expm1 as _expm1,
+    fabs as _fabs,
+    fix as _fix,
+    float_power as _float_power,
+    floor as _floor,
+    floor_divide as _floor_divide,
+    fmax as _fmax,
+    fmin as _fmin,
+    fmod as _fmod,
+    gcd as _gcd,
+    gelu as _gelu,
+    heaviside as _heaviside,
+    hypot as _hypot,
+    lcm as _lcm,
+    ldexp as _ldexp,
+    log as _log,
+    log10 as _log10,
+    log1p as _log1p,
+    log2 as _log2,
+    logaddexp as _logaddexp,
+    logaddexp2 as _logaddexp2,
+    max as _max,
+    maximum as _maximum,
+    min as _min,
+    minimum as _minimum,
+    mod as _mod,
+    modf as _modf,
+    multiply as _multiply,
+    nan_to_num as _nan_to_num,
+    nancumprod as _nancumprod,
+    nancumsum as _nancumsum,
+    nanmax as _nanmax,
+    nanprod as _nanprod,
+    nansum as _nansum,
+    negative as _negative,
+    positive as _positive,
+    power as _power,
+    prod as _prod,
+    rad2deg as _rad2deg,
+    radians as _radians,
+    reciprocal as _reciprocal,
+    real as _real,
+    relu as _relu,
+    remainder as _remainder,
+    rint as _rint,
+    round_ as _round_,
+    sign as _sign,
+    signbit as _signbit,
+    sin as _sin,
+    sinc as _sinc,
+    sinh as _sinh,
+    sqrt as _sqrt,
+    square as _square,
+    subtract as _subtract,
+    sum as _sum,
+    tan as _tan,
+    tanh as _tanh,
+    true_divide as _true_divide,
+    trunc as _trunc,
 )
 from .utils import ndarray, _convert_dtype
 
 
 # Trigonometric functions
-def sin(x: ndarray) -> ndarray:
+def sin(x: ArrayLike) -> ndarray:
     """
     Calculate the sine of each element.
 
@@ -136,10 +136,10 @@ def sin(x: ndarray) -> ndarray:
     >>> ap.sin(ap.array([0, np.pi/6, np.pi/2]))
     array([0. , 0.5, 1. ])
     """
-    return ndarray(_ap_sin(x))
+    return ndarray(_sin(x))
 
 
-def cos(x: ndarray) -> ndarray:
+def cos(x: ArrayLike) -> ndarray:
     """
     Calculate the cosine of each element.
 
@@ -169,10 +169,10 @@ def cos(x: ndarray) -> ndarray:
     >>> ap.cos(ap.array([0, np.pi]))
     array([ 1., -1.])
     """
-    return ndarray(_ap_cos(x))
+    return ndarray(_cos(x))
 
 
-def tan(x: ndarray) -> ndarray:
+def tan(x: ArrayLike) -> ndarray:
     """
     Calculate the tangent of each element.
 
@@ -202,10 +202,10 @@ def tan(x: ndarray) -> ndarray:
     >>> ap.tan(ap.array([-np.pi/4, 0, np.pi/4]))
     array([-1.,  0.,  1.])
     """
-    return ndarray(_ap_tan(x))
+    return ndarray(_tan(x))
 
 
-def arcsin(x: ndarray) -> ndarray:
+def arcsin(x: ArrayLike) -> ndarray:
     """
     Calculate the inverse sine of each element.
 
@@ -235,10 +235,10 @@ def arcsin(x: ndarray) -> ndarray:
     >>> ap.arcsin(ap.array([0, 0.5, 1]))
     array([0.        , 0.52359878, 1.57079633])
     """
-    return ndarray(_ap_arcsin(x))
+    return ndarray(_arcsin(x))
 
 
-def arccos(x: ndarray) -> ndarray:
+def arccos(x: ArrayLike) -> ndarray:
     """
     Calculate the inverse cosine of each element.
 
@@ -268,10 +268,10 @@ def arccos(x: ndarray) -> ndarray:
     >>> ap.arccos(ap.array([1, 0.5, 0]))
     array([0.        , 1.04719755, 1.57079633])
     """
-    return ndarray(_ap_arccos(x))
+    return ndarray(_arccos(x))
 
 
-def arctan(x: ndarray) -> ndarray:
+def arctan(x: ArrayLike) -> ndarray:
     """
     Calculate the inverse tangent of each element.
 
@@ -302,14 +302,14 @@ def arctan(x: ndarray) -> ndarray:
     >>> ap.arctan(ap.array([0, 1]))
     array([0.        , 0.78539816])
     """
-    return ndarray(_ap_arctan(x))
+    return ndarray(_arctan(x))
 
 
-def arctan2(x1: ndarray, x2: ndarray) -> ndarray:
+def arctan2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Calculate the element-wise inverse tangent of the quotient `x1/x2`, adjusting for the quadrant.
 
-    This function computes the inverse tangent of `x1/x2`, 
+    This function computes the inverse tangent of `x1/x2`,
     using the signs of both arguments to determine the correct quadrant of the result.
     The returned values are in radians, ranging from -pi to pi.
 
@@ -339,10 +339,10 @@ def arctan2(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.arctan2(y, x)
     array([3.14159265, 0.78539816])
     """
-    return ndarray(_ap_arctan2(x1, x2))
+    return ndarray(_arctan2(x1, x2))
 
 
-def hypot(x1: ndarray, x2: ndarray) -> ndarray:
+def hypot(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Calculate the hypotenuse given two sides of a right triangle.
 
@@ -372,10 +372,10 @@ def hypot(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.hypot(3*ap.ones(2), 4*ap.ones(2))
     array([5., 5.])
     """
-    return ndarray(_ap_hypot(x1, x2))
+    return ndarray(_hypot(x1, x2))
 
 
-def radians(x: ndarray) -> ndarray:
+def radians(x: ArrayLike) -> ndarray:
     """
     Convert angles from degrees to radians.
 
@@ -405,10 +405,10 @@ def radians(x: ndarray) -> ndarray:
     >>> ap.radians(ap.array([0, 90, 180]))
     array([0.        , 1.57079633, 3.14159265])
     """
-    return ndarray(_ap_radians(x))
+    return ndarray(_radians(x))
 
 
-def deg2rad(x: ndarray) -> ndarray:
+def deg2rad(x: ArrayLike) -> ndarray:
     """
     Convert angles from degrees to radians.
 
@@ -438,10 +438,10 @@ def deg2rad(x: ndarray) -> ndarray:
     >>> ap.deg2rad(ap.array([0, 90, 180]))
     array([0.        , 1.57079633, 3.14159265])
     """
-    return ndarray(_ap_radians(x))
+    return ndarray(_radians(x))
 
 
-def degrees(x: ndarray) -> ndarray:
+def degrees(x: ArrayLike) -> ndarray:
     """
     Convert angles from radians to degrees.
 
@@ -472,10 +472,10 @@ def degrees(x: ndarray) -> ndarray:
     >>> ap.degrees(ap.array([0, np.pi/2, np.pi]))
     array([  0.,  90., 180.])
     """
-    return ndarray(_ap_degrees(x))
+    return ndarray(_degrees(x))
 
 
-def rad2deg(x: ndarray) -> ndarray:
+def rad2deg(x: ArrayLike) -> ndarray:
     """
     Convert angles from radians to degrees.
 
@@ -506,11 +506,11 @@ def rad2deg(x: ndarray) -> ndarray:
     >>> ap.rad2deg(ap.array([0, np.pi/2, np.pi]))
     array([  0.,  90., 180.])
     """
-    return ndarray(_ap_rad2deg(x))
+    return ndarray(_rad2deg(x))
 
 
 # Miscellaneous functions
-def absolute(x: ndarray) -> ndarray:
+def absolute(x: ArrayLike) -> ndarray:
     """
     Calculate the absolute value of each element.
 
@@ -540,10 +540,10 @@ def absolute(x: ndarray) -> ndarray:
     >>> ap.absolute(ap.array([3+4j]))
     array([5.])
     """
-    return ndarray(_ap_absolute(x))
+    return ndarray(_absolute(x))
 
 
-def fabs(x: ndarray) -> ndarray:
+def fabs(x: ArrayLike) -> ndarray:
     """
     Calculate the absolute value for real-valued elements.
 
@@ -571,14 +571,14 @@ def fabs(x: ndarray) -> ndarray:
     >>> ap.fabs(ap.array([-2.5, 2.5]))
     array([2.5, 2.5])
     """
-    return ndarray(_ap_fabs(x))
+    return ndarray(_fabs(x))
 
 
-def sign(x: ndarray) -> ndarray:
+def sign(x: ArrayLike) -> ndarray:
     """
     Determine the sign of each element.
 
-    This function returns an element-wise indication of the sign of a number: -1 for negative, 
+    This function returns an element-wise indication of the sign of a number: -1 for negative,
     0 for zero, and 1 for positive.
 
     Arguments
@@ -603,10 +603,10 @@ def sign(x: ndarray) -> ndarray:
     >>> ap.sign(0)
     0
     """
-    return ndarray(_ap_sign(x))
+    return ndarray(_sign(x))
 
 
-def heaviside(x1: ndarray, x2: ndarray) -> ndarray:
+def heaviside(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Compute the Heaviside step function.
 
@@ -635,11 +635,11 @@ def heaviside(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.heaviside(ap.array([-2.0, 0, 1.0]), 0.5)
     array([0. , 0.5, 1. ])
     """
-    return ndarray(_ap_heaviside(x1, x2))
+    return ndarray(_heaviside(x1, x2))
 
 
 def clip(
-    a: ndarray, a_min: Union[ndarray, float], a_max: Union[ndarray, float]
+    a: ArrayLike, a_min: Union[ArrayLike, float], a_max: Union[ArrayLike, float]
 ) -> ndarray:
     """
     Constrain array values to a given range.
@@ -672,11 +672,11 @@ def clip(
     >>> ap.clip(a, 1, 3)
     array([1, 1, 2, 3, 3])
     """
-    return ndarray(_ap_clip(a, a_min, a_max))
+    return ndarray(_clip(a, a_min, a_max))
 
 
 def nan_to_num(
-    x: ndarray,
+    x: ArrayLike,
     nan: float = 0.0,
     posinf: Optional[float] = None,
     neginf: Optional[float] = None,
@@ -684,7 +684,7 @@ def nan_to_num(
     """
     Replace NaN and infinity with finite values.
 
-    This function replaces NaN with zero (or a specified value) and 
+    This function replaces NaN with zero (or a specified value) and
     infinity with large finite numbers (or specified values).
 
     Arguments
@@ -714,10 +714,10 @@ def nan_to_num(
     >>> ap.nan_to_num(ap.array([np.inf, -np.inf, np.nan]))
     array([ 1.79769313e+308, -1.79769313e+308,  0.00000000e+000])
     """
-    return ndarray(_ap_nan_to_num(x, nan, posinf, neginf))
+    return ndarray(_nan_to_num(x, nan, posinf, neginf))
 
 
-def sqrt(x: ndarray) -> ndarray:
+def sqrt(x: ArrayLike) -> ndarray:
     """
     Calculate the non-negative square root of each element.
 
@@ -744,10 +744,10 @@ def sqrt(x: ndarray) -> ndarray:
     >>> ap.sqrt(ap.array([1, 4, 16]))
     array([1., 2., 4.])
     """
-    return ndarray(_ap_sqrt(x))
+    return ndarray(_sqrt(x))
 
 
-def square(x: ndarray) -> ndarray:
+def square(x: ArrayLike) -> ndarray:
     """
     Calculate the square of each element.
 
@@ -775,10 +775,10 @@ def square(x: ndarray) -> ndarray:
     >>> ap.square(ap.array([2, 3, 4]))
     array([ 4,  9, 16])
     """
-    return ndarray(_ap_square(x))
+    return ndarray(_square(x))
 
 
-def relu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def relu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the Rectified Linear Unit (ReLU) activation.
 
@@ -802,10 +802,10 @@ def relu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.relu(ap.array([-2, 0, 2]))
     array([0, 0, 2])
     """
-    return ndarray(_ap_relu(x, _convert_dtype(dtype)))
+    return ndarray(_relu(x, _convert_dtype(dtype)))
 
 
-def gelu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def gelu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the Gaussian Error Linear Unit (GELU) activation.
 
@@ -829,12 +829,12 @@ def gelu(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.gelu(ap.array([-1.0, 0.0, 1.0]))
     array([-0.15865525,  0.        ,  0.84134475])
     """
-    return ndarray(_ap_gelu(x, _convert_dtype(dtype)))
+    return ndarray(_gelu(x, _convert_dtype(dtype)))
 
 
 # Arithmetic operations
 def add(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the sum of two inputs element-wise.
@@ -866,10 +866,10 @@ def add(
     >>> ap.add(ap.array([10, 20]), ap.array([5, 5]))
     array([15, 25])
     """
-    return ndarray(_ap_add(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_add(x1, x2, _convert_dtype(dtype)))
 
 
-def reciprocal(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def reciprocal(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the reciprocal of each element.
 
@@ -898,10 +898,10 @@ def reciprocal(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.reciprocal(ap.array([1., 2., 4.]))
     array([1.  , 0.5 , 0.25])
     """
-    return ndarray(_ap_reciprocal(x, _convert_dtype(dtype)))
+    return ndarray(_reciprocal(x, _convert_dtype(dtype)))
 
 
-def positive(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def positive(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Apply the unary positive operator element-wise.
 
@@ -930,10 +930,10 @@ def positive(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.positive(ap.array([-5, 5]))
     array([-5,  5])
     """
-    return ndarray(_ap_positive(x, _convert_dtype(dtype)))
+    return ndarray(_positive(x, _convert_dtype(dtype)))
 
 
-def negative(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def negative(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the numerical negative element-wise.
 
@@ -962,11 +962,11 @@ def negative(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.negative(ap.array([10, -10]))
     array([-10,  10])
     """
-    return ndarray(_ap_negative(x, _convert_dtype(dtype)))
+    return ndarray(_negative(x, _convert_dtype(dtype)))
 
 
 def multiply(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the product of two inputs element-wise.
@@ -998,11 +998,11 @@ def multiply(
     >>> ap.multiply(ap.array([2.0, 4.0]), ap.array([3.0, 0.5]))
     array([6., 2.])
     """
-    return ndarray(_ap_multiply(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_multiply(x1, x2, _convert_dtype(dtype)))
 
 
 def divide(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the division of two inputs element-wise.
@@ -1036,11 +1036,11 @@ def divide(
     >>> ap.divide(ap.array([6, 12]), ap.array([3, 4]))
     array([2., 3.])
     """
-    return ndarray(_ap_divide(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def true_divide(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the true division of two inputs element-wise.
@@ -1073,11 +1073,11 @@ def true_divide(
     >>> ap.true_divide(ap.array([6, 12]), ap.array([3, 4]))
     array([2., 3.])
     """
-    return ndarray(_ap_true_divide(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_true_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def subtract(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the difference between two inputs element-wise.
@@ -1109,11 +1109,11 @@ def subtract(
     >>> ap.subtract(ap.array([10, 5]), ap.array([2, 2]))
     array([8, 3])
     """
-    return ndarray(_ap_subtract(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_subtract(x1, x2, _convert_dtype(dtype)))
 
 
 def floor_divide(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the floor division of two inputs element-wise.
@@ -1148,11 +1148,11 @@ def floor_divide(
     >>> ap.floor_divide(ap.array([10, 10]), ap.array([3, 4]))
     array([3, 2])
     """
-    return ndarray(_ap_floor_divide(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_floor_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def float_power(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the power of bases raised to exponents, promoting to float.
@@ -1185,11 +1185,11 @@ def float_power(
     >>> ap.float_power(ap.array([2, 5]), ap.array([3, 2]))
     array([ 8., 25.])
     """
-    return ndarray(_ap_float_power(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_float_power(x1, x2, _convert_dtype(dtype)))
 
 
 def fmod(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the floating-point remainder of division.
@@ -1223,11 +1223,11 @@ def fmod(
     >>> ap.fmod(ap.array([-4, -4, 4, 4]), ap.array([3, -3, 3, -3]))
     array([-1, -1,  1,  1])
     """
-    return ndarray(_ap_fmod(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_fmod(x1, x2, _convert_dtype(dtype)))
 
 
 def mod(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the remainder of division element-wise.
@@ -1261,10 +1261,10 @@ def mod(
     >>> ap.mod(ap.array([-4, -4, 4, 4]), ap.array([3, -3, 3, -3]))
     array([ 2, -1,  1, -2])
     """
-    return ndarray(_ap_mod(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_mod(x1, x2, _convert_dtype(dtype)))
 
 
-def modf(x: ndarray) -> tuple:
+def modf(x: ArrayLike) -> tuple:
     """
     Separate the fractional and integral parts of elements.
 
@@ -1294,11 +1294,12 @@ def modf(x: ndarray) -> tuple:
     >>> ap.modf(ap.array([1.5, -2.5]))
     (array([ 0.5, -0.5]), array([ 1., -2.]))
     """
-    return _ap_modf(x)
+    frac, inte = _modf(x)
+    return [ndarray(frac), ndarray(inte)]
 
 
 def remainder(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the remainder of division element-wise.
@@ -1332,11 +1333,11 @@ def remainder(
     >>> ap.remainder(ap.array([5, -5]), ap.array([3, 3]))
     array([2, 1])
     """
-    return ndarray(_ap_remainder(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_remainder(x1, x2, _convert_dtype(dtype)))
 
 
 def divmod(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> tuple:
     """
     Calculate both the quotient and the remainder.
@@ -1372,11 +1373,13 @@ def divmod(
     >>> ap.divmod(ap.array([10, 11]), ap.array([3, 3]))
     (array([3, 3]), array([1, 2]))
     """
-    return _ap_divmod(x1, x2, _convert_dtype(dtype))
+    res1, res2 = _divmod(x1, x2)
+    _type = _convert_dtype(dtype)
+    return [ndarray(res1, _type), ndarray(res2, _type)]
 
 
 def power(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the power of bases raised to exponents.
@@ -1409,15 +1412,15 @@ def power(
     >>> ap.power(ap.array([2, 5]), ap.array([3, 2]))
     array([ 8, 25])
     """
-    return ndarray(_ap_power(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_power(x1, x2, _convert_dtype(dtype)))
 
 
 # Sums, products, differences
 def prod(
-    a: ndarray,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    a: ArrayLike,
+    axis: AxisOptional = None,
     keepdims: bool = False,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     """
     Calculate the product of elements.
@@ -1453,15 +1456,15 @@ def prod(
     2.0
     """
     if axis is None:
-        return _ap_prod(a)
-    return ndarray(_ap_prod(a, axis, keepdims, _convert_dtype(dtype)))
+        return _prod(a)
+    return ndarray(_prod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
 def sum(
-    a: ndarray,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    a: ArrayLike,
+    axis: AxisOptional = None,
     keepdims: bool = False,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     """
     Calculate the sum of elements.
@@ -1497,15 +1500,15 @@ def sum(
     2.0
     """
     if axis is None:
-        return _ap_sum(a)
-    return ndarray(_ap_sum(a, axis, keepdims, _convert_dtype(dtype)))
+        return _sum(a)
+    return ndarray(_sum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
 def nanprod(
-    a: ndarray,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    a: ArrayLike,
+    axis: AxisOptional = None,
     keepdims: bool = False,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     """
     Calculate the product of elements, replacing NaNs with one.
@@ -1542,15 +1545,15 @@ def nanprod(
     1.0
     """
     if axis is None:
-        return _ap_nanprod(a)
-    return ndarray(_ap_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
+        return _nanprod(a)
+    return ndarray(_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
 def nansum(
-    a: ndarray,
-    axis: Optional[Union[int, Sequence[int]]] = None,
+    a: ArrayLike,
+    axis: AxisOptional = None,
     keepdims: bool = False,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     """
     Calculate the sum of elements, replacing NaNs with zero.
@@ -1587,12 +1590,12 @@ def nansum(
     1.0
     """
     if axis is None:
-        return _ap_nansum(a)
-    return ndarray(_ap_nansum(a, axis, keepdims, _convert_dtype(dtype)))
+        return _nansum(a)
+    return ndarray(_nansum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
 def cumprod(
-    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the cumulative product of elements.
@@ -1626,11 +1629,11 @@ def cumprod(
     >>> ap.cumprod(a)
     array([1, 2, 6])
     """
-    return ndarray(_ap_cumprod(a, axis, _convert_dtype(dtype)))
+    return ndarray(_cumprod(a, axis, _convert_dtype(dtype)))
 
 
 def cumsum(
-    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the cumulative sum of elements.
@@ -1664,11 +1667,11 @@ def cumsum(
     >>> ap.cumsum(a)
     array([1, 3, 6])
     """
-    return ndarray(_ap_cumsum(a, axis, _convert_dtype(dtype)))
+    return ndarray(_cumsum(a, axis, _convert_dtype(dtype)))
 
 
 def nancumprod(
-    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the cumulative product of elements, treating NaNs as one.
@@ -1703,11 +1706,11 @@ def nancumprod(
     >>> ap.nancumprod(ap.array([1, np.nan]))
     array([1., 1.])
     """
-    return ndarray(_ap_nancumprod(a, axis, _convert_dtype(dtype)))
+    return ndarray(_nancumprod(a, axis, _convert_dtype(dtype)))
 
 
 def nancumsum(
-    a: ndarray, axis: Optional[int] = None, dtype: Optional[np.dtype] = None
+    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the cumulative sum of elements, treating NaNs as zero.
@@ -1742,10 +1745,10 @@ def nancumsum(
     >>> ap.nancumsum(ap.array([1, np.nan]))
     array([1., 1.])
     """
-    return ndarray(_ap_nancumsum(a, axis, _convert_dtype(dtype)))
+    return ndarray(_nancumsum(a, axis, _convert_dtype(dtype)))
 
 
-def cross(a: ndarray, b: ndarray, axis: Optional[int] = None) -> ndarray:
+def cross(a: ArrayLike, b: ArrayLike, axis: AxisOptional = None) -> ndarray:
     """
     Calculate the cross product of two vectors.
 
@@ -1778,15 +1781,15 @@ def cross(a: ndarray, b: ndarray, axis: Optional[int] = None) -> ndarray:
     >>> ap.cross(x, y)
     array([-3,  6, -3])
     """
-    return ndarray(_ap_cross(a, b, axis))
+    return ndarray(_cross(a, b, axis))
 
 
 # Exponents and logarithms
-def exp(x: ndarray) -> ndarray:
+def exp(x: ArrayLike) -> ndarray:
     """
     Calculate the exponential of each element.
 
-    This function computes `e` raised to the power of each element in `x`, 
+    This function computes `e` raised to the power of each element in `x`,
     where `e` is the base of the natural logarithm.
 
     Arguments
@@ -1810,10 +1813,10 @@ def exp(x: ndarray) -> ndarray:
     >>> ap.exp(ap.array([1., 2.]))
     array([2.71828183, 7.3890561 ])
     """
-    return ndarray(_ap_exp(x))
+    return ndarray(_exp(x))
 
 
-def expm1(x: ndarray) -> ndarray:
+def expm1(x: ArrayLike) -> ndarray:
     """
     Calculate `exp(x) - 1` for each element.
 
@@ -1841,10 +1844,10 @@ def expm1(x: ndarray) -> ndarray:
     >>> ap.expm1(ap.array([1e-10]))
     array([1.0000000e-10])
     """
-    return ndarray(_ap_expm1(x))
+    return ndarray(_expm1(x))
 
 
-def exp2(x: ndarray) -> ndarray:
+def exp2(x: ArrayLike) -> ndarray:
     """
     Calculate 2 raised to the power of each element.
 
@@ -1871,10 +1874,10 @@ def exp2(x: ndarray) -> ndarray:
     >>> ap.exp2(ap.array([3]))
     array([8.])
     """
-    return ndarray(_ap_exp2(x))
+    return ndarray(_exp2(x))
 
 
-def log(x: ndarray) -> ndarray:
+def log(x: ArrayLike) -> ndarray:
     """
     Calculate the natural logarithm of each element.
 
@@ -1903,10 +1906,10 @@ def log(x: ndarray) -> ndarray:
     >>> ap.log(ap.array([ap.e]))
     array([1.])
     """
-    return ndarray(_ap_log(x))
+    return ndarray(_log(x))
 
 
-def log10(x: ndarray) -> ndarray:
+def log10(x: ArrayLike) -> ndarray:
     """
     Calculate the base-10 logarithm of each element.
 
@@ -1934,10 +1937,10 @@ def log10(x: ndarray) -> ndarray:
     >>> ap.log10(ap.array([100.]))
     array([2.])
     """
-    return ndarray(_ap_log10(x))
+    return ndarray(_log10(x))
 
 
-def log2(x: ndarray) -> ndarray:
+def log2(x: ArrayLike) -> ndarray:
     """
     Calculate the base-2 logarithm of each element.
 
@@ -1965,10 +1968,10 @@ def log2(x: ndarray) -> ndarray:
     >>> ap.log2(ap.array([8.]))
     array([3.])
     """
-    return ndarray(_ap_log2(x))
+    return ndarray(_log2(x))
 
 
-def log1p(x: ndarray) -> ndarray:
+def log1p(x: ArrayLike) -> ndarray:
     """
     Calculate the natural logarithm of `1 + x` for each element.
 
@@ -1996,10 +1999,10 @@ def log1p(x: ndarray) -> ndarray:
     >>> ap.log1p(ap.array([1e-99]))
     array([1.e-99])
     """
-    return ndarray(_ap_log1p(x))
+    return ndarray(_log1p(x))
 
 
-def logaddexp(x1: ndarray, x2: ndarray) -> ndarray:
+def logaddexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Calculate the logarithm of the sum of exponentials of the inputs.
 
@@ -2030,10 +2033,10 @@ def logaddexp(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.logaddexp(ap.array([0]), ap.array([0]))
     array([0.69314718])
     """
-    return ndarray(_ap_logaddexp(x1, x2))
+    return ndarray(_logaddexp(x1, x2))
 
 
-def logaddexp2(x1: ndarray, x2: ndarray) -> ndarray:
+def logaddexp2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Calculate the base-2 logarithm of the sum of base-2 exponentials of the inputs.
 
@@ -2063,11 +2066,11 @@ def logaddexp2(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.logaddexp2(ap.array([1]), ap.array([1]))
     array([2.])
     """
-    return ndarray(_ap_logaddexp2(x1, x2))
+    return ndarray(_logaddexp2(x1, x2))
 
 
 # Handling complex numbers
-def real(x: ndarray) -> ndarray:
+def real(x: ArrayLike) -> ndarray:
     """
     Return the real part of the complex argument.
 
@@ -2094,11 +2097,11 @@ def real(x: ndarray) -> ndarray:
     >>> ap.real(ap.array([1+5j]))
     array([1.])
     """
-    return ndarray(_ap_real(x))
+    return ndarray(_real(x))
 
 
 # Floating point routines
-def signbit(x: ndarray) -> ndarray:
+def signbit(x: ArrayLike) -> ndarray:
     """
     Check if the sign bit is set for each element.
 
@@ -2125,9 +2128,10 @@ def signbit(x: ndarray) -> ndarray:
     >>> ap.signbit(ap.array([-2.5, 3.5]))
     array([ True, False])
     """
-    result = ndarray(_ap_signbit(x))
+    result = ndarray(_signbit(x))
     # CANN's aclnnSignbit does not handle IEEE 754 negative zero (-0.0).
     # Detect -0.0 via numpy and patch the result.
+    import numpy as np
     np_x = x.to_numpy()
     neg_zero_mask = np.signbit(np_x) & (np_x == 0)
     if neg_zero_mask.any():
@@ -2137,7 +2141,7 @@ def signbit(x: ndarray) -> ndarray:
     return result
 
 
-def ldexp(x1: ndarray, x2: ndarray) -> ndarray:
+def ldexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Calculate `x1 * (2**x2)` element-wise.
 
@@ -2166,10 +2170,10 @@ def ldexp(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.ldexp(ap.array([3]), ap.array([2]))
     array([12.])
     """
-    return ndarray(_ap_ldexp(x1, x2))
+    return ndarray(_ldexp(x1, x2))
 
 
-def copysign(x1: ndarray, x2: ndarray) -> ndarray:
+def copysign(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     """
     Change the sign of `x1` to that of `x2` element-wise.
 
@@ -2198,11 +2202,11 @@ def copysign(x1: ndarray, x2: ndarray) -> ndarray:
     >>> ap.copysign(ap.array([1.5]), ap.array([-1]))
     array([-1.5])
     """
-    return ndarray(_ap_copysign(x1, x2))
+    return ndarray(_copysign(x1, x2))
 
 
 # Hyperbolic functions
-def sinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def sinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the hyperbolic sine of each element.
 
@@ -2232,10 +2236,10 @@ def sinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.sinh(ap.array([0., 1.]))
     array([0.        , 1.17520119])
     """
-    return ndarray(_ap_sinh(x, _convert_dtype(dtype)))
+    return ndarray(_sinh(x, _convert_dtype(dtype)))
 
 
-def cosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def cosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the hyperbolic cosine of each element.
 
@@ -2265,10 +2269,10 @@ def cosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.cosh(ap.array([0., 1.]))
     array([1.        , 1.54308063])
     """
-    return ndarray(_ap_cosh(x, _convert_dtype(dtype)))
+    return ndarray(_cosh(x, _convert_dtype(dtype)))
 
 
-def tanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def tanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the hyperbolic tangent of each element.
 
@@ -2298,10 +2302,10 @@ def tanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.tanh(ap.array([0., 1.]))
     array([0.        , 0.76159416])
     """
-    return ndarray(_ap_tanh(x, _convert_dtype(dtype)))
+    return ndarray(_tanh(x, _convert_dtype(dtype)))
 
 
-def arcsinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def arcsinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the inverse hyperbolic sine of each element.
 
@@ -2330,10 +2334,10 @@ def arcsinh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.arcsinh(ap.array([0., 1.17520119]))
     array([0., 1.])
     """
-    return ndarray(_ap_arcsinh(x, _convert_dtype(dtype)))
+    return ndarray(_arcsinh(x, _convert_dtype(dtype)))
 
 
-def arccosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def arccosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the inverse hyperbolic cosine of each element.
 
@@ -2362,10 +2366,10 @@ def arccosh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.arccosh(ap.array([1., 1.54308063]))
     array([0., 1.])
     """
-    return ndarray(_ap_arccosh(x, _convert_dtype(dtype)))
+    return ndarray(_arccosh(x, _convert_dtype(dtype)))
 
 
-def arctanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def arctanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the inverse hyperbolic tangent of each element.
 
@@ -2394,11 +2398,11 @@ def arctanh(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.arctanh(ap.array([0., 0.76159416]))
     array([0., 1.])
     """
-    return ndarray(_ap_arctanh(x, _convert_dtype(dtype)))
+    return ndarray(_arctanh(x, _convert_dtype(dtype)))
 
 
 # Other special functions
-def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def sinc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the normalized sinc function of each element.
 
@@ -2427,12 +2431,12 @@ def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.sinc(ap.array([0., 0.5]))
     array([1.        , 0.63661977])
     """
-    return ndarray(_ap_sinc(x, _convert_dtype(dtype)))
+    return ndarray(_sinc(x, _convert_dtype(dtype)))
 
 
 # Rational routines
 def gcd(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the greatest common divisor of the inputs.
@@ -2464,11 +2468,11 @@ def gcd(
     >>> ap.gcd(ap.array([10]), ap.array([25]))
     array([5])
     """
-    return ndarray(_ap_gcd(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_gcd(x1, x2, _convert_dtype(dtype)))
 
 
 def lcm(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the least common multiple of the inputs.
@@ -2500,11 +2504,11 @@ def lcm(
     >>> ap.lcm(ap.array([4]), ap.array([6]))
     array([12])
     """
-    return ndarray(_ap_lcm(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_lcm(x1, x2, _convert_dtype(dtype)))
 
 
 # Rounding
-def around(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
+def around(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
     """
     Round elements to a specified number of decimal places.
 
@@ -2515,7 +2519,7 @@ def around(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> n
     x : asnumpy.ndarray
         Input data.
     decimals : int, optional
-        Number of decimal places to round to (default: 0). 
+        Number of decimal places to round to (default: 0).
         If decimals is negative, it specifies the number of positions to the left of the decimal point.
     dtype : data-type, optional
         The desired data type for the output array.
@@ -2538,10 +2542,10 @@ def around(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> n
     >>> ap.around(ap.array([0.55, 1.55]), decimals=1)
     array([0.6, 1.6])
     """
-    return ndarray(_ap_around(x, decimals, _convert_dtype(dtype)))
+    return ndarray(_around(x, decimals, _convert_dtype(dtype)))
 
 
-def round_(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> ndarray:
+def round_(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
     """
     Round elements to a specified number of decimal places.
 
@@ -2552,7 +2556,7 @@ def round_(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> n
     x : asnumpy.ndarray
         Input data.
     decimals : int, optional
-        Number of decimal places to round to (default: 0). 
+        Number of decimal places to round to (default: 0).
         If decimals is negative, it specifies the number of positions to the left of the decimal point.
     dtype : data-type, optional
         The desired data type for the output array.
@@ -2575,10 +2579,10 @@ def round_(x: ndarray, decimals: int = 0, dtype: Optional[np.dtype] = None) -> n
     >>> ap.round_(ap.array([0.55, 1.55]), decimals=1)
     array([0.6, 1.6])
     """
-    return ndarray(_ap_round_(x, decimals, _convert_dtype(dtype)))
+    return ndarray(_round_(x, decimals, _convert_dtype(dtype)))
 
 
-def rint(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def rint(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Round elements to the nearest integer.
 
@@ -2609,10 +2613,10 @@ def rint(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.rint(ap.array([-1.2, 1.2]))
     array([-1.,  1.])
     """
-    return ndarray(_ap_rint(x, _convert_dtype(dtype)))
+    return ndarray(_rint(x, _convert_dtype(dtype)))
 
 
-def fix(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def fix(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Round elements towards zero.
 
@@ -2643,10 +2647,10 @@ def fix(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.fix(ap.array([2.9, -2.9]))
     array([ 2., -2.])
     """
-    return ndarray(_ap_fix(x, _convert_dtype(dtype)))
+    return ndarray(_fix(x, _convert_dtype(dtype)))
 
 
-def floor(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the floor of each element.
 
@@ -2676,10 +2680,10 @@ def floor(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.floor(ap.array([-1.5, 1.5]))
     array([-2.,  1.])
     """
-    return ndarray(_ap_floor(x, _convert_dtype(dtype)))
+    return ndarray(_floor(x, _convert_dtype(dtype)))
 
 
-def ceil(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def ceil(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Calculate the ceiling of each element.
 
@@ -2709,10 +2713,10 @@ def ceil(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.ceil(ap.array([-1.5, 1.5]))
     array([-1.,  2.])
     """
-    return ndarray(_ap_ceil(x, _convert_dtype(dtype)))
+    return ndarray(_ceil(x, _convert_dtype(dtype)))
 
 
-def trunc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
+def trunc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Truncate elements to their integer part.
 
@@ -2742,12 +2746,12 @@ def trunc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
     >>> ap.trunc(ap.array([-1.5, 1.5]))
     array([-1.,  1.])
     """
-    return ndarray(_ap_trunc(x, _convert_dtype(dtype)))
+    return ndarray(_trunc(x, _convert_dtype(dtype)))
 
 
 # Extrema finding
 def maximum(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the element-wise maximum of the inputs.
@@ -2781,11 +2785,11 @@ def maximum(
     >>> ap.maximum(ap.array([2, 3]), ap.array([1, 5]))
     array([2, 5])
     """
-    return ndarray(_ap_maximum(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_maximum(x1, x2, _convert_dtype(dtype)))
 
 
 def minimum(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the element-wise minimum of the inputs.
@@ -2819,11 +2823,11 @@ def minimum(
     >>> ap.minimum(ap.array([2, 3]), ap.array([1, 5]))
     array([1, 3])
     """
-    return ndarray(_ap_minimum(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_minimum(x1, x2, _convert_dtype(dtype)))
 
 
 def fmax(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the element-wise maximum of the inputs, ignoring NaNs.
@@ -2859,11 +2863,11 @@ def fmax(
     >>> ap.fmax(ap.array([np.nan, 2]), ap.array([1, np.nan]))
     array([1., 2.])
     """
-    return ndarray(_ap_fmax(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_fmax(x1, x2, _convert_dtype(dtype)))
 
 
 def fmin(
-    x1: Union[ndarray, Any], x2: Union[ndarray, Any], dtype: Optional[np.dtype] = None
+    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
 ) -> ndarray:
     """
     Calculate the element-wise minimum of the inputs, ignoring NaNs.
@@ -2899,11 +2903,11 @@ def fmin(
     >>> ap.fmin(ap.array([np.nan, 2]), ap.array([1, np.nan]))
     array([1., 2.])
     """
-    return ndarray(_ap_fmin(x1, x2, _convert_dtype(dtype)))
+    return ndarray(_fmin(x1, x2, _convert_dtype(dtype)))
 
 
 def max(
-    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
     Calculate the maximum value of the array.
@@ -2940,12 +2944,12 @@ def max(
     3
     """
     if axis is None:
-        return _ap_max(a)
-    return ndarray(_ap_max(a, axis, keepdims))
+        return _max(a)
+    return ndarray(_max(a, axis, keepdims))
 
 
 def amax(
-    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
     Calculate the maximum value of the array.
@@ -2982,12 +2986,12 @@ def amax(
     3
     """
     if axis is None:
-        return _ap_amax(a)
-    return ndarray(_ap_amax(a, axis, keepdims))
+        return _amax(a)
+    return ndarray(_amax(a, axis, keepdims))
 
 
 def nanmax(
-    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
     Calculate the maximum value of the array, ignoring NaNs.
@@ -3025,12 +3029,12 @@ def nanmax(
     1.0
     """
     if axis is None:
-        return _ap_nanmax(a)
-    return ndarray(_ap_nanmax(a, axis, keepdims))
+        return _nanmax(a)
+    return ndarray(_nanmax(a, axis, keepdims))
 
 
 def min(
-    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
     Calculate the minimum value of the array.
@@ -3067,12 +3071,12 @@ def min(
     1
     """
     if axis is None:
-        return _ap_min(a)
-    return ndarray(_ap_min(a, axis, keepdims))
+        return _min(a)
+    return ndarray(_min(a, axis, keepdims))
 
 
 def amin(
-    a: ndarray, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False
+    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
 ) -> Union[ndarray, float]:
     """
     Calculate the minimum value of the array.
@@ -3109,5 +3113,5 @@ def amin(
     1
     """
     if axis is None:
-        return _ap_amin(a)
-    return ndarray(_ap_amin(a, axis, keepdims))
+        return _amin(a)
+    return ndarray(_amin(a, axis, keepdims))

@@ -14,27 +14,24 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union, Optional, Sequence, Any
-import numpy as np
+from ._types import ArrayLike, DTypeLike, ShapeLike, ScalarLike
 from .lib.asnumpy_core.array import (
-    empty as _ap_empty,
-    empty_like as _ap_empty_like,
-    eye as _ap_eye,
-    full as _ap_full,
-    full_like as _ap_full_like,
-    identity as _ap_identity,
-    linspace as _ap_linspace,
-    ones as _ap_ones,
-    ones_like as _ap_ones_like,
-    zeros as _ap_zeros,
-    zeros_like as _ap_zeros_like,
+    empty as _empty,
+    empty_like as _empty_like,
+    eye as _eye,
+    full as _full,
+    full_like as _full_like,
+    identity as _identity,
+    linspace as _linspace,
+    ones as _ones,
+    ones_like as _ones_like,
+    zeros as _zeros,
+    zeros_like as _zeros_like,
 )
 from .utils import ndarray, _convert_dtype
 
 
-def zeros(
-    shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
-) -> ndarray:
+def zeros(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array initialized with zero values.
 
@@ -76,10 +73,10 @@ def zeros(
     array([[0, 0],
            [0, 0]])
     """
-    return ndarray(_ap_zeros(shape, _convert_dtype(dtype)))
+    return ndarray(_zeros(shape, _convert_dtype(dtype)))
 
 
-def zeros_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
+def zeros_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array of zeros with the same shape as an existing array.
 
@@ -119,12 +116,10 @@ def zeros_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     array([[0, 0],
            [0, 0]])
     """
-    return ndarray(_ap_zeros_like(other, _convert_dtype(dtype)))
+    return ndarray(_zeros_like(other, _convert_dtype(dtype)))
 
 
-def full(
-    shape: Union[int, Sequence[int]], value: Any, dtype: Optional[np.dtype] = None
-) -> ndarray:
+def full(shape: ShapeLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with a specific value.
 
@@ -162,10 +157,10 @@ def full(
     array([[3.5, 3.5, 3.5],
            [3.5, 3.5, 3.5]])
     """
-    return ndarray(_ap_full(shape, value, _convert_dtype(dtype)))
+    return ndarray(_full(shape, value, _convert_dtype(dtype)))
 
 
-def full_like(other: Any, value: Any, dtype: Optional[np.dtype] = None) -> ndarray:
+def full_like(other: ArrayLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with a specific value, matching another array's shape.
 
@@ -197,12 +192,10 @@ def full_like(other: Any, value: Any, dtype: Optional[np.dtype] = None) -> ndarr
     >>> ap.full_like(x, 9)
     array([9, 9, 9, 9])
     """
-    return ndarray(_ap_full_like(other, value, _convert_dtype(dtype)))
+    return ndarray(_full_like(other, value, _convert_dtype(dtype)))
 
 
-def empty(
-    shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None
-) -> ndarray:
+def empty(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an uninitialized array.
 
@@ -235,10 +228,10 @@ def empty(
     array([[... , ...],
            [... , ...]])  # values arbitrary
     """
-    return ndarray(_ap_empty(shape, _convert_dtype(dtype)))
+    return ndarray(_empty(shape, _convert_dtype(dtype)))
 
 
-def empty_like(prototype: Any, dtype: Optional[np.dtype] = None) -> ndarray:
+def empty_like(prototype: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an uninitialized array matching another array's shape.
 
@@ -269,10 +262,10 @@ def empty_like(prototype: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     array([[... , ...],
            [... , ...]])  # values arbitrary
     """
-    return ndarray(_ap_empty_like(prototype, _convert_dtype(dtype)))
+    return ndarray(_empty_like(prototype, _convert_dtype(dtype)))
 
 
-def eye(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
+def eye(n: int, dtype: DTypeLike = None) -> ndarray:
     """
     Create a 2-D identity matrix.
 
@@ -304,10 +297,10 @@ def eye(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
            [0., 1., 0.],
            [0., 0., 1.]])
     """
-    return ndarray(_ap_eye(n, _convert_dtype(dtype)))
+    return ndarray(_eye(n, _convert_dtype(dtype)))
 
 
-def ones(shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None) -> ndarray:
+def ones(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with ones.
 
@@ -336,10 +329,10 @@ def ones(shape: Union[int, Sequence[int]], dtype: Optional[np.dtype] = None) -> 
     >>> ap.ones(4)
     array([1., 1., 1., 1.])
     """
-    return ndarray(_ap_ones(shape, _convert_dtype(dtype)))
+    return ndarray(_ones(shape, _convert_dtype(dtype)))
 
 
-def ones_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
+def ones_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array of ones matching another array's shape.
 
@@ -370,10 +363,10 @@ def ones_like(other: Any, dtype: Optional[np.dtype] = None) -> ndarray:
     array([[1, 1, 1],
            [1, 1, 1]])
     """
-    return ndarray(_ap_ones_like(other, _convert_dtype(dtype)))
+    return ndarray(_ones_like(other, _convert_dtype(dtype)))
 
 
-def identity(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
+def identity(n: int, dtype: DTypeLike = None) -> ndarray:
     """
     Create a square identity matrix.
 
@@ -397,14 +390,14 @@ def identity(n: int, dtype: Optional[np.dtype] = None) -> ndarray:
            [0., 1., 0.],
            [0., 0., 1.]])
     """
-    return ndarray(_ap_identity(n, _convert_dtype(dtype)))
+    return ndarray(_identity(n, _convert_dtype(dtype)))
 
 
 def linspace(
-    start: Union[int, float],
-    end: Union[int, float],
+    start: ScalarLike,
+    end: ScalarLike,
     steps: int = 50,
-    dtype: Optional[np.dtype] = None,
+    dtype: DTypeLike = None,
 ) -> ndarray:
     """
     Generate evenly spaced samples over an interval.
@@ -435,4 +428,4 @@ def linspace(
     >>> ap.linspace(0, 1, 5)
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
-    return ndarray(_ap_linspace(start, end, steps, _convert_dtype(dtype)))
+    return ndarray(_linspace(start, end, steps, _convert_dtype(dtype)))
