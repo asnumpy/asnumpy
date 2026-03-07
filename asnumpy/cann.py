@@ -15,11 +15,11 @@
 # *****************************************************************************
 
 from .lib.asnumpy_core.cann import (
-    finalize as _ap_finalize,
-    init as _ap_init,
-    reset_device as _ap_reset_device,
-    reset_device_force as _ap_reset_device_force,
-    set_device as _ap_set_device,
+    finalize as _finalize,
+    init as _init,
+    reset_device as _reset_device,
+    reset_device_force as _reset_device_force,
+    set_device as _set_device,
 )
 
 
@@ -32,7 +32,7 @@ def set_device(device_id: int) -> None:
     device_id : int
         ID of the device to set.
     """
-    return _ap_set_device(device_id)
+    return _set_device(device_id)
 
 
 def reset_device(device_id: int) -> None:
@@ -44,7 +44,7 @@ def reset_device(device_id: int) -> None:
     device_id : int
         ID of the device to reset.
     """
-    return _ap_reset_device(device_id)
+    return _reset_device(device_id)
 
 
 def reset_device_force(device_id: int) -> None:
@@ -56,18 +56,18 @@ def reset_device_force(device_id: int) -> None:
     device_id : int
         ID of the device to reset.
     """
-    return _ap_reset_device_force(device_id)
+    return _reset_device_force(device_id)
 
 
 def init() -> None:
     """
     Initialize the CANN backend.
     """
-    return _ap_init()
+    return _init()
 
 
 def finalize() -> None:
     """
     Finalize the CANN backend.
     """
-    return _ap_finalize()
+    return _finalize()

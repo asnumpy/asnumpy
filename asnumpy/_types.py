@@ -1,5 +1,5 @@
 # *****************************************************************************
-# Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+# Copyright (c) 2025 AISS and ISE Group at Harbin Institute of Technology. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,39 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union
-from .lib.asnumpy_core.statistics import mean as _mean
-from .utils import ndarray, _convert_dtype
-from ._types import ArrayLike, AxisLike, DTypeLike
+from typing import Union, Sequence, TypeVar
+import numpy as np
 
 
-def mean(
-    a: ArrayLike,
-    axis: AxisLike = None,
-    keepdims: bool = False,
-    dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
-    if axis is None:
-        return _mean(a)
-    return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))
+ArrayLike = Union[
+    "ndarray",  # NPUArray
+    np.ndarray,
+    int,
+    float,
+    complex,
+    bool,
+    Sequence,
+]
+
+DTypeLike = Union[np.dtype, str, type, None]
+
+ShapeLike = Union[int, Sequence[int]]
+
+AxisLike = Union[int, Sequence[int], None]
+
+AxisOptional = Union[int, Sequence[int], None]
+
+ScalarLike = Union[int, float, complex, bool]
+
+T = TypeVar("T")
+
+
+__all__ = [
+    "ArrayLike",
+    "DTypeLike",
+    "ShapeLike",
+    "AxisLike",
+    "AxisOptional",
+    "ScalarLike",
+    "T",
+]
