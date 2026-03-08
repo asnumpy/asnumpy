@@ -1,23 +1,40 @@
-## 类型
-- [ ] Bug修复
-- [ ] 新功能
-- [ ] 代码风格更新
-- [ ] 代码重构
-- [ ] 构建过程或辅助工具的变动
-- [ ] 文档内容更新
+<!--
+PR Title Guidelines:
+  - Format: <type>(<scope>): <description>
+  - Examples: feat(math): add nanmin, fix(array): correct shape
+  - Max 72 characters, imperative mood, lowercase, no trailing period
 
-## 描述
-请提供此 Pull Request 的详细说明。
+Line Length: Maximum 80 characters per line.
+-->
 
-## 如何测试
-描述测试这个变更的步骤，包括哪些文件需要被修改。
+## Summary
 
-## Checklist:
-- [ ] 我的代码遵循这个项目的代码风格
-- [ ] 我已经自己测试过我的代码
-- [ ] 我已经更新了相应的文档
-- [ ] 我已经根据需要更新了对应的变更日志
-- [ ] 我已经在标题中正确使用了类型标签（例如：`feature:`, `fix:`）
+<!-- What and WHY this change is needed. -->
 
-## 其他信息
-在这里可以添加任何与这个 Pull Request 相关的其他说明。
+## Type of Change
+
+- [ ] `feat`: New feature
+- [ ] `fix`: Bug fix
+- [ ] `refactor`: Code refactoring
+- [ ] `docs`: Documentation
+- [ ] `test`: Tests
+- [ ] `chore`: Build/tooling
+
+---
+
+## Contributor Declaration
+
+- [ ] Not a trivial change (e.g., typo fix).
+- [ ] PR description follows [best practices](https://cbea.ms/git-commit/).
+- [ ] `ruff check .` and `ruff format --check .` passed.
+- [ ] Tests added, or reason: `FILL IN REASON IF SKIPPED`.
+
+---
+
+## Changes
+
+<!-- Key changes and affected files. -->
+
+## Related Issues
+
+<!-- Closes #123, Fixes #456, etc. -->
