@@ -19,15 +19,15 @@ add_library(dtypes OBJECT
     np_import.cpp
 )
 
-target_include_directories(dtypes PUBLIC 
+target_include_directories(dtypes PUBLIC
     ${CMAKE_SOURCE_DIR}/include
-    ${Python3_INCLUDE_DIRS}
-    ${Python3_NumPy_INCLUDE_DIRS}
+    ${Python_INCLUDE_DIRS}
+    ${Python_NumPy_INCLUDE_DIRS}
 )
 
-target_link_libraries(dtypes PUBLIC 
+target_link_libraries(dtypes PUBLIC
     fmt::fmt
-    ${Python3_LIBRARIES}
+    Python::Python
 )
 
 # 添加必要的编译定义

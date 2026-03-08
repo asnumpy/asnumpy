@@ -14,18 +14,14 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union
-from .lib.asnumpy_core.statistics import mean as _mean
-from .utils import ndarray, _convert_dtype
-from ._types import ArrayLike, AxisLike, DTypeLike
+"""Math tests common fixtures and utilities."""
+
+import numpy
 
 
-def mean(
-    a: ArrayLike,
-    axis: AxisLike = None,
-    keepdims: bool = False,
-    dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
-    if axis is None:
-        return _mean(a)
-    return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))
+def _create_array(xp, data, dtype):
+    """辅助函数：创建数组"""
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
