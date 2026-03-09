@@ -37,11 +37,11 @@ def test_sum_basic(xp, dtype):
     return xp.sum(a, axis=0, keepdims=False)
 
 
-@pytest.mark.xfail(reason="Bug: sum does not support axis=None in asnumpy/aclnn")
+@pytest.mark.xfail(reason="Bug: sum use aclnnFlatten which does not support float64")
 @testing.for_dtypes([numpy.float32])
 def test_sum_axis_none_xfail(xp, dtype):
     a = _create_array(xp, [1.0, 2.0], dtype)
-    return xp.sum(a, axis=None, keepdims=False)
+    return xp.sum(a)
 
 
 # ========== 2. 乘积 (Prod) ==========
@@ -56,11 +56,11 @@ def test_prod_basic(xp, dtype):
     return xp.prod(a, axis=0, keepdims=False)
 
 
-@pytest.mark.xfail(reason="Bug: prod does not support axis=None in asnumpy/aclnn")
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float64])
+@testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_prod_axis_none_xfail(xp, dtype):
     a = _create_array(xp, [1.0, 2.0], dtype)
-    return xp.prod(a, axis=None, keepdims=False)
+    return xp.prod(a)
 
 
 # ========== 3. 归约 Dtype 限制 (XFAIL) ==========
