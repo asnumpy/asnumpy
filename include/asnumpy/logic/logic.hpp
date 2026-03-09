@@ -190,7 +190,7 @@ NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<
  * @brief Perform element-wise equality comparison between two arrays.
  * 
  * Compares each element of x1 and x2 and returns a boolean array
- * indicating where x1 == x2. Uses aclnnEqual internally.
+ * indicating where x1 == x2. Uses aclnnEqTensor internally.
  * 
  * @param x1 First input array.
  * @param x2 Second input array.
@@ -199,6 +199,20 @@ NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<
  * @throws std::runtime_error If ACL operation fails.
  */
 NPUArray equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
+
+/**
+ * @brief Perform element-wise equality comparison between an array and a scalar.
+ * 
+ * Compares each element of x1 and x2 and returns a boolean array
+ * indicating where x1 == x2. Uses aclnnEqScalar internally.
+ * 
+ * @param x1 First input array.
+ * @param scalar Scalar value to compare with.
+ * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
+ * @return NPUArray Boolean array where each element indicates the result of x1 == scalsr.
+ * @throws std::runtime_error If ACL operation fails.
+ */
+NPUArray equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype = std::nullopt);
 
 /**
  * @brief Perform element-wise not-equal comparison between two arrays.
