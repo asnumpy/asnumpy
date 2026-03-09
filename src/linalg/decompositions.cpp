@@ -17,6 +17,7 @@
 
 #include <asnumpy/linalg/decompositions.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -26,7 +27,9 @@
 #include <fmt/format.h>
 #include <stdexcept>
 
-std::vector<NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode) {
+using namespace asnumpy;
+
+std::pair<NPUArray, NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode) {
     int size = a.shape.size();
     int k = a.shape[size-2] < a.shape.back() ? a.shape[size-2] : a.shape.back();
     auto shapeQ = a.shape;
@@ -36,7 +39,7 @@ std::vector<NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode) {
         num = 1;
     }
     else if (mode == "r") {
-        shapeQ = {};
+        shapeQ = a.shape;
         shapeR[size-2] = k;
         num = 2;
     }
@@ -51,17 +54,10 @@ std::vector<NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode) {
     aclOpExecutor* executor;
     auto error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnLinalgQr(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, "aclnnLinalgQr error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
-    std::vector<NPUArray> result;
-    result.push_back(resultQ);
-    result.push_back(resultR);
-    return result;
+    return {resultQ, resultR};
 }
