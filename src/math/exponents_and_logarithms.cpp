@@ -18,6 +18,7 @@
 #include <asnumpy/math/exponents_and_logarithms.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -43,21 +44,18 @@ namespace asnumpy {
         if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64){
             aclType = ACL_DOUBLE;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnExpGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnExp(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnExp error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnExpGetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnExp(workspace, workspaceSize, executor, nullptr);
+            },
+            "Exp"                                       
+        );
     }
 
     NPUArray Expm1(const NPUArray& x) {
@@ -67,21 +65,18 @@ namespace asnumpy {
         if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64){
             aclType = ACL_DOUBLE;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnExpm1GetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnExpm1(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnExpm1 error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnExpm1GetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnExpm1(workspace, workspaceSize, executor, nullptr);
+            },
+            "Expm1"                                       
+        );
     }
 
     NPUArray Exp2(const NPUArray& x) {
@@ -90,90 +85,81 @@ namespace asnumpy {
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE){
             aclType = x.aclDtype;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnExp2GetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnExp2(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnExp2 error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnExp2GetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnExp2(workspace, workspaceSize, executor, nullptr);
+            },
+            "Exp2"                                       
+        );
     }
 
     NPUArray Log(const NPUArray& x) {
         auto shape = x.shape;
         aclDataType aclType = ACL_DOUBLE;
-        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+            x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLogGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLog(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLog error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLogGetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLog(workspace, workspaceSize, executor, nullptr);
+            },
+            "Log"                                       
+        );
     }
 
     NPUArray Log10(const NPUArray& x) {
         auto shape = x.shape;
         aclDataType aclType = ACL_FLOAT;
-        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+            x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLog10GetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLog10(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLog10 error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLog10GetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLog10(workspace, workspaceSize, executor, nullptr);
+            },
+            "Log10"                                       
+        );
     }
 
     NPUArray Log2(const NPUArray& x) {
         auto shape = x.shape;
         aclDataType aclType = ACL_DOUBLE;
-        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+            x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLog2GetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLog2(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLog2 error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLog2GetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLog2(workspace, workspaceSize, executor, nullptr);
+            },
+            "Log2"                                       
+        );
     }
 
     NPUArray Log1p(const NPUArray& x) {
@@ -182,58 +168,49 @@ namespace asnumpy {
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE){
             aclType = x.aclDtype;
         }
-        auto result = NPUArray(shape, aclType);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLog1pGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLog1p(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLog1p error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(aclType);
+        return ExecuteUnaryOp(
+            x,                                          
+            dtype,                                     
+            [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLog1pGetWorkspaceSize(in, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLog1p(workspace, workspaceSize, executor, nullptr);
+            },
+            "Log1p"                                       
+        );
     }
 
     NPUArray Logaddexp(const NPUArray& x1, const NPUArray& x2) {
-        auto broadcast = GetBroadcastShape(x1, x2);
-        auto result = NPUArray(broadcast, ACL_FLOAT);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLogAddExpGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLogAddExp(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLogAddExp error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+        return ExecuteBinaryOp(
+            x1,
+            x2,                                           
+            dtype,                                     
+            [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLogAddExpGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLogAddExp(workspace, workspaceSize, executor, nullptr);
+            },
+            "Logaddexp"                                       
+        );
     }
 
     NPUArray Logaddexp2(const NPUArray& x1, const NPUArray& x2) {
-        auto broadcast = GetBroadcastShape(x1, x2);
-        auto result = NPUArray(broadcast, ACL_FLOAT);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnLogAddExp2GetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLogAddExp2(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLogAddExp2 error");
-        error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        return result;
+        py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+        return ExecuteBinaryOp(
+            x1,
+            x2,                                           
+            dtype,                                     
+            [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnLogAddExp2GetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnLogAddExp2(workspace, workspaceSize, executor, nullptr);
+            },
+            "Logaddexp2"                                       
+        );
     }
 }
