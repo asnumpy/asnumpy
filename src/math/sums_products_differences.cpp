@@ -18,6 +18,7 @@
 #include <asnumpy/math/sums_products_differences.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -57,14 +58,11 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnProdDimGetWorkspaceSize(a.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnProdDimGetWorkspaceSize(a.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr, 
+            &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnProdDim(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnProdDim(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnProdDim error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -79,11 +77,8 @@ namespace asnumpy {
         auto error = aclnnProdGetWorkspaceSize(a.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
         void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnProd(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnProd(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnProd error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -127,14 +122,11 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnReduceSumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnReduceSumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, 
+            result.tensorPtr, &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnReduceSum(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnReduceSum(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnReduceSum error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -153,12 +145,8 @@ namespace asnumpy {
         aclOpExecutor* executor1;
         auto error1 = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnFlatten(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnFlatten(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnFlatten error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
@@ -168,14 +156,11 @@ namespace asnumpy {
         auto result = NPUArray({1}, a.aclDtype);
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnReduceSumGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnReduceSumGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, 
+            result.tensorPtr, &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnReduceSum(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnReduceSum(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnReduceSum error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -219,29 +204,22 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize1 = 0;
         aclOpExecutor* executor1;
-        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, 
-            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
+        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, std::numeric_limits<float>::infinity(), 
+            -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnNanToNum(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnNanToNum error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
         
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnProdDimGetWorkspaceSize(temp.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnProdDimGetWorkspaceSize(temp.tensorPtr, axis, keepdims, result.aclDtype, 
+            result.tensorPtr, &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnProdDim(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnProdDim(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnProdDim error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -255,29 +233,22 @@ namespace asnumpy {
         auto result = NPUArray(shape, a.aclDtype);
         uint64_t workspaceSize1 = 0;
         aclOpExecutor* executor1;
-        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, 
-            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
+        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, std::numeric_limits<float>::infinity(), 
+            -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnNanToNum(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnNanToNum error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
         
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnProdGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnProdGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, 
+            &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnProd(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnProd(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnProd error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -322,14 +293,11 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnReduceNansumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnReduceNansumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, 
+            result.tensorPtr, &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnReduceNansum(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnReduceNansum(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnReduceNansum error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -348,12 +316,8 @@ namespace asnumpy {
         aclOpExecutor* executor1;
         auto error1 = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnFlatten(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnFlatten(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnFlatten error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
@@ -363,14 +327,11 @@ namespace asnumpy {
         auto result = NPUArray({1}, a.aclDtype);
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnReduceNansumGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnReduceNansumGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, 
+            result.tensorPtr, &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnReduceNansum(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnReduceNansum(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnReduceNansum error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -403,14 +364,11 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnCumprodGetWorkspaceSize(a.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnCumprodGetWorkspaceSize(a.tensorPtr, axis_scalar, result.aclDtype, 
+            result.tensorPtr, &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnCumprod(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnCumprod(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnCumprod error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -423,14 +381,11 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnCumsumGetWorkspaceSize(a.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnCumsumGetWorkspaceSize(a.tensorPtr, axis, result.aclDtype, result.tensorPtr, 
+            &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnCumsum(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnCumsum(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnCumsum error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
@@ -446,29 +401,22 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize1 = 0;
         aclOpExecutor* executor1;
-        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, 
-            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
+        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, std::numeric_limits<float>::infinity(), 
+            -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnNanToNum(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnNanToNum error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
 
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnCumprodGetWorkspaceSize(temp.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnCumprodGetWorkspaceSize(temp.tensorPtr, axis_scalar, result.aclDtype, 
+            result.tensorPtr, &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnCumprod(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnCumprod(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnCumprod error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -483,29 +431,22 @@ namespace asnumpy {
         auto result = NPUArray(shape, outDtype);
         uint64_t workspaceSize1 = 0;
         aclOpExecutor* executor1;
-        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, 
-            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
+        auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, std::numeric_limits<float>::infinity(), 
+            -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
         CheckGetWorkspaceSizeAclnnStatus(error1);
-        void* workspaceAddr1 = nullptr;
-        if(workspaceSize1 != 0ULL) {
-            error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error1);
-        }
-        error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
+        AclWorkspace workspace1(workspaceSize1);
+        error1 = aclnnNanToNum(workspace1.get(), workspaceSize1, executor1, nullptr);
         CheckAclnnStatus(error1, "aclnnNanToNum error");
         error1 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error1);
 
         uint64_t workspaceSize2 = 0;
         aclOpExecutor* executor2;
-        auto error2 = aclnnCumsumGetWorkspaceSize(temp.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+        auto error2 = aclnnCumsumGetWorkspaceSize(temp.tensorPtr, axis, result.aclDtype, result.tensorPtr, 
+            &workspaceSize2, &executor2);
         CheckGetWorkspaceSizeAclnnStatus(error2);
-        void* workspaceAddr2 = nullptr;
-        if(workspaceSize2 != 0ULL) {
-            error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error2);
-        }
-        error2 = aclnnCumsum(workspaceAddr2, workspaceSize2, executor2, nullptr);
+        AclWorkspace workspace2(workspaceSize2);
+        error2 = aclnnCumsum(workspace2.get(), workspaceSize2, executor2, nullptr);
         CheckAclnnStatus(error2, "aclnnCumsum error");
         error2 = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error2);
@@ -518,14 +459,11 @@ namespace asnumpy {
         auto result = NPUArray(broadcast, a.aclDtype);
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
-        auto error = aclnnLinalgCrossGetWorkspaceSize(a.tensorPtr, b.tensorPtr, axis, result.tensorPtr, &workspaceSize, &executor);
+        auto error = aclnnLinalgCrossGetWorkspaceSize(a.tensorPtr, b.tensorPtr, axis, result.tensorPtr, 
+            &workspaceSize, &executor);
         CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnLinalgCross(workspaceAddr, workspaceSize, executor, nullptr);
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnLinalgCross(workspace.get(), workspaceSize, executor, nullptr);
         CheckAclnnStatus(error, "aclnnLinalgCross error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);
