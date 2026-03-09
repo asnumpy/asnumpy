@@ -17,6 +17,8 @@
 
 #include <asnumpy/linalg/norms.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -28,6 +30,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <stdexcept>
+
+using namespace asnumpy;
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
     auto shape = a.shape;
@@ -46,14 +50,11 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
     auto result = NPUArray(shape, ACL_FLOAT);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar, axis_array, keepdims, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar, axis_array, keepdims, result.tensorPtr, 
+        &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnNorm(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnNorm(workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, "aclnnNorm error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -61,58 +62,46 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
 }
 
 NPUArray Linalg_Det(const NPUArray& a) {
-    auto shape = {a.shape[0]};
+    std::vector<int64_t> shape = a.shape;
+    shape.erase(shape.end() - 2, shape.end());
     auto temp = NPUArray(shape, ACL_DOUBLE);
-    auto result = NPUArray(shape, ACL_DOUBLE);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
     auto error1 = aclnnLogdetGetWorkspaceSize(a.tensorPtr, temp.tensorPtr, &workspaceSize1, &executor1);
     CheckGetWorkspaceSizeAclnnStatus(error1);
-    void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
-        error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error1);
-    }
-    error1 = aclnnLogdet(workspaceAddr1, workspaceSize1, executor1, nullptr);
+    AclWorkspace workspace1(workspaceSize1);
+    error1 = aclnnLogdet(workspace1.get(), workspaceSize1, executor1, nullptr);
     CheckAclnnStatus(error1, "aclnnLogdet error");
     error1 = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error1);
     
-    uint64_t workspaceSize2 = 0;
-    aclOpExecutor* executor2;
-    auto error2 = aclnnExpGetWorkspaceSize(temp.tensorPtr, result.tensorPtr, &workspaceSize2, &executor2);
-    CheckGetWorkspaceSizeAclnnStatus(error2);
-    void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
-        error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error2);
-    }
-    error2 = aclnnExp(workspaceAddr2, workspaceSize2, executor2, nullptr);
-    CheckAclnnStatus(error2, "aclnnExp error");
-    error2 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error2);
-    return result;
+    py::dtype dtype = NPUArray::GetPyDtype(ACL_DOUBLE);
+    return ExecuteUnaryOp(
+        temp,
+        dtype, 
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnExpGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnExp(workspace, workspaceSize, executor, nullptr);
+        },
+        "Linalg_Det"
+    );
 }
 
-std::vector<NPUArray> Linalg_Slogdet(const NPUArray& a) {
-    std::vector<int64_t> shape = {a.shape[0]};
+std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a) {
+    auto shape = a.shape;
+    shape.erase(shape.end() - 2, shape.end());
     auto signout = NPUArray(shape, ACL_DOUBLE);
     auto logout = NPUArray(shape, ACL_DOUBLE);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
     auto error = aclnnSlogdetGetWorkspaceSize(a.tensorPtr, signout.tensorPtr, logout.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnSlogdet(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnSlogdet(workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, "aclnnSlogdet error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
-    std::vector<NPUArray> result;
-    result.push_back(signout);
-    result.push_back(logout);
-    return result;
+    return {signout, logout};
 }
