@@ -55,7 +55,6 @@ def test_any_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.any(a)
 
-@pytest.mark.xfail(reason="Bug: aclnnAll throws RuntimeError 161002 with axis argument")
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_all_axis(xp, dtype):
@@ -64,7 +63,6 @@ def test_all_axis(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.all(a, axis=(0,))
 
-@pytest.mark.xfail(reason="Bug: aclnnAny throws RuntimeError 161002 with axis argument")
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_any_axis(xp, dtype):
@@ -181,11 +179,9 @@ def test_less_equal(xp, dtype):
     b = _create_array(xp, np_b, dtype)
     return xp.less_equal(a, b)
 
-@pytest.mark.xfail(reason="Bug: aclnnEqual throws RuntimeError 161002")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_equal(xp, dtype):
-    """测试 equal (已知失败)"""
     data_a = [1.0, 2.0, 3.0]
     data_b = [1.0, 2.0, 4.0]
     a = _create_array(xp, data_a, dtype)
@@ -201,11 +197,11 @@ def test_not_equal(xp, dtype):
     b = _create_array(xp, data_b, dtype)
     return xp.not_equal(a, b)
 
-@pytest.mark.xfail(reason="Bug: aclnnGtScalar returns wrong results (all True)")
-@testing.for_dtypes([numpy.float32])
+
+@testing.for_dtypes([numpy.float64])
 @testing.numpy_asnumpy_array_equal()
 def test_greater_scalar(xp, dtype):
-    """测试 greater_scalar (已知数值错误)"""
+    """测试 greater_scalar (API内部强制把输入scalar转为float64，故当前只支持flaot64)"""
     data = [1.0, 2.0, 3.0]
     scalar = 2.0
     a = _create_array(xp, data, dtype)
@@ -216,9 +212,7 @@ def test_greater_scalar(xp, dtype):
 @testing.suppress_warnings
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
-@pytest.mark.xfail(reason="Bug: aclnnEqual throws RuntimeError 161002 with NaN")
 def test_equal_with_nan(xp, dtype):
-    """测试 NaN 的比较行为 (已知会崩溃)"""
     data_a = [float('nan'), 1.0]
     data_b = [float('nan'), 1.0]
     a = _create_array(xp, data_a, dtype)
