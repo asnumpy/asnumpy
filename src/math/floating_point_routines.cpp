@@ -19,6 +19,7 @@
 #include <asnumpy/math/floating_point_routines.hpp>
 #include <asnumpy/math/miscellaneous.hpp>
 #include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -32,50 +33,18 @@
 namespace asnumpy {
 
 NPUArray Signbit(const NPUArray& x) {
-    // 初始化结果数组（形状与输入一致，数据类型为布尔型）
-    auto shape = x.shape;
-    NPUArray result(shape, ACL_BOOL);  // 布尔型输出（True表示负数）
-
-    // 获取工作空间大小
-    uint64_t workspace_size = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnSignbitGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
+    py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
+    return ExecuteUnaryOp(
+        x,                                           
+        dtype,                                     
+        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnSignbitGetWorkspaceSize(in, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnSignbit(workspace, workspaceSize, executor, nullptr);
+        },
+        "Signbit"                                       
     );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Signbit: get workspace size failed, error={}", error));
-    }
-
-    // 分配工作空间
-    void* workspace = nullptr;
-    if (workspace_size > 0ULL) {
-        error = aclrtMalloc(&workspace, workspace_size, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            throw std::runtime_error(fmt::format("Signbit: malloc workspace failed, error={}", error));
-        }
-    }
-
-    // 执行符号位检查（检测是否为负数）
-    error = aclnnSignbit(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
-    );
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("Signbit: computation failed, error={}", error));
-    }
-
-    // 同步设备并释放资源
-    aclrtSynchronizeDevice();
-    if (workspace != nullptr) {
-        aclrtFree(workspace);
-    }
-
-    return result;
 }
 
 NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2) {
