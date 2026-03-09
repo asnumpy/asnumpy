@@ -18,6 +18,7 @@
 #include <asnumpy/random/distributions.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -68,14 +69,11 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, 
+        &uni_workspaceSize, &uni_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* uni_workspaceAddr = nullptr;
-    if(uni_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&uni_workspaceAddr, uni_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceUniform(uni_workspaceAddr, uni_workspaceSize, uni_executor, nullptr);
+    AclWorkspace uni_workspace(uni_workspaceSize);
+    error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceUniform error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -87,14 +85,11 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     aclScalar* alpha = aclCreateScalar(&scalar2, ACL_FLOAT);
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, rsubs_temp.tensorPtr, &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, rsubs_temp.tensorPtr, 
+        &rsubs_workspaceSize, &rsubs_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* rsubs_workspaceAddr = nullptr;
-    if(rsubs_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&rsubs_workspaceAddr, rsubs_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnRsubs(rsubs_workspaceAddr, rsubs_workspaceSize, rsubs_executor, nullptr);
+    AclWorkspace rsubs_workspace(rsubs_workspaceSize);
+    error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
     CheckAclnnStatus(error, "aclnnRsubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -104,14 +99,11 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     aclScalar* exponent = aclCreateScalar(&scalar3, ACL_FLOAT);
     uint64_t exp_workspaceSize = 0;
     aclOpExecutor* exp_executor;
-    error = aclnnPowTensorScalarGetWorkspaceSize(rsubs_temp.tensorPtr, exponent, result.tensorPtr, &exp_workspaceSize, &exp_executor);
+    error = aclnnPowTensorScalarGetWorkspaceSize(rsubs_temp.tensorPtr, exponent, result.tensorPtr, 
+        &exp_workspaceSize, &exp_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* exp_workspaceAddr = nullptr;
-    if(exp_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&exp_workspaceAddr, exp_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnPowTensorScalar(exp_workspaceAddr, exp_workspaceSize, exp_executor, nullptr);
+    AclWorkspace exp_workspace(exp_workspaceSize);
+    error = aclnnPowTensorScalar(exp_workspace.get(), exp_workspaceSize, exp_executor, nullptr);
     CheckAclnnStatus(error, "aclnnPowTensorScalar error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -120,12 +112,8 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     aclOpExecutor* reci_executor;
     error = aclnnInplaceReciprocalGetWorkspaceSize(result.tensorPtr, &reci_workspaceSize, &reci_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* reci_workspaceAddr = nullptr;
-    if(reci_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&reci_workspaceAddr, reci_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceReciprocal(reci_workspaceAddr, reci_workspaceSize, reci_executor, nullptr);
+    AclWorkspace reci_workspace(reci_workspaceSize);
+    error = aclnnInplaceReciprocal(reci_workspace.get(), reci_workspaceSize, reci_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceReciprocal error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -134,12 +122,8 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     aclOpExecutor* sub_executor;
     error = aclnnInplaceSubsGetWorkspaceSize(result.tensorPtr, other, alpha, &sub_workspaceSize, &sub_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* sub_workspaceAddr = nullptr;
-    if(sub_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&sub_workspaceAddr, sub_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceSubs(sub_workspaceAddr, sub_workspaceSize, sub_executor, nullptr);
+    AclWorkspace sub_workspace(sub_workspaceSize);
+    error = aclnnInplaceSubs(sub_workspace.get(), sub_workspaceSize, sub_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceSubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -155,14 +139,11 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, 
+        &uni_workspaceSize, &uni_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* uni_workspaceAddr = nullptr;
-    if(uni_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&uni_workspaceAddr, uni_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceUniform(uni_workspaceAddr, uni_workspaceSize, uni_executor, nullptr);
+    AclWorkspace uni_workspace(uni_workspaceSize);
+    error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceUniform error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -174,14 +155,11 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     aclScalar* alpha = aclCreateScalar(&scalar2, ACL_FLOAT);
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, result.tensorPtr, &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, result.tensorPtr, 
+        &rsubs_workspaceSize, &rsubs_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* rsubs_workspaceAddr = nullptr;
-    if(rsubs_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&rsubs_workspaceAddr, rsubs_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnRsubs(rsubs_workspaceAddr, rsubs_workspaceSize, rsubs_executor, nullptr);
+    AclWorkspace rsubs_workspace(rsubs_workspaceSize);
+    error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
     CheckAclnnStatus(error, "aclnnRsubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -190,12 +168,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     aclOpExecutor* log_executor;
     error = aclnnInplaceLogGetWorkspaceSize(result.tensorPtr, &log_workspaceSize, &log_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* log_workspaceAddr = nullptr;
-    if(log_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&log_workspaceAddr, log_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceLog(log_workspaceAddr, log_workspaceSize, log_executor, nullptr);
+    AclWorkspace log_workspace(log_workspaceSize);
+    error = aclnnInplaceLog(log_workspace.get(), log_workspaceSize, log_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceLog error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -206,12 +180,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     aclOpExecutor* muls_executor;
     error = aclnnInplaceMulsGetWorkspaceSize(result.tensorPtr, mulnum, &muls_workspaceSize, &muls_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* muls_workspaceAddr = nullptr;
-    if(muls_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&muls_workspaceAddr, muls_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceMuls(muls_workspaceAddr, muls_workspaceSize, muls_executor, nullptr);
+    AclWorkspace muls_workspace(muls_workspaceSize);
+    error = aclnnInplaceMuls(muls_workspace.get(), muls_workspaceSize, muls_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceMuls error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -220,12 +190,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     aclOpExecutor* sqrt_executor;
     error = aclnnInplaceSqrtGetWorkspaceSize(result.tensorPtr, &sqrt_workspaceSize, &sqrt_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* sqrt_workspaceAddr = nullptr;
-    if(sqrt_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&sqrt_workspaceAddr, sqrt_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceSqrt(sqrt_workspaceAddr, sqrt_workspaceSize, sqrt_executor, nullptr);
+    AclWorkspace sqrt_workspace(sqrt_workspaceSize);
+    error = aclnnInplaceSqrt(sqrt_workspace.get(), sqrt_workspaceSize, sqrt_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceSqrt error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -235,12 +201,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     aclOpExecutor* executor;
     error = aclnnInplaceMulsGetWorkspaceSize(result.tensorPtr, muls, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceMuls(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnInplaceMuls(workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceMuls error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -256,15 +218,12 @@ NPUArray Generator_Normal(float loc, float scale, const std::vector<int64_t>& si
     int64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, 
+        &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnNormalFloatFloat(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnNormalFloatFloat error");
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnNormalFloatFloat(workspace.get(), workspaceSize, executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Generator_Normal");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
     return result;
@@ -279,15 +238,12 @@ NPUArray Generator_Uniform(double low, double high, const std::vector<int64_t>& 
     uint64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, low, high, seed, offset, &workspaceSize, &executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, low, high, seed, offset, 
+        &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceUniform(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnInplaceUniform error");
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnInplaceUniform(workspace.get(), workspaceSize, executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Generator_Uniform");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
     return result;
@@ -304,15 +260,12 @@ NPUArray Generator_Standard_normal(const std::vector<int64_t>& size) {
     int64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, 
+        &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnNormalFloatFloat(workspaceAddr, workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnNormalFloatFloat error");
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnNormalFloatFloat(workspace.get(), workspaceSize, executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Generator_Standard_normal");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
     return result;
@@ -327,14 +280,11 @@ NPUArray Generator_Standard_cauchy(const std::vector<int64_t>& size) {
     uint64_t offset = 0;
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, 0.0, 1.0, seed, offset, 
+        &uni_workspaceSize, &uni_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* uni_workspaceAddr = nullptr;
-    if(uni_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&uni_workspaceAddr, uni_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceUniform(uni_workspaceAddr, uni_workspaceSize, uni_executor, nullptr);
+    AclWorkspace uni_workspace(uni_workspaceSize);
+    error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceUniform error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -347,12 +297,8 @@ NPUArray Generator_Standard_cauchy(const std::vector<int64_t>& size) {
     aclOpExecutor* subs_executor;
     error = aclnnInplaceSubsGetWorkspaceSize(result.tensorPtr, other, alpha, &subs_workspaceSize, &subs_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* subs_workspaceAddr = nullptr;
-    if(subs_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&subs_workspaceAddr, subs_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceSubs(subs_workspaceAddr, subs_workspaceSize, subs_executor, nullptr);
+    AclWorkspace subs_workspace(subs_workspaceSize);
+    error = aclnnInplaceSubs(subs_workspace.get(), subs_workspaceSize, subs_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceSubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -363,12 +309,8 @@ NPUArray Generator_Standard_cauchy(const std::vector<int64_t>& size) {
     aclOpExecutor* muls_executor;
     error = aclnnInplaceMulsGetWorkspaceSize(result.tensorPtr, pi, &muls_workspaceSize, &muls_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* muls_workspaceAddr = nullptr;
-    if(muls_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&muls_workspaceAddr, muls_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceMuls(muls_workspaceAddr, muls_workspaceSize, muls_executor, nullptr);
+    AclWorkspace muls_workspace(muls_workspaceSize);
+    error = aclnnInplaceMuls(muls_workspace.get(), muls_workspaceSize, muls_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceMuls error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -377,12 +319,8 @@ NPUArray Generator_Standard_cauchy(const std::vector<int64_t>& size) {
     aclOpExecutor* tan_executor;
     error = aclnnInplaceTanGetWorkspaceSize(result.tensorPtr, &tan_workspaceSize, &tan_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* tan_workspaceAddr = nullptr;
-    if(tan_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&tan_workspaceAddr, tan_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceTan(tan_workspaceAddr, tan_workspaceSize, tan_executor, nullptr);
+    AclWorkspace tan_workspace(tan_workspaceSize);
+    error = aclnnInplaceTan(tan_workspace.get(), tan_workspaceSize, tan_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceTan error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -398,14 +336,11 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, 
+        &uni_workspaceSize, &uni_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* uni_workspaceAddr = nullptr;
-    if(uni_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&uni_workspaceAddr, uni_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceUniform(uni_workspaceAddr, uni_workspaceSize, uni_executor, nullptr);
+    AclWorkspace uni_workspace(uni_workspaceSize);
+    error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceUniform error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -417,14 +352,11 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     aclScalar* alpha = aclCreateScalar(&scalar2, ACL_FLOAT);
     uint64_t rsubs_workspaceSize1 = 0;
     aclOpExecutor* rsubs_executor1;
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other1, alpha, rsubs_temp.tensorPtr, &rsubs_workspaceSize1, &rsubs_executor1);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other1, alpha, rsubs_temp.tensorPtr, 
+        &rsubs_workspaceSize1, &rsubs_executor1);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* rsubs_workspaceAddr1 = nullptr;
-    if(rsubs_workspaceSize1 != 0ULL) {
-        error = aclrtMalloc(&rsubs_workspaceAddr1, rsubs_workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnRsubs(rsubs_workspaceAddr1, rsubs_workspaceSize1, rsubs_executor1, nullptr);
+    AclWorkspace rsubs_workspace1(rsubs_workspaceSize1);
+    error = aclnnRsubs(rsubs_workspace1.get(), rsubs_workspaceSize1, rsubs_executor1, nullptr);
     CheckAclnnStatus(error, "aclnnRsubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -433,12 +365,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     aclOpExecutor* log_executor;
     error = aclnnInplaceLogGetWorkspaceSize(rsubs_temp.tensorPtr, &log_workspaceSize, &log_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* log_workspaceAddr = nullptr;
-    if(log_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&log_workspaceAddr, log_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnInplaceLog(log_workspaceAddr, log_workspaceSize, log_executor, nullptr);
+    AclWorkspace log_workspace(log_workspaceSize);
+    error = aclnnInplaceLog(log_workspace.get(), log_workspaceSize, log_executor, nullptr);
     CheckAclnnStatus(error, "aclnnInplaceLog error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -448,14 +376,11 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     aclScalar* other2 = aclCreateScalar(&scalar3, ACL_FLOAT);
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
-    error = aclnnRsubsGetWorkspaceSize(rsubs_temp.tensorPtr, other2, alpha, result.tensorPtr, &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(rsubs_temp.tensorPtr, other2, alpha, result.tensorPtr, 
+        &rsubs_workspaceSize, &rsubs_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* rsubs_workspaceAddr = nullptr;
-    if(rsubs_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&rsubs_workspaceAddr, rsubs_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnRsubs(rsubs_workspaceAddr, rsubs_workspaceSize, rsubs_executor, nullptr);
+    AclWorkspace rsubs_workspace(rsubs_workspaceSize);
+    error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
     CheckAclnnStatus(error, "aclnnRsubs error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -466,12 +391,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     aclOpExecutor* exp_executor;
     error = aclnnPowTensorScalarGetWorkspaceSize(result.tensorPtr, exponent, result.tensorPtr, &exp_workspaceSize, &exp_executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* exp_workspaceAddr = nullptr;
-    if(exp_workspaceSize != 0ULL) {
-        error = aclrtMalloc(&exp_workspaceAddr, exp_workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnPowTensorScalar(exp_workspaceAddr, exp_workspaceSize, exp_executor, nullptr);
+    AclWorkspace exp_workspace(exp_workspaceSize);
+    error = aclnnPowTensorScalar(exp_workspace.get(), exp_workspaceSize, exp_executor, nullptr);
     CheckAclnnStatus(error, "aclnnPowTensorScalar error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
@@ -516,7 +437,6 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     // 4. 声明资源并创建流
     uint64_t bernoulli_ws = 0;
     aclOpExecutor* bernoulli_exec = nullptr;
-    void* bernoulli_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) throw std::runtime_error(fmt::format("Binomial: create stream failed, error={}", ret));
@@ -526,41 +446,22 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
         bernoulli_tensor.tensorPtr, prob_tensor.tensorPtr, 42, 0, 
         bernoulli_tensor.tensorPtr, &bernoulli_ws, &bernoulli_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: bernoulli get ws failed, error={}", ret));
-    }
-    if (bernoulli_ws != 0ULL) {
-        ret = aclrtMalloc(&bernoulli_ws_addr, bernoulli_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Binomial: bernoulli malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnBernoulliTensor(bernoulli_ws_addr, bernoulli_ws, bernoulli_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(bernoulli_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: bernoulli compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace bernoulli(bernoulli_ws);
+    ret = aclnnBernoulliTensor(bernoulli.get(), bernoulli_ws, bernoulli_exec, stream);
+    CheckAclnnStatus(ret, "aclnnBernoulliTensor error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(bernoulli_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: bernoulli sync failed, error={}", ret));
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. 归约求和（核心修正部分）
     NPUArray result(size, ACL_INT32);
     uint64_t sum_ws = 0;
     aclOpExecutor* sum_exec = nullptr;
-    void* sum_ws_addr = nullptr;
     std::vector<int64_t> reduce_axis = {0};  // 沿第0维求和
 
     // 6.1 创建aclIntArray类型的归约轴（适配接口要求）
     aclIntArray* dims_array = aclCreateIntArray(reduce_axis.data(), reduce_axis.size());
     if (dims_array == nullptr) {
-        aclrtFree(bernoulli_ws_addr);
         aclrtDestroyStream(stream);
         throw std::runtime_error("Binomial: create dims array failed");
     }
@@ -575,44 +476,17 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
         &sum_ws,
         &sum_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyIntArray(dims_array);
-        aclrtFree(bernoulli_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: sum get ws failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
 
     // 6.3 分配求和工作空间并执行
-    if (sum_ws != 0ULL) {
-        ret = aclrtMalloc(&sum_ws_addr, sum_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyIntArray(dims_array);
-            aclrtFree(bernoulli_ws_addr);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Binomial: sum malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnReduceSum(sum_ws_addr, sum_ws, sum_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyIntArray(dims_array);
-        aclrtFree(sum_ws_addr);
-        aclrtFree(bernoulli_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: sum compute failed, error={}", ret));
-    }
+    AclWorkspace sumws(sum_ws);
+    ret = aclnnReduceSum(sumws.get(), sum_ws, sum_exec, stream);
+    CheckAclnnStatus(ret, "aclnnReduceSum error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyIntArray(dims_array);
-        aclrtFree(sum_ws_addr);
-        aclrtFree(bernoulli_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Binomial: sum sync failed, error={}", ret));
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 7. 释放所有资源
     aclDestroyIntArray(dims_array);  // 销毁归约轴数组
-    aclrtFree(sum_ws_addr);
-    aclrtFree(bernoulli_ws_addr);
     aclrtDestroyStream(stream);
 
     return result;
@@ -630,7 +504,6 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
 
     uint64_t uniform_ws = 0;
     aclOpExecutor* uniform_exec = nullptr;
-    void* uniform_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) {
@@ -647,30 +520,12 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
         u_tensor.tensorPtr, low, high, seed, offset,
         &uniform_ws, &uniform_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Exponential: uniform get ws failed, error={}", ret));
-    }
-    if (uniform_ws != 0ULL) {
-        ret = aclrtMalloc(&uniform_ws_addr, uniform_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Exponential: uniform malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnInplaceUniform(uniform_ws_addr, uniform_ws, uniform_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Exponential: uniform compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace uniform(uniform_ws);
+    ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceUniform error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Exponential: uniform sync failed, error={}", ret));
-    }
-    aclrtFree(uniform_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 3. 计算 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
@@ -702,66 +557,25 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
         &sub_ws,
         &sub_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: sub get ws failed");
-    }
-    if (sub_ws != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr, sub_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Exponential: sub malloc ws failed");
-        }
-    }
-    ret = aclnnSub(sub_ws_addr, sub_ws, sub_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: sub compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws(sub_ws);
+    ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: sub sync failed");
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
     aclDestroyScalar(alpha_scalar);
-    aclrtFree(sub_ws_addr);
 
     // 4. log(1 - U)
     NPUArray log_tensor(size, ACL_FLOAT);
     uint64_t log_ws = 0;
     aclOpExecutor* log_exec = nullptr;
-    void* log_ws_addr = nullptr;
     ret = aclnnLogGetWorkspaceSize(one_minus_u.tensorPtr, log_tensor.tensorPtr, &log_ws, &log_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: log get ws failed");
-    }
-    if (log_ws != 0ULL) {
-        ret = aclrtMalloc(&log_ws_addr, log_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Exponential: log malloc ws failed");
-        }
-    }
-    ret = aclnnLog(log_ws_addr, log_ws, log_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: log compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace logws(log_ws);
+    ret = aclnnLog(logws.get(), log_ws, log_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: log sync failed");
-    }
-    aclrtFree(log_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. result = -scale * log(1 - U)
     NPUArray scale_tensor({}, ACL_FLOAT);
@@ -781,32 +595,13 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_FLOAT);
     uint64_t mul_ws = 0;
     aclOpExecutor* mul_exec = nullptr;
-    void* mul_ws_addr = nullptr;
     ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_tensor.tensorPtr, result.tensorPtr, &mul_ws, &mul_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: mul get ws failed");
-    }
-    if (mul_ws != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr, mul_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Exponential: mul malloc ws failed");
-        }
-    }
-    ret = aclnnMul(mul_ws_addr, mul_ws, mul_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: mul compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws(mul_ws);
+    ret = aclnnMul(mulws.get(), mul_ws, mul_exec, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Exponential: mul sync failed");
-    }
-    aclrtFree(mul_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. 清理资源
     aclrtDestroyStream(stream);
@@ -826,7 +621,6 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
 
     uint64_t uniform_ws = 0;
     aclOpExecutor* uniform_exec = nullptr;
-    void* uniform_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) {
@@ -842,30 +636,12 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
         u_tensor.tensorPtr, low, high, seed, offset,
         &uniform_ws, &uniform_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: uniform get ws failed");
-    }
-    if (uniform_ws != 0ULL) {
-        ret = aclrtMalloc(&uniform_ws_addr, uniform_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: uniform malloc ws failed");
-        }
-    }
-    ret = aclnnInplaceUniform(uniform_ws_addr, uniform_ws, uniform_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: uniform compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace uniform(uniform_ws);
+    ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceUniform error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: uniform sync failed");
-    }
-    aclrtFree(uniform_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 3. 计算 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
@@ -885,7 +661,6 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     NPUArray one_minus_u(size, ACL_FLOAT);
     uint64_t sub_ws = 0;
     aclOpExecutor* sub_exec = nullptr;
-    void* sub_ws_addr = nullptr;
 
     aclScalar* alpha_scalar = aclCreateScalar(&one_val, ACL_FLOAT);
 
@@ -897,67 +672,26 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
         &sub_ws,
         &sub_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: sub get ws failed");
-    }
-    if (sub_ws != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr, sub_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: sub malloc ws failed");
-        }
-    }
-    ret = aclnnSub(sub_ws_addr, sub_ws, sub_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: sub compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws(sub_ws);
+    ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: sub sync failed");
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
     aclDestroyScalar(alpha_scalar);
-    aclrtFree(sub_ws_addr);
 
     // 4. log(1 - U)
     NPUArray log_tensor(size, ACL_FLOAT);
     uint64_t log_ws = 0;
     aclOpExecutor* log_exec = nullptr;
-    void* log_ws_addr = nullptr;
 
     ret = aclnnLogGetWorkspaceSize(one_minus_u.tensorPtr, log_tensor.tensorPtr, &log_ws, &log_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: log get ws failed");
-    }
-    if (log_ws != 0ULL) {
-        ret = aclrtMalloc(&log_ws_addr, log_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: log malloc ws failed");
-        }
-    }
-    ret = aclnnLog(log_ws_addr, log_ws, log_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: log compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace logws(log_ws);
+    ret = aclnnLog(logws.get(), log_ws, log_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: log sync failed");
-    }
-    aclrtFree(log_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. 除以 log(1 - p)
     NPUArray denom_tensor({}, ACL_FLOAT);
@@ -977,63 +711,26 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     NPUArray div_tensor(size, ACL_FLOAT);
     uint64_t div_ws = 0;
     aclOpExecutor* div_exec = nullptr;
-    void* div_ws_addr = nullptr;
-    ret = aclnnDivGetWorkspaceSize(log_tensor.tensorPtr, denom_tensor.tensorPtr, div_tensor.tensorPtr, &div_ws, &div_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: div get ws failed");
-    }
-    if (div_ws != 0ULL) {
-        ret = aclrtMalloc(&div_ws_addr, div_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: div malloc ws failed");
-        }
-    }
-    ret = aclnnDiv(div_ws_addr, div_ws, div_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: div compute failed");
-    }
+    ret = aclnnDivGetWorkspaceSize(log_tensor.tensorPtr, denom_tensor.tensorPtr, div_tensor.tensorPtr, 
+        &div_ws, &div_exec);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace divws(div_ws);
+    ret = aclnnDiv(divws.get(), div_ws, div_exec, stream);
+    CheckAclnnStatus(ret, "aclnnDiv error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: div sync failed");
-    }
-    aclrtFree(div_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. floor
     NPUArray floor_tensor(size, ACL_FLOAT);
     uint64_t floor_ws = 0;
     aclOpExecutor* floor_exec = nullptr;
-    void* floor_ws_addr = nullptr;
     ret = aclnnFloorGetWorkspaceSize(div_tensor.tensorPtr, floor_tensor.tensorPtr, &floor_ws, &floor_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: floor get ws failed");
-    }
-    if (floor_ws != 0ULL) {
-        ret = aclrtMalloc(&floor_ws_addr, floor_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: floor malloc ws failed");
-        }
-    }
-    ret = aclnnFloor(floor_ws_addr, floor_ws, floor_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(floor_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: floor compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace floor(floor_ws);
+    ret = aclnnFloor(floor.get(), floor_ws, floor_exec, stream);
+    CheckAclnnStatus(ret, "aclnnFloor error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(floor_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: floor sync failed");
-    }
-    aclrtFree(floor_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 7. +1
     NPUArray one_tensor2({}, ACL_FLOAT);
@@ -1053,7 +750,6 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_FLOAT);
     uint64_t add_ws = 0;
     aclOpExecutor* add_exec = nullptr;
-    void* add_ws_addr = nullptr;
     aclScalar* alpha_one = aclCreateScalar(&one_val2, ACL_FLOAT);
 
     ret = aclnnAddGetWorkspaceSize(
@@ -1064,35 +760,13 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
         &add_ws,
         &add_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_one);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: add get ws failed");
-    }
-    if (add_ws != 0ULL) {
-        ret = aclrtMalloc(&add_ws_addr, add_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_one);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Geometric: add malloc ws failed");
-        }
-    }
-    ret = aclnnAdd(add_ws_addr, add_ws, add_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_one);
-        aclrtFree(add_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: add compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace addws(add_ws);
+    ret = aclnnAdd(addws.get(), add_ws, add_exec, stream);
+    CheckAclnnStatus(ret, "aclnnAdd error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_one);
-        aclrtFree(add_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Geometric: add sync failed");
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
     aclDestroyScalar(alpha_one);
-    aclrtFree(add_ws_addr);
 
     // 8. 清理
     aclrtDestroyStream(stream);
@@ -1112,7 +786,6 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
 
     uint64_t uniform_ws = 0;
     aclOpExecutor* uniform_exec = nullptr;
-    void* uniform_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) {
@@ -1128,30 +801,12 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
         u_tensor.tensorPtr, low, high, seed, offset,
         &uniform_ws, &uniform_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: uniform get ws failed, error={}", ret));
-    }
-    if (uniform_ws != 0ULL) {
-        ret = aclrtMalloc(&uniform_ws_addr, uniform_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: uniform malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnInplaceUniform(uniform_ws_addr, uniform_ws, uniform_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: uniform compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace uniform(uniform_ws);
+    ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceUniform error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: uniform sync failed, error={}", ret));
-    }
-    aclrtFree(uniform_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 步骤说明：
     // 3. log_u = log(U)
@@ -1164,32 +819,13 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray log_u(size, ACL_FLOAT);
     uint64_t log_ws = 0;
     aclOpExecutor* log_exec = nullptr;
-    void* log_ws_addr = nullptr;
     ret = aclnnLogGetWorkspaceSize(u_tensor.tensorPtr, log_u.tensorPtr, &log_ws, &log_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log get ws failed, error={}", ret));
-    }
-    if (log_ws != 0ULL) {
-        ret = aclrtMalloc(&log_ws_addr, log_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: log malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnLog(log_ws_addr, log_ws, log_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace logws(log_ws);
+    ret = aclnnLog(logws.get(), log_ws, log_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log sync failed, error={}", ret));
-    }
-    aclrtFree(log_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 4. neg_log_u = -1.0 * log_u  (构造 -1 标量张量并用 Mul)
     float neg_one_val = -1.0f;
@@ -1209,63 +845,26 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray neg_log_u(size, ACL_FLOAT);
     uint64_t mul_ws1 = 0;
     aclOpExecutor* mul_exec1 = nullptr;
-    void* mul_ws_addr1 = nullptr;
-    ret = aclnnMulGetWorkspaceSize(neg_one_tensor.tensorPtr, log_u.tensorPtr, neg_log_u.tensorPtr, &mul_ws1, &mul_exec1);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul(get) -neg log get ws failed, error={}", ret));
-    }
-    if (mul_ws1 != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr1, mul_ws1, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: mul malloc1 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnMul(mul_ws_addr1, mul_ws1, mul_exec1, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul compute1 failed, error={}", ret));
-    }
+    ret = aclnnMulGetWorkspaceSize(neg_one_tensor.tensorPtr, log_u.tensorPtr, neg_log_u.tensorPtr, 
+        &mul_ws1, &mul_exec1);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws1(mul_ws1);
+    ret = aclnnMul(mulws1.get(), mul_ws1, mul_exec1, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul sync1 failed, error={}", ret));
-    }
-    aclrtFree(mul_ws_addr1);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. log_neg_log_u = log(neg_log_u)
     NPUArray log_neg_log_u(size, ACL_FLOAT);
     uint64_t log2_ws = 0;
     aclOpExecutor* log2_exec = nullptr;
-    void* log2_ws_addr = nullptr;
     ret = aclnnLogGetWorkspaceSize(neg_log_u.tensorPtr, log_neg_log_u.tensorPtr, &log2_ws, &log2_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log2 get ws failed, error={}", ret));
-    }
-    if (log2_ws != 0ULL) {
-        ret = aclrtMalloc(&log2_ws_addr, log2_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: log2 malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnLog(log2_ws_addr, log2_ws, log2_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log2_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log2 compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace log2ws(log2_ws);
+    ret = aclnnLog(log2ws.get(), log2_ws, log2_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log2_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: log2 sync failed, error={}", ret));
-    }
-    aclrtFree(log2_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. scaled = scale * log_neg_log_u  (构造 scale scalar tensor并用 Mul)
     float scale_f = static_cast<float>(scale);
@@ -1285,32 +884,14 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray scaled(size, ACL_FLOAT);
     uint64_t mul_ws2 = 0;
     aclOpExecutor* mul_exec2 = nullptr;
-    void* mul_ws_addr2 = nullptr;
-    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_neg_log_u.tensorPtr, scaled.tensorPtr, &mul_ws2, &mul_exec2);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul(get) scale get ws failed, error={}", ret));
-    }
-    if (mul_ws2 != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr2, mul_ws2, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: mul malloc2 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnMul(mul_ws_addr2, mul_ws2, mul_exec2, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr2);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul compute2 failed, error={}", ret));
-    }
+    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_neg_log_u.tensorPtr, scaled.tensorPtr, 
+        &mul_ws2, &mul_exec2);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws2(mul_ws2);
+    ret = aclnnMul(mulws2.get(), mul_ws2, mul_exec2, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr2);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: mul sync2 failed, error={}", ret));
-    }
-    aclrtFree(mul_ws_addr2);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 7. result = loc - scaled
     //    使用 aclnnSub：self = loc_tensor (scalar), other = scaled (tensor), alpha = 1.0
@@ -1331,7 +912,6 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_FLOAT);
     uint64_t sub_ws = 0;
     aclOpExecutor* sub_exec = nullptr;
-    void* sub_ws_addr = nullptr;
     float alpha_val = 1.0f;
     aclScalar* alpha_scalar = aclCreateScalar(&alpha_val, ACL_FLOAT);
     if (alpha_scalar == nullptr) {
@@ -1347,37 +927,15 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
         &sub_ws,
         &sub_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: sub get ws failed, error={}", ret));
-    }
-    if (sub_ws != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr, sub_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Gumbel: sub malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnSub(sub_ws_addr, sub_ws, sub_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: sub compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws(sub_ws);
+    ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Gumbel: sub sync failed, error={}", ret));
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 8. 清理资源
     aclDestroyScalar(alpha_scalar);
-    aclrtFree(sub_ws_addr);
     aclrtDestroyStream(stream);
 
     return result;
@@ -1395,7 +953,6 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
 
     uint64_t uniform_ws = 0;
     aclOpExecutor* uniform_exec = nullptr;
-    void* uniform_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) {
@@ -1411,61 +968,24 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
         u_tensor.tensorPtr, low, high, seed, offset,
         &uniform_ws, &uniform_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: uniform get ws failed, error={}", ret));
-    }
-    if (uniform_ws != 0ULL) {
-        ret = aclrtMalloc(&uniform_ws_addr, uniform_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: uniform malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnInplaceUniform(uniform_ws_addr, uniform_ws, uniform_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: uniform compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace uniform(uniform_ws);
+    ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceUniform error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: uniform sync failed, error={}", ret));
-    }
-    aclrtFree(uniform_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 3. a = abs(U)
     NPUArray abs_u(size, ACL_FLOAT);
     uint64_t abs_ws = 0;
     aclOpExecutor* abs_exec = nullptr;
-    void* abs_ws_addr = nullptr;
     ret = aclnnAbsGetWorkspaceSize(u_tensor.tensorPtr, abs_u.tensorPtr, &abs_ws, &abs_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: abs get ws failed, error={}", ret));
-    }
-    if (abs_ws != 0ULL) {
-        ret = aclrtMalloc(&abs_ws_addr, abs_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: abs malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnAbs(abs_ws_addr, abs_ws, abs_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(abs_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: abs compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace absws(abs_ws);
+    ret = aclnnAbs(absws.get(), abs_ws, abs_exec, stream);
+    CheckAclnnStatus(ret, "aclnnAbs error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(abs_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: abs sync failed, error={}", ret));
-    }
-    aclrtFree(abs_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 4. t = 1 - 2 * abs_u
     // 4.1 构造 scalar 2.0 (as tensor) 并计算 two_mul_abs = 2 * abs_u (Mul)
@@ -1486,32 +1006,14 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray two_mul_abs(size, ACL_FLOAT);
     uint64_t mul_ws1 = 0;
     aclOpExecutor* mul_exec1 = nullptr;
-    void* mul_ws_addr1 = nullptr;
-    ret = aclnnMulGetWorkspaceSize(two_tensor.tensorPtr, abs_u.tensorPtr, two_mul_abs.tensorPtr, &mul_ws1, &mul_exec1);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul(get) two*abs get ws failed, error={}", ret));
-    }
-    if (mul_ws1 != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr1, mul_ws1, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: mul malloc1 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnMul(mul_ws_addr1, mul_ws1, mul_exec1, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul compute1 failed, error={}", ret));
-    }
+    ret = aclnnMulGetWorkspaceSize(two_tensor.tensorPtr, abs_u.tensorPtr, two_mul_abs.tensorPtr, 
+        &mul_ws1, &mul_exec1);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws1(mul_ws1);
+    ret = aclnnMul(mulws1.get(), mul_ws1, mul_exec1, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul sync1 failed, error={}", ret));
-    }
-    aclrtFree(mul_ws_addr1);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 4.2 one_tensor scalar = 1.0
     NPUArray one_tensor({}, ACL_FLOAT);
@@ -1532,113 +1034,44 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray t_tensor(size, ACL_FLOAT);
     uint64_t sub_ws1 = 0;
     aclOpExecutor* sub_exec1 = nullptr;
-    void* sub_ws_addr1 = nullptr;
     float alpha_val_f = 1.0f;
     aclScalar* alpha_scalar = aclCreateScalar(&alpha_val_f, ACL_FLOAT);
     if (alpha_scalar == nullptr) {
         aclrtDestroyStream(stream);
         throw std::runtime_error("Laplace: create alpha scalar failed");
     }
-    ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr, two_mul_abs.tensorPtr, alpha_scalar, t_tensor.tensorPtr, &sub_ws1, &sub_exec1);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub get ws failed, error={}", ret));
-    }
-    if (sub_ws1 != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr1, sub_ws1, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: sub malloc1 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnSub(sub_ws_addr1, sub_ws1, sub_exec1, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub compute1 failed, error={}", ret));
-    }
+    ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr, two_mul_abs.tensorPtr, alpha_scalar, t_tensor.tensorPtr, 
+        &sub_ws1, &sub_exec1);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws1(sub_ws1);
+    ret = aclnnSub(subws1.get(), sub_ws1, sub_exec1, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr1);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub sync1 failed, error={}", ret));
-    }
-    // free resources for this sub
-    aclrtFree(sub_ws_addr1);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. log_t = log(t_tensor)
     NPUArray log_t(size, ACL_FLOAT);
     uint64_t log_ws = 0;
     aclOpExecutor* log_exec = nullptr;
-    void* log_ws_addr = nullptr;
     ret = aclnnLogGetWorkspaceSize(t_tensor.tensorPtr, log_t.tensorPtr, &log_ws, &log_exec);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: log get ws failed, error={}", ret));
-    }
-    if (log_ws != 0ULL) {
-        ret = aclrtMalloc(&log_ws_addr, log_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: log malloc ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnLog(log_ws_addr, log_ws, log_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: log compute failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace logws(log_ws);
+    ret = aclnnLog(logws.get(), log_ws, log_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: log sync failed, error={}", ret));
-    }
-    aclrtFree(log_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. sign_u = U / abs_u  (divide elementwise)
     NPUArray sign_u(size, ACL_FLOAT);
     uint64_t div_ws1 = 0;
     aclOpExecutor* div_exec1 = nullptr;
-    void* div_ws_addr1 = nullptr;
     ret = aclnnDivGetWorkspaceSize(u_tensor.tensorPtr, abs_u.tensorPtr, sign_u.tensorPtr, &div_ws1, &div_exec1);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: div get ws(sign) failed, error={}", ret));
-    }
-    if (div_ws1 != 0ULL) {
-        ret = aclrtMalloc(&div_ws_addr1, div_ws1, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: div malloc(sign) ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnDiv(div_ws_addr1, div_ws1, div_exec1, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr1);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: div compute(sign) failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace divws1(div_ws1);
+    ret = aclnnDiv(divws1.get(), div_ws1, div_exec1, stream);
+    CheckAclnnStatus(ret, "aclnnDiv error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr1);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: div sync(sign) failed, error={}", ret));
-    }
-    aclrtFree(div_ws_addr1);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 7. scaled = scale * log_t  (use scale scalar tensor and Mul)
     float scale_f = static_cast<float>(scale);
@@ -1660,71 +1093,26 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray scaled(size, ACL_FLOAT);
     uint64_t mul_ws2 = 0;
     aclOpExecutor* mul_exec2 = nullptr;
-    void* mul_ws_addr2 = nullptr;
-    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_t.tensorPtr, scaled.tensorPtr, &mul_ws2, &mul_exec2);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul(get) scale*log get ws failed, error={}", ret));
-    }
-    if (mul_ws2 != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr2, mul_ws2, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: mul malloc2 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnMul(mul_ws_addr2, mul_ws2, mul_exec2, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr2);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul compute2 failed, error={}", ret));
-    }
+    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_t.tensorPtr, scaled.tensorPtr, 
+        &mul_ws2, &mul_exec2);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws2(mul_ws2);
+    ret = aclnnMul(mulws2.get(), mul_ws2, mul_exec2, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr2);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul sync2 failed, error={}", ret));
-    }
-    aclrtFree(mul_ws_addr2);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 8. tmp = sign_u * scaled  (elementwise mul)
     NPUArray tmp(size, ACL_FLOAT);
     uint64_t mul_ws3 = 0;
     aclOpExecutor* mul_exec3 = nullptr;
-    void* mul_ws_addr3 = nullptr;
     ret = aclnnMulGetWorkspaceSize(sign_u.tensorPtr, scaled.tensorPtr, tmp.tensorPtr, &mul_ws3, &mul_exec3);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul(get) sign*scaled get ws failed, error={}", ret));
-    }
-    if (mul_ws3 != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr3, mul_ws3, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: mul malloc3 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnMul(mul_ws_addr3, mul_ws3, mul_exec3, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr3);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul compute3 failed, error={}", ret));
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws3(mul_ws3);
+    ret = aclnnMul(mulws3.get(), mul_ws3, mul_exec3, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr3);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: mul sync3 failed, error={}", ret));
-    }
-    aclrtFree(mul_ws_addr3);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 9. result = loc - tmp  (use aclnnSub with self=loc_tensor, other=tmp, alpha=1)
     float loc_f = static_cast<float>(loc);
@@ -1746,40 +1134,18 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_FLOAT);
     uint64_t sub_ws2 = 0;
     aclOpExecutor* sub_exec2 = nullptr;
-    void* sub_ws_addr2 = nullptr;
 
-    ret = aclnnSubGetWorkspaceSize(loc_tensor.tensorPtr, tmp.tensorPtr, alpha_scalar, result.tensorPtr, &sub_ws2, &sub_exec2);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub get ws2 failed, error={}", ret));
-    }
-    if (sub_ws2 != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr2, sub_ws2, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Laplace: sub malloc2 ws failed, error={}", ret));
-        }
-    }
-    ret = aclnnSub(sub_ws_addr2, sub_ws2, sub_exec2, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(sub_ws_addr2);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub compute2 failed, error={}", ret));
-    }
+    ret = aclnnSubGetWorkspaceSize(loc_tensor.tensorPtr, tmp.tensorPtr, alpha_scalar, result.tensorPtr, 
+        &sub_ws2, &sub_exec2);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws2(sub_ws2);
+    ret = aclnnSub(subws2.get(), sub_ws2, sub_exec2, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(sub_ws_addr2);
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Laplace: sub sync2 failed, error={}", ret));
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 10. 清理并返回
     aclDestroyScalar(alpha_scalar);
-    aclrtFree(sub_ws_addr2);
     aclrtDestroyStream(stream);
 
     return result;
@@ -1797,7 +1163,6 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
 
     uint64_t uniform_ws = 0;
     aclOpExecutor* uniform_exec = nullptr;
-    void* uniform_ws_addr = nullptr;
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
     if (ret != ACL_SUCCESS || !stream) {
@@ -1813,30 +1178,12 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
         u_tensor.tensorPtr, low, high, seed, offset,
         &uniform_ws, &uniform_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Logistic: uniform get ws failed, error={}", ret));
-    }
-    if (uniform_ws != 0ULL) {
-        ret = aclrtMalloc(&uniform_ws_addr, uniform_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: uniform malloc ws failed");
-        }
-    }
-    ret = aclnnInplaceUniform(uniform_ws_addr, uniform_ws, uniform_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: uniform compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace uniform(uniform_ws);
+    ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceUniform error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(uniform_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: uniform sync failed");
-    }
-    aclrtFree(uniform_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 3. 计算 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
@@ -1856,104 +1203,43 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray one_minus_u(size, ACL_FLOAT);
     uint64_t sub_ws = 0;
     aclOpExecutor* sub_exec = nullptr;
-    void* sub_ws_addr = nullptr;
 
     aclScalar* alpha_scalar = aclCreateScalar(&one_val, ACL_FLOAT); // alpha = 1
     ret = aclnnSubGetWorkspaceSize(
         one_tensor.tensorPtr, u_tensor.tensorPtr, alpha_scalar,
         one_minus_u.tensorPtr, &sub_ws, &sub_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: sub get ws failed");
-    }
-    if (sub_ws != 0ULL) {
-        ret = aclrtMalloc(&sub_ws_addr, sub_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_scalar);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: sub malloc ws failed");
-        }
-    }
-    ret = aclnnSub(sub_ws_addr, sub_ws, sub_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: sub compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace subws(sub_ws);
+    ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
+    CheckAclnnStatus(ret, "aclnnSub error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_scalar);
-        aclrtFree(sub_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: sub sync failed");
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
     aclDestroyScalar(alpha_scalar);
-    aclrtFree(sub_ws_addr);
 
     // 4. ratio = U / (1 - U)
     NPUArray ratio(size, ACL_FLOAT);
     uint64_t div_ws = 0;
     aclOpExecutor* div_exec = nullptr;
-    void* div_ws_addr = nullptr;
     ret = aclnnDivGetWorkspaceSize(u_tensor.tensorPtr, one_minus_u.tensorPtr, ratio.tensorPtr, &div_ws, &div_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: div get ws failed");
-    }
-    if (div_ws != 0ULL) {
-        ret = aclrtMalloc(&div_ws_addr, div_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: div malloc ws failed");
-        }
-    }
-    ret = aclnnDiv(div_ws_addr, div_ws, div_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: div compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace divws(div_ws);
+    ret = aclnnDiv(divws.get(), div_ws, div_exec, stream);
+    CheckAclnnStatus(ret, "aclnnDiv error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(div_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: div sync failed");
-    }
-    aclrtFree(div_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. log(ratio)
     NPUArray log_ratio(size, ACL_FLOAT);
     uint64_t log_ws = 0;
     aclOpExecutor* log_exec = nullptr;
-    void* log_ws_addr = nullptr;
     ret = aclnnLogGetWorkspaceSize(ratio.tensorPtr, log_ratio.tensorPtr, &log_ws, &log_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: log get ws failed");
-    }
-    if (log_ws != 0ULL) {
-        ret = aclrtMalloc(&log_ws_addr, log_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: log malloc ws failed");
-        }
-    }
-    ret = aclnnLog(log_ws_addr, log_ws, log_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: log compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace logws(log_ws);
+    ret = aclnnLog(logws.get(), log_ws, log_exec, stream);
+    CheckAclnnStatus(ret, "aclnnLog error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(log_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: log sync failed");
-    }
-    aclrtFree(log_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 6. scale * log(ratio)
     NPUArray scale_tensor({}, ACL_FLOAT);
@@ -1973,32 +1259,13 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray scaled_log(size, ACL_FLOAT);
     uint64_t mul_ws = 0;
     aclOpExecutor* mul_exec = nullptr;
-    void* mul_ws_addr = nullptr;
     ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_ratio.tensorPtr, scaled_log.tensorPtr, &mul_ws, &mul_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: mul get ws failed");
-    }
-    if (mul_ws != 0ULL) {
-        ret = aclrtMalloc(&mul_ws_addr, mul_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: mul malloc ws failed");
-        }
-    }
-    ret = aclnnMul(mul_ws_addr, mul_ws, mul_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: mul compute failed");
-    }
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace mulws(mul_ws);
+    ret = aclnnMul(mulws.get(), mul_ws, mul_exec, stream);
+    CheckAclnnStatus(ret, "aclnnMul error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclrtFree(mul_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: mul sync failed");
-    }
-    aclrtFree(mul_ws_addr);
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 7. loc + (scale * log_ratio)
     NPUArray loc_tensor({}, ACL_FLOAT);
@@ -2018,38 +1285,16 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_FLOAT);
     uint64_t add_ws = 0;
     aclOpExecutor* add_exec = nullptr;
-    void* add_ws_addr = nullptr;
     aclScalar* alpha_add = aclCreateScalar(&one_val, ACL_FLOAT); // alpha = 1
-    ret = aclnnAddGetWorkspaceSize(loc_tensor.tensorPtr, scaled_log.tensorPtr, alpha_add, result.tensorPtr, &add_ws, &add_exec);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_add);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: add get ws failed");
-    }
-    if (add_ws != 0ULL) {
-        ret = aclrtMalloc(&add_ws_addr, add_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclDestroyScalar(alpha_add);
-            aclrtDestroyStream(stream);
-            throw std::runtime_error("Logistic: add malloc ws failed");
-        }
-    }
-    ret = aclnnAdd(add_ws_addr, add_ws, add_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_add);
-        aclrtFree(add_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: add compute failed");
-    }
+    ret = aclnnAddGetWorkspaceSize(loc_tensor.tensorPtr, scaled_log.tensorPtr, alpha_add, result.tensorPtr, 
+        &add_ws, &add_exec);
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace addws(add_ws);
+    ret = aclnnAdd(addws.get(), add_ws, add_exec, stream);
+    CheckAclnnStatus(ret, "aclnnAdd error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        aclDestroyScalar(alpha_add);
-        aclrtFree(add_ws_addr);
-        aclrtDestroyStream(stream);
-        throw std::runtime_error("Logistic: add sync failed");
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
     aclDestroyScalar(alpha_add);
-    aclrtFree(add_ws_addr);
 
     // 8. 清理资源
     aclrtDestroyStream(stream);
@@ -2070,11 +1315,9 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     // 资源变量（初始化）
     uint64_t normal_ws = 0;
     aclOpExecutor* normal_exec = nullptr;
-    void* normal_ws_addr = nullptr;
 
     uint64_t exp_ws = 0;
     aclOpExecutor* exp_exec = nullptr;
-    void* exp_ws_addr = nullptr;
 
     aclrtStream stream = nullptr;
     auto ret = aclrtCreateStream(&stream);
@@ -2097,81 +1340,23 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         &normal_ws,
         &normal_exec
     );
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: normal get ws failed, error={}", ret));
-    }
-
-    if (normal_ws != 0ULL) {
-        ret = aclrtMalloc(&normal_ws_addr, normal_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Lognormal: normal malloc ws failed, error={}", ret));
-        }
-    }
-
-    ret = aclnnInplaceNormal(normal_ws_addr, normal_ws, normal_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        if (normal_ws_addr) {
-            aclrtFree(normal_ws_addr);
-        }
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: normal compute failed, error={}", ret));
-    }
-
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace normal(normal_ws);
+    ret = aclnnInplaceNormal(normal.get(), normal_ws, normal_exec, stream);
+    CheckAclnnStatus(ret, "aclnnInplaceNormal error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        if (normal_ws_addr) {
-            aclrtFree(normal_ws_addr);
-        }
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: normal sync failed, error={}", ret));
-    }
-
-    if (normal_ws_addr) {
-        aclrtFree(normal_ws_addr);
-        normal_ws_addr = nullptr;
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 4. 对正态样本做指数变换 result = exp(z_tensor)
     NPUArray result(size, ACL_FLOAT);
 
     ret = aclnnExpGetWorkspaceSize(z_tensor.tensorPtr, result.tensorPtr, &exp_ws, &exp_exec);
-    if (ret != ACL_SUCCESS) {
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: exp get ws failed, error={}", ret));
-    }
-
-    if (exp_ws != 0ULL) {
-        ret = aclrtMalloc(&exp_ws_addr, exp_ws, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (ret != ACL_SUCCESS) {
-            aclrtDestroyStream(stream);
-            throw std::runtime_error(fmt::format("Lognormal: exp malloc ws failed, error={}", ret));
-        }
-    }
-
-    ret = aclnnExp(exp_ws_addr, exp_ws, exp_exec, stream);
-    if (ret != ACL_SUCCESS) {
-        if (exp_ws_addr) {
-            aclrtFree(exp_ws_addr);
-        }
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: exp compute failed, error={}", ret));
-    }
-
+    CheckGetWorkspaceSizeAclnnStatus(ret);
+    AclWorkspace expws(exp_ws);
+    ret = aclnnExp(expws.get(), exp_ws, exp_exec, stream);
+    CheckAclnnStatus(ret, "aclnnExp error");
     ret = aclrtSynchronizeStream(stream);
-    if (ret != ACL_SUCCESS) {
-        if (exp_ws_addr) {
-            aclrtFree(exp_ws_addr);
-        }
-        aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format("Lognormal: exp sync failed, error={}", ret));
-    }
-
-    if (exp_ws_addr) {
-        aclrtFree(exp_ws_addr);
-        exp_ws_addr = nullptr;
-    }
+    CheckSynchronizeDeviceAclnnStatus(ret);
 
     // 5. 清理 stream 并返回
     aclrtDestroyStream(stream);
