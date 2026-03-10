@@ -327,22 +327,37 @@ __all__ = [
 
 __all__.extend(_direct_all_)
 
-# Loguru logging configuration
 
-# Remove default loguru handler
-logger.remove()
+logger.disable("asnumpy")
 
-# Console sink (colored, INFO level)
-logger.add(sys.__stderr__, level=os.getenv("ASNUMPY_LOG_LEVEL", "INFO"),
-           format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
-           "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-           catch=True)
 
-# File sink (logs/asnumpy_{time:YYYY-MM-DD_HHmmss}.log, keep 7 days)
-log_file = os.getenv("ASNUMPY_LOG_FILE", "logs/asnumpy_{time:YYYY-MM-DD_HHmmss}.log")
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
-logger.add(log_file, retention="7 days",
-           level=os.getenv("ASNUMPY_LOG_LEVEL", "INFO"), catch=True)
+def enable_logging(level="INFO", log_dir=None):
+    """
+    Enable low-level logging for asnumpy.
+    :param level: Logging level (e.g., "DEBUG", "INFO").
+    :param log_dir: If specified, logs will be saved to a file in this directory alongside console output.
+    """
+    # Enable logging for the current module
+    logger.enable("asnumpy")
+    logger.remove() # Remove Loguru's default handler
+
+    # Add safe console output (use sys.__stderr__ to avoid closed stream errors during atexit)
+    logger.add(sys.__stderr__, level=level,
+               format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
+                      "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+               catch=True)
+
+    # Write to file only if log_dir is provided by the user
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "asnumpy_{time:YYYY-MM-DD_HHmmss}.log")
+        logger.add(log_file, retention="7 days", level=level, catch=True)
+        logger.info(f"ASNumPy file logging enabled: {log_file}")
+
+
+if os.getenv("ASNUMPY_DEBUG", "0") == "1":
+    enable_logging(level="DEBUG", log_dir=os.getenv("ASNUMPY_LOG_DIR", None))
+
 
 import atexit
 

@@ -114,7 +114,7 @@ def for_dtypes(dtypes, name='dtype'):
                     # 使用关键字参数调用原函数
                     impl(**{name: dtype})
                 except Exception:
-                    logger.info(f'{name} is {dtype}')
+                    logger.debug(f'{name} is {dtype}')
                     raise
         # 清除函数签名中的参数，让pytest看到的是无参数函数
         test_func.__signature__ = inspect.Signature()
@@ -252,7 +252,7 @@ def for_orders(orders, name='order'):
                     kw[name] = order
                     impl(*args, **kw)
                 except Exception:
-                    logger.info(f'{name} is {order}')
+                    logger.debug(f'{name} is {order}')
                     raise
         return test_func
     return decorator
