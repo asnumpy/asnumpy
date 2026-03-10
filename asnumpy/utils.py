@@ -14,8 +14,8 @@
 # limitations under the License.
 # *****************************************************************************
 
-from loguru import logger
 from typing import Sequence, Union, overload
+from loguru import logger
 import numpy as np
 from .lib.asnumpy_core import ndarray as _ndarray
 from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
