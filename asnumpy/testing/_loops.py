@@ -28,12 +28,10 @@ __all__ = [
 
 import functools
 import inspect
-import logging
+from loguru import logger
 import numpy
 
 from . import _array
-
-logger = logging.getLogger(__name__)
 
 
 # dtype常量定义

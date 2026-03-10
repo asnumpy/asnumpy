@@ -14,6 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
+from loguru import logger
 from typing import Sequence, Union, overload
 import numpy as np
 from .lib.asnumpy_core import ndarray as _ndarray
@@ -150,12 +151,16 @@ class ndarray(_ndarray):
         return super().to_numpy()
 
 
+@logger.catch
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
+    logger.debug(f"Broadcasting shapes {shape_a}, {shape_b}")
     return _broadcast_shape(shape_a, shape_b)
 
 
+@logger.catch
 def _convert_dtype(dtype):
     """Convert dtype parameter to appropriate format if needed"""
+    logger.debug(f"Converting dtype {dtype}")
     if dtype is None:
         return None
     if not isinstance(dtype, np.dtype):
@@ -163,8 +168,10 @@ def _convert_dtype(dtype):
     return dtype
 
 
+@logger.catch
 def _convert_size(size: Union[int, Sequence[int]]) -> Sequence[int]:
     """Convert size from int to tuple"""
+    logger.debug(f"Converting size {size}")
     if isinstance(size, int):
         return (size,)
     return size

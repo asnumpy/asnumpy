@@ -324,6 +324,25 @@ __all__ = [
 
 __all__.extend(_direct_all_)
 
+# Loguru logging configuration
+from loguru import logger
+import sys
+import os
+
+# Remove default loguru handler
+logger.remove()
+
+# Console sink (colored, INFO level)
+logger.add(sys.__stderr__, level=os.getenv("ASNUMPY_LOG_LEVEL", "INFO"),
+           format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+           catch=True)
+
+# File sink (logs/asnumpy_{time:YYYY-MM-DD_HHmmss}.log, keep 7 days)
+log_file = os.getenv("ASNUMPY_LOG_FILE", "logs/asnumpy_{time:YYYY-MM-DD_HHmmss}.log")
+os.makedirs(os.path.dirname(log_file), exist_ok=True)
+logger.add(log_file, retention="7 days",
+           level=os.getenv("ASNUMPY_LOG_LEVEL", "INFO"), catch=True)
+
 import atexit
 
 

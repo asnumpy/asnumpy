@@ -14,6 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
+from loguru import logger
 from ._types import ArrayLike, DTypeLike, ShapeLike, ScalarLike
 from .lib.asnumpy_core.array import (
     empty as _empty,
@@ -31,6 +32,7 @@ from .lib.asnumpy_core.array import (
 from .utils import ndarray, _convert_dtype
 
 
+@logger.catch
 def zeros(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array initialized with zero values.
@@ -73,9 +75,11 @@ def zeros(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     array([[0, 0],
            [0, 0]])
     """
+    logger.debug(f"Creating zeros array shape={shape}, dtype={dtype}")
     return ndarray(_zeros(shape, _convert_dtype(dtype)))
 
 
+@logger.catch
 def zeros_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array of zeros with the same shape as an existing array.
@@ -116,9 +120,11 @@ def zeros_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     array([[0, 0],
            [0, 0]])
     """
+    logger.debug(f"Creating zeros_like array other={other}, dtype={dtype}")
     return ndarray(_zeros_like(other, _convert_dtype(dtype)))
 
 
+@logger.catch
 def full(shape: ShapeLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with a specific value.
@@ -157,9 +163,11 @@ def full(shape: ShapeLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarra
     array([[3.5, 3.5, 3.5],
            [3.5, 3.5, 3.5]])
     """
+    logger.debug(f"Creating full array shape={shape}, value={value}, dtype={dtype}")
     return ndarray(_full(shape, value, _convert_dtype(dtype)))
 
 
+@logger.catch
 def full_like(other: ArrayLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with a specific value, matching another array's shape.
@@ -192,9 +200,11 @@ def full_like(other: ArrayLike, value: ScalarLike, dtype: DTypeLike = None) -> n
     >>> ap.full_like(x, 9)
     array([9, 9, 9, 9])
     """
+    logger.debug(f"Creating full_like array other={other}, value={value}, dtype={dtype}")
     return ndarray(_full_like(other, value, _convert_dtype(dtype)))
 
 
+@logger.catch
 def empty(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an uninitialized array.
@@ -228,9 +238,11 @@ def empty(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     array([[... , ...],
            [... , ...]])  # values arbitrary
     """
+    logger.debug(f"Creating empty array shape={shape}, dtype={dtype}")
     return ndarray(_empty(shape, _convert_dtype(dtype)))
 
 
+@logger.catch
 def empty_like(prototype: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an uninitialized array matching another array's shape.
@@ -262,9 +274,11 @@ def empty_like(prototype: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     array([[... , ...],
            [... , ...]])  # values arbitrary
     """
+    logger.debug(f"Creating empty_like array prototype={prototype}, dtype={dtype}")
     return ndarray(_empty_like(prototype, _convert_dtype(dtype)))
 
 
+@logger.catch
 def eye(n: int, dtype: DTypeLike = None) -> ndarray:
     """
     Create a 2-D identity matrix.
@@ -297,9 +311,11 @@ def eye(n: int, dtype: DTypeLike = None) -> ndarray:
            [0., 1., 0.],
            [0., 0., 1.]])
     """
+    logger.debug(f"Creating eye array n={n}, dtype={dtype}")
     return ndarray(_eye(n, _convert_dtype(dtype)))
 
 
+@logger.catch
 def ones(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array filled with ones.
@@ -329,9 +345,11 @@ def ones(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     >>> ap.ones(4)
     array([1., 1., 1., 1.])
     """
+    logger.debug(f"Creating ones array shape={shape}, dtype={dtype}")
     return ndarray(_ones(shape, _convert_dtype(dtype)))
 
 
+@logger.catch
 def ones_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     """
     Create an array of ones matching another array's shape.
@@ -363,9 +381,11 @@ def ones_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     array([[1, 1, 1],
            [1, 1, 1]])
     """
+    logger.debug(f"Creating ones_like array other={other}, dtype={dtype}")
     return ndarray(_ones_like(other, _convert_dtype(dtype)))
 
 
+@logger.catch
 def identity(n: int, dtype: DTypeLike = None) -> ndarray:
     """
     Create a square identity matrix.
@@ -390,9 +410,11 @@ def identity(n: int, dtype: DTypeLike = None) -> ndarray:
            [0., 1., 0.],
            [0., 0., 1.]])
     """
+    logger.debug(f"Creating identity array n={n}, dtype={dtype}")
     return ndarray(_identity(n, _convert_dtype(dtype)))
 
 
+@logger.catch
 def linspace(
     start: ScalarLike,
     end: ScalarLike,
@@ -428,4 +450,5 @@ def linspace(
     >>> ap.linspace(0, 1, 5)
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
+    logger.debug(f"Creating linspace array start={start}, end={end}, steps={steps}, dtype={dtype}")
     return ndarray(_linspace(start, end, steps, _convert_dtype(dtype)))
