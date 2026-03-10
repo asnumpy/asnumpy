@@ -14,9 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-import importlib
 from typing import TYPE_CHECKING
-# eager loading
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:
@@ -174,7 +172,7 @@ _LAZY_MAPPING = {
     # .linalg
     "linalg": ".linalg",
     # .linalg.direct
-    "dot": ".linalg.direct", "einsum": ".linalg.direct", "inner": ".linalg.direct", 
+    "dot": ".linalg.direct", "einsum": ".linalg.direct", "inner": ".linalg.direct",
     "matmul": ".linalg.direct", "outer": ".linalg.direct", "vdot": ".linalg.direct",
     # .logic
     "all": ".logic", "any": ".logic", "equal": ".logic", "greater": ".logic",
@@ -223,6 +221,8 @@ _EAGER_EXPORTS = [
 
 __all__ = _EAGER_EXPORTS + list(_LAZY_MAPPING.keys())
 
+import importlib
+
 # Get version from package metadata
 try:
     from importlib.metadata import version
@@ -236,7 +236,7 @@ def __getattr__(name):
         module_path = _LAZY_MAPPING[name]
         module = importlib.import_module(module_path, package=__package__)
         if name == module_path.strip("."):
-            return module  
+            return module
         return getattr(module, name)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
