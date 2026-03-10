@@ -209,9 +209,6 @@ _LAZY_MAPPING = {
     "softmax": ".nn",
     # .io
     "save": ".io", "savez": ".io", "savez_compressed": ".io", "load": ".io",
-    # # .cann
-    # "finalize": ".cann", "init": ".cann", "reset_device": ".cann", 
-    # "reset_device_force": ".cann", "set_device": ".cann",
     # ._types
     "ArrayLike": "._types", "DTypeLike": "._types", "ShapeLike": "._types",
     "AxisLike": "._types", "AxisOptional": "._types", "ScalarLike": "._types",
@@ -243,6 +240,7 @@ def __getattr__(name):
         return getattr(module, name)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 def __dir__():
     return __all__ + ["__version__"]
