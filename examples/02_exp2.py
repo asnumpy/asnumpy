@@ -15,9 +15,9 @@
 # *****************************************************************************
 
 import asnumpy as ap
+import gc
 import numpy as np
 import time
-import gc
 from typing import Tuple, Dict
 
 def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
