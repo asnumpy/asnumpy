@@ -85,6 +85,7 @@ def _generate_case(test_class, params):
         attr = getattr(test_class, attr_name)
         if not callable(attr):
             continue
+        
         # 为方法添加参数
         def make_method(original_method, test_params):
             @functools.wraps(original_method)
