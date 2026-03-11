@@ -1,0 +1,60 @@
+name: Bug 报告 / Bug Report
+description: 提交问题反馈以帮助我们改进 / File a bug report to help us improve
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 感谢您抽出时间填写此错误报告！/ Thanks for taking the time to fill out this bug report!
+        在提交之前，请先检索现有 Issues / Please search existing issues before submitting.
+  - type: checkboxes
+    id: pre-submit-checks
+    attributes:
+      label: 提交前检查 / Pre-submit Checks
+      description: |
+        确认您已遵守以下要求 / Please confirm the following:
+      options:
+        - label: 我已检索 Issues，没有发现类似问题 / I have searched Issues and found no similar problems.
+          required: true
+        - label: 我已阅读文档，但未能解决我的问题 / I have read the documentation but it didn't help.
+          required: true
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: 问题类型 / Problem Type
+      description: 您遇到了哪类问题？/ What kind of problem are you experiencing?
+      options:
+        - 运行时错误 / Runtime Error
+        - 计算结果错误 / Incorrect Calculation Result
+        - 性能问题 / Performance Issue
+        - 安装/环境问题 / Installation/Environment Issue
+        - 内存溢出 / Out of Memory
+        - 其他 / Other
+    validations:
+      required: true
+  - type: textarea
+    id: system-info
+    attributes:
+      label: 运行环境 / System Information
+      description: |
+        请提供详细的运行环境信息，这对排查问题至关重要。
+        Please provide detailed system information, which is crucial for troubleshooting.
+      placeholder: |
+        - 操作系统 / OS (e.g., Ubuntu 20.04, EulerOS 2.9):
+        - 昇腾AI处理器型号 / Ascend NPU Model (e.g., Ascend 910B, 310P):
+        - CANN 版本 / CANN Version (e.g., 7.0.0):
+        - Python 版本 / Python Version (e.g., 3.8, 3.10):
+        - asnumpy 版本 / asnumpy Version (e.g., 1.0.0):
+    validations:
+      required: true
+  - type: textarea
+    id: code-to-reproduce
+    attributes:
+      label: 复现问题的代码 / Code to Reproduce
+      description: 提供一段能复现问题的**最小化、可运行**的代码 / Provide a **minimal, runnable** code snippet that reproduces the issue.
+      placeholder: |
+        ```python
+        import asnumpy as np
+
+        # 您的代码 / Your code here
