@@ -1,0 +1,90 @@
+name: Feature Request
+description: Suggest an idea for this project
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for taking the time to suggest a feature!
+        Please search existing issues before submitting.
+  - type: checkboxes
+    id: pre-submit-checks
+    attributes:
+      label: Pre-submit Checks
+      description: |
+        Please confirm the following:
+      options:
+        - label: I have searched Issues and found no similar feature requests.
+          required: true
+        - label: I have read the documentation and confirmed that this feature is not yet implemented.
+          required: true
+  - type: textarea
+    id: problem-related
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+      placeholder: "Example: When performing large matrix operations, asnumpy lacks functions like `np.einsum`, leading to complex code and poor performance."
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+      placeholder: "Example: Add support for `np.einsum` in asnumpy to accelerate tensor contractions using the NPU."
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe how this feature would be used, preferably with a code example (pseudocode is acceptable).
+      placeholder: |
+        ```python
+        import asnumpy as np
+        # Example usage
+        a = np.random.rand(2,3)
+        b = np.random.rand(3,4)
+        c = np.einsum('ij,jk->ik', a, b)
+        render: python
+validations:
+required: true
+
+type: textarea
+id: alternatives
+attributes:
+label: Describe alternatives you've considered
+description: A clear and concise description of any alternative solutions or features you've considered.
+placeholder: "Example: Currently using multiple np.dot loops, which is inefficient and verbose."
+validations:
+required: false
+
+type: dropdown
+id: npu-specific
+attributes:
+label: Does this involve NPU-specific features?
+description: Does this feature depend on specific Ascend NPU hardware capabilities (e.g., AI Core, AI CPU, DVPP)?
+options:
+
+Yes, it depends on specific NPU capabilities.
+
+No, it's a general NumPy-compatible feature.
+
+Not sure.
+validations:
+required: true
+
+type: input
+id: can-version
+attributes:
+label: If yes, please specify required CANN version or NPU model (optional)
+description: "Example: CANN 7.0.0, Ascend 910B"
+placeholder: "e.g., CANN 7.0.0, Ascend 910B"
+
+type: textarea
+id: additional-context
+attributes:
+label: Additional Context
+description: Add any other context, screenshots, or references about the feature request here.
+placeholder: "Example: Link to NumPy documentation, related papers, or implementations in other frameworks."
