@@ -129,8 +129,12 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_c
                 if x.dtype.kind in 'uif':
                     diff = x - y
                     msg += f"\nMax absolute difference: {np.abs(diff).max()}"
-            except Exception:
-                pass
+            except TypeError as e:
+                # 类型错误：无法进行算术运算，记录但不中断
+                msg += f"\nWarning: Cannot calculate difference - {str(e)}"
+            except Exception as e:
+                # 其他意外错误，记录详细信息
+                msg += f"\nWarning: Difference calculation failed - {type(e).__name__}: {str(e)}"
 
             if x.size > 0:
                 mask = ~np.isclose(x, y, rtol=rtol, atol=atol, equal_nan=True)

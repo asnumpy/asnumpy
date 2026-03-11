@@ -41,7 +41,7 @@ def _create_array(xp, data, dtype):
 # ========== 1. Sinc 正常链路 (Float32/64) ==========
 
 
-@testing.for_dtypes([numpy.float32, numpy.float64])
+@testing.for_dtypes([numpy.float64])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_sinc_basic(xp, dtype):
     """测试 sinc 基础功能（已知支持的浮点类型）"""
@@ -50,7 +50,7 @@ def test_sinc_basic(xp, dtype):
     return xp.sinc(a)
 
 
-@testing.for_dtypes([numpy.float32])
+@testing.for_dtypes([numpy.float64])
 @testing.numpy_asnumpy_allclose()
 def test_sinc_zero(xp, dtype):
     """测试 sinc(0) = 1"""

@@ -22,7 +22,7 @@
 __all__ = [
     'for_dtypes', 'for_all_dtypes', 'for_float_dtypes', 'for_int_dtypes',
     'for_signed_dtypes', 'for_unsigned_dtypes', 'for_complex_dtypes',
-    'for_orders', 'for_CF_orders',
+    'for_orders', 'for_cf_orders',
     'numpy_asnumpy_array_equal', 'numpy_asnumpy_allclose',
 ]
 
@@ -258,7 +258,7 @@ def for_orders(orders, name='order'):
     return decorator
 
 
-def for_CF_orders(name='order'):
+def for_cf_orders(name='order'):
     """为C和F内存顺序参数化测试"""
     return for_orders([None, 'C', 'F', 'c', 'f'], name)
 
