@@ -15,9 +15,9 @@
 # *****************************************************************************
 
 import asnumpy as ap
+import gc
 import numpy as np
 import time
-import gc
 from typing import Tuple, Dict
 
 def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
@@ -145,8 +145,9 @@ def run_test_case(shape: Tuple[int, ...], dtype: np.dtype = np.float32,
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("性能基准测试 (修正版)")
-    print("优化策略: 循环内显式 del 释放显存 + 取中段最快速度")
+    print("README 示例代码性能基准测试")
+    print("测试操作: multiply (元素级乘法)")
+    print("统计策略: 预热后，取中段最快速度 (剔除最慢10%)")
     print("=" * 70)
     
     # 测试配置
