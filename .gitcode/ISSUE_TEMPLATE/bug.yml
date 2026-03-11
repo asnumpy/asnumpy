@@ -42,72 +42,72 @@ body:
     type: textarea
     id: expected
     attributes:
-    label: "✅ 期望行为 / Expected Behavior"
-    description: "你期望发生什么？ / What did you expect to happen?"
-    placeholder: "应该返回数组元素的和 6。 / Should return the sum 6."
-    validations:
-    required: true
+      label: "✅ 期望行为 / Expected Behavior"
+      description: "你期望发生什么？ / What did you expect to happen?"
+      placeholder: "应该返回数组元素的和 6。 / Should return the sum 6."
+      validations:
+      required: true
 
     type: dropdown
     id: npu_model
     attributes:
-    label: "🖥️ NPU 型号 / NPU Model"
-    description: "你使用的NPU型号是什么？ / What NPU model are you using?"
-    options:
+      label: "🖥️ NPU 型号 / NPU Model"
+      description: "你使用的NPU型号是什么？ / What NPU model are you using?"
+      options:
 
-    "Atlas 300T / Atlas 800 (Model 9000)"
+      "Atlas 300T / Atlas 800 (Model 9000)"
 
-    "Atlas 910B"
+      "Atlas 910B"
 
-    "昇腾310P / Ascend 310P"
+      "昇腾310P / Ascend 310P"
 
-    "其他 (请在环境信息中注明) / Other (please specify in environment)"
-    validations:
-    required: true
+      "其他 (请在环境信息中注明) / Other (please specify in environment)"
+      validations:
+      required: true
 
     type: input
     id: cann_version
     attributes:
-    label: "📦 CANN 版本 / CANN Version"
-    description: "你使用的CANN版本号？(例如 8.2.RC1) / What CANN version are you running? (e.g., 8.2.RC1)"
-    placeholder: "8.2.RC1.alpha003"
-    validations:
-    required: true
+      label: "📦 CANN 版本 / CANN Version"
+      description: "你使用的CANN版本号？(例如 8.2.RC1) / What CANN version are you running? (e.g., 8.2.RC1)"
+      placeholder: "8.2.RC1.alpha003"
+      validations:
+      required: true
 
     type: input
     id: asnumpy_version
     attributes:
-    label: "📌 AsNumpy 版本 / AsNumpy Version"
-    description: "你使用的AsNumpy版本（Commit ID或Release标签） / The AsNumpy version (Commit ID or Release tag) you are using."
-    placeholder: "例如 main 分支最新 commit: 3a1b2c... 或 v0.1.0"
-    validations:
-    required: true
+      label: "📌 AsNumpy 版本 / AsNumpy Version"
+      description: "你使用的AsNumpy版本（Commit ID或Release标签） / The AsNumpy version (Commit ID or Release tag) you are using."
+      placeholder: "例如 main 分支最新 commit: 3a1b2c... 或 v0.1.0"
+      validations:
+      required: true
 
     type: textarea
     id: environment
     attributes:
-    label: "⚙️ 环境信息 / Environment Information"
-    description: "请提供操作系统、GCC版本、Python版本等。 / Please provide OS, GCC version, Python version, etc."
-    placeholder: |
-    操作系统 / OS: Ubuntu 22.04
-    GCC 版本 / GCC Version: 11.4.0
-    Python 版本 / Python Version: 3.10.12
-    其他相关库版本 / Other library versions: numpy 1.24.0
-    validations:
-    required: true
+      label: "⚙️ 环境信息 / Environment Information"
+      description: "请提供操作系统、GCC版本、Python版本等。 / Please provide OS, GCC version, Python version, etc."
+      placeholder: |
+      操作系统 / OS: Ubuntu 22.04
+      GCC 版本 / GCC Version: 11.4.0
+      Python 版本 / Python Version: 3.10.12
+      其他相关库版本 / Other library versions: numpy 1.24.0
+      validations:
+      required: true
 
     type: checkboxes
     id: terms
     attributes:
-    label: "📋 确认项 / Checklist"
-    description: "提交前请确认 / Please confirm before submitting"
-    options:
+      label: "📋 确认项 / Checklist"
+      description: "提交前请确认 / Please confirm before submitting"
+      options:
 
-    label: "我已搜索现有Issue，确认这是一个新问题。 / I have searched existing issues and confirmed this is a new one."
-    required: true
+      label: "我已搜索现有Issue，确认这是一个新问题。 / I have searched existing issues and confirmed this is a new one."
+      required: true
 
-    label: "我已提供最小可复现的代码示例。 / I have provided a minimal reproducible code example."
-    required: true
+      label: "我已提供最小可复现的代码示例。 / I have provided a minimal reproducible code example."
+      required: true
 
-    label: "我已提供完整的软硬件环境信息。 / I have provided complete software and hardware environment information."
-    required: true
+      label: "我已提供完整的软硬件环境信息。 / I have provided complete software and hardware environment information."
+      required: true
