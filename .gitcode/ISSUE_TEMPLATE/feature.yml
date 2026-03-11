@@ -1,90 +1,82 @@
-name: Feature Request
-description: Suggest an idea for this project
-title: "[Feature]: "
+name: "✨ 功能建议 / Feature Request"
+description: 为 AsNumpy 提出一个新想法或功能 / Suggest an idea or new feature for AsNumpy
+title: "[FEATURE] "
 labels: ["enhancement"]
+assignees: []
+
 body:
   - type: markdown
     attributes:
       value: |
-        ## Thanks for taking the time to suggest a feature!
-        Please search existing issues before submitting.
-  - type: checkboxes
-    id: pre-submit-checks
-    attributes:
-      label: Pre-submit Checks
-      description: |
-        Please confirm the following:
-      options:
-        - label: I have searched Issues and found no similar feature requests.
-          required: true
-        - label: I have read the documentation and confirmed that this feature is not yet implemented.
-          required: true
+        ## 感谢您愿意提出改进建议！ / Thanks for suggesting an improvement!
+        请告诉我们您希望 AsNumpy 增加什么功能。在提交前，请搜索现有 Issue 以确保没有重复的建议。
+        Please tell us what functionality you'd like to see in AsNumpy. Before submitting, please search existing issues to avoid duplicates.
+
   - type: textarea
-    id: problem-related
+    id: problem
     attributes:
-      label: Is your feature request related to a problem?
-      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-      placeholder: "Example: When performing large matrix operations, asnumpy lacks functions like `np.einsum`, leading to complex code and poor performance."
+      label: "❓ 相关问题是？ / Related Problem"
+      description: "这个功能建议是否与某个问题相关？请清晰描述。 / Is your feature request related to a problem? Please describe clearly."
+      placeholder: |
+        例如：当我尝试在NPU上执行 `np.linalg.eig` 时，AsNumpy 还不支持，导致我必须将数据拷贝回CPU计算，效率很低。
+        Example: When I try to use `np.linalg.eig` on NPU, AsNumpy doesn't support it yet, so I have to copy data back to CPU for computation, which is inefficient.
     validations:
-      required: false
+      required: true
+
   - type: textarea
     id: solution
     attributes:
-      label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
-      placeholder: "Example: Add support for `np.einsum` in asnumpy to accelerate tensor contractions using the NPU."
+      label: "💡 期望的解决方案 / Desired Solution"
+      description: "你希望实现什么样的API或行为？请尽可能详细描述。 / What API or behavior would you like to see? Please describe in detail as much as possible."
+      placeholder: |
+        希望添加 `ap.linalg.eig` 函数，用于计算方阵的特征值和特征向量，接口设计与 NumPy 的 `numpy.linalg.eig` 保持一致。
+        I hope to add `ap.linalg.eig` function to compute eigenvalues and eigenvectors of a square matrix, with an interface consistent with NumPy's `numpy.linalg.eig`.
     validations:
       required: true
-  - type: textarea
-    id: use-case
+
+  - type: dropdown
+    id: numpy_api
     attributes:
-      label: Use Case
-      description: Describe how this feature would be used, preferably with a code example (pseudocode is acceptable).
+      label: "🔗 对应的NumPy API / Corresponding NumPy API"
+      description: "这个功能对应NumPy的哪个API？（如果适用） / Which NumPy API does this correspond to? (if applicable)"
+      options:
+        - np.add / np.sum / 基础数学运算 / Basic math
+        - np.matmul / 矩阵乘法 / Matrix multiplication
+        - np.dot / 点积 / Dot product
+        - np.linalg / 线性代数 / Linear Algebra
+        - np.random / 随机抽样 / Random sampling
+        - np.fft / 傅里叶变换 / FFT
+        - np.ma (远期) / Masked arrays (long-term)
+        - np.polynomial (远期) / Polynomial (long-term)
+        - 其他 (请在下文描述) / Other (please describe below)
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "🔄 考虑过的替代方案 / Alternatives Considered"
+      description: "你考虑过哪些替代方法或变通方案？ / Any alternative solutions or workarounds you've considered?"
       placeholder: |
-        ```python
-        import asnumpy as np
-        # Example usage
-        a = np.random.rand(2,3)
-        b = np.random.rand(3,4)
-        c = np.einsum('ij,jk->ik', a, b)
-        render: python
-validations:
-required: true
+        目前我只能在CPU上用NumPy计算，然后拷贝到NPU，但这样数据迁移开销很大。或者使用其他NPU库，但它们与NumPy接口不兼容。
+        Currently I can only compute on CPU with NumPy and then copy to NPU, but the data transfer overhead is huge. Or use other NPU libraries, but their interfaces are not compatible with NumPy.
 
-type: textarea
-id: alternatives
-attributes:
-label: Describe alternatives you've considered
-description: A clear and concise description of any alternative solutions or features you've considered.
-placeholder: "Example: Currently using multiple np.dot loops, which is inefficient and verbose."
-validations:
-required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: "📎 附加信息 / Additional Context"
+      description: "添加任何其他背景信息、用例、代码示例或参考资料（如 Ascend C 算子思路、OpenBOAT 仓库等）。 / Add any other context, use cases, code examples, or references (e.g., Ascend C operator ideas, OpenBOAT repository, etc.) here."
+      placeholder: |
+        例如：我建议参考NumPy的实现方式，或者提供一些相关的 Ascend C 算子实现思路、OpenBOAT 中的参考代码。
+        Example: I suggest referring to NumPy's implementation, or provide some related Ascend C operator implementation ideas, reference code from OpenBOAT.
 
-type: dropdown
-id: npu-specific
-attributes:
-label: Does this involve NPU-specific features?
-description: Does this feature depend on specific Ascend NPU hardware capabilities (e.g., AI Core, AI CPU, DVPP)?
-options:
-
-Yes, it depends on specific NPU capabilities.
-
-No, it's a general NumPy-compatible feature.
-
-Not sure.
-validations:
-required: true
-
-type: input
-id: can-version
-attributes:
-label: If yes, please specify required CANN version or NPU model (optional)
-description: "Example: CANN 7.0.0, Ascend 910B"
-placeholder: "e.g., CANN 7.0.0, Ascend 910B"
-
-type: textarea
-id: additional-context
-attributes:
-label: Additional Context
-description: Add any other context, screenshots, or references about the feature request here.
-placeholder: "Example: Link to NumPy documentation, related papers, or implementations in other frameworks."
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: "📋 确认项 / Checklist"
+      description: "提交前请确认 / Please confirm before submitting"
+      options:
+        - label: "我已搜索现有Issue，确认没有重复的功能建议。 / I have searched existing issues and confirmed this is not a duplicate."
+          required: true
+        - label: "我理解这个功能可能需要根据项目路线图进行规划，并愿意参与测试或提供反馈。 / I understand this feature may be planned according to the project roadmap, and I am willing to participate in testing or provide feedback."
+          required: true
