@@ -1,5 +1,5 @@
 name: "🐛 Bug 报告 / Bug Report"
-description: 报告一个问题来帮助我们改进 AsNumpy / Report an issue to help us improve AsNumpy
+description: "报告一个问题来帮助我们改进 AsNumpy / Report an issue to help us improve AsNumpy"
 title: "[BUG] "
 labels: ["bug", "needs-triage"]
 assignees: []
@@ -16,7 +16,7 @@ body:
     attributes:
       label: "🐞 问题描述 / Problem Description"
       description: "请清晰简洁地描述问题是什么。 / Please describe the problem clearly and concisely."
-      placeholder: 当我使用 ap.sum() 时，出现了段错误... / When I use ap.sum(), I got a segmentation fault...
+      placeholder: "当我使用 ap.sum() 时，出现了段错误... / When I use ap.sum(), I got a segmentation fault..."
     validations:
       required: true
 
@@ -25,18 +25,18 @@ body:
     attributes:
       label: "🔄 复现步骤 / Steps to Reproduce"
       description: "提供最小可复现的代码示例和步骤。 / Provide a minimal reproducible code example and steps."
-      placeholder: |
+      placeholder: |-
         1. 导入 asnumpy as ap
         2. 创建数组: a = ap.array([1,2,3])
         3. 执行: ap.sum(a)
         4. 观察错误
         ```python
         # 你的代码示例 / Your code example
-                import asnumpy as ap
+        import asnumpy as ap
         a = ap.array([1, 2, 3])
         result = ap.sum(a)
         print(result)
-validations:
+        validations:
 required: true
 
 type: textarea
@@ -44,7 +44,7 @@ id: expected
 attributes:
 label: "✅ 期望行为 / Expected Behavior"
 description: "你期望发生什么？ / What did you expect to happen?"
-placeholder: 应该返回数组元素的和 6。 / Should return the sum 6.
+placeholder: "应该返回数组元素的和 6。 / Should return the sum 6."
 validations:
 required: true
 
@@ -55,13 +55,13 @@ label: "🖥️ NPU 型号 / NPU Model"
 description: "你使用的NPU型号是什么？ / What NPU model are you using?"
 options:
 
-Atlas 300T / Atlas 800 (Model 9000)
+"Atlas 300T / Atlas 800 (Model 9000)"
 
-Atlas 910B
+"Atlas 910B"
 
-昇腾310P / Ascend 310P
+"昇腾310P / Ascend 310P"
 
-其他 (请在环境信息中注明) / Other (please specify in environment)
+"其他 (请在环境信息中注明) / Other (please specify in environment)"
 validations:
 required: true
 
@@ -88,7 +88,7 @@ id: environment
 attributes:
 label: "⚙️ 环境信息 / Environment Information"
 description: "请提供操作系统、GCC版本、Python版本等。 / Please provide OS, GCC version, Python version, etc."
-placeholder: |
+placeholder: |-
 操作系统 / OS: Ubuntu 22.04
 GCC 版本 / GCC Version: 11.4.0
 Python 版本 / Python Version: 3.10.12
