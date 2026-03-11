@@ -41,7 +41,7 @@ __all__ = [
     
     # order装饰器
     'for_orders', 
-    'for_CF_orders',
+    'for_cf_orders',
     
     # numpy-asnumpy比较装饰器
     'numpy_asnumpy_array_equal', 
@@ -97,7 +97,7 @@ from asnumpy.testing._assertions import (
 from asnumpy.testing._loops import (
     for_dtypes, for_all_dtypes, for_float_dtypes, for_int_dtypes,
     for_signed_dtypes, for_unsigned_dtypes, for_complex_dtypes,
-    for_orders, for_CF_orders,
+    for_orders, for_cf_orders,
     numpy_asnumpy_array_equal, numpy_asnumpy_allclose,
 )
 

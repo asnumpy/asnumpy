@@ -28,7 +28,6 @@ import pytest
 from asnumpy import testing
 
 # ========== 辅助函数 ==========
-
 def _create_array(xp, data, dtype):
     """辅助函数：创建数组"""
     np_arr = numpy.array(data, dtype=dtype)
@@ -38,7 +37,6 @@ def _create_array(xp, data, dtype):
     return xp.ndarray.from_numpy(np_arr)
 
 # ========== 1. 归约运算测试 (Reduction) ==========
-
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_all_basic(xp, dtype):
@@ -46,6 +44,7 @@ def test_all_basic(xp, dtype):
     data = [True, True, False, True]
     a = _create_array(xp, data, dtype)
     return xp.all(a)
+
 
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
@@ -55,6 +54,7 @@ def test_any_basic(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.any(a)
 
+
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_all_axis(xp, dtype):
@@ -62,6 +62,7 @@ def test_all_axis(xp, dtype):
     data = [[True, False], [True, True]]
     a = _create_array(xp, data, dtype)
     return xp.all(a, axis=(0,))
+
 
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
@@ -72,13 +73,13 @@ def test_any_axis(xp, dtype):
     return xp.any(a, axis=(1,))
 
 # ========== 2. 无穷/有限检查测试 (Finite Checks) ==========
-
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite(xp, dtype):
     data = [0.0, 1.0, float('inf'), float('-inf'), float('nan')]
     a = _create_array(xp, data, dtype)
     return xp.isfinite(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -87,12 +88,14 @@ def test_isinf(xp, dtype):
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isposinf(xp, dtype):
     data = [0.0, float('inf'), float('-inf')]
     a = _create_array(xp, data, dtype)
     return xp.isposinf(a)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -102,7 +105,6 @@ def test_isneginf(xp, dtype):
     return xp.isneginf(a)
 
 # ========== 3. 逻辑运算测试 (Logical Operators) ==========
-
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_and(xp, dtype):
@@ -111,6 +113,7 @@ def test_logical_and(xp, dtype):
     x1 = _create_array(xp, data1, dtype)
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_and(x1, x2)
+
 
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
@@ -121,6 +124,7 @@ def test_logical_or(xp, dtype):
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_or(x1, x2)
 
+
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_xor(xp, dtype):
@@ -130,6 +134,7 @@ def test_logical_xor(xp, dtype):
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_xor(x1, x2)
 
+
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_not(xp, dtype):
@@ -138,7 +143,6 @@ def test_logical_not(xp, dtype):
     return xp.logical_not(x)
 
 # ========== 4. 比较运算测试 (Comparisons) ==========
-
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_greater(xp, dtype):
@@ -148,6 +152,7 @@ def test_greater(xp, dtype):
     a = _create_array(xp, np_a, dtype)
     b = _create_array(xp, np_b, dtype)
     return xp.greater(a, b)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -159,6 +164,7 @@ def test_greater_equal(xp, dtype):
     b = _create_array(xp, np_b, dtype)
     return xp.greater_equal(a, b)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_less(xp, dtype):
@@ -168,6 +174,7 @@ def test_less(xp, dtype):
     a = _create_array(xp, np_a, dtype)
     b = _create_array(xp, np_b, dtype)
     return xp.less(a, b)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -179,6 +186,7 @@ def test_less_equal(xp, dtype):
     b = _create_array(xp, np_b, dtype)
     return xp.less_equal(a, b)
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_equal(xp, dtype):
@@ -187,6 +195,7 @@ def test_equal(xp, dtype):
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.equal(a, b)
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -208,7 +217,6 @@ def test_greater_scalar(xp, dtype):
     return xp.greater(a, scalar)
 
 # ========== 5. 问题测试 (保持 xfail) ==========
-
 @testing.suppress_warnings
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
