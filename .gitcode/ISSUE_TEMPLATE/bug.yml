@@ -45,7 +45,7 @@ body:
       label: "✅ 期望行为 / Expected Behavior"
       description: "你期望发生什么？ / What did you expect to happen?"
       placeholder: "应该返回数组元素的和 6。 / Should return the sum 6."
-      validations:
+    validations:
       required: true
 
     type: dropdown
@@ -62,7 +62,7 @@ body:
       "昇腾310P / Ascend 310P"
 
       "其他 (请在环境信息中注明) / Other (please specify in environment)"
-      validations:
+    validations:
       required: true
 
     type: input
@@ -71,7 +71,7 @@ body:
       label: "📦 CANN 版本 / CANN Version"
       description: "你使用的CANN版本号？(例如 8.2.RC1) / What CANN version are you running? (e.g., 8.2.RC1)"
       placeholder: "8.2.RC1.alpha003"
-      validations:
+    validations:
       required: true
 
     type: input
@@ -80,7 +80,7 @@ body:
       label: "📌 AsNumpy 版本 / AsNumpy Version"
       description: "你使用的AsNumpy版本（Commit ID或Release标签） / The AsNumpy version (Commit ID or Release tag) you are using."
       placeholder: "例如 main 分支最新 commit: 3a1b2c... 或 v0.1.0"
-      validations:
+    validations:
       required: true
 
     type: textarea
@@ -93,7 +93,7 @@ body:
       GCC 版本 / GCC Version: 11.4.0
       Python 版本 / Python Version: 3.10.12
       其他相关库版本 / Other library versions: numpy 1.24.0
-      validations:
+    validations:
       required: true
 
     type: checkboxes
