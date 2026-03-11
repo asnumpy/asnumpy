@@ -1,7 +1,7 @@
 ---
 name: ❓ 问题咨询 / Question
 about: 提出关于 AsNumpy 使用、安装或设计的问题 / Ask a question about using, installing, or designing AsNumpy
-title: "[QUESTION] "
+title: [QUESTION] 
 labels: ["question"]
 assignees: []
 ---
