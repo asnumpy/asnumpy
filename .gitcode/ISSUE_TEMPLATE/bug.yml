@@ -1,60 +1,113 @@
-name: Bug 报告 / Bug Report
-description: 提交问题反馈以帮助我们改进 / File a bug report to help us improve
-title: "[Bug]: "
-labels: ["bug", "triage"]
+name: "🐛 Bug 报告 / Bug Report"
+description: 报告一个问题来帮助我们改进 AsNumpy / Report an issue to help us improve AsNumpy
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
 body:
   - type: markdown
     attributes:
       value: |
-        ## 感谢您抽出时间填写此错误报告！/ Thanks for taking the time to fill out this bug report!
-        在提交之前，请先检索现有 Issues / Please search existing issues before submitting.
-  - type: checkboxes
-    id: pre-submit-checks
-    attributes:
-      label: 提交前检查 / Pre-submit Checks
-      description: |
-        确认您已遵守以下要求 / Please confirm the following:
-      options:
-        - label: 我已检索 Issues，没有发现类似问题 / I have searched Issues and found no similar problems.
-          required: true
-        - label: 我已阅读文档，但未能解决我的问题 / I have read the documentation but it didn't help.
-          required: true
-  - type: dropdown
-    id: issue-type
-    attributes:
-      label: 问题类型 / Problem Type
-      description: 您遇到了哪类问题？/ What kind of problem are you experiencing?
-      options:
-        - 运行时错误 / Runtime Error
-        - 计算结果错误 / Incorrect Calculation Result
-        - 性能问题 / Performance Issue
-        - 安装/环境问题 / Installation/Environment Issue
-        - 内存溢出 / Out of Memory
-        - 其他 / Other
-    validations:
-      required: true
-  - type: textarea
-    id: system-info
-    attributes:
-      label: 运行环境 / System Information
-      description: |
-        请提供详细的运行环境信息，这对排查问题至关重要。
-        Please provide detailed system information, which is crucial for troubleshooting.
-      placeholder: |
-        - 操作系统 / OS (e.g., Ubuntu 20.04, EulerOS 2.9):
-        - 昇腾AI处理器型号 / Ascend NPU Model (e.g., Ascend 910B, 310P):
-        - CANN 版本 / CANN Version (e.g., 7.0.0):
-        - Python 版本 / Python Version (e.g., 3.8, 3.10):
-        - asnumpy 版本 / asnumpy Version (e.g., 1.0.0):
-    validations:
-      required: true
-  - type: textarea
-    id: code-to-reproduce
-    attributes:
-      label: 复现问题的代码 / Code to Reproduce
-      description: 提供一段能复现问题的**最小化、可运行**的代码 / Provide a **minimal, runnable** code snippet that reproduces the issue.
-      placeholder: |
-        ```python
-        import asnumpy as np
+        ## 感谢您花时间填写这个Bug报告！ / Thanks for taking the time to fill out this bug report!
+        在提交前，请搜索现有Issue，确保没有重复。 / Please search for existing issues before submitting to avoid duplicates.
 
-        # 您的代码 / Your code here
+  - type: textarea
+    id: description
+    attributes:
+      label: "🐞 问题描述 / Problem Description"
+      description: "请清晰简洁地描述问题是什么。 / Please describe the problem clearly and concisely."
+      placeholder: 当我使用 ap.sum() 时，出现了段错误... / When I use ap.sum(), I got a segmentation fault...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "🔄 复现步骤 / Steps to Reproduce"
+      description: "提供最小可复现的代码示例和步骤。 / Provide a minimal reproducible code example and steps."
+      placeholder: |
+        1. 导入 asnumpy as ap
+        2. 创建数组: a = ap.array([1,2,3])
+        3. 执行: ap.sum(a)
+        4. 观察错误
+        ```python
+        # 你的代码示例 / Your code example
+                import asnumpy as ap
+        a = ap.array([1, 2, 3])
+        result = ap.sum(a)
+        print(result)
+validations:
+required: true
+
+type: textarea
+id: expected
+attributes:
+label: "✅ 期望行为 / Expected Behavior"
+description: "你期望发生什么？ / What did you expect to happen?"
+placeholder: 应该返回数组元素的和 6。 / Should return the sum 6.
+validations:
+required: true
+
+type: dropdown
+id: npu_model
+attributes:
+label: "🖥️ NPU 型号 / NPU Model"
+description: "你使用的NPU型号是什么？ / What NPU model are you using?"
+options:
+
+Atlas 300T / Atlas 800 (Model 9000)
+
+Atlas 910B
+
+昇腾310P / Ascend 310P
+
+其他 (请在环境信息中注明) / Other (please specify in environment)
+validations:
+required: true
+
+type: input
+id: cann_version
+attributes:
+label: "📦 CANN 版本 / CANN Version"
+description: "你使用的CANN版本号？(例如 8.2.RC1) / What CANN version are you running? (e.g., 8.2.RC1)"
+placeholder: "8.2.RC1.alpha003"
+validations:
+required: true
+
+type: input
+id: asnumpy_version
+attributes:
+label: "📌 AsNumpy 版本 / AsNumpy Version"
+description: "你使用的AsNumpy版本（Commit ID或Release标签） / The AsNumpy version (Commit ID or Release tag) you are using."
+placeholder: "例如 main 分支最新 commit: 3a1b2c... 或 v0.1.0"
+validations:
+required: true
+
+type: textarea
+id: environment
+attributes:
+label: "⚙️ 环境信息 / Environment Information"
+description: "请提供操作系统、GCC版本、Python版本等。 / Please provide OS, GCC version, Python version, etc."
+placeholder: |
+操作系统 / OS: Ubuntu 22.04
+GCC 版本 / GCC Version: 11.4.0
+Python 版本 / Python Version: 3.10.12
+其他相关库版本 / Other library versions: numpy 1.24.0
+validations:
+required: true
+
+type: checkboxes
+id: terms
+attributes:
+label: "📋 确认项 / Checklist"
+description: "提交前请确认 / Please confirm before submitting"
+options:
+
+label: "我已搜索现有Issue，确认这是一个新问题。 / I have searched existing issues and confirmed this is a new one."
+required: true
+
+label: "我已提供最小可复现的代码示例。 / I have provided a minimal reproducible code example."
+required: true
+
+label: "我已提供完整的软硬件环境信息。 / I have provided complete software and hardware environment information."
+required: true

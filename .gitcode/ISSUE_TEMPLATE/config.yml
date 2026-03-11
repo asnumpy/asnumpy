@@ -1,0 +1,33 @@
+# 议题模板选择器配置文件
+# Issue template chooser configuration file
+
+# 禁用创建完全空白的议题，鼓励用户使用模板
+# Disable creating completely blank issues, encourage users to use templates
+blank_issues_enabled: false
+
+# 提供有用的外部链接，帮助用户在创建议题前自助解决问题
+# Provide useful external links to help users self-serve before creating an issue
+contact_links:
+  - name: "📖 AsNumpy 项目文档 / AsNumpy Documentation"
+    url: https://gitcode.com/cann/asnumpy/tree/master/docs
+    about: 查阅项目官方文档，了解API用法、设计理念和贡献指南 / Check the official docs for API usage, design philosophy, and contribution guidelines.
+
+  - name: "❓ 常见问题 / FAQs"
+    url: https://gitcode.com/cann/asnumpy/wiki/FAQ
+    about: 查看常见问题解答，也许能快速解决你的疑问 / Check FAQs for quick answers to common questions.
+
+  - name: "💬 昇腾开发者社区论坛 / Ascend Developer Community Forum"
+    url: https://www.hiascend.com/forum/
+    about: 在昇腾官方社区与其他开发者交流，讨论昇腾AI处理器和CANN相关问题 / Discuss with other developers in the Ascend official community about Ascend AI processors and CANN related topics.
+
+  - name: "🔧 CANN 官方文档 / CANN Official Documentation"
+    url: https://www.hiascend.com/document
+    about: 查阅CANN的官方技术文档，了解底层算子、运行时配置等 / Refer to CANN's official technical documentation for low-level operators, runtime configuration, etc.
+
+  - name: "⚙️ OpenBOAT 算子仓库 / OpenBOAT Operator Repository"
+    url: https://gitcode.com/ascend/OpenBOAT
+    about: AsNumpy 依赖的 Ascend C 算子仓库，可在此查找或贡献自定义算子 / The Ascend C operator repository that AsNumpy depends on; you can find or contribute custom operators here.
+
+  - name: "📢 项目动态与路线图 / Project Updates & Roadmap"
+    url: https://gitcode.com/cann/asnumpy/milestones
+    about: 了解 AsNumpy 的下一步计划和版本发布安排 / Learn about AsNumpy's next plans and release schedule.
