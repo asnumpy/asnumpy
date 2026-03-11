@@ -28,7 +28,7 @@
 #include <aclnnop/aclnn_div.h>
 #include <aclnnop/aclnn_gcd.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

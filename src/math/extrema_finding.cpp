@@ -31,7 +31,7 @@
 #include <aclnnop/aclnn_min.h>
 
 #include <cstdint>
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <limits>
 #include <stdexcept>

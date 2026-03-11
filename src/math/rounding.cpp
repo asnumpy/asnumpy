@@ -28,7 +28,7 @@
 #include <aclnnop/aclnn_floor.h>
 #include <aclnnop/aclnn_ceil.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

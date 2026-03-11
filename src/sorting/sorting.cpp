@@ -23,7 +23,7 @@
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_sort.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

@@ -41,7 +41,7 @@
 #include <aclnnop/aclnn_fmod_tensor.h>
 #include <aclnnop/aclnn_remainder.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 
