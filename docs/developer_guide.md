@@ -6,10 +6,9 @@
 2. [后端开发 (C++)](#二后端开发-c)
 3. [构建系统配置 (CMake)](#三构建系统配置-cmake)
 4. [前端开发 (Python)](#四前端开发-python)
-5. [更新 API 文档](#五更新-api-文档)
-6. [测试编写](#六测试编写)
-7. [编译与运行](#七编译与运行)
-8. [附录](#八附录)
+5. [测试编写](#五测试编写)
+6. [编译与运行](#六编译与运行)
+7. [附录](#七附录)
 
 ---
 
@@ -330,34 +329,6 @@ from .utils import ndarray, _convert_dtype
 
 ```python
 def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-    """
-    Calculate the normalized sinc function of each element.
-
-    This function computes the normalized sinc function,
-    `sin(pi * x) / (pi * x)`, for every element in the input array `x`.
-
-    Arguments
-    ---------
-    x : asnumpy.ndarray
-        Input array.
-    dtype : data-type, optional
-        The desired data type for the output array.
-
-    Returns
-    -------
-    asnumpy.ndarray
-        The normalized sinc function evaluated at ``x``.
-
-    See Also
-    --------
-    numpy.sinc
-
-    Examples
-    --------
-    >>> import asnumpy as ap
-    >>> ap.sinc(ap.array([0., 0.5]))
-    array([1.        , 0.63661977])
-    """
     return ndarray(_ap_sinc(x, _convert_dtype(dtype)))
 ```
 
@@ -422,37 +393,6 @@ def function_name(
     param2: Union[ndarray, Any], 
     optional_param: Optional[np.dtype] = None
 ) -> ndarray:
-    """
-    简短的功能描述（一句话总结）
-    
-    详细描述函数的功能、计算公式或行为特点。
-    如果有特殊情况或边界条件，应在此说明。
-    
-    Arguments
-    ---------
-    param1 : asnumpy.ndarray
-        参数1的详细说明。
-    param2 : array-like or scalar
-        参数2的详细说明，说明接受的类型。
-    optional_param : data-type, optional
-        可选参数的说明，默认值为 None。
-    
-    Returns
-    -------
-    asnumpy.ndarray
-        返回值的详细说明，包括数据类型和形状。
-    
-    See Also
-    --------
-    numpy.function_name
-    asnumpy.related_function
-    
-    Examples
-    --------
-    >>> import asnumpy as ap
-    >>> ap.function_name(ap.array([1, 2, 3]))
-    array([result])
-    """
     # 参数处理
     if optional_param is not None:
         dtype = _convert_dtype(optional_param)
@@ -463,97 +403,11 @@ def function_name(
 
 ---
 
-## 五、更新 API 文档
-
-开发新函数后，需要更新 Sphinx 文档配置，以便自动生成 API 文档。
-
-### 5.1 更新 rst文件
-
-根据函数所属的类别，在对应rst文件中添加函数名，以sinc为例在
-docs/source/reference/math.rst的对应部分添加函数名。
-
-**文件位置**: `docs/source/reference/math.rst`
-
-例如，添加 `sinc` 函数（属于"其他"类别）：
-
-```rst
-其他
-----
-
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   clip
-   sqrt
-   square
-   signbit
-   modf
-   ldexp
-   sinc        # 新增：添加在此处
-   nan_to_num
-   real
-   gelu
-   relu
-```
-
-**注意事项：**
-• 函数名必须与 Python 中的函数名完全一致（小写）
-
-### 5.2 更新模块索引（可选）
-
-• 若项目新增了Python模块，需在docs/source/reference添加对应的rst格式模块索引文件，以及需在docs/source/reference/index.rst中添加模块声明，确保该模块已被包含。rst文件格式示例如下。
-
-```rst
-模块名称
-.. currentmodule:: asnumpy
-
-二级模块名称1
-------------
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   API名1
-   API名2
-    
-二级模块名称2
-------------
-.. autosummary::
-   :toctree: generated/
-   :nosignatures:
-
-   API名3
-   API名4
-```
-
-• 若项目删除了Python模块，需在docs/source/reference删除对应的rst格式模块索引文件，以及需在docs/source/reference/index.rst中删除模块声明，确保该模块已被删除。
-
-### 5.3 生成文档（可选）
-
-完成代码开发和文档配置更新后，可以生成 HTML 文档查看：
-
-```bash
-#在项目根目录下执行如下命令，安装项目和文档生成工具所需的依赖。
-pip install -e ".[docs]"
-
-# 进入 docs 目录
-cd docs
-
-# 生成文档
-make html
-
-#文档生成成功后，会保存在 `docs/build/html` 目录下
-#打开`index.html` 文件，按选项跳转即可查看完整的 API 文档。
-```
-
----
-
-## 六、测试编写
+## 五、测试编写
 
 测试是确保代码质量的关键。asnumpy 使用 pytest 和自定义测试框架编写测试。
 
-### 6.1 测试文件组织
+### 5.1 测试文件组织
 
 测试文件按模块组织，位于 `tests/asnumpy_tests/` 目录：
 
@@ -570,7 +424,7 @@ tests/
     └── ...
 ```
 
-### 6.2 编写测试用例
+### 5.2 编写测试用例
 
 **文件位置**: `tests/asnumpy_tests/math_tests/test_miscellaneous.py`
 
@@ -657,11 +511,11 @@ def test_sinc_multidim(xp, dtype):
     return xp.sinc(a)
 ```
 
-### 6.3 测试装饰器
+### 5.3 测试装饰器
 
 asnumpy 提供了丰富的测试装饰器：
 
-#### 6.3.1 数据类型装饰器
+#### 5.3.1 数据类型装饰器
 
 ```python
 # 测试所有浮点类型
@@ -689,7 +543,7 @@ def test_something(xp, dtype):
     pass
 ```
 
-#### 6.3.2 NumPy-Asnumpy 比较装饰器
+#### 5.3.2 NumPy-Asnumpy 比较装饰器
 
 ```python
 # 比较数组是否完全相等
@@ -707,16 +561,16 @@ def test_something(xp, dtype):
     return xp.some_function(a)
 ```
 
-#### 6.3.3 参数说明
+#### 5.3.3 参数说明
 
 - `rtol`: 相对容差（relative tolerance）
 - `atol`: 绝对容差（absolute tolerance）
 - `no_float16`: 排除 float16 类型
 - `no_complex`: 排除复数类型
 
-### 6.4 测试用例设计原则
+### 5.4 测试用例设计原则
 
-#### 6.4.1 覆盖范围
+#### 5.4.1 覆盖范围
 
 测试应覆盖以下场景：
 
@@ -726,7 +580,7 @@ def test_something(xp, dtype):
 4. **多维数组**: 不同形状的数组
 5. **错误处理**: 异常情况的处理
 
-#### 6.4.2 随机数测试
+#### 5.4.2 随机数测试
 
 对于涉及随机数的测试，必须设置固定种子：
 
@@ -738,7 +592,7 @@ def test_random_operation(xp, dtype):
     return xp.some_function(a)
 ```
 
-#### 6.4.3 辅助函数
+#### 5.4.3 辅助函数
 
 使用辅助函数统一数组创建逻辑：
 
@@ -753,9 +607,9 @@ def _create_array(xp, data, dtype):
 
 ---
 
-## 七、编译与运行
+## 六、编译与运行
 
-### 7.1 编译项目
+### 6.1 编译项目
 
 在开发模式下安装和编译项目，这样修改代码后无需重新安装即可生效：
 
@@ -769,15 +623,15 @@ pip install -e .
 - 首次安装会自动下载依赖（fmt, pybind11）
 - 后续修改 C++ 代码只需重新运行 `pip install -e .`
 
-### 7.2 运行测试
+### 6.2 运行测试
 
-#### 7.2.1 运行所有测试
+#### 6.2.1 运行所有测试
 
 ```bash
 pytest tests/
 ```
 
-#### 7.2.2 运行特定模块测试
+#### 6.2.2 运行特定模块测试
 
 ```bash
 # 数学模块测试
@@ -787,7 +641,7 @@ pytest tests/asnumpy_tests/math_tests/
 pytest tests/asnumpy_tests/linalg_tests/
 ```
 
-#### 7.2.3 运行单个测试
+#### 6.2.3 运行单个测试
 
 ```bash
 # 运行特定测试文件
@@ -797,9 +651,9 @@ pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py
 pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
 ```
 
-### 7.3 调试技巧
+### 6.3 调试技巧
 
-#### 7.3.1 查看编译错误
+#### 6.3.1 查看编译错误
 
 如果编译失败，检查：
 
@@ -807,7 +661,7 @@ pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
 2. 确认环境变量是否正确设置
 3. 检查头文件路径和库文件路径
 
-#### 7.3.2 查看错误消息
+#### 6.3.2 查看错误消息
 
 如果 NPU 算子执行失败，错误消息格式为：
 
@@ -828,7 +682,7 @@ pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
 
 ---
 
-## 八、附录
+## 七、附录
 
 ### A. 项目目录结构
 
@@ -842,11 +696,15 @@ asnumpy/
 │   ├── testing/            # 测试工具
 │   └── ...
 ├── docs/                   # 文档
+│   ├── architecture.md     # 架构说明
+│   ├── benchmarks.md       # 性能基准
 │   ├── developer_guide.md  # 开发指南
-│   ├── source/             # Sphinx 源文件
-│   │   ├── reference/       # API 参考文档
-│   │   └── conf.py         # Sphinx 配置
-│   └── build/              # 构建输出
+│   ├── faq.md              # 常见问题
+│   ├── quick_start.md      # 快速入门
+│   └── images/             # 文档图片
+│       ├── AsNumpy Logo.png
+│       ├── NPU扩展功能模块.png
+│       └── 功能模块.png
 ├── include/                # C++ 头文件
 │   └── asnumpy/
 │       ├── math/           # 数学模块头文件

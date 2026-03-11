@@ -27,6 +27,3 @@ _skbuild/
 
 # Backup files
 *.backup
-
-# Sphinx build files
-docs/source/reference/generated/
