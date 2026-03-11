@@ -14,6 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
+from loguru import logger
 from .lib.asnumpy_core.cann import (
     finalize as _finalize,
     init as _init,
@@ -23,6 +24,7 @@ from .lib.asnumpy_core.cann import (
 )
 
 
+@logger.catch
 def set_device(device_id: int) -> None:
     """
     Set the current device.
@@ -32,9 +34,11 @@ def set_device(device_id: int) -> None:
     device_id : int
         ID of the device to set.
     """
+    logger.info(f"Setting device to {device_id}")
     return _set_device(device_id)
 
 
+@logger.catch
 def reset_device(device_id: int) -> None:
     """
     Reset the current device.
@@ -44,9 +48,11 @@ def reset_device(device_id: int) -> None:
     device_id : int
         ID of the device to reset.
     """
+    logger.info(f"Resetting device {device_id}")
     return _reset_device(device_id)
 
 
+@logger.catch
 def reset_device_force(device_id: int) -> None:
     """
     Force reset the current device.
@@ -56,18 +62,23 @@ def reset_device_force(device_id: int) -> None:
     device_id : int
         ID of the device to reset.
     """
+    logger.info(f"Force resetting device {device_id}")
     return _reset_device_force(device_id)
 
 
+@logger.catch
 def init() -> None:
     """
     Initialize the CANN backend.
     """
+    logger.info("Initializing CANN backend")
     return _init()
 
 
+@logger.catch
 def finalize() -> None:
     """
     Finalize the CANN backend.
     """
+    logger.info("Finalizing CANN backend")
     return _finalize()
