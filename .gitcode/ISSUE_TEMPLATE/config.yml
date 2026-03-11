@@ -13,7 +13,7 @@ contact_links:
     about: 查阅项目官方文档，了解API用法、设计理念和贡献指南 / Check the official docs for API usage, design philosophy, and contribution guidelines.
 
   - name: "❓ 常见问题 / FAQs"
-    url: https://gitcode.com/cann/asnumpy/wiki/FAQ
+    url: https://gitcode.com/cann/asnumpy/tree/master/docs/faq.md
     about: 查看常见问题解答，也许能快速解决你的疑问 / Check FAQs for quick answers to common questions.
 
   - name: "💬 昇腾开发者社区论坛 / Ascend Developer Community Forum"
@@ -25,7 +25,7 @@ contact_links:
     about: 查阅CANN的官方技术文档，了解底层算子、运行时配置等 / Refer to CANN's official technical documentation for low-level operators, runtime configuration, etc.
 
   - name: "⚙️ OpenBOAT 算子仓库 / OpenBOAT Operator Repository"
-    url: https://gitcode.com/ascend/OpenBOAT
+    url: https://gitcode.com/HIT1920/OpenBOAT
     about: AsNumpy 依赖的 Ascend C 算子仓库，可在此查找或贡献自定义算子 / The Ascend C operator repository that AsNumpy depends on; you can find or contribute custom operators here.
 
   - name: "📢 项目动态与路线图 / Project Updates & Roadmap"
