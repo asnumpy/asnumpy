@@ -33,7 +33,7 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <optional>
 #include <pybind11/numpy.h>

@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 #include <asnumpy/utils/status_handler.hpp>
-#include <fmt/base.h>
+#include <fmt/core.h>
 
 #define CHECK_RET(cond, return_expr)                                                                                   \
 	do {                                                                                                               \

@@ -19,7 +19,7 @@
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
-#include <fmt/base.h>
+#include <fmt/core.h>
 
 #include <aclnnop/aclnn_all.h>
 #include <aclnnop/aclnn_any.h>

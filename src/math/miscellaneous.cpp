@@ -36,7 +36,7 @@
 #include <aclnnop/aclnn_sign.h>
 #include <aclnnop/aclnn_heaviside.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <limits>
 #include <stdexcept>
