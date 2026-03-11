@@ -49,13 +49,6 @@ dev = [
 test = [
     "pytest>=9.0.0",
 ]
-docs = [
-    "sphinx>=5.3.0",
-    "pydata_sphinx_theme>=0.11.0",
-    "sphinx-copybutton",
-    "scipy",
-    "jieba",
-]
 
 [project.urls]
 Homepage = "https://gitcode.com/cann/asnumpy"
