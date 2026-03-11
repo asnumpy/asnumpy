@@ -50,7 +50,7 @@
 #include <aclnnop/aclnn_div.h>
 #include <aclnnop/aclnn_add.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <pybind11/attr.h>
 #include <stdexcept>

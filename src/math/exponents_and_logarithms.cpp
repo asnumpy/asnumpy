@@ -32,7 +32,7 @@
 #include <aclnnop/aclnn_logaddexp.h>
 #include <aclnnop/aclnn_logaddexp2.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

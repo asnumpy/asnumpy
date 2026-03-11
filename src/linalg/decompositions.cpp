@@ -23,7 +23,7 @@
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_linalg_qr.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

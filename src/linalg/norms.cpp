@@ -27,7 +27,7 @@
 #include <aclnnop/aclnn_exp.h>
 #include <aclnnop/aclnn_slogdet.h>
 
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 

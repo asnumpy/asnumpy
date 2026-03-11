@@ -37,7 +37,7 @@
 #include <aclnnop/aclnn_foreach_mul_scalar.h>
 
 #include <cstdio>
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 #include <cmath>

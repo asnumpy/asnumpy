@@ -18,7 +18,7 @@
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 #include <asnumpy/math/math.hpp>
-#include <fmt/base.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <shape.h>
 #include <stdexcept>

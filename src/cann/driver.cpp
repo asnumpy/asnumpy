@@ -16,13 +16,13 @@
 
 
 #include "asnumpy/cann/driver.hpp"
-#include "fmt/base.h"
+#include "fmt/core.h"
 
 void asnumpy::cann::init() {
     auto ret = aclInit(nullptr);
     if (ret != ACL_SUCCESS) {
         auto message = aclGetRecentErrMsg();
-        fmt::println("{}", message);
+        fmt::print("{}", message);
     }
 }
 
@@ -30,6 +30,6 @@ void asnumpy::cann::finalize() {
     auto ret = aclFinalize();
     if (ret != ACL_SUCCESS) {
         auto message = aclGetRecentErrMsg();
-        fmt::println("{}", message);
+        fmt::print("{}", message);
     }
 }
