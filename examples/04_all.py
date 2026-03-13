@@ -14,11 +14,12 @@
 # limitations under the License.
 # *****************************************************************************
 
-import asnumpy as ap
 import gc
-import numpy as np
 import time
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
+
+import asnumpy as ap
+import numpy as np
 
 def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     """创建asnumpy和numpy测试数组"""
