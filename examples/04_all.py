@@ -16,10 +16,14 @@
 
 import gc
 import time
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
-import asnumpy as ap
 import numpy as np
+import asnumpy as ap
+
+# 导入公共工具函数
+from utils import calculate_stable_metric
+
 
 def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     """创建asnumpy和numpy测试数组"""
@@ -36,22 +40,6 @@ def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     
     return m1_asnp, m1_np
 
-def calculate_stable_metric(times: list, trim_ratio: float = 0.1) -> float:
-    """
-    统计策略：取中段最快速度
-    1. 排序去除最慢的 10% (受系统调度影响的数据)
-    2. 取剩余数据的最小值 (代表硬件峰值性能)
-    """
-    if not times:
-        return 0.0
-    
-    sorted_times = sorted(times)
-    keep_count = int(len(sorted_times) * (1.0 - trim_ratio))
-    if keep_count < 1:
-        keep_count = 1
-        
-    valid_times = sorted_times[:keep_count]
-    return min(valid_times)
 
 def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) -> list:
     """
@@ -69,10 +57,8 @@ def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) 
         start = time.perf_counter()
         
         # 执行计算
-        res = all_func(m1)
-        
+        res = all_func(m1) 
         end = time.perf_counter()
-        
         times.append(end - start)
         
         # 显式删除结果对象（虽然 all 返回标量，但保持一致性）
@@ -84,10 +70,11 @@ def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) 
         
     return times
 
+
 def run_test_case(shape: Tuple[int, ...], dtype: np.dtype, 
-                 warmup: int = 40, iterations: int = 400) -> Dict[str, float]:
+                  warmup: int = 40, iterations: int = 400) -> Dict[str, float]:
     """运行单个测试用例"""
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"测试形状: {shape}, 类型: {dtype}")
     
     m1_asnp, m1_np = create_arrays(shape, dtype)
@@ -142,6 +129,7 @@ def run_test_case(shape: Tuple[int, ...], dtype: np.dtype,
         del m1_asnp, m1_np
         gc.collect()
 
+
 if __name__ == "__main__":
     print("=" * 70)
     print("README 示例代码性能基准测试")
@@ -169,7 +157,7 @@ if __name__ == "__main__":
     print(f"  预热轮数: {warmup_iterations}")
     print(f"  测试轮数: {test_iterations}")
     print(f"  统计方法: 排序后剔除最慢10%，取最小值")
-    print(f"\n{'='*70}\n")
+    print(f"\n{'=' * 70}\n")
     
     results = []
     for shape, dtype in test_configs:
@@ -182,41 +170,41 @@ if __name__ == "__main__":
             traceback.print_exc()
     
     # 输出汇总结果
-    print("\n" + "="*95)
+    print("\n" + "=" * 95)
     print("测试结果汇总 (基于中段最快速度)")
-    print("-"*95)
+    print("-" * 95)
     print(f"{'形状':<15} | {'类型':<10} | {'数据量':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'加速比':<10}")
     print(f"{'':15} | {'':10} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
-    print("-"*95)
+    print("-" * 95)
     
     for result in results:
         shape_str = str(result['shape'])
         dtype_str = result['dtype']
         data_size = np.prod(result['shape'])
         data_size_str = f"{data_size:,}"
-        asnp_time = f"{result['asnumpy_metric']*1000:.4f}"
-        np_time = f"{result['numpy_metric']*1000:.4f}"
+        # 修复：算术操作符两侧增加空格
+        asnp_time = f"{result['asnumpy_metric'] * 1000:.4f}"
+        np_time = f"{result['numpy_metric'] * 1000:.4f}"
         speedup_str = f"{result['speedup']:.2f}x"
         
         print(f"{shape_str:<15} | {dtype_str:<10} | {data_size_str:<12} | {asnp_time:<12} | {np_time:<12} | {speedup_str}")
     
-    print("-"*95)
+    print("-" * 95)
     
     # 统计信息
     if results:
         avg_speedup = sum(r['speedup'] for r in results) / len(results)
         max_speedup = max(r['speedup'] for r in results)
         
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("性能统计:")
         print(f"  平均加速比: {avg_speedup:.2f}x")
         print(f"  最大加速比: {max_speedup:.2f}x")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
     
     print("\n注意事项:")
     print("  • 测试 bool 和 float32 两种数据类型")
     print("  • all() 是归约操作，返回标量结果")
     print("  • 已调整迭代次数以保证显存安全")
     print("  • 采用'取中段最快速度'算法，展示 NPU 真实计算能力")
-    print("="*70)
-
+    print("=" * 70)

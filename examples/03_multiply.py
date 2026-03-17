@@ -16,10 +16,12 @@
 
 import gc
 import time
-from typing import Tuple, Dict
-
-import asnumpy as ap
 import numpy as np
+import asnumpy as ap
+
+from typing import Tuple, Dict
+from utils import calculate_stable_metric
+
 
 def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     """创建输入数组"""
@@ -29,24 +31,8 @@ def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     m1_asnp = ap.ndarray.from_numpy(m1_np)
     m2_asnp = ap.ndarray.from_numpy(m2_np)
     
-    # 不再预分配 out，因为 multiply 不支持
     return m1_asnp, m2_asnp, m1_np, m2_np
 
-def calculate_stable_metric(times: list, trim_ratio: float = 0.1) -> float:
-    """
-    统计策略：取中段最快速度
-    排序后剔除最慢的 10%，取剩余部分的最小值
-    """
-    if not times:
-        return 0.0
-    
-    sorted_times = sorted(times)
-    keep_count = int(len(sorted_times) * (1.0 - trim_ratio))
-    if keep_count < 1:
-        keep_count = 1
-        
-    valid_times = sorted_times[:keep_count]
-    return min(valid_times)
 
 def bench_multiply(multiply_func, m1, m2, warmup: int, iterations: int, is_npu: bool = False) -> list:
     """
@@ -55,10 +41,7 @@ def bench_multiply(multiply_func, m1, m2, warmup: int, iterations: int, is_npu: 
     """
     # 1. 预热阶段
     for _ in range(warmup):
-        # 预热也要处理内存，防止预热阶段就 OOM
         res = multiply_func(m1, m2)
-        # 如果是 NPU，建议同步以确保预热真实执行（假设 ap 有同步接口，若无则忽略）
-        # if is_npu: ap.sync() 
         del res
 
     # 2. 正式测试阶段
@@ -67,17 +50,11 @@ def bench_multiply(multiply_func, m1, m2, warmup: int, iterations: int, is_npu: 
         start = time.perf_counter()
         
         # 执行计算，产生新对象
-        res = multiply_func(m1, m2)
-        
-        # 注意：对于 NPU 异步计算，end 时间点可能只是 CPU 发完指令
-        # 如果需要测量纯计算时间且 API 是异步的，通常需要 sync()
-        # 如果 API 内部已同步或我们接受异步测量，则直接记录时间
+        res = multiply_func(m1, m2) 
         end = time.perf_counter()
-        
         times.append(end - start)
         
         # 关键优化：显式删除结果对象
-        # 这会触发 Python 引用计数归零，通知底层库释放显存
         del res
 
     # 如果底层库有缓存或延迟释放，建议在循环外强制垃圾回收
@@ -86,10 +63,11 @@ def bench_multiply(multiply_func, m1, m2, warmup: int, iterations: int, is_npu: 
         
     return times
 
+
 def run_test_case(shape: Tuple[int, ...], dtype: np.dtype = np.float32, 
-                 warmup: int = 200, iterations: int = 3000) -> Dict[str, float]:
+                  warmup: int = 200, iterations: int = 3000) -> Dict[str, float]:
     """运行单个测试用例"""
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"测试形状: {shape}")
     
     m1_asnp, m2_asnp, m1_np, m2_np = create_arrays(shape, dtype)
@@ -101,7 +79,7 @@ def run_test_case(shape: Tuple[int, ...], dtype: np.dtype = np.float32,
             m1_asnp, m2_asnp, 
             warmup=warmup,
             iterations=iterations,
-            is_npu=True  # 标记为 NPU 测试，启用内存清理
+            is_npu=True
         )
         
         # --- 测试 NumPy (CPU) ---
@@ -144,6 +122,7 @@ def run_test_case(shape: Tuple[int, ...], dtype: np.dtype = np.float32,
         del m1_asnp, m2_asnp, m1_np, m2_np
         gc.collect()
 
+
 if __name__ == "__main__":
     print("=" * 70)
     print("README 示例代码性能基准测试")
@@ -169,7 +148,7 @@ if __name__ == "__main__":
     print(f"  预热轮数: {warmup_iterations}")
     print(f"  测试轮数: {test_iterations}")
     print(f"  内存策略: 每次 iteration 后显式 del 结果")
-    print(f"\n{'='*70}\n")
+    print(f"\n{'=' * 70}\n")
     
     results = []
     for shape in shapes:
@@ -183,27 +162,26 @@ if __name__ == "__main__":
             traceback.print_exc()
     
     # 输出结果汇总
-    print("\n" + "="*85)
+    print("\n" + "=" * 85)
     print("测试结果汇总 (基于中段最快速度)")
-    print("-"*85)
+    print("-" * 85)
     print(f"{'形状':<15} | {'数据量':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'加速比':<10}")
     print(f"{'':15} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
-    print("-"*85)
+    print("-" * 85)
     
     for result in results:
         shape_str = str(result['shape'])
         data_size = np.prod(result['shape'])
         data_size_str = f"{data_size:,}"
-        asnp_time = f"{result['asnumpy_metric']*1000:.4f}"
-        np_time = f"{result['numpy_metric']*1000:.4f}"
+        # 修复：算术操作符两侧增加空格
+        asnp_time = f"{result['asnumpy_metric'] * 1000:.4f}"
+        np_time = f"{result['numpy_metric'] * 1000:.4f}"
         speedup_str = f"{result['speedup']:.2f}x"
         
         print(f"{shape_str:<15} | {data_size_str:<12} | {asnp_time:<12} | {np_time:<12} | {speedup_str}")
     
-    print("-"*85)
+    print("-" * 85)
     
     if results:
         avg_speedup = sum(r['speedup'] for r in results) / len(results)
         print(f"\n平均加速比: {avg_speedup:.2f}x")
-
-
