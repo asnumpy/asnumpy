@@ -16,7 +16,7 @@
 
 import gc
 import time
-from typing import Tuple, Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 import asnumpy as ap

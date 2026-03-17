@@ -19,7 +19,7 @@ import time
 import numpy as np
 import asnumpy as ap
 
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 from utils import create_arrays, calculate_stable_metric
 
 
