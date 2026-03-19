@@ -30,15 +30,15 @@ Asnumpy 是一个基于华为昇腾 NPU 的数值计算库，提供与 NumPy 兼
 ```
 1. 添加函数声明 (include/)
    ↓
-2. 实现函数逻辑 (src/)
+2. 实现函数逻辑 (csrc/)
    ↓
-3. 配置 CMakeLists.txt (src/)
+3. 配置 CMakeLists.txt (csrc/)
    ↓
-4. 添加 Python 绑定 (python/)
+4. 添加 Python 绑定 (bindings/python/)
    ↓
-5. 添加 Python 包装层 (asnumpy/math.py)
+5. 添加 Python 包装层 (src/asnumpy/math.py)
    ↓
-6. 导出到主命名空间 (asnumpy/__init__.py)
+6. 导出到主命名空间 (src/asnumpy/__init__.py)
    ↓
 7. 更新 API 文档配置 (docs/source/reference/)
    ↓
@@ -103,7 +103,7 @@ NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
 在对应的源文件中实现函数逻辑。继续以 `sinc` 为例：
 
-**文件位置**: `src/math/other_special_functions.cpp`
+**文件位置**: `csrc/math/other_special_functions.cpp`
 
 ```cpp
 NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype) {
@@ -238,7 +238,7 @@ CMake 用于管理项目的编译和链接。添加新功能时需要更新 CMak
 
 ### 3.1 添加新模块
 
-如果要添加一个新的模块（如 `new_module`），需要在 `src/CMakeLists.txt` 中添加：
+如果要添加一个新的模块（如 `new_module`），需要在 `csrc/CMakeLists.txt` 中添加：
 
 ```cmake
 # 添加子目录
@@ -252,7 +252,7 @@ target_link_libraries(asnumpy INTERFACE array cann dtypes linalg random math log
 
 在新模块目录下创建 `CMakeLists.txt`：
 
-**文件位置**: `src/new_module/CMakeLists.txt`
+**文件位置**: `csrc/new_module/CMakeLists.txt`
 
 ```cmake
 add_library(new_module OBJECT)
@@ -269,7 +269,7 @@ target_link_libraries(new_module PUBLIC
 
 ### 3.3 现有模块添加函数
 
-对于现有模块（如 `math`），只需确保 `src/CMakeLists.txt` 中已包含该模块：
+对于现有模块（如 `math`），只需确保 `csrc/CMakeLists.txt` 中已包含该模块：
 
 ```cmake
 add_subdirectory(math)  # math 模块已存在
@@ -286,9 +286,9 @@ target_link_libraries(asnumpy INTERFACE ... math ...)  # 已链接
 
 ### 4.1 添加 Pybind11 绑定
 
-在对应的绑定文件中添加函数绑定。绑定文件位于 `python/` 目录，按模块组织。
+在对应的绑定文件中添加函数绑定。绑定文件位于 `bindings/python/` 目录，按模块组织。
 
-**文件位置**: `python/bind_math.cpp`
+**文件位置**: `bindings/python/bind_math.cpp`
 
 ```cpp
 namespace asnumpy {
@@ -311,12 +311,12 @@ namespace asnumpy {
 
 在对应的 Python 模块中导入 C++ 函数，并添加 Python 包装层，包括类型注解、文档字符串和参数处理。
 
-**文件位置**: `asnumpy/math.py`
+**文件位置**: `src/asnumpy/math.py`
 
 首先，从编译好的 C++ 扩展导入函数：
 
 ```python
-from .lib.asnumpy_core.math import (
+from ._core.math import (
     sin as _ap_sin,
     cos as _ap_cos,
     sinc as _ap_sinc,
@@ -336,7 +336,7 @@ def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
 
 在主包的 `__init__.py` 中添加函数，使其可以通过 `asnumpy.sinc` 访问。
 
-**文件位置**: `asnumpy/__init__.py`
+**文件位置**: `src/asnumpy/__init__.py`
 
 ```python
 from .math import (
@@ -376,7 +376,7 @@ math.def("sinc", &Sinc,
 **导入规范：**
 ```python
 # 使用别名导入 C++ 原始函数，使用 _ap_ 前缀标记为内部 API
-from .lib.asnumpy_core.math import (
+from ._core.math import (
     sin as _ap_sin,
     cos as _ap_cos,
     sinc as _ap_sinc,
@@ -688,48 +688,48 @@ pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
 
 ```
 asnumpy/
-├── asnumpy/                 # Python 包
-│   ├── __init__.py         # 主包初始化
-│   ├── math.py             # 数学模块
-│   ├── linalg/             # 线性代数模块
-│   ├── random/             # 随机数模块
-│   ├── testing/            # 测试工具
-│   └── ...
-├── docs/                   # 文档
-│   ├── architecture.md     # 架构说明
-│   ├── benchmarks.md       # 性能基准
-│   ├── developer_guide.md  # 开发指南
-│   ├── faq.md              # 常见问题
-│   ├── quick_start.md      # 快速入门
-│   └── images/             # 文档图片
-│       ├── AsNumpy Logo.png
-│       ├── NPU扩展功能模块.png
-│       └── 功能模块.png
-├── include/                # C++ 头文件
+├── src/                     # Python 源码（src-layout）
 │   └── asnumpy/
-│       ├── math/           # 数学模块头文件
-│       ├── linalg/         # 线性代数模块头文件
+│       ├── __init__.py      # 主包初始化
+│       ├── math.py          # 数学模块
+│       ├── linalg/          # 线性代数模块
+│       ├── random/          # 随机数模块
+│       ├── testing/         # 测试工具
 │       └── ...
-├── src/                    # C++ 源文件
-│   ├── math/               # 数学模块实现
+├── csrc/                    # C++ 源文件
+│   ├── math/                # 数学模块实现
 │   │   ├── arithmetic_operations.cpp
 │   │   ├── trigonometric_functions.cpp
 │   │   └── ...
-│   ├── linalg/             # 线性代数模块实现
-│   └── CMakeLists.txt      # 源文件构建配置
-├── python/                 # Pybind11 绑定
-│   ├── bind_math.cpp       # 数学模块绑定
-│   ├── bind_linalg.cpp     # 线性代数模块绑定
-│   └── ...
-├── tests/                  # 测试文件
-│   ├── conftest.py         # pytest 配置
-│   └── asnumpy_tests/      # 测试用例
+│   ├── linalg/              # 线性代数模块实现
+│   └── CMakeLists.txt       # 源文件构建配置
+├── bindings/                # Pybind11 绑定层
+│   └── python/
+│       ├── module.cpp       # 扩展模块入口
+│       ├── bind_math.cpp    # 数学模块绑定
+│       ├── bind_linalg.cpp  # 线性代数模块绑定
+│       └── ...
+├── docs/                    # 文档
+│   ├── architecture.md      # 架构说明
+│   ├── benchmarks.md        # 性能基准
+│   ├── developer_guide.md   # 开发指南
+│   ├── faq.md               # 常见问题
+│   ├── quick_start.md       # 快速入门
+│   └── images/              # 文档图片
+├── include/                 # C++ 头文件
+│   └── asnumpy/
+│       ├── math/            # 数学模块头文件
+│       ├── linalg/          # 线性代数模块头文件
+│       └── ...
+├── tests/                   # 测试文件
+│   ├── conftest.py          # pytest 配置
+│   └── asnumpy_tests/       # 测试用例
 │       ├── math_tests/
 │       ├── linalg_tests/
 │       └── ...
-├── CMakeLists.txt          # 主 CMake 配置
-├── pyproject.toml          # Python 项目配置
-└── README.md               # 项目说明
+├── CMakeLists.txt           # 主 CMake 配置
+├── pyproject.toml           # Python 项目配置
+└── README.md                # 项目说明
 ```
 
 ### B. 常用命令速查
