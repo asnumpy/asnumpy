@@ -116,6 +116,7 @@ def test_arctan_basic(xp, dtype):
 
 
 @pytest.mark.xfail(reason="Bug: aclnnArccos throws RuntimeError on x > 1")
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_arccos_out_of_domain(xp, dtype):
