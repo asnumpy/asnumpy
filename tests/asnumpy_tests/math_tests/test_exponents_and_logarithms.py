@@ -95,6 +95,7 @@ def test_exp_int_mismatch_xfail(xp, dtype):
     return xp.exp(a)
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_log_domain_error(xp, dtype):

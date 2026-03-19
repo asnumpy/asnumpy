@@ -92,16 +92,9 @@ endif()
 
 # ========== Source directories ==========
 include_directories(include)
-add_subdirectory(src)
-add_subdirectory(python)
+add_subdirectory(csrc)
+add_subdirectory(bindings/python)
 
-# ========== Install Python package ==========
 if(SKBUILD)
     message(STATUS "Building with scikit-build-core")
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/asnumpy/"
-            DESTINATION "asnumpy"
-            FILES_MATCHING
-            PATTERN "*.py"
-            PATTERN "__pycache__" EXCLUDE
-            PATTERN "*.pyc" EXCLUDE)
 endif()

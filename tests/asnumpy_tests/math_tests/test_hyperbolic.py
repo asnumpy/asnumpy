@@ -118,6 +118,7 @@ def test_arctanh_basic(xp, dtype):
 # --- 越界行为测试 (不带 equal_nan 参数，依赖底层默认行为) ---
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_arccosh_out_of_domain(xp, dtype):
@@ -127,6 +128,7 @@ def test_arccosh_out_of_domain(xp, dtype):
     return xp.arccosh(a)
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_arctanh_out_of_domain(xp, dtype):
