@@ -7,10 +7,10 @@ include README.md
 include contributors.json
 
 # 递归包含源代码和资源
-recursive-include asnumpy *
-recursive-include include *
 recursive-include src *
-recursive-include python *
+recursive-include include *
+recursive-include csrc *
+recursive-include bindings/python *
 recursive-include third_party *
 
 # 包含示例和测试代码
