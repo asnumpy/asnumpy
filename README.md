@@ -85,6 +85,10 @@ uv sync
 ```bash
 git clone --recursive https://gitcode.com/cann/asnumpy.git
 cd asnumpy
+
+pip install --upgrade pip setuptools wheel
+pip install build
+
 python -m build
 pip install dist/*.whl
 ```
