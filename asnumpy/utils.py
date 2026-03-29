@@ -65,6 +65,22 @@ class ndarray(_ndarray):
     def acl_dtype(self) -> int:
         return super().aclDtype
 
+    @property
+    def ndim(self) -> int:
+        return super().ndim
+
+    @property
+    def itemsize(self) -> int:
+        return super().itemsize
+
+    @property
+    def nbytes(self) -> int:
+        return super().nbytes
+
+    @property
+    def strides(self) -> tuple:
+        return super().strides
+
     @classmethod
     def from_numpy(cls, host_data: np.ndarray) -> "ndarray":
         base_obj = _ndarray.from_numpy(host_data)

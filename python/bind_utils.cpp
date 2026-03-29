@@ -28,6 +28,10 @@ void bind_utils(pybind11::module_& utils) {
         .def_static("from_numpy", &NPUArray::FromNumpy, py::arg("host_data"))
         .def_property_readonly("shape", [](const NPUArray& self) { return self.shape; })
         .def_property_readonly("dtype", [](const NPUArray& self) { return self.dtype; })
-        .def_property_readonly("aclDtype", [](const NPUArray& self) { return static_cast<int>(self.aclDtype); });
+        .def_property_readonly("aclDtype", [](const NPUArray& self) { return static_cast<int>(self.aclDtype); })
+        .def_property_readonly("ndim", [](const NPUArray& self) { return self.shape.size(); })
+        .def_property_readonly("itemsize", [](const NPUArray& self) { return NPUArray::GetDataTypeSize(self.aclDtype); })
+        .def_property_readonly("nbytes", [](const NPUArray& self) { return self.tensorSize * NPUArray::GetDataTypeSize(self.aclDtype); })
+        .def_property_readonly("strides", [](const NPUArray& self) { return self.strides; });
     utils.def("broadcast_shape", &GetBroadcastShape, py::arg("a"), py::arg("b"));
 }
