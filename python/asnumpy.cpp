@@ -30,6 +30,7 @@ void bind_sorting(pybind11::module_& sorting);
 void bind_testing(pybind11::module_& testing);
 void bind_utils(pybind11::module_& utils);
 void bind_version(pybind11::module_& version);
+void bind_memory(pybind11::module_& memory);
 
 namespace asnumpy {
 void bind_statistics(pybind11::module_& statistics);
@@ -53,6 +54,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
     auto testing = module.def_submodule("testing");
     // auto utils = module.def_submodule("utils");
     auto version = module.def_submodule("version");
+    auto memory = module.def_submodule("memory");
     
 
     bind_array(array);
@@ -70,4 +72,5 @@ PYBIND11_MODULE(asnumpy_core, module) {
     bind_testing(testing);
     bind_utils(module);
     bind_version(version);
+    bind_memory(memory);
 }
