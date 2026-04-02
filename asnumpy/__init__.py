@@ -163,6 +163,8 @@ from .nn import softmax
 
 from .utils import broadcast_shape, ndarray
 
+from .memory import clear_cache, memory_stats, trim_cache
+
 from .io import save, savez, savez_compressed, load
 
 
