@@ -18,6 +18,7 @@ import importlib
 import sys
 from typing import TYPE_CHECKING
 import os
+import numpy as np
 from loguru import logger
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
@@ -168,6 +169,15 @@ if TYPE_CHECKING:
     from .io import save, savez, savez_compressed, load
 
 
+# Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
+_NUMPY_DTYPE_NAMES = {
+    "float16", "float32", "float64",
+    "int8", "int16", "int32", "int64",
+    "uint8", "uint16", "uint32", "uint64",
+    "complex64", "complex128",
+    "bool_",
+}
+
 _LAZY_MAPPING = {
     # .array
     "empty": ".array", "empty_like": ".array", "eye": ".array", "full": ".array",
@@ -242,11 +252,15 @@ def __getattr__(name):
             return module
         return getattr(module, name)
 
+    # Fall back to numpy for dtype aliases (e.g., ap.float32 -> np.float32)
+    if name in _NUMPY_DTYPE_NAMES:
+        return getattr(np, name)
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def __dir__():
-    return __all__ + ["__version__"]
+    return __all__ + ["__version__"] + list(_NUMPY_DTYPE_NAMES)
 
 
 
