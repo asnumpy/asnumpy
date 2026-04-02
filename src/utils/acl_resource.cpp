@@ -15,6 +15,7 @@
  *****************************************************************************/
 
 #include "asnumpy/utils/acl_resource.hpp"
+#include "asnumpy/memory/MemoryPool.hpp"
 #include "asnumpy/utils/status_handler.hpp"
 #include <acl/acl.h>
 
@@ -26,14 +27,13 @@ namespace asnumpy {
 
 AclWorkspace::AclWorkspace(uint64_t size) : size_(size) {
     if (size_ > 0ULL) {
-        auto error = aclrtMalloc(&ptr_, size_, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
+        ptr_ = memory::MemoryPool::instance().malloc(size_);
     }
 }
 
 AclWorkspace::~AclWorkspace() {
     if (ptr_) {
-        aclrtFree(ptr_);
+        memory::MemoryPool::instance().free(ptr_);
     }
 }
 
@@ -47,7 +47,7 @@ AclWorkspace& AclWorkspace::operator=(AclWorkspace&& other) noexcept {
     if (this != &other) {
         // Free current resource
         if (ptr_) {
-            aclrtFree(ptr_);
+            memory::MemoryPool::instance().free(ptr_);
         }
         // Take ownership of other resource
         ptr_ = other.ptr_;

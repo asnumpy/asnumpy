@@ -165,6 +165,7 @@ if TYPE_CHECKING:
     )
     from .nn import softmax
 
+    from .memory import clear_cache, memory_stats, trim_cache
     from .io import save, savez, savez_compressed, load
 
 
@@ -209,6 +210,8 @@ _LAZY_MAPPING = {
     "mean": ".statistics",
     # .nn
     "softmax": ".nn",
+    # .memory
+    "clear_cache": ".memory", "memory_stats": ".memory", "trim_cache": ".memory",
     # .io
     "save": ".io", "savez": ".io", "savez_compressed": ".io", "load": ".io",
     # ._types

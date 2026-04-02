@@ -1,52 +1,152 @@
-import asnumpy as ap
-import time
+import gc
 import os
+import time
 
-def run_workload(iterations=1000):
-    """模拟一个高频创建和销毁不同大小数组的负载"""
-    start_time = time.time()
-    
-    # 数组形状列表，模拟不同维度的需求
-    shapes = [
-        (1024, 1024),  # 4MB
-        (512, 1024),   # 2MB
-        (2048, 512),   # 4MB
-        (256, 256),    # 256KB
-        (1024, 256),   # 1MB
-    ]
-    
-    for i in range(iterations):
-        # 循环创建并立即释放数组
-        target_shape = shapes[i % len(shapes)]
-        temp = ap.zeros(target_shape, dtype='float32')
-        # 执行一个简单的计算操作，确保显存被真实触碰
-        # (可选：如果有运算 API 的话，比如 res = temp + 1)
+import asnumpy as ap
+
+
+WORKLOADS = [
+    {
+        "name": "small_path",
+        "shape": (256, 256),  # 256 KB float32, should stay on the small-allocation path
+        "iterations": 5000,
+        "warmup": 500,
+    },
+    {
+        "name": "large_path",
+        "shape": (1024, 1024),  # 4 MB float32, should stay on the large-allocation path
+        "iterations": 3000,
+        "warmup": 300,
+    },
+]
+
+
+def bytes_for_shape(shape, itemsize=4):
+    elements = 1
+    for dim in shape:
+        elements *= dim
+    return elements * itemsize
+
+
+def format_bytes(num_bytes):
+    if num_bytes >= 1024 * 1024:
+        return f"{num_bytes / (1024 * 1024):.2f} MB"
+    if num_bytes >= 1024:
+        return f"{num_bytes / 1024:.2f} KB"
+    return f"{num_bytes} B"
+
+
+def reset_pool_state():
+    if hasattr(ap, "trim_cache"):
+        ap.trim_cache()
+    gc.collect()
+
+
+def run_workload(shape, iterations):
+    start = time.perf_counter()
+    for _ in range(iterations):
+        temp = ap.zeros(shape, dtype="float32")
         del temp
-        
-    end_time = time.time()
-    return end_time - start_time
+    elapsed = time.perf_counter() - start
+    throughput = iterations / elapsed
+    avg_latency_us = (elapsed / iterations) * 1_000_000
+    return {
+        "elapsed_s": elapsed,
+        "throughput_ops": throughput,
+        "avg_latency_us": avg_latency_us,
+    }
 
-def benchmark():
-    # 检测当前是否启用了内存池
-    pool_enabled = os.environ.get("ASN_ENABLE_POOL", "1") != "0"
-    mode_name = "【内存池模式】" if pool_enabled else "【系统直调 (aclrtMalloc) 模式】"
-    
-    print(f"\n🚀 开始执行 {mode_name} 测试...")
-    
-    num_iterations = 2000
-    elapsed = run_workload(num_iterations)
-    
-    avg_time_ms = (elapsed / num_iterations) * 1000
-    throughput = num_iterations / elapsed
-    
-    print("-" * 50)
-    print(f"总计完成次数: {num_iterations}")
-    print(f"总耗时:      {elapsed:.4f} 秒")
-    print(f"平均单次耗时: {avg_time_ms:.4f} 毫秒")
-    print(f"吞吐量:      {throughput:.2f} ops/sec")
-    print("-" * 50)
-    
-    return avg_time_ms, throughput
+
+def benchmark_mode(label, pool_enabled, shape, iterations, warmup):
+    os.environ["ASN_ENABLE_POOL"] = "1" if pool_enabled else "0"
+    os.environ["ASN_DEBUG_LOG"] = "0"
+    reset_pool_state()
+
+    print(f"--- Testing {label} ---")
+    print(f"[{label}] Warming up...")
+    run_workload(shape, warmup)
+    reset_pool_state()
+
+    print(f"[{label}] Running {iterations} iterations...")
+    result = run_workload(shape, iterations)
+    print(
+        f"Result: {result['throughput_ops']:.2f} ops/s | "
+        f"Latency: {result['avg_latency_us']:.2f} us"
+    )
+    print()
+    reset_pool_state()
+    return result
+
+
+def print_report(workload, baseline, pooled):
+    throughput_speedup = pooled["throughput_ops"] / baseline["throughput_ops"]
+    latency_delta_pct = (
+        (pooled["avg_latency_us"] - baseline["avg_latency_us"])
+        / baseline["avg_latency_us"]
+        * 100
+    )
+    latency_delta_us = pooled["avg_latency_us"] - baseline["avg_latency_us"]
+
+    print("=" * 60)
+    print(f"Workload: {workload['name']}")
+    print(
+        f"Shape: {workload['shape']} | "
+        f"Allocation Size: {format_bytes(bytes_for_shape(workload['shape']))}"
+    )
+    print("=" * 60)
+    print()
+    print("--- Final Report ---")
+    print(
+        f"{'Metric':<20} | {'System Call':>12} | {'Memory Pool':>12} | {'Improvement':>16}"
+    )
+    print("-" * 70)
+    print(
+        f"{'Throughput (ops/s)':<20} | "
+        f"{baseline['throughput_ops']:>12.2f} | "
+        f"{pooled['throughput_ops']:>12.2f} | "
+        f"{throughput_speedup:>10.2f}x"
+    )
+    print(
+        f"{'Latency (us)':<20} | "
+        f"{baseline['avg_latency_us']:>12.2f} | "
+        f"{pooled['avg_latency_us']:>12.2f} | "
+        f"{latency_delta_pct:>8.1f}% ({latency_delta_us:+.2f} us)"
+    )
+    print()
+
+
+def benchmark_workload(workload):
+    print()
+    print("#" * 72)
+    print(
+        f"Benchmarking {workload['name']} | "
+        f"shape={workload['shape']} | "
+        f"alloc={format_bytes(bytes_for_shape(workload['shape']))}"
+    )
+    print("#" * 72)
+    print()
+
+    baseline = benchmark_mode(
+        label="System Call (Baseline)",
+        pool_enabled=False,
+        shape=workload["shape"],
+        iterations=workload["iterations"],
+        warmup=workload["warmup"],
+    )
+    pooled = benchmark_mode(
+        label="Memory Pool (Optimized)",
+        pool_enabled=True,
+        shape=workload["shape"],
+        iterations=workload["iterations"],
+        warmup=workload["warmup"],
+    )
+    print_report(workload, baseline, pooled)
+
+
+def main():
+    for workload in WORKLOADS:
+        benchmark_workload(workload)
+
 
 if __name__ == "__main__":
-    benchmark()
+    main()

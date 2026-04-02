@@ -1,35 +1,72 @@
 import asnumpy as ap
-import os
 
-def test_memory_pool():
-    print("\n" + "="*50)
-    print("开始内存池验证测试...")
-    print("="*50)
 
-    # 步骤 1: 第一次创建数组
-    # 预期日志：触发 [MemoryPool] ARENA ALLOC (申请大块) 
-    #         和 [MemoryPool] ARENA SPLIT (切分给当前使用)
-    print("\n--- 步骤 1: 创建 4MB 数组 'a' ---")
-    a = ap.zeros((1024, 1024), dtype='float32')
-    print("数组 'a' 已创建。")
+CASES = [
+    {
+        "name": "small_path",
+        "shape": (256, 256),  # 256 KB float32
+        "expected_counter": "small_runs",
+    },
+    {
+        "name": "large_path",
+        "shape": (1024, 1024),  # 4 MB float32
+        "expected_counter": "large_arenas",
+    },
+]
 
-    # 步骤 2: 释放数组
-    # 预期日志：触发 !!! [MemoryPool] FREE -> Cache
-    print("\n--- 步骤 2: 销毁数组 'a' ---")
+
+def print_stats(tag):
+    stats = ap.memory_stats()
+    print(
+        f"[{tag}] "
+        f"active={stats['active_bytes']} "
+        f"cached={stats['cached_bytes']} "
+        f"system={stats['system_bytes']} "
+        f"hits={stats['cache_hits']} "
+        f"misses={stats['cache_misses']} "
+        f"small_runs={stats['small_run_count']} "
+        f"large_arenas={stats['large_arena_count']}"
+    )
+
+
+def run_case(case):
+    print("=" * 60)
+    print(
+        f"Smoke test: {case['name']} | "
+        f"shape={case['shape']} | expected={case['expected_counter']}"
+    )
+    print("=" * 60)
+
+    ap.trim_cache()
+    print_stats(f"{case['name']}:init")
+
+    a = ap.zeros(case["shape"], dtype="float32")
+    print_stats(f"{case['name']}:after_a")
+
     del a
-    print("数组 'a' 已销毁，显存应回到池中。")
+    print_stats(f"{case['name']}:after_del_a")
 
-    # 步骤 3: 再次创建相同大小的数组
-    # 预期逻辑：内存池会发现池子里刚好有一个 4MB 的空闲块
-    # 预期日志：触发 !!! [MemoryPool] REUSE (复用) 
-    #         注意：此时【不应该】再出现 ARENA ALLOC
-    print("\n--- 步骤 3: 再次创建 4MB 数组 'b' ---")
-    b = ap.zeros((1024, 1024), dtype='float32')
-    print("数组 'b' 已创建。")
+    b = ap.zeros(case["shape"], dtype="float32")
+    print_stats(f"{case['name']}:after_b")
 
-    print("\n" + "="*50)
-    print("测试指令已发完，请检查上方日志中的 REUSE 标记！")
-    print("="*50 + "\n")
+    del b
+    ap.trim_cache()
+    print_stats(f"{case['name']}:after_trim")
+    print()
+
+
+def main():
+    for case in CASES:
+        run_case(case)
+
+    print("=" * 60)
+    print("Expected checks:")
+    print("1. small_path should make `small_runs` rise above 0 while it is active/cached.")
+    print("2. large_path should make `large_arenas` rise above 0 while it is active/cached.")
+    print("3. The second allocation in each case should increase `cache_hits`.")
+    print("4. `trim_cache()` should bring cached/system bytes back down when fully idle.")
+    print("=" * 60)
+
 
 if __name__ == "__main__":
-    test_memory_pool()
+    main()
