@@ -161,6 +161,8 @@ from ._types import (
 
 from .nn import softmax
 
+from .memory import clear_cache, memory_stats, trim_cache
+
 from .utils import broadcast_shape, ndarray
 
 from .io import save, savez, savez_compressed, load
@@ -315,6 +317,10 @@ __all__ = [
     "ScalarLike",
     # .nn
     "softmax",
+    # .memory
+    "clear_cache",
+    "memory_stats",
+    "trim_cache",
     # .utils
     "broadcast_shape",
     "ndarray",

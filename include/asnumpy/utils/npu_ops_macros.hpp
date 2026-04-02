@@ -14,6 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
+#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 #include <fmt/core.h>
 
@@ -35,14 +36,10 @@
 #define EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc)                                               \
 	do {                                                                                                               \
                                                                                                                        \
-		void* workspaceAddr = nullptr;                                                                                 \
-		if (workspaceSize > 0) {                                                                                       \
-			auto error_malloc = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);                 \
-			CheckMallocAclnnStatus(error_malloc);                                                                      \
-		}                                                                                                              \
-		auto error_func = AclnnFunc(workspaceAddr, workspaceSize, executor, nullptr);                                  \
+		asnumpy::AclWorkspace workspace(workspaceSize);                                                                \
+		auto error_func = AclnnFunc(workspace.get(), workspaceSize, executor, nullptr);                                \
 		CheckAclnnStatus(error_func, fmt::format("[{}] Failed to execute operation.", #OpName));                       \
-		auto error_sync = aclrtSynchronizeDevice();                                                                    \
+		auto error_sync = aclrtSynchronizeDevice();                                                                    \                                                                                                              
 		CheckSynchronizeDeviceAclnnStatus(error_sync);                                                                 \
 	}                                                                                                                  \
 	while (0)
