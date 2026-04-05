@@ -26,8 +26,25 @@ void bind_utils(pybind11::module_& utils) {
         .def(py::init<const NPUArray&>(), "Copy constructor for NPUArray")
         .def("to_numpy", &NPUArray::ToNumpy)
         .def_static("from_numpy", &NPUArray::FromNumpy, py::arg("host_data"))
-        .def_property_readonly("shape", [](const NPUArray& self) { return self.shape; })
+        .def_property_readonly("shape", [](const NPUArray& self) {
+            py::tuple shape_tuple(self.shape.size());
+            for (size_t i = 0; i < self.shape.size(); ++i) {
+                shape_tuple[i] = self.shape[i];
+            }
+            return shape_tuple;
+        })
         .def_property_readonly("dtype", [](const NPUArray& self) { return self.dtype; })
-        .def_property_readonly("aclDtype", [](const NPUArray& self) { return static_cast<int>(self.aclDtype); });
+        .def_property_readonly("aclDtype", [](const NPUArray& self) { return static_cast<int>(self.aclDtype); })
+        .def_property_readonly("ndim", [](const NPUArray& self) { return self.shape.size(); })
+        .def_property_readonly("itemsize", [](const NPUArray& self) { return NPUArray::GetDataTypeSize(self.aclDtype); })
+        .def_property_readonly("nbytes", [](const NPUArray& self) { return self.tensorSize * NPUArray::GetDataTypeSize(self.aclDtype); })
+        .def_property_readonly("strides", [](const NPUArray& self) {
+            auto itemsize = NPUArray::GetDataTypeSize(self.aclDtype);
+            py::tuple byte_strides(self.strides.size());
+            for (size_t i = 0; i < self.strides.size(); ++i) {
+                byte_strides[i] = self.strides[i] * itemsize;
+            }
+            return byte_strides;
+        });
     utils.def("broadcast_shape", &GetBroadcastShape, py::arg("a"), py::arg("b"));
 }
