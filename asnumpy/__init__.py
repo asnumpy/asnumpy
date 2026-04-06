@@ -16,8 +16,13 @@
 
 import sys
 import os
+import numpy as np
 from loguru import logger
 from .array import (
+    array,
+    asarray,
+    asanyarray,
+    copy,
     empty,
     empty_like,
     eye,
@@ -145,6 +150,7 @@ from .math import (
 )
 
 from . import random
+from . import testing
 
 from .sorting import sort
 
@@ -165,6 +171,21 @@ from .utils import broadcast_shape, ndarray
 
 from .io import save, savez, savez_compressed, load
 
+# NumPy-compatible constants
+from numpy import e, euler_gamma, inf, nan, newaxis, pi
+
+# NumPy-compatible dtype types
+from numpy import (
+    bool_, int8, int16, int32, int64,
+    uint8, uint16, uint32, uint64,
+    float16, float32, float64,
+    complex64, complex128,
+    dtype, finfo, iinfo,
+)
+
+# NumPy-compatible dtype helper functions
+from numpy import issubdtype, promote_types, can_cast, result_type
+
 
 # Get version from package metadata (defined in pyproject.toml)
 try:
@@ -178,6 +199,10 @@ except Exception:
 
 __all__ = [
     # .array
+    "array",
+    "asarray",
+    "asanyarray",
+    "copy",
     "empty",
     "empty_like",
     "eye",
@@ -323,9 +348,105 @@ __all__ = [
     "save",
     "savez",
     "savez_compressed",
+    # numpy constants
+    "e", "euler_gamma", "inf", "nan", "newaxis", "pi",
+    # numpy dtype types
+    "bool_", "int8", "int16", "int32", "int64",
+    "uint8", "uint16", "uint32", "uint64",
+    "float16", "float32", "float64",
+    "complex64", "complex128",
+    "dtype", "finfo", "iinfo",
+    # numpy dtype helpers
+    "issubdtype", "promote_types", "can_cast", "result_type",
 ]
 
 __all__.extend(_direct_all_)
+
+
+# ---------------------------------------------------------------------------
+# Module-level __getattr__: automatic numpy fallback for unimplemented APIs
+# ---------------------------------------------------------------------------
+# Python's module attribute lookup order:
+#   1. Explicit imports / __dict__  →  found? return immediately
+#   2. Not found?  →  call __getattr__(name) if defined on the module
+#
+# Example: when a user writes `ap.tri(3)`, Python cannot find "tri" in
+# asnumpy's explicit imports, so it calls __getattr__("tri"). This function
+# then delegates to numpy.tri and wraps the returned np.ndarray into an
+# asnumpy.ndarray, so the user gets a seamless experience.
+#
+# Guard: if a name is declared in __all__ but has no actual implementation
+# (e.g. a planned-but-not-yet-implemented operator), we raise AttributeError
+# immediately instead of silently falling back to numpy. This prevents real
+# bugs from being masked — if we claimed to support "sin", it MUST work on
+# NPU, not quietly run on CPU via numpy.
+# ---------------------------------------------------------------------------
+
+def __getattr__(name):
+    """Fallback to numpy for APIs not yet natively implemented in asnumpy.
+
+    Lookup flow:
+        1. Guard check — if *name* is in __all__, it means asnumpy claims
+           to support it, so raise AttributeError to signal a real bug
+           (e.g. the import is missing or the implementation is broken).
+        2. Delegate to numpy — try ``getattr(np, name)``.
+        3. If the result is callable, wrap it so that any np.ndarray
+           returned by numpy is automatically converted to asnumpy.ndarray
+           via ``_wrap_result``. Non-callable attributes (e.g. constants)
+           are returned as-is.
+
+    This is the same pattern used by CuPy for APIs it has not yet ported
+    to GPU: the user gets a working API immediately, and asnative
+    implementations can be added incrementally without breaking existing
+    user code.
+    """
+    # Guard: names in __all__ must have real asnumpy implementations.
+    # If we reach here, something is wrong — either a missing import
+    # or a broken implementation. Fail loudly to avoid silent bugs.
+    if name in __all__:
+        raise AttributeError(
+            f"module 'asnumpy' has no attribute {name!r}"
+        )
+
+    # Delegate to numpy
+    try:
+        attr = getattr(np, name)
+    except AttributeError:
+        raise AttributeError(
+            f"module 'asnumpy' has no attribute {name!r}"
+        )
+
+    # Wrap callables so that np.ndarray return values become asnumpy.ndarray.
+    # Non-callable attributes (e.g. np.ndarray subclass types) pass through.
+    if callable(attr):
+        def _wrapped(*args, **kwargs):
+            result = attr(*args, **kwargs)
+            return _wrap_result(result)
+        # Preserve introspection so that tracebacks and help() look correct
+        _wrapped.__name__ = name
+        _wrapped.__qualname__ = f'asnumpy.{name}'
+        _wrapped.__module__ = 'asnumpy'
+        return _wrapped
+
+    return attr
+
+
+def _wrap_result(result):
+    """Recursively convert np.ndarray values to asnumpy.ndarray.
+
+    This handles the common return types from numpy functions:
+        - np.ndarray       → asnumpy.ndarray (via from_numpy)
+        - tuple of arrays  → tuple of asnumpy.ndarray
+        - list of arrays   → list of asnumpy.ndarray
+        - scalars / other  → returned as-is
+    """
+    if isinstance(result, np.ndarray):
+        return ndarray.from_numpy(result)
+    if isinstance(result, tuple):
+        return tuple(_wrap_result(r) for r in result)
+    if isinstance(result, list):
+        return [_wrap_result(r) for r in result]
+    return result
 
 
 logger.disable("asnumpy")

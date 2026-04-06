@@ -27,3 +27,8 @@ _skbuild/
 
 # Backup files
 *.backup
+
+# AI tool artifacts
+CLAUDE.md
+AGENTS.md
+.spec-workflow/
