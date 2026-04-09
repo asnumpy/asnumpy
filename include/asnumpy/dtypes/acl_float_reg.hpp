@@ -307,18 +307,24 @@ namespace dtypes {
             RegisterConversionIfRegistered<float6_e2m3fn>(type_num);
             RegisterConversionIfRegistered<float6_e3m2fn>(type_num);
             RegisterConversionIfRegistered<float4_e2m1fn>(type_num);
+            RegisterConversionIfRegistered<float4_e1m2fn>(type_num);
         }
         
         template<typename U>
         static void RegisterConversionIfRegistered(int type_num) {
-            if (ACLFloatManager<U>::npy_type != NPY_NOTYPE) {
-                // 注册 T -> U 的转换
-                PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), ACLFloatManager<U>::npy_type,
-                                         reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_acl_type<U>));
-                // 注册 U -> T 的转换
-                PyArray_RegisterCastFunc(PyArray_DescrFromType(ACLFloatManager<U>::npy_type), type_num,
-                                         reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_acl_type<U>));
+            if (ACLFloatManager<U>::npy_type == NPY_NOTYPE) {
+                return;
             }
+            // 避免 T->T 自转换：同类型时 PyArray_RegisterCastFunc 会在「cast 已用过」后重复注册，触发 NumPy 2.x 警告
+            if (ACLFloatManager<U>::npy_type == type_num) {
+                return;
+            }
+            // 注册 T -> U 的转换
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), ACLFloatManager<U>::npy_type,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_acl_type<U>));
+            // 注册 U -> T 的转换
+            PyArray_RegisterCastFunc(PyArray_DescrFromType(ACLFloatManager<U>::npy_type), type_num,
+                                     reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_from_acl_type<U>));
         }
         
         // 创建 Python 类型对象

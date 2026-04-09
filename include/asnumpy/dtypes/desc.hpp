@@ -29,10 +29,18 @@ namespace dtypes {
     class float6_e2m3fn;
     class float6_e3m2fn;
     class float4_e2m1fn;
+    class float4_e1m2fn;
+    
+    // 前向声明 ACL 整数类型
+    class int4;
+    class uint1;
 
-    // 前向声明 ACLFloatManager
+    // 前向声明 ACLFloatManager 和 ACLIntManager
     template <typename T>
     struct ACLFloatManager;
+    
+    template <typename T>
+    struct ACLIntManager;
 
     // TypeDescriptor 模板声明
     template <typename T, typename Enable = void>
@@ -60,6 +68,15 @@ namespace dtypes {
 
     template<>
     struct TypeDescriptor<float4_e2m1fn>;
+
+    template<>
+    struct TypeDescriptor<float4_e1m2fn>;
+
+    template<>
+    struct TypeDescriptor<int4>;
+
+    template<>
+    struct TypeDescriptor<uint1>;
 
 }
 }
