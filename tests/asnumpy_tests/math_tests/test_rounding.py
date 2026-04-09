@@ -71,7 +71,9 @@ def test_rint_float_basic(xp, dtype):
     return xp.rint(a)
 
 
-@pytest.mark.xfail(reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy")
+@pytest.mark.xfail(
+    reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy"
+)
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_rint_int_mismatch_xfail(xp, dtype):
     """记录：rint 对整数类型的输出 dtype 与 numpy 不一致"""

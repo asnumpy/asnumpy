@@ -80,7 +80,7 @@ if __name__ == "__main__":
     print("With np.dtype wrapper:", zeros_dtype_cpu.dtype)
 
     # Test with string
-    zeros_str_npu = asnumpy.zeros((2, 2), dtype='float32')
+    zeros_str_npu = asnumpy.zeros((2, 2), dtype="float32")
     zeros_str_cpu = zeros_str_npu.to_numpy()
     print("With string dtype:", zeros_str_cpu.dtype)
 
@@ -97,4 +97,4 @@ if __name__ == "__main__":
     print("3D array shape:", zeros_3d_cpu.shape)
     print("3D array sum:", np.sum(zeros_3d_cpu))
 
-    print("\nAll zeros tests completed successfully!") 
+    print("\nAll zeros tests completed successfully!")
