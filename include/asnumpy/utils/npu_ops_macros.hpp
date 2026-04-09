@@ -16,6 +16,7 @@
 
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/cann/driver.hpp>
 #include <fmt/core.h>
 
 #define CHECK_RET(cond, return_expr)                                                                                   \
@@ -35,11 +36,11 @@
 
 #define EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc)                                               \
 	do {                                                                                                               \
-                                                                                                                       \
 		asnumpy::AclWorkspace workspace(workspaceSize);                                                                \
-		auto error_func = AclnnFunc(workspace.get(), workspaceSize, executor, nullptr);                                \
-		CheckAclnnStatus(error_func, fmt::format("[{}] Failed to execute operation.", #OpName));                       \
-		auto error_sync = aclrtSynchronizeDevice();                                                                    \                                                                                                              
+		aclrtStream _op_stream = asnumpy::cann::get_stream();                                                          \
+		auto error_func = AclnnFunc(workspace.get(), workspaceSize, executor, _op_stream);                             \
+		CheckAclnnStatus(error_func, fmt::format("[{}] Failed to execute operation.", #OpName));                        \
+		auto error_sync = aclrtSynchronizeStream(_op_stream);                                                          \
 		CheckSynchronizeDeviceAclnnStatus(error_sync);                                                                 \
 	}                                                                                                                  \
 	while (0)
