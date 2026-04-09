@@ -83,6 +83,7 @@ struct ACLFloatPolicy {
         return PyUnicode_FromFormat("%s(%g)", TypeDescriptor<T>::kTypeName, val);
     }
 
+
     template <typename T, typename Scalar>
     static PyObject* ScalarStr(Scalar* self) {
         float val = static_cast<float>(self->value);

@@ -1,0 +1,218 @@
+version: 1
+scope:
+  description: >
+    Support matrix for asnumpy high-level Python APIs vs asnumpy custom dtypes.
+    This focuses on API-level behavior (success / unsupported) rather than registration.
+  environment_notes:
+    - These APIs allocate device memory and require a working Ascend runtime/device.
+    - Some APIs depend on backend kernels and may be unsupported for certain dtypes.
+  generated_at_utc: '2026-04-21T10:33:47Z'
+  generated_by: 'update_dtype_support_matrix.py'
+
+dtypes:
+  - name: bfloat16
+    kind: f
+    acl_enum: 27
+  - name: float8_e5m2
+    kind: f
+    acl_enum: 35
+  - name: float8_e4m3fn
+    kind: f
+    acl_enum: 36
+  - name: float8_e8m0
+    kind: f
+    acl_enum: 37
+  - name: float6_e3m2fn
+    kind: f
+    acl_enum: 38
+  - name: float6_e2m3fn
+    kind: f
+    acl_enum: 39
+  - name: float4_e2m1fn
+    kind: f
+    acl_enum: 40
+  - name: float4_e1m2fn
+    kind: f
+    acl_enum: 41
+  - name: int4
+    kind: i
+    acl_enum: 29
+  - name: uint1
+    kind: u
+    acl_enum: 30
+
+apis:
+  - name: empty
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: supported
+      float8_e4m3fn: supported
+      float8_e8m0: supported
+      float6_e3m2fn: supported
+      float6_e2m3fn: supported
+      float4_e2m1fn: supported
+      float4_e1m2fn: supported
+      int4: supported
+      uint1: supported
+    notes:
+      - Allocation + dtype mapping only; does not require a fill kernel.
+  - name: empty_like
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: supported
+      float8_e4m3fn: supported
+      float8_e8m0: supported
+      float6_e3m2fn: supported
+      float6_e2m3fn: supported
+      float4_e2m1fn: supported
+      float4_e1m2fn: supported
+      int4: supported
+      uint1: supported
+    notes:
+      - Allocation + dtype mapping only; does not require a fill kernel.
+  - name: zeros
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend zero-fill kernel support (e.g., aclnnInplaceZero*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: zeros_like
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend zero-fill kernel support (e.g., aclnnInplaceZero*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: ones
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend one-fill kernel support (e.g., aclnnInplaceOne*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: ones_like
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend one-fill kernel support (e.g., aclnnInplaceOne*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: full
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend fill kernel support (e.g., aclnnInplaceFillScalar*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: full_like
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend fill kernel support (e.g., aclnnInplaceFillScalar*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: eye
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend eye/identity kernel support (e.g., aclnnEye*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: identity
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend eye/identity kernel support (e.g., aclnnEye*).
+      - In current implementation, failures are caught by loguru and the API returns None.
+  - name: linspace
+    module: asnumpy.array
+    status_by_dtype:
+      bfloat16: supported
+      float8_e5m2: unsupported
+      float8_e4m3fn: unsupported
+      float8_e8m0: unsupported
+      float6_e3m2fn: unsupported
+      float6_e2m3fn: unsupported
+      float4_e2m1fn: unsupported
+      float4_e1m2fn: unsupported
+      int4: unsupported
+      uint1: unsupported
+    notes:
+      - Depends on backend linspace kernel support (e.g., aclnnLinspace*).
+      - In current implementation, failures are caught by loguru and the API returns None.
