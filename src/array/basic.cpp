@@ -16,6 +16,7 @@
 
 
 #include <asnumpy/array/basic.hpp>
+#include <asnumpy/cann/driver.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
@@ -63,21 +64,16 @@ NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
     if(error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZeroGetWorkspaceSize error = {}",error));
     }
-    // 检查workspaceSize是否有效
-    if(workspaceSize < 0) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) Invalid workspaceSize: {}", workspaceSize));
-    }
-    // 申请工作空间
     AclWorkspace workspace(workspaceSize);
-    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, nullptr);
-    if(error != ACL_SUCCESS){
-         throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZero error = {}",error));
-    }
-    error = aclrtSynchronizeDevice();
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, stream);
     if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclrtSynchronizeDevice error = {}",error));
+        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZero error = {}",error));
     }
-    // 执行结束后释放工作空间
+    error = aclrtSynchronizeStream(stream);
+    if(error != ACL_SUCCESS) {
+        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclrtSynchronizeStream error = {}",error));
+    }
     return array;
 }
 
@@ -87,23 +83,18 @@ NPUArray Zeros_like(const NPUArray& other, py::dtype dtype) {
     aclOpExecutor *executor;
     auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZeroGetWorkspaceSize error = {}",error));
+        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZeroGetWorkspaceSize error = {}",error));
     }
-        // 检查workspaceSize是否有效
-    if(workspaceSize < 0) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) Invalid workspaceSize: {}", workspaceSize));
-    }
-    // 申请工作空间
     AclWorkspace workspace(workspaceSize);
-    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, nullptr);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, stream);
     if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZero error = {}",error));
+        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZero error = {}",error));
     }
-    error = aclrtSynchronizeDevice();
+    error = aclrtSynchronizeStream(stream);
     if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclrtSynchronizeDevice error = {}",error));
+        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclrtSynchronizeStream error = {}",error));
     }
-    // 执行结束后释放工作空间
     return array;
 }
 
@@ -125,19 +116,17 @@ NPUArray Full(const std::vector<int64_t>& shape, const py::object& value, py::dt
     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclnnInplaceFillScalarGetWorkspaceSize error = {}",error));
     // 检查workspaceSize是否有效
     if(workspaceSize < 0) throw std::runtime_error(fmt::format("[baisc.cpp](full) Invalid workspaceSize: {}", workspaceSize));
-    // 3. 申请工作空间
-    void *workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclrtMalloc error = {}",error));
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceFillScalar(workspace.get(), workspaceSize, executor, stream);
+    if(error != ACL_SUCCESS) {
+        aclDestroyScalar(scalar);
+        throw std::runtime_error(fmt::format("[basic.cpp](full) aclnnInplaceFillScalar error = {}", error));
     }
-    error = aclnnInplaceFillScalar(workspaceAddr, workspaceSize, executor, nullptr);
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclnnInplaceFillScalar error = {}", error));
-    error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclrtSynchronizeDevice error = {}",error));
-    // 6. 释放
-    if(workspaceAddr != nullptr) {
-        aclrtFree(workspaceAddr);
+    error = aclrtSynchronizeStream(stream);
+    if(error != ACL_SUCCESS) {
+        aclDestroyScalar(scalar);
+        throw std::runtime_error(fmt::format("[basic.cpp](full) aclrtSynchronizeStream error = {}",error));
     }
     aclDestroyScalar(scalar);
     return array;
@@ -147,33 +136,32 @@ NPUArray Full_like(const NPUArray& other, const py::object& value, py::dtype dty
     auto array = NPUArray(other.shape, dtype);
     double valueDouble = 0;
     if (value.is_none()) {
-        throw std::runtime_error("[baisc.cpp](full) Input is None");
+        throw std::runtime_error("[basic.cpp](full_like) Input is None");
     }
     try {
         valueDouble = py::cast<double>(value);
     } catch (const py::cast_error& e) {
-        throw std::runtime_error("[baisc.cpp](full) Conversion error: " + std::string(e.what()));
+        throw std::runtime_error("[basic.cpp](full_like) Conversion error: " + std::string(e.what()));
     }
     aclScalar* scalar = CreateScalar(valueDouble, array.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnInplaceFillScalarGetWorkspaceSize(array.tensorPtr, scalar, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclnnInplaceFillScalarGetWorkspaceSize error = {}",error));
-    // 检查workspaceSize是否有效
-    if(workspaceSize < 0) throw std::runtime_error(fmt::format("[baisc.cpp](full) Invalid workspaceSize: {}", workspaceSize));
-    // 3. 申请工作空间
-    void *workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclrtMalloc error = {}",error));
+    if(error != ACL_SUCCESS) {
+        aclDestroyScalar(scalar);
+        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclnnInplaceFillScalarGetWorkspaceSize error = {}",error));
     }
-    error = aclnnInplaceFillScalar(workspaceAddr, workspaceSize, executor, nullptr);
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclnnInplaceFillScalar error = {}", error));
-    error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](full) aclrtSynchronizeDevice error = {}",error));
-    // 6. 释放
-    if(workspaceAddr != nullptr) {
-        aclrtFree(workspaceAddr);
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceFillScalar(workspace.get(), workspaceSize, executor, stream);
+    if(error != ACL_SUCCESS) {
+        aclDestroyScalar(scalar);
+        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclnnInplaceFillScalar error = {}", error));
+    }
+    error = aclrtSynchronizeStream(stream);
+    if(error != ACL_SUCCESS) {
+        aclDestroyScalar(scalar);
+        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclrtSynchronizeStream error = {}",error));
     }
     aclDestroyScalar(scalar);
     return array;
@@ -184,23 +172,13 @@ NPUArray Eye(int64_t n, py::dtype dtype) {
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](eye) aclnnEyeGetWorkspaceSize error = {}",error));
-    // 检查workspaceSize是否有效
-    if(workspaceSize < 0) throw std::runtime_error(fmt::format("[baisc.cpp](eye) Invalid workspaceSize: {}", workspaceSize));
-    // 申请工作空间
-    void *workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](eye) aclrtMalloc error = {}",error));
-    }
-    error = aclnnEye(workspaceAddr, workspaceSize, executor, nullptr);
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](eye) aclnnEye error = {}",error));
-    error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[baisc.cpp](eye) aclrtSynchronizeDevice error = {}",error));
-    // 执行结束后释放工作空间
-    if(workspaceAddr != nullptr) {
-        aclrtFree(workspaceAddr);
-    }
+    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[basic.cpp](eye) aclnnEyeGetWorkspaceSize error = {}",error));
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnEye(workspace.get(), workspaceSize, executor, stream);
+    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[basic.cpp](eye) aclnnEye error = {}",error));
+    error = aclrtSynchronizeStream(stream);
+    if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("[basic.cpp](eye) aclrtSynchronizeStream error = {}",error));
     return array;
 }
 
@@ -210,49 +188,17 @@ NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype) {
     aclOpExecutor *executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclnnInplaceOneGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones) aclnnInplaceOneGetWorkspaceSize error = {}", error));
     }
-    // 检查workspaceSize是否有效
-    if(workspaceSize < 0) throw std::runtime_error(fmt::format("[basic.cpp](ones) Invalid workspaceSize: {}", workspaceSize));
-    // 申请工作空间
-    void *workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) {
-            std::string error_msg = fmt::format("[basic.cpp](ones) aclrtMalloc error = {}", error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-                error_msg += std::string(" - ") + detailed_msg;
-            }
-            throw std::runtime_error(error_msg);
-        }
-    }
-    error = aclnnInplaceOne(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceOne(workspace.get(), workspaceSize, executor, stream);
     if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclnnInplaceOne error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones) aclnnInplaceOne error = {}", error));
     }
-    error = aclrtSynchronizeDevice();
+    error = aclrtSynchronizeStream(stream);
     if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
-    // 执行结束后释放工作空间
-    if(workspaceAddr != nullptr) {
-        aclrtFree(workspaceAddr);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones) aclrtSynchronizeStream error = {}", error));
     }
     return array;
 }
@@ -263,58 +209,19 @@ NPUArray Identity(int64_t n, py::dtype dtype) {
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
 
-    auto error = aclnnEyeGetWorkspaceSize(n, n,  // 行, 列, 对角线偏移(k=0)
-                                          array.tensorPtr,
-                                          &workspaceSize,
-                                          &executor);
+    auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclnnEyeGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](identity) aclnnEyeGetWorkspaceSize error = {}", error));
     }
-
-    if (workspaceSize < 0) {
-        throw std::runtime_error(fmt::format("[basic.cpp](identity) Invalid workspaceSize: {}", workspaceSize));
-    }
-
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = fmt::format("[basic.cpp](identity) aclrtMalloc error = {}", error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-                error_msg += std::string(" - ") + detailed_msg;
-            }
-            throw std::runtime_error(error_msg);
-        }
-    }
-
-    error = aclnnEye(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnEye(workspace.get(), workspaceSize, executor, stream);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclnnEye error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](identity) aclnnEye error = {}", error));
     }
-
-    error = aclrtSynchronizeDevice();
+    error = aclrtSynchronizeStream(stream);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
-
-    if (workspaceAddr != nullptr) {
-        aclrtFree(workspaceAddr);
+        throw std::runtime_error(fmt::format("[basic.cpp](identity) aclrtSynchronizeStream error = {}", error));
     }
     return array;
 }
@@ -325,48 +232,17 @@ NPUArray ones_like(const NPUArray& other, py::dtype dtype) {
     aclOpExecutor *executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclnnInplaceOneGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones_like) aclnnInplaceOneGetWorkspaceSize error = {}", error));
     }
-    if (workspaceSize < 0) {
-        throw std::runtime_error(fmt::format("[basic.cpp](ones_like) Invalid workspaceSize: {}", workspaceSize));
-    }
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            std::string error_msg = fmt::format("[basic.cpp](ones_like) aclrtMalloc error = {}", error);
-            const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && strlen(detailed_msg) > 0) {
-                error_msg += std::string(" - ") + detailed_msg;
-            }
-            throw std::runtime_error(error_msg);
-        }
-    }
-    error = aclnnInplaceOne(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
+    error = aclnnInplaceOne(workspace.get(), workspaceSize, executor, stream);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclnnInplaceOne error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones_like) aclnnInplaceOne error = {}", error));
     }
-    error = aclrtSynchronizeDevice();
+    error = aclrtSynchronizeStream(stream);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
-    if (workspaceAddr) {
-        aclrtFree(workspaceAddr);
+        throw std::runtime_error(fmt::format("[basic.cpp](ones_like) aclrtSynchronizeStream error = {}", error));
     }
     return array;
 }
@@ -483,44 +359,22 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
                                  std::to_string(workspaceSize));
     }
 
-    void* workspaceAddr = nullptr;
-    if (workspaceSize > 0) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if (error != ACL_SUCCESS) {
-            aclDestroyScalar(acl_start);
-            aclDestroyScalar(acl_end);
-            std::string msg = "[baisc.cpp](linspace) aclrtMalloc error = " + std::to_string(error);
-            const char* detail = aclGetRecentErrMsg();
-            if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-            throw std::runtime_error(msg);
-        }
-    }
+    AclWorkspace workspace(workspaceSize);
+    aclrtStream stream = asnumpy::cann::get_stream();
 
-    error = aclnnLinspace(workspaceAddr, workspaceSize, executor, nullptr);
+    error = aclnnLinspace(workspace.get(), workspaceSize, executor, stream);
     if (error != ACL_SUCCESS) {
-        if (workspaceAddr) aclrtFree(workspaceAddr);
         aclDestroyScalar(acl_start);
         aclDestroyScalar(acl_end);
-        std::string msg = "[baisc.cpp](linspace) aclnnLinspace error = " + std::to_string(error);
-        const char* detail = aclGetRecentErrMsg();
-        if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-        throw std::runtime_error(msg);
+        throw std::runtime_error(fmt::format("[basic.cpp](linspace) aclnnLinspace error = {}", error));
     }
 
-    error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        if (workspaceAddr) aclrtFree(workspaceAddr);
-        aclDestroyScalar(acl_start);
-        aclDestroyScalar(acl_end);
-        std::string msg = "[baisc.cpp](linspace) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detail = aclGetRecentErrMsg();
-        if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-        throw std::runtime_error(msg);
-    }
-
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    error = aclrtSynchronizeStream(stream);
     aclDestroyScalar(acl_start);
     aclDestroyScalar(acl_end);
+    if (error != ACL_SUCCESS) {
+        throw std::runtime_error(fmt::format("[basic.cpp](linspace) aclrtSynchronizeStream error = {}", error));
+    }
 
     return out;
 }

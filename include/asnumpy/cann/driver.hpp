@@ -26,5 +26,7 @@ namespace cann {
 void init();
 void finalize();
 
+aclrtStream get_stream();
+
 }
 }

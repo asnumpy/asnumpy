@@ -1,5 +1,6 @@
 import asnumpy as ap
 
+ap.init()
 
 CASES = [
     {
