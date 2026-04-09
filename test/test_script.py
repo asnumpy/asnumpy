@@ -17,6 +17,7 @@
 import numpy as np
 import asnumpy as ap
 from script_test_cases import *
+
 """
 How to use:
 
@@ -76,7 +77,12 @@ MATH_FUNCTIONS = [
     ("arccosh", np.arccosh, ap.arccosh, UNARY_TEST_CASES),
     ("arctanh", np.arctanh, ap.arctanh, UNARY_TEST_CASES),
     ("signbit", np.signbit, ap.signbit, UNARY_TEST_CASES),
-    ("clip", np.clip, ap.clip, CLIP_TEST_CASES + CLIP_ARR_OBJ_CASES + CLIP_OBJ_ARR_CASES + CLIP_OBJ_OBJ_CASES),
+    (
+        "clip",
+        np.clip,
+        ap.clip,
+        CLIP_TEST_CASES + CLIP_ARR_OBJ_CASES + CLIP_OBJ_ARR_CASES + CLIP_OBJ_OBJ_CASES,
+    ),
     ("square", np.square, ap.square, UNARY_TEST_CASES),
     ("fabs", np.abs, ap.fabs, UNARY_TEST_CASES),
     ("nan_to_num", np.nan_to_num, ap.nan_to_num, NAN_TO_NUM_TEST_CASES),
@@ -127,8 +133,8 @@ MATH_FUNCTIONS = [
 LINALG_FUNCTIONS = [
     ("qr", np.linalg.qr, ap.linalg.qr, QR_TEST_CASES),
     ("norm", np.linalg.norm, ap.linalg.norm, NORM_TEST_CASES),
-    ("det",np.linalg.det,ap.linalg.det,DET_SLOGDET_TEST_CASES),
-    ("slogdet",np.linalg.slogdet,ap.linalg.slogdet,DET_SLOGDET_TEST_CASES),
+    ("det", np.linalg.det, ap.linalg.det, DET_SLOGDET_TEST_CASES),
+    ("slogdet", np.linalg.slogdet, ap.linalg.slogdet, DET_SLOGDET_TEST_CASES),
     ("matmul", np.matmul, ap.matmul, MATMUL_DOT_TEST_CASES),
     ("einsum", np.einsum, ap.einsum, EINSUM_TEST_CASES),
     ("matrix_power", np.linalg.matrix_power, ap.linalg.matrix_power, MATRIX_POWER_TEST_CASES),
@@ -136,7 +142,7 @@ LINALG_FUNCTIONS = [
     ("vdot", np.vdot, ap.vdot, MATMUL_DOT_TEST_CASES),
     ("inner", np.inner, ap.inner, INNER_TEST_CASES),
     ("outer", np.outer, ap.outer, OUTER_TEST_CASES),
-    ("inv",np.linalg.inv,ap.linalg.inv,DET_SLOGDET_TEST_CASES)
+    ("inv", np.linalg.inv, ap.linalg.inv, DET_SLOGDET_TEST_CASES),
 ]
 
 LOGIC_FUNCTIONS = [
@@ -163,20 +169,23 @@ SORTING_FUNCTIONS = [
 ]
 
 # 总表
-FUNCTIONS_TABLE = ARRAY_FUNCTIONS + MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
+FUNCTIONS_TABLE = (
+    ARRAY_FUNCTIONS + MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS + SORTING_FUNCTIONS
+)
 
 # =========================测试函数本体======================
 
+
 def test_functions():
-    
+
     for name, np_func, ap_func, test_cases in FUNCTIONS_TABLE:
         print("=" * 50)
         print(f"Testing {name} function:")
         print("=" * 50)
-        
+
         passed = 0
         total = len(test_cases)
-        
+
         for i, test_case in enumerate(test_cases):
             # 将测试用例元组解包为参数
             try:
@@ -192,15 +201,24 @@ def test_functions():
                     # 可使用：np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     # 测试 cross 时，可使用：np_func(test_case[0], test_case[1], axis=test_case[2])
                     # 测试 nan_to_num 时，可使用：np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
-                    if name == "prod" or name == "sum" or name == "nanprod" or name == "nansum" or name == "max" \
-                    or name == "amax" or name == "nanmax":
+                    if (
+                        name == "prod"
+                        or name == "sum"
+                        or name == "nanprod"
+                        or name == "nansum"
+                        or name == "max"
+                        or name == "amax"
+                        or name == "nanmax"
+                    ):
                         np_result = np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     elif name == "min" or name == "amin":
                         np_result = np_func(test_case[0], axis=test_case[1], keepdims=test_case[2])
                     elif name == "cross":
                         np_result = np_func(test_case[0], test_case[1], axis=test_case[2])
                     elif name == "nan_to_num":
-                        np_result = np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
+                        np_result = np_func(
+                            test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3]
+                        )
                     elif name == "sort":
                         np_result = np_func(test_case[0], axis=test_case[1])
                     else:
@@ -208,24 +226,32 @@ def test_functions():
                     ap_result = ap_func(*converted_args)
                 else:
                     # 单个参数的情况
-                    converted_arg = ap.ndarray.from_numpy(test_case) if isinstance(test_case, np.ndarray) else test_case
+                    converted_arg = (
+                        ap.ndarray.from_numpy(test_case)
+                        if isinstance(test_case, np.ndarray)
+                        else test_case
+                    )
                     np_result = np_func(test_case)
                     ap_result = ap_func(converted_arg)
-                
+
                 # 转换结果为numpy数组
-                if hasattr(ap_result, 'to_numpy'):
+                if hasattr(ap_result, "to_numpy"):
                     ap_result_np = ap_result.to_numpy()
                 else:
                     ap_result_np = ap_result
-                
+
                 # 对于多个返回值的函数（如qr）
                 if isinstance(np_result, tuple) and isinstance(ap_result_np, tuple):
                     all_close = True
                     for np_res, ap_res in zip(np_result, ap_result_np):
-                        if not np.allclose(np_res, ap_res.to_numpy() if hasattr(ap_res, 'to_numpy') else ap_res, equal_nan=True):
+                        if not np.allclose(
+                            np_res,
+                            ap_res.to_numpy() if hasattr(ap_res, "to_numpy") else ap_res,
+                            equal_nan=True,
+                        ):
                             all_close = False
                     if not all_close:
-                        print(f"Test {i+1} FAILED:")
+                        print(f"Test {i + 1} FAILED:")
                         print(f"  Input: {test_case}")
                         print(f"  NumPy result: {np_result}")
                         print(f"  AP result: {ap_result_np}")
@@ -234,7 +260,7 @@ def test_functions():
                         passed += 1
                 else:
                     if not np.allclose(np_result, ap_result_np, equal_nan=True):
-                        print(f"Test {i+1} FAILED:")
+                        print(f"Test {i + 1} FAILED:")
                         print(f"  Input: {test_case}")
                         print(f"  NumPy result: {np_result}")
                         print(f"  AP result: {ap_result_np}")
@@ -242,24 +268,25 @@ def test_functions():
                     else:
                         passed += 1
             except Exception as e:
-                print(f"Test {i+1} ERROR:")
+                print(f"Test {i + 1} ERROR:")
                 print(f"  Input: {test_case}")
                 print(f"  Error: {e}")
                 print()
-        
+
         print(f"Passed: {passed}/{total} tests")
         print()
-        
+
 
 def main():
     print("Testing NPU Math Functions")
     print("=" * 60)
     print()
-    
+
     test_functions()
-    
+
     print("=" * 60)
     print("All tests completed")
+
 
 if __name__ == "__main__":
     main()

@@ -17,6 +17,7 @@
 import numpy as np
 import asnumpy as ap
 from script_test_cases import *
+
 """
 How to use:
 
@@ -96,16 +97,17 @@ FUNCTIONS_TABLE = MATH_FUNCTIONS + LINALG_FUNCTIONS + LOGIC_FUNCTIONS
 
 # =========================测试函数本体======================
 
+
 def test_functions():
-    
+
     for name, np_func, ap_func, test_cases in FUNCTIONS_TABLE:
         print("=" * 50)
         print(f"Testing {name} function:")
         print("=" * 50)
-        
+
         passed = 0
         total = len(test_cases)
-        
+
         for i, test_case in enumerate(test_cases):
             # 将测试用例元组解包为参数
             try:
@@ -125,30 +127,40 @@ def test_functions():
                     elif name == "cross":
                         np_result = np_func(test_case[0], test_case[1], axis=test_case[2])
                     elif name == "nan_to_num":
-                        np_result = np_func(test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3])
+                        np_result = np_func(
+                            test_case[0], nan=test_case[1], posinf=test_case[2], neginf=test_case[3]
+                        )
                     else:
                         np_result = np_func(*test_case)
                     ap_result = ap_func(*converted_args)
                 else:
                     # 单个参数的情况
-                    converted_arg = ap.ndarray.from_numpy(test_case) if isinstance(test_case, np.ndarray) else test_case
+                    converted_arg = (
+                        ap.ndarray.from_numpy(test_case)
+                        if isinstance(test_case, np.ndarray)
+                        else test_case
+                    )
                     np_result = np_func(test_case)
                     ap_result = ap_func(converted_arg)
-                
+
                 # 转换结果为numpy数组
-                if hasattr(ap_result, 'to_numpy'):
+                if hasattr(ap_result, "to_numpy"):
                     ap_result_np = ap_result.to_numpy()
                 else:
                     ap_result_np = ap_result
-                
+
                 # 对于多个返回值的函数（如qr）
                 if isinstance(np_result, tuple) and isinstance(ap_result_np, tuple):
                     all_close = True
                     for np_res, ap_res in zip(np_result, ap_result_np):
-                        if not np.allclose(np_res, ap_res.to_numpy() if hasattr(ap_res, 'to_numpy') else ap_res, equal_nan=True):
+                        if not np.allclose(
+                            np_res,
+                            ap_res.to_numpy() if hasattr(ap_res, "to_numpy") else ap_res,
+                            equal_nan=True,
+                        ):
                             all_close = False
                     if not all_close:
-                        print(f"Test {i+1} FAILED:")
+                        print(f"Test {i + 1} FAILED:")
                         print(f"  Input: {test_case}")
                         print(f"  NumPy result: {np_result}")
                         print(f"  AP result: {ap_result_np}")
@@ -157,7 +169,7 @@ def test_functions():
                         passed += 1
                 else:
                     if not np.allclose(np_result, ap_result_np, equal_nan=True):
-                        print(f"Test {i+1} FAILED:")
+                        print(f"Test {i + 1} FAILED:")
                         print(f"  Input: {test_case}")
                         print(f"  NumPy result: {np_result}")
                         print(f"  AP result: {ap_result_np}")
@@ -165,24 +177,25 @@ def test_functions():
                     else:
                         passed += 1
             except Exception as e:
-                print(f"Test {i+1} ERROR:")
+                print(f"Test {i + 1} ERROR:")
                 print(f"  Input: {test_case}")
                 print(f"  Error: {e}")
                 print()
-        
+
         print(f"Passed: {passed}/{total} tests")
         print()
-        
+
 
 def main():
     print("Testing NPU Math Functions")
     print("=" * 60)
     print()
-    
+
     test_functions()
-    
+
     print("=" * 60)
     print("All tests completed")
+
 
 if __name__ == "__main__":
     main()

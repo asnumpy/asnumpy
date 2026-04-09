@@ -80,8 +80,8 @@ if __name__ == "__main__":
     print("With np.dtype wrapper:", ones_dtype_cpu.dtype)
 
     # Test with string
-    ones_str_npu = asnumpy.ones((2, 2), dtype='float32')
+    ones_str_npu = asnumpy.ones((2, 2), dtype="float32")
     ones_str_cpu = ones_str_npu.to_numpy()
     print("With string dtype:", ones_str_cpu.dtype)
 
-    print("\nAll ones tests completed successfully!") 
+    print("\nAll ones tests completed successfully!")
