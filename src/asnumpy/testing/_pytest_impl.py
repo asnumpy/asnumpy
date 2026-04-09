@@ -36,7 +36,11 @@ import functools
 
 
 def is_available():
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Check whether pytest is available.
+=======
+    """检查pytest是否可用
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Returns:
         bool: True if pytest is installed and importable.
@@ -50,9 +54,15 @@ def is_available():
 
 
 class _TestingParameterizeMixin:
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Mixin class for parameterized tests.
 
     Inherit from this class to support pytest-style parameterized tests.
+=======
+    """参数化测试的混合类
+
+    这个类可以被测试类继承，以支持pytest风格的参数化测试。
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
     """
 
     @classmethod
@@ -67,6 +77,7 @@ class _TestingParameterizeMixin:
 
 
 def parameterize(*args, **kwargs):
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Parameterized test decorator.
 
     Provides functionality similar to pytest.mark.parametrize,
@@ -78,6 +89,19 @@ def parameterize(*args, **kwargs):
 
     Returns:
         Decorator function.
+=======
+    """参数化测试装饰器
+
+    这个装饰器提供类似pytest.mark.parametrize的功能，
+    但与Asnumpy的测试框架集成。
+
+    Args:
+        *args: 参数名和参数值
+        **kwargs: 其他选项
+
+    Returns:
+        装饰器函数
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Examples:
         @parameterize('dtype', [numpy.float32, numpy.float64])
@@ -102,13 +126,18 @@ def parameterize(*args, **kwargs):
 
         return decorator
 
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     # Use pytest.mark.parametrize when pytest is available
+=======
+    # 如果pytest可用，使用pytest.mark.parametrize
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
     import pytest
 
     return pytest.mark.parametrize(*args, **kwargs)
 
 
 def fixture(*args, **kwargs):
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Fixture decorator.
 
     Provides functionality similar to pytest.fixture.
@@ -116,6 +145,15 @@ def fixture(*args, **kwargs):
     Args:
         *args: Positional arguments.
         **kwargs: Keyword arguments.
+=======
+    """fixture装饰器
+
+    这个装饰器提供类似pytest.fixture的功能。
+
+    Args:
+        *args: 位置参数
+        **kwargs: 关键字参数
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Returns:
         Decorator function or fixture object.
@@ -132,17 +170,28 @@ def fixture(*args, **kwargs):
 
             return decorator
 
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     # Use pytest.fixture when pytest is available
+=======
+    # 如果pytest可用，使用pytest.fixture
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
     import pytest
 
     return pytest.fixture(*args, **kwargs)
 
 
 def skip(reason):
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Skip test decorator.
 
     Args:
         reason: Reason for skipping the test.
+=======
+    """跳过测试装饰器
+
+    Args:
+        reason: 跳过测试的原因
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Returns:
         Decorator function.
@@ -158,11 +207,19 @@ def skip(reason):
 
 
 def skipif(condition, reason):
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Conditional skip test decorator.
 
     Args:
         condition: Condition under which the test is skipped.
         reason: Reason for skipping the test.
+=======
+    """条件跳过测试装饰器
+
+    Args:
+        condition: 跳过测试的条件
+        reason: 跳过测试的原因
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Returns:
         Decorator function.
@@ -178,11 +235,19 @@ def skipif(condition, reason):
 
 
 def xfail(reason="", strict=False):
+<<<<<<< HEAD:src/asnumpy/testing/_pytest_impl.py
     """Expected failure test decorator.
 
     Args:
         reason: Reason for the expected failure.
         strict: Whether to use strict mode.
+=======
+    """预期失败测试装饰器
+
+    Args:
+        reason: 预期失败的原因
+        strict: 是否严格模式
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_pytest_impl.py
 
     Returns:
         Decorator function.

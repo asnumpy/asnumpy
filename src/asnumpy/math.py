@@ -339,7 +339,11 @@ def heaviside(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_heaviside(x1, x2))
 
 
+<<<<<<< HEAD:src/asnumpy/math.py
 def clip(a: ArrayLike, a_min: ArrayLike | float, a_max: ArrayLike | float) -> ndarray:
+=======
+def clip(a: ArrayLike, a_min: Union[ArrayLike, float], a_max: Union[ArrayLike, float]) -> ndarray:
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     return ndarray(_clip(a, a_min, a_max))
 
 
@@ -550,7 +554,11 @@ def signbit(x: ArrayLike) -> ndarray:
     # Detect -0.0 via numpy and patch the result.
     import numpy as np
 
+<<<<<<< HEAD:src/asnumpy/math.py
     np_x = x.to_numpy()  # type: ignore[union-attr]
+=======
+    np_x = x.to_numpy()
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     neg_zero_mask = np.signbit(np_x) & (np_x == 0)
     if neg_zero_mask.any():
         np_result = result.to_numpy().astype(np.bool_)
@@ -659,13 +667,21 @@ def fmin(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fmin(x1, x2, _convert_dtype(dtype)))
 
 
+<<<<<<< HEAD:src/asnumpy/math.py
 def max(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
+=======
+def max(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> Union[ndarray, float]:
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     if axis is None:
         return _max(a)  # type: ignore[no-any-return]
     return ndarray(_max(a, axis, keepdims))
 
 
+<<<<<<< HEAD:src/asnumpy/math.py
 def amax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
+=======
+def amax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> Union[ndarray, float]:
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     if axis is None:
         return _amax(a)  # type: ignore[no-any-return]
     return ndarray(_amax(a, axis, keepdims))
@@ -677,13 +693,21 @@ def nanmax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> n
     return ndarray(_nanmax(a, axis, keepdims))
 
 
+<<<<<<< HEAD:src/asnumpy/math.py
 def min(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
+=======
+def min(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> Union[ndarray, float]:
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     if axis is None:
         return _min(a)  # type: ignore[no-any-return]
     return ndarray(_min(a, axis, keepdims))
 
 
+<<<<<<< HEAD:src/asnumpy/math.py
 def amin(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
+=======
+def amin(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> Union[ndarray, float]:
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/math.py
     if axis is None:
         return _amin(a)  # type: ignore[no-any-return]
     return ndarray(_amin(a, axis, keepdims))

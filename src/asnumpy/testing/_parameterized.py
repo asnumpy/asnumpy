@@ -31,6 +31,7 @@ import itertools
 
 
 def product(params_dict):
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
     """Generate the Cartesian product of a parameter dictionary.
 
     Combines all possible values of multiple parameters into a Cartesian
@@ -41,6 +42,17 @@ def product(params_dict):
 
     Returns:
         Generator yielding dicts of parameter combinations.
+=======
+    """生成参数字典的笛卡尔积
+
+    将多个参数的可能值组合成笛卡尔积，用于参数化测试。
+
+    Args:
+        params_dict: 参数字典，键是参数名，值是参数可能的取值列表
+
+    Returns:
+        生成器，产生参数组合的字典
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
 
     Examples:
         >>> list(product({'a': [1, 2], 'b': [3, 4]}))
@@ -58,6 +70,7 @@ def product(params_dict):
 
 
 def product_dict(*dicts):
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
     """Merge multiple dicts and yield their Cartesian product.
 
     Args:
@@ -65,6 +78,15 @@ def product_dict(*dicts):
 
     Returns:
         Generator yielding merged parameter dicts.
+=======
+    """将多个字典的笛卡尔积合并
+
+    Args:
+        *dicts: 多个参数字典
+
+    Returns:
+        生成器，产生合并后的参数字典
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
 
     Examples:
         >>> list(product_dict({'a': [1, 2]}, {'b': [3, 4]}))
@@ -78,6 +100,7 @@ def product_dict(*dicts):
 
 
 def _make_class_name(base_name, params):
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
     """Generate a class name for a parameterized test.
 
     Builds a descriptive test class name from a base name and parameter values.
@@ -88,6 +111,18 @@ def _make_class_name(base_name, params):
 
     Returns:
         Generated class name string.
+=======
+    """为参数化测试生成类名
+
+    根据基础类名和参数值，生成一个描述性的测试类名。
+
+    Args:
+        base_name: 基础类名
+        params: 参数字典
+
+    Returns:
+        生成的类名字符串
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
 
     Examples:
         >>> _make_class_name('TestZeros', {'dtype': 'float32', 'order': 'C'})
@@ -99,10 +134,17 @@ def _make_class_name(base_name, params):
     parts = [base_name]
     for key, value in params.items():
         value_str = str(value)
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
         # Strip type prefix (e.g. <class 'numpy.float32'> -> float32)
         if "numpy." in value_str:
             value_str = value_str.split(".")[-1].rstrip("'>")
         # Replace special characters
+=======
+        # 移除类型前缀（如 <class 'numpy.float32'> -> float32）
+        if "numpy." in value_str:
+            value_str = value_str.split(".")[-1].rstrip("'>")
+        # 替换特殊字符
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
         value_str = value_str.replace("<", "").replace(">", "").replace("'", "")
         value_str = value_str.replace(" ", "_").replace(".", "_").replace("-", "_")
 
@@ -112,6 +154,7 @@ def _make_class_name(base_name, params):
 
 
 def parameterize_test_class(base_class, params_dict):
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
     """Generate parameterized subclasses for a test class.
 
     Creates multiple parameterized subclasses of a base test class
@@ -123,6 +166,18 @@ def parameterize_test_class(base_class, params_dict):
 
     Returns:
         List of generated test classes.
+=======
+    """为测试类生成参数化的子类
+
+    这个函数根据参数字典，为基础测试类生成多个参数化的子类。
+
+    Args:
+        base_class: 基础测试类
+        params_dict: 参数字典
+
+    Returns:
+        生成的测试类列表
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
 
     Examples:
         class BaseTest:
@@ -135,12 +190,21 @@ def parameterize_test_class(base_class, params_dict):
         )
     """
     classes = []
+<<<<<<< HEAD:src/asnumpy/testing/_parameterized.py
 
     for params in product(params_dict):
         # Generate class name
         class_name = _make_class_name(base_class.__name__, params)
 
         # Create new class
+=======
+
+    for params in product(params_dict):
+        # 生成类名
+        class_name = _make_class_name(base_class.__name__, params)
+
+        # 创建新类
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_parameterized.py
         new_class = type(class_name, (base_class,), {"_params": params})
 
         classes.append(new_class)

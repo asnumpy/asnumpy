@@ -76,7 +76,11 @@ def test_prod_axis_none_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] dtype promotion: sum/prod keeps original dtype, NumPy promotes", strict=True
+=======
+    reason="Mismatch: asnumpy sum/prod keeps original dtype for int8/16/32, whereas numpy promotes"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
 def test_sum_int_mismatch_xfail(xp, dtype):

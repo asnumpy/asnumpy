@@ -62,7 +62,13 @@ def test_sinc_zero(xp, dtype):
 # ========== 2. 异常与 Bug 记录 (XFAIL) ==========
 
 
+<<<<<<< HEAD
 @pytest.mark.xfail(reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True)
+=======
+@pytest.mark.xfail(
+    reason="Bug: C++ core missing mapping from float16 to aclDataType (Unsupported py::dtype)"
+)
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.float16])
 def test_sinc_float16_mapping_xfail(xp, dtype):
     """

@@ -62,7 +62,11 @@ def test_lcm_basic(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] aclnnGcd/Lcm throws RuntimeError 161002 for Int8/Int16", strict=True
+=======
+    reason="Bug: aclnnGcd/Lcm throws RuntimeError 161002 (get workspace size failed) for Int8/Int16"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int8, numpy.int16])
 @testing.numpy_asnumpy_array_equal()
@@ -88,8 +92,12 @@ def test_rational_float_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] behavior mismatch: negative input handling in GCD between NPU and NumPy",
     strict=True,
+=======
+    reason="Behavior Mismatch: Handling of negative inputs in GCD between NPU and NumPy"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int32])
 def test_gcd_negative_behavior_xfail(xp, dtype):

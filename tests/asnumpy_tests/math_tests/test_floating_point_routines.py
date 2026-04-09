@@ -68,6 +68,12 @@ def test_signbit_basic(xp, dtype):
     return xp.signbit(a)
 
 
+<<<<<<< HEAD
+=======
+@pytest.mark.xfail(
+    reason="Bug: signbit(-0.0) returns False, violating IEEE 754 and mismatching NumPy"
+)
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_signbit_negative_zero_xfail(xp, dtype):
@@ -121,8 +127,12 @@ def test_float_routines_float16_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] isnan/isinf on int dtypes may be unsupported or return wrong types",
     strict=True,
+=======
+    reason="Mismatch: isnan/isinf on Int dtypes might unsupported or return different types"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int32])
 def test_float_checks_int_xfail(xp, dtype):

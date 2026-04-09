@@ -27,6 +27,7 @@ def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
 
     # asnumpy测试数据 - 从 numpy 转换
     import asnumpy as ap
+
     m1_asnp = ap.ndarray.from_numpy(m1_np)
     m2_asnp = ap.ndarray.from_numpy(m2_np)
 

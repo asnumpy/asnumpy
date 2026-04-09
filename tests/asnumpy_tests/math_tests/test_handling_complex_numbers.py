@@ -50,8 +50,12 @@ def test_real_complex64_basic(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] complex128 output hardcoded to float32 (ACL_FLOAT), should be float64",
     strict=True,
+=======
+    reason="Mismatch: complex128 output is hardcoded to float32 (ACL_FLOAT) instead of float64."
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.complex128])
 @testing.numpy_asnumpy_allclose()
@@ -69,7 +73,13 @@ def test_real_complex128_precision_xfail(xp, dtype):
     return xp.real(a)
 
 
+<<<<<<< HEAD
 @pytest.mark.xfail(reason="[FIXABLE] real() on non-complex dtypes unsupported", strict=True)
+=======
+@pytest.mark.xfail(
+    reason="Bug: real() on non-complex dtypes might be unsupported in current asnumpy implementation"
+)
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.float32, numpy.int32])
 def test_real_non_complex_xfail(xp, dtype):
     """NumPy 允许对实数调 real (返回自身)，验证 asnumpy 是否支持"""

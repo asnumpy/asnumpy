@@ -156,6 +156,26 @@ if TYPE_CHECKING:
         true_divide,
         trunc,
     )
+<<<<<<< HEAD:src/asnumpy/__init__.py
+=======
+
+    from . import random
+
+    from .sorting import sort
+
+    from .statistics import mean
+
+    from .utils import broadcast_shape, ndarray
+
+    from ._types import (
+        ArrayLike,
+        DTypeLike,
+        ShapeLike,
+        AxisLike,
+        AxisOptional,
+        ScalarLike,
+    )
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/__init__.py
     from .nn import softmax
     from .sorting import sort
     from .statistics import mean
@@ -342,6 +362,18 @@ _EAGER_EXPORTS = [
 __all__ = _EAGER_EXPORTS + list(_LAZY_MAPPING.keys())
 
 
+<<<<<<< HEAD:src/asnumpy/__init__.py
+=======
+# Get version from package metadata
+try:
+    from importlib.metadata import version
+
+    __version__ = version("asnumpy")
+except Exception:
+    __version__ = "0.2.0"
+
+
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/__init__.py
 def __getattr__(name):
     if name in _LAZY_MAPPING:
         module_path = _LAZY_MAPPING[name]

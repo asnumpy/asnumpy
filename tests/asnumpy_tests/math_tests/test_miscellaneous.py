@@ -56,8 +56,12 @@ def test_absolute_unsupported_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] dtype mismatch: fabs returns original int type, NumPy returns float",
     strict=True,
+=======
+    reason="Mismatch: AsNumpy returns original type for int, but Numpy returns float for fabs"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int8, numpy.int32, numpy.uint8])
 def test_fabs_dtype_mismatch_xfail(xp, dtype):
@@ -93,8 +97,12 @@ def test_square_float64(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] dtype promotion: square outputs float32 for integers, NumPy preserves/promotes",
     strict=True,
+=======
+    reason="Mismatch: AsNumpy square outputs float32 for integers, Numpy preserves dtype or promotes"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_square_int_mismatch_xfail(xp, dtype):

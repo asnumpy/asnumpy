@@ -72,8 +72,12 @@ def test_rint_float_basic(xp, dtype):
 
 
 @pytest.mark.xfail(
+<<<<<<< HEAD
     reason="[FIXABLE] dtype promotion: rint on int32/64 outputs inconsistent dtype vs NumPy",
     strict=True,
+=======
+    reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy"
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 )
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_rint_int_mismatch_xfail(xp, dtype):

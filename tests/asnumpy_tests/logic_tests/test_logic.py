@@ -45,12 +45,16 @@ def _create_array(xp, data, dtype):
     return xp.ndarray.from_numpy(np_arr)
 
 
+<<<<<<< HEAD
 # ==========================================================================
 # 1. 归约运算测试 (Reduction): all, any
 # ==========================================================================
 
 
 # ---------- 1.1 基础功能 ----------
+=======
+# ========== 1. 归约运算测试 (Reduction) ==========
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_all_basic(xp, dtype):
@@ -87,6 +91,7 @@ def test_any_axis(xp, dtype):
     return xp.any(a, axis=(1,))
 
 
+<<<<<<< HEAD
 # ---------- 1.2 多 dtype ----------
 @testing.for_dtypes([numpy.bool_, numpy.int32, numpy.int64, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -171,6 +176,9 @@ def test_any_empty(xp):
 
 
 # ---------- 2.1 基础功能 ----------
+=======
+# ========== 2. 无穷/有限检查测试 (Finite Checks) ==========
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite(xp, dtype):
@@ -203,6 +211,7 @@ def test_isneginf(xp, dtype):
     return xp.isneginf(a)
 
 
+<<<<<<< HEAD
 # ---------- 2.2 NaN 行为 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_array_equal()
@@ -301,6 +310,9 @@ def test_isinf_empty(xp, dtype):
 
 
 # ---------- 3.1 基础功能 ----------
+=======
+# ========== 3. 逻辑运算测试 (Logical Operators) ==========
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.bool_, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_and(xp, dtype):
@@ -339,6 +351,7 @@ def test_logical_not(xp, dtype):
     return xp.logical_not(x)
 
 
+<<<<<<< HEAD
 # ---------- 3.2 多 dtype ----------
 @testing.for_dtypes(
     [numpy.bool_, numpy.int8, numpy.int32, numpy.int64, numpy.float32, numpy.float64]
@@ -496,6 +509,9 @@ def test_logical_not_empty(xp, dtype):
 
 
 # ---------- 4.1 基础功能 ----------
+=======
+# ========== 4. 比较运算测试 (Comparisons) ==========
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_greater(xp, dtype):
@@ -570,6 +586,7 @@ def test_greater_scalar(xp, dtype):
     return xp.greater(a, scalar)
 
 
+<<<<<<< HEAD
 # ---------- 4.2 多 dtype ----------
 @testing.for_dtypes([numpy.bool_, numpy.int32, numpy.int64, numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_array_equal()
@@ -899,3 +916,15 @@ def test_less_empty(xp, dtype):
     a = _create_array(xp, [], dtype)
     b = _create_array(xp, [], dtype)
     return xp.less(a, b)
+=======
+# ========== 5. 问题测试 (保持 xfail) ==========
+@testing.suppress_warnings
+@testing.for_dtypes([numpy.float32])
+@testing.numpy_asnumpy_array_equal()
+def test_equal_with_nan(xp, dtype):
+    data_a = [float("nan"), 1.0]
+    data_b = [float("nan"), 1.0]
+    a = _create_array(xp, data_a, dtype)
+    b = _create_array(xp, data_b, dtype)
+    return xp.equal(a, b)
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files)

@@ -25,6 +25,7 @@ import numpy as np
 
 
 def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     """Assert that two arrays are exactly equal.
 
     Args:
@@ -33,6 +34,16 @@ def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
         err_msg: Custom error message.
         verbose: Whether to show detailed error information.
         strides_check: Whether to check strides.
+=======
+    """断言两个数组完全相等
+
+    Args:
+        x: 第一个数组
+        y: 第二个数组
+        err_msg: 自定义错误消息
+        verbose: 是否显示详细错误信息
+        strides_check: 是否检查strides
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
 
     Raises:
         AssertionError: If the arrays are not equal.
@@ -50,37 +61,64 @@ def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
         else:
             y = np.asarray(y)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check shape
+=======
+    # 检查shape
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check dtype
+=======
+    # 检查dtype
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check strides
+=======
+    # 检查strides
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if strides_check and x.strides != y.strides:
         msg = f"Strides mismatch: x.strides={x.strides}, y.strides={y.strides}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check values
+=======
+    # 检查值
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if not np.array_equal(x, y):
         if verbose:
             msg = "Arrays are not equal."
             try:
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
                 # Compute difference only for numeric types
                 if x.dtype.kind in "biu f":  # bool, int, uint, float
                     if x.dtype.kind == "b":
                         # For bool, use XOR to compute difference (subtraction raises an error)
+=======
+                # 尝试计算差异，仅对数值类型有效
+                if x.dtype.kind in "biu f":  # bool, int, uint, float
+                    if x.dtype.kind == "b":
+                        # 修复：布尔型使用异或(^)计算差异，避免减法报错
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
                         diff = x ^ y
                         msg += f"\nNumber of differing elements: {np.sum(diff)}"
                     else:
                         diff = x - y
                         msg += f"\nMax absolute difference: {np.abs(diff).max()}"
             except Exception:
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
                 pass  # Ignore if difference computation fails
+=======
+                pass  # 如果计算差异失败，忽略，只打印数组内容
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
 
             if x.size > 0:
                 msg += f"\nIndices where elements differ: {np.where(x != y)}"
@@ -91,8 +129,13 @@ def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
 
 
 def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg="", verbose=True, strides_check=False):
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     """Assert that two arrays are equal within a tolerance (for floating-point comparison)."""
     # Convert to numpy arrays
+=======
+    """断言两个数组在误差范围内相等（用于浮点数比较）"""
+    # 转换为numpy数组
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if not isinstance(x, np.ndarray):
         if hasattr(x, "to_numpy"):
             x = x.to_numpy()
@@ -105,22 +148,38 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg="", verbose=True, strides_c
         else:
             y = np.asarray(y)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check shape
+=======
+    # 检查shape
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check dtype
+=======
+    # 检查dtype
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check strides
+=======
+    # 检查strides
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if strides_check and x.strides != y.strides:
         msg = f"Strides mismatch: x.strides={x.strides}, y.strides={y.strides}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
+<<<<<<< HEAD:src/asnumpy/testing/_array.py
     # Check values within tolerance
+=======
+    # 检查值（在误差范围内）
+>>>>>>> 6f1d96a (style: fix ruff formatting for project python files):asnumpy/testing/_array.py
     if not np.allclose(x, y, rtol=rtol, atol=atol, equal_nan=True):
         if verbose:
             msg = "Arrays are not almost equal."
