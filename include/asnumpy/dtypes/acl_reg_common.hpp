@@ -112,7 +112,7 @@ public:
         U* from_ptr = static_cast<U*>(from);
         T* to_ptr = static_cast<T*>(to);
         for (npy_intp i = 0; i < n; i++) {
-            to_ptr[i] = Policy::template ConvertFromPeer<U>(from_ptr[i]);
+            to_ptr[i] = Policy::template ConvertFromPeer<U, T>(from_ptr[i]);
         }
     }
 
