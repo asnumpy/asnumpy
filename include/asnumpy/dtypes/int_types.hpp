@@ -100,10 +100,18 @@ namespace asnumpy {
             return SubByteInt(v_ * other.v_);
         }
         constexpr SubByteInt operator/(const SubByteInt& other) const {
-            return SubByteInt(IntValue() / other.IntValue());
+            const UnderlyingTy denom = other.IntValue();
+            if (denom == 0) {
+                return SubByteInt(0);
+            }
+            return SubByteInt(IntValue() / denom);
         }
         constexpr SubByteInt operator%(const SubByteInt& other) const {
-            return SubByteInt((IntValue() % other.IntValue()));
+            const UnderlyingTy denom = other.IntValue();
+            if (denom == 0) {
+                return SubByteInt(0);
+            }
+            return SubByteInt((IntValue() % denom));
         }
     
         // 位运算符

@@ -16,9 +16,12 @@
 
 #pragma once
 
-#include <asnumpy/dtypes/float/bit_cast.hpp>
-#include <asnumpy/dtypes/float/float8.hpp>
-#include <asnumpy/dtypes/float/bfloat16.hpp>
-#include <asnumpy/dtypes/float/float6.hpp>
-#include <asnumpy/dtypes/float/float4.hpp>
+#define ASNUMPY_ACL_MANAGER_COMMON_MEMBERS                \
+    static PyObject* type_ptr;      /* Python类型对象指针 */  \
+    static int npy_type;            /* NumPy类型ID */          \
+    static PyType_Spec type_spec;                               \
+    static PyType_Slot type_slots[];                             \
+    static PyArray_ArrFuncs arr_funcs;  /* NumPy数组操作函数 */   \
+    static PyArray_DescrProto npy_descr_proto; /* NumPy 2.x */    \
+    static PyArray_Descr* npy_descr;    /* 注册后有效 */
 

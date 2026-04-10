@@ -19,8 +19,10 @@
 
 #include <asnumpy/dtypes/np_import.hpp>
 #include <asnumpy/dtypes/desc.hpp>
+#include <asnumpy/dtypes/acl_manager_members.hpp>
 #include <vector>
-#include <cstring>
+#include <algorithm>
+#include <cstddef>
 
 // NumPy 2.x 兼容：在 2.0 及以上使用 PyArray_DescrProto
 #if NPY_ABI_VERSION < 0x02000000
@@ -33,14 +35,8 @@ namespace dtypes {
     // ACL 浮点类型管理器基类
     template <typename T>
     struct ACLFloatManager {
-        static PyObject* type_ptr;      // Python类型对象指针
-        static int npy_type;           // NumPy类型ID
+        ASNUMPY_ACL_MANAGER_COMMON_MEMBERS
         static int Dtype() { return npy_type; }
-        static PyType_Spec type_spec;
-        static PyType_Slot type_slots[];
-        static PyArray_ArrFuncs arr_funcs;  // NumPy数组操作函数（静态存储）
-        static PyArray_DescrProto npy_descr_proto; // NumPy 2.x 描述符原型
-        static PyArray_Descr* npy_descr;    // NumPy描述符（注册后有效）
     };
 
     // Python 标量对象包装
@@ -60,7 +56,9 @@ namespace dtypes {
         // 数组操作函数
         static void copyswap(void* dst, void* src, int swap, void* arr) {
             if (src != nullptr) {
-                std::memcpy(dst, src, sizeof(T));
+                const auto* src_bytes = static_cast<const std::byte*>(src);
+                auto* dst_bytes = static_cast<std::byte*>(dst);
+                std::copy_n(src_bytes, sizeof(T), dst_bytes);
             }
             if (swap && sizeof(T) > 1) {
                 // 对于多字节类型才需要字节序转换
