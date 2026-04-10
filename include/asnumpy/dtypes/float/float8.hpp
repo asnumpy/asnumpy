@@ -17,6 +17,7 @@
 #pragma once
 
 #include <asnumpy/dtypes/float/bit_cast.hpp>
+#include <asnumpy/dtypes/float/f32_helpers.hpp>
 #include <acl/acl.h>
 
 namespace asnumpy {
@@ -191,14 +192,7 @@ private:
 
         int e_unbiased;
         float mant;
-        if (exp == 0) {
-            // float32 次正规：规范化到 (0,1)
-            e_unbiased = -126;
-            mant = std::ldexp(static_cast<float>(frac), -149);
-        } else {
-            e_unbiased = static_cast<int>(exp) - 127;
-            mant = 1.0f + static_cast<float>(frac) * (1.0f / 8388608.0f);  // [1,2)
-        }
+        f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
         constexpr int bias = 7;
         // e4m3fn 正规阈值：2^-6
