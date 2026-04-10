@@ -66,9 +66,7 @@ def test_prod_axis_none_xfail(xp, dtype):
 # ========== 3. 归约 Dtype 限制 (XFAIL) ==========
 
 
-@pytest.mark.xfail(
-    reason="Mismatch: asnumpy sum/prod keeps original dtype for int8/16/32, whereas numpy promotes"
-)
+@pytest.mark.xfail(reason="Mismatch: asnumpy sum/prod keeps original dtype for int8/16/32, whereas numpy promotes")
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
 def test_sum_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)

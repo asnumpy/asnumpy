@@ -61,9 +61,7 @@ def test_lcm_basic(xp, dtype):
 # ========== 2. 针对低精度整数的 Bug 记录 (XFAIL) ==========
 
 
-@pytest.mark.xfail(
-    reason="Bug: aclnnGcd/Lcm throws RuntimeError 161002 (get workspace size failed) for Int8/Int16"
-)
+@pytest.mark.xfail(reason="Bug: aclnnGcd/Lcm throws RuntimeError 161002 (get workspace size failed) for Int8/Int16")
 @testing.for_dtypes([numpy.int8, numpy.int16])
 @testing.numpy_asnumpy_array_equal()
 def test_rational_low_precision_int_xfail(xp, dtype):
@@ -87,9 +85,7 @@ def test_rational_float_xfail(xp, dtype):
     return xp.gcd(x1, x2)
 
 
-@pytest.mark.xfail(
-    reason="Behavior Mismatch: Handling of negative inputs in GCD between NPU and NumPy"
-)
+@pytest.mark.xfail(reason="Behavior Mismatch: Handling of negative inputs in GCD between NPU and NumPy")
 @testing.for_dtypes([numpy.int32])
 def test_gcd_negative_behavior_xfail(xp, dtype):
     """
