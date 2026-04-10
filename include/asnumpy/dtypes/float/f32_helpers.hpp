@@ -33,6 +33,18 @@ inline void f32_exp_frac_to_unbiased_and_mant(uint32_t exp, uint32_t frac, int& 
     mant = 1.0f + static_cast<float>(frac) * (1.0f / 8388608.0f);
 }
 
+inline float mx_decode_sign_exp_mant(uint8_t sign, uint8_t exp, uint8_t mant, int bias,
+                                     float mant_step) {
+    if (exp == 0) {
+        float v = static_cast<float>(mant) * mant_step;
+        return sign ? -v : v;
+    }
+    float base = 1.0f + static_cast<float>(mant) * mant_step;
+    int e = static_cast<int>(exp) - bias;
+    float v = std::ldexp(base, e);
+    return sign ? -v : v;
+}
+
 }  // namespace dtypes
 }  // namespace asnumpy
 

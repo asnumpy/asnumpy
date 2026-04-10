@@ -202,15 +202,7 @@ private:
         uint8_t exp = (bits >> 2) & 0x7u;  // 3-bit exponent
         uint8_t mant = bits & 0x3u;         // 2-bit mantissa
         constexpr int bias = 3;
-
-        if (exp == 0) {
-            float v = static_cast<float>(mant) * (1.0f / 4.0f);  // 次正规
-            return sign ? -v : v;
-        }
-        float base = 1.0f + static_cast<float>(mant) * 0.25f;
-        int e = static_cast<int>(exp) - bias;
-        float v = std::ldexp(base, e);
-        return sign ? -v : v;
+        return mx_decode_sign_exp_mant(sign, exp, mant, bias, 0.25f);
     }
 
 public:
