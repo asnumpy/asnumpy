@@ -211,11 +211,21 @@ namespace asnumpy {
             return *this;
         }
         constexpr SubByteInt& operator/=(const SubByteInt& other) {
-            *this = *this / other;
+            const UnderlyingTy denom = other.IntValue();
+            if (denom == 0) {
+                v_ = 0;
+                return *this;
+            }
+            *this = SubByteInt(IntValue() / denom);
             return *this;
         }
         constexpr SubByteInt& operator%=(const SubByteInt& other) {
-            *this = *this % other;
+            const UnderlyingTy denom = other.IntValue();
+            if (denom == 0) {
+                v_ = 0;
+                return *this;
+            }
+            *this = SubByteInt(IntValue() % denom);
             return *this;
         }
         constexpr SubByteInt& operator&=(const SubByteInt& other) {
@@ -293,10 +303,10 @@ namespace asnumpy {
 // std::numeric_limits 特化
 namespace std {
 
-    template <>
-    struct numeric_limits<asnumpy::dtypes::int4> {
+    template <typename T, bool IsSigned, bool IsModulo, int Digits>
+    struct asnumpy_subbyte_numeric_limits_common {
         static constexpr bool is_specialized = true;
-        static constexpr bool is_signed = true;
+        static constexpr bool is_signed = IsSigned;
         static constexpr bool is_integer = true;
         static constexpr bool is_exact = true;
         static constexpr bool has_infinity = false;
@@ -307,9 +317,9 @@ namespace std {
         static constexpr float_round_style round_style = round_toward_zero;
         static constexpr bool is_iec559 = false;
         static constexpr bool is_bounded = true;
-        static constexpr bool is_modulo = false;
-        static constexpr int digits = 3;  // N - 1 for signed
-        static constexpr int digits10 = 0;  // floor(3 * log10(2)) = 0
+        static constexpr bool is_modulo = IsModulo;
+        static constexpr int digits = Digits;
+        static constexpr int digits10 = 0;
         static constexpr int max_digits10 = 0;
         static constexpr int radix = 2;
         static constexpr int min_exponent = 0;
@@ -318,6 +328,11 @@ namespace std {
         static constexpr int max_exponent10 = 0;
         static constexpr bool traps = true;
         static constexpr bool tinyness_before = false;
+    };
+
+    template <>
+    struct numeric_limits<asnumpy::dtypes::int4>
+        : asnumpy_subbyte_numeric_limits_common<asnumpy::dtypes::int4, true, false, 3> {
     
         static constexpr asnumpy::dtypes::int4 min() noexcept { 
             return asnumpy::dtypes::int4(-8); 
@@ -349,30 +364,8 @@ namespace std {
     };
     
     template <>
-    struct numeric_limits<asnumpy::dtypes::uint1> {
-        static constexpr bool is_specialized = true;
-        static constexpr bool is_signed = false;
-        static constexpr bool is_integer = true;
-        static constexpr bool is_exact = true;
-        static constexpr bool has_infinity = false;
-        static constexpr bool has_quiet_NaN = false;
-        static constexpr bool has_signaling_NaN = false;
-        static constexpr float_denorm_style has_denorm = denorm_absent;
-        static constexpr bool has_denorm_loss = false;
-        static constexpr float_round_style round_style = round_toward_zero;
-        static constexpr bool is_iec559 = false;
-        static constexpr bool is_bounded = true;
-        static constexpr bool is_modulo = true;  // unsigned is modulo
-        static constexpr int digits = 1;  // N for unsigned
-        static constexpr int digits10 = 0;  // floor(1 * log10(2)) = 0
-        static constexpr int max_digits10 = 0;
-        static constexpr int radix = 2;
-        static constexpr int min_exponent = 0;
-        static constexpr int min_exponent10 = 0;
-        static constexpr int max_exponent = 0;
-        static constexpr int max_exponent10 = 0;
-        static constexpr bool traps = true;
-        static constexpr bool tinyness_before = false;
+    struct numeric_limits<asnumpy::dtypes::uint1>
+        : asnumpy_subbyte_numeric_limits_common<asnumpy::dtypes::uint1, false, true, 1> {
     
         static constexpr asnumpy::dtypes::uint1 min() noexcept { 
             return asnumpy::dtypes::uint1(0); 
