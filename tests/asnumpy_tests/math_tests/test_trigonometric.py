@@ -33,9 +33,7 @@ def _create_array(xp, data, dtype):
 
 
 # 对于 sin/cos/tan，float16 目前在 C++ 绑定层可能存在映射问题
-@pytest.mark.xfail(
-    condition=True, reason="Bug: aclDataType mapping for float16 is missing in C++ core"
-)
+@pytest.mark.xfail(condition=True, reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_trig_float16_xfail(xp, dtype):

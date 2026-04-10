@@ -53,9 +53,7 @@ def test_absolute_unsupported_xfail(xp, dtype):
     return xp.absolute(a)
 
 
-@pytest.mark.xfail(
-    reason="Mismatch: AsNumpy returns original type for int, but Numpy returns float for fabs"
-)
+@pytest.mark.xfail(reason="Mismatch: AsNumpy returns original type for int, but Numpy returns float for fabs")
 @testing.for_dtypes([numpy.int8, numpy.int32, numpy.uint8])
 def test_fabs_dtype_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [-1, 2], dtype)
@@ -87,9 +85,7 @@ def test_square_float64(xp, dtype):
     return xp.square(a)
 
 
-@pytest.mark.xfail(
-    reason="Mismatch: AsNumpy square outputs float32 for integers, Numpy preserves dtype or promotes"
-)
+@pytest.mark.xfail(reason="Mismatch: AsNumpy square outputs float32 for integers, Numpy preserves dtype or promotes")
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_square_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
@@ -154,7 +150,7 @@ def test_nan_to_num_basic(xp, dtype):
     修正：显式传入参数以适配 C++ 绑定
     nan=0.0, posinf=max_float, neginf=min_float
     """
-    data = [float("nan"), float("inf"), float("-inf"), 1.0]
+    data = [float('nan'), float('inf'), float('-inf'), 1.0]
     a = _create_array(xp, data, dtype)
 
     # 假设 AsNumpy 的 C++ 接口需要这几个参数，而没有默认值
