@@ -14,258 +14,380 @@
  * limitations under the License.
  *****************************************************************************/
 
+#include <algorithm>
+#include <vector>
 
-#include <asnumpy/dtypes/acl_float_reg.hpp>
 #include <asnumpy/dtypes/desc.hpp>
 #include <asnumpy/dtypes/float_types.hpp>
-#include <asnumpy/dtypes/np_import.hpp>
+#include <asnumpy/dtypes/int_types.hpp>
+#include <asnumpy/dtypes/acl_float_reg.hpp>
+#include <asnumpy/dtypes/acl_int_reg.hpp>
 
 namespace asnumpy {
 namespace dtypes {
-
-// 显式特化所有 ACL 浮点类型的静态成员
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e5m2)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e4m3fn)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e8m0)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(bfloat16)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e2m3fn)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e3m2fn)
-EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e2m1fn)
-
-// TypeDescriptor 具体类型的特化实现
-// TypeDescriptor 对 float8_e5m2 的特化
-template<>
-struct TypeDescriptor<float8_e5m2> : ACLFloatManager<float8_e5m2> {
-    using T = float8_e5m2;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float8_e5m2";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e5m2";
-    static constexpr const char* kTpDoc = "Float8 E5M2 floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = '5';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 float8_e4m3fn 的特化
-template<>
-struct TypeDescriptor<float8_e4m3fn> : ACLFloatManager<float8_e4m3fn> {
-    using T = float8_e4m3fn;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float8_e4m3fn";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e4m3fn";
-    static constexpr const char* kTpDoc = "Float8 E4M3FN floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = '6';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 float8_e8m0 的特化
-template<>
-struct TypeDescriptor<float8_e8m0> : ACLFloatManager<float8_e8m0> {
-    using T = float8_e8m0;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float8_e8m0";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e8m0";
-    static constexpr const char* kTpDoc = "Float8 E8M0 floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = '7';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 bfloat16 的特化
-template<>
-struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
-    using T = bfloat16;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "bfloat16";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.bfloat16";
-    static constexpr const char* kTpDoc = "BFloat16 floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = '8';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 float6_e2m3fn 的特化
-template<>
-struct TypeDescriptor<float6_e2m3fn> : ACLFloatManager<float6_e2m3fn> {
-    using T = float6_e2m3fn;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float6_e2m3fn";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float6_e2m3fn";
-    static constexpr const char* kTpDoc = "Float6 E2M3FN floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = '9';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 float6_e3m2fn 的特化
-template<>
-struct TypeDescriptor<float6_e3m2fn> : ACLFloatManager<float6_e3m2fn> {
-    using T = float6_e3m2fn;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float6_e3m2fn";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float6_e3m2fn";
-    static constexpr const char* kTpDoc = "Float6 E3M2FN floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = 'A';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// TypeDescriptor 对 float4_e2m1fn 的特化
-template<>
-struct TypeDescriptor<float4_e2m1fn> : ACLFloatManager<float4_e2m1fn> {
-    using T = float4_e2m1fn;
-
-    static constexpr bool is_floating = true;
-    static constexpr bool is_integral = false;
-    static constexpr bool is_complex = false;
-    static constexpr const char* kTypeName = "float4_e2m1fn";
-    static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float4_e2m1fn";
-    static constexpr const char* kTpDoc = "Float4 E2M1FN floating-point values";
-
-    static constexpr char kNpyDescrKind = 'f';
-    static constexpr char kNpyDescrType = 'B';
-    static constexpr char kNpyDescrByteorder = '=';
-    static constexpr int kSize = sizeof(T);
-    static constexpr int kAlignment = alignof(T);
-};
-
-// 对外暴露统一初始化与注册入口
-void InitAndRegisterDtypes() {
-    // 1) 确保只导入一次 NumPy C API
-    ImportNumpy();
-    
-    // 2) 直接注册所有 ACL 浮点类型
-    FloatTypeRegistrar<float8_e5m2>::RegisterDtype();
-    FloatTypeRegistrar<float8_e4m3fn>::RegisterDtype();
-    FloatTypeRegistrar<float8_e8m0>::RegisterDtype();
-    FloatTypeRegistrar<bfloat16>::RegisterDtype();
-    FloatTypeRegistrar<float6_e2m3fn>::RegisterDtype();
-    FloatTypeRegistrar<float6_e3m2fn>::RegisterDtype();
-    FloatTypeRegistrar<float4_e2m1fn>::RegisterDtype();
-}
-
-// 检查所有类型是否已注册
-bool AreAllACLFloatTypesRegistered() {
-    return ACLFloatManager<float8_e5m2>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float8_e4m3fn>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float8_e8m0>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<bfloat16>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float6_e2m3fn>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float6_e3m2fn>::npy_type != NPY_NOTYPE &&
-           ACLFloatManager<float4_e2m1fn>::npy_type != NPY_NOTYPE;
-}
-
-// 获取特定类型的 dtype 类型号
-template<typename T>
-int GetACLFloatTypeNum() {
-    return ACLFloatManager<T>::npy_type;
-}
-
-// 获取特定类型的 dtype 描述符
-template<typename T>
-PyArray_Descr* GetACLFloatDescr() {
-    if (ACLFloatManager<T>::npy_descr == nullptr) {
-        return nullptr;
-    }
-    Py_INCREF(ACLFloatManager<T>::npy_descr);
-    return ACLFloatManager<T>::npy_descr;
-}
-
-// 创建特定类型的数组
-template<typename T>
-PyObject* CreateACLFloatArray(const std::vector<npy_intp>& shape, const std::vector<float>& data = {}) {
-    int type_num = GetACLFloatTypeNum<T>();
-    if (type_num == NPY_NOTYPE) {
-        PyErr_SetString(PyExc_RuntimeError, "dtype not registered");
-        return nullptr;
-    }
-    
-    // 创建数组
-    PyObject* array = PyArray_EMPTY(static_cast<int>(shape.size()), 
-                                  const_cast<npy_intp*>(shape.data()), 
-                                  type_num, 0);
-    if (array == nullptr) {
-        return nullptr;
-    }
-    
-    // 填充数据
-    if (!data.empty()) {
-        T* array_data = static_cast<T*>(PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)));
-        for (size_t i = 0; i < std::min(data.size(), static_cast<size_t>(PyArray_SIZE(reinterpret_cast<PyArrayObject*>(array)))); ++i) {
-            array_data[i] = T(data[i]);
-        }
-    }
-    
-    return array;
-}
-
-// 从数组获取 float 数据
-template<typename T>
-std::vector<float> GetACLFloatArrayData(PyObject* array) {
-    if (!PyArray_Check(array)) {
-        return {};
-    }
-    
-    PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(array);
-    if (PyArray_TYPE(arr) != GetACLFloatTypeNum<T>()) {
-        return {};
-    }
-    
-    npy_intp size = PyArray_SIZE(arr);
-    T* data = static_cast<T*>(PyArray_DATA(arr));
-    
-    std::vector<float> result;
-    result.reserve(size);
-    
-    for (npy_intp i = 0; i < size; ++i) {
-        result.push_back(static_cast<float>(data[i]));
-    }
-    
-    return result;
-}
-
-// 获取类型对象指针（用于绑定）
-template<typename T>
+ 
+ // 显式特化所有 ACL 浮点类型的静态成员
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e5m2)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e4m3fn)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e8m0)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(bfloat16)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e2m3fn)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e3m2fn)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e2m1fn)
+ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e1m2fn)
+ 
+ // 显式特化所有 ACL 整数类型的静态成员
+ EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(int4)
+ EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(uint1)
+ 
+ // TypeDescriptor 具体类型的特化实现
+ // TypeDescriptor 对 float8_e5m2 的特化
+ template<>
+ struct TypeDescriptor<float8_e5m2> : ACLFloatManager<float8_e5m2> {
+     using T = float8_e5m2;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float8_e5m2";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e5m2";
+     static constexpr const char* kTpDoc = "Float8 E5M2 floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = '5';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float8_e4m3fn 的特化
+ template<>
+ struct TypeDescriptor<float8_e4m3fn> : ACLFloatManager<float8_e4m3fn> {
+     using T = float8_e4m3fn;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float8_e4m3fn";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e4m3fn";
+     static constexpr const char* kTpDoc = "Float8 E4M3FN floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = '6';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float8_e8m0 的特化
+ template<>
+ struct TypeDescriptor<float8_e8m0> : ACLFloatManager<float8_e8m0> {
+     using T = float8_e8m0;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float8_e8m0";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float8_e8m0";
+     static constexpr const char* kTpDoc = "Float8 E8M0 floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = '7';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 bfloat16 的特化
+ template<>
+ struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
+     using T = bfloat16;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "bfloat16";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.bfloat16";
+     static constexpr const char* kTpDoc = "BFloat16 floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = '8';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float6_e2m3fn 的特化
+ template<>
+ struct TypeDescriptor<float6_e2m3fn> : ACLFloatManager<float6_e2m3fn> {
+     using T = float6_e2m3fn;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float6_e2m3fn";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float6_e2m3fn";
+     static constexpr const char* kTpDoc = "Float6 E2M3FN floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = '9';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float6_e3m2fn 的特化
+ template<>
+ struct TypeDescriptor<float6_e3m2fn> : ACLFloatManager<float6_e3m2fn> {
+     using T = float6_e3m2fn;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float6_e3m2fn";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float6_e3m2fn";
+     static constexpr const char* kTpDoc = "Float6 E3M2FN floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = 'A';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float4_e2m1fn 的特化
+ template<>
+ struct TypeDescriptor<float4_e2m1fn> : ACLFloatManager<float4_e2m1fn> {
+     using T = float4_e2m1fn;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float4_e2m1fn";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float4_e2m1fn";
+     static constexpr const char* kTpDoc = "Float4 E2M1FN floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = 'B';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 float4_e1m2fn 的特化
+ template<>
+ struct TypeDescriptor<float4_e1m2fn> : ACLFloatManager<float4_e1m2fn> {
+     using T = float4_e1m2fn;
+ 
+     static constexpr bool is_floating = true;
+     static constexpr bool is_integral = false;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "float4_e1m2fn";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.float4_e1m2fn";
+     static constexpr const char* kTpDoc = "Float4 E1M2FN floating-point values";
+ 
+     static constexpr char kNpyDescrKind = 'f';
+     static constexpr char kNpyDescrType = 'C';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 int4 的特化
+ template<>
+ struct TypeDescriptor<int4> : ACLIntManager<int4> {
+     using T = int4;
+ 
+     static constexpr bool is_floating = false;
+     static constexpr bool is_integral = true;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "int4";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.int4";
+     static constexpr const char* kTpDoc = "4-bit signed integer values";
+ 
+     static constexpr char kNpyDescrKind = 'i';
+     static constexpr char kNpyDescrType = 'D';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // TypeDescriptor 对 uint1 的特化
+ template<>
+ struct TypeDescriptor<uint1> : ACLIntManager<uint1> {
+     using T = uint1;
+ 
+     static constexpr bool is_floating = false;
+     static constexpr bool is_integral = true;
+     static constexpr bool is_complex = false;
+     static constexpr const char* kTypeName = "uint1";
+     static constexpr const char* kQualifiedTypeName = "asnumpy.dtypes.uint1";
+     static constexpr const char* kTpDoc = "1-bit unsigned integer values";
+ 
+     static constexpr char kNpyDescrKind = 'u';
+     static constexpr char kNpyDescrType = 'E';
+     static constexpr char kNpyDescrByteorder = '=';
+     static constexpr int kSize = sizeof(T);
+     static constexpr int kAlignment = alignof(T);
+ };
+ 
+ // 对外暴露统一初始化与注册入口
+ void InitAndRegisterDtypes() {
+     // 1) 确保只导入一次 NumPy C API
+     ImportNumpy();
+     
+     // 2) 直接注册所有 ACL 浮点类型
+     FloatTypeRegistrar<float8_e5m2>::RegisterDtype();
+     FloatTypeRegistrar<float8_e4m3fn>::RegisterDtype();
+     FloatTypeRegistrar<float8_e8m0>::RegisterDtype();
+     FloatTypeRegistrar<bfloat16>::RegisterDtype();
+     FloatTypeRegistrar<float6_e2m3fn>::RegisterDtype();
+     FloatTypeRegistrar<float6_e3m2fn>::RegisterDtype();
+     FloatTypeRegistrar<float4_e2m1fn>::RegisterDtype();
+     FloatTypeRegistrar<float4_e1m2fn>::RegisterDtype();
+     
+     // 3) 直接注册所有 ACL 整数类型
+     IntTypeRegistrar<int4>::RegisterDtype();
+     IntTypeRegistrar<uint1>::RegisterDtype();
+ }
+ 
+ // 检查所有类型是否已注册
+ bool AreAllACLFloatTypesRegistered() {
+     return ACLFloatManager<float8_e5m2>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float8_e4m3fn>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float8_e8m0>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<bfloat16>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float6_e2m3fn>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float6_e3m2fn>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float4_e2m1fn>::npy_type != NPY_NOTYPE &&
+            ACLFloatManager<float4_e1m2fn>::npy_type != NPY_NOTYPE;
+ }
+ 
+ // 检查所有ACL整数类型是否已注册
+ bool AreAllACLIntTypesRegistered() {
+     return ACLIntManager<int4>::npy_type != NPY_NOTYPE &&
+            ACLIntManager<uint1>::npy_type != NPY_NOTYPE;
+ }
+ 
+ PyArray_Descr* RegisteredArrayDescrForAclType(aclDataType acl_type) {
+     switch (acl_type) {
+         case ACL_BF16:
+             return ACLFloatManager<bfloat16>::npy_descr;
+         case ACL_FLOAT8_E5M2:
+             return ACLFloatManager<float8_e5m2>::npy_descr;
+         case ACL_FLOAT8_E4M3FN:
+             return ACLFloatManager<float8_e4m3fn>::npy_descr;
+         case ACL_FLOAT8_E8M0:
+             return ACLFloatManager<float8_e8m0>::npy_descr;
+         case ACL_FLOAT6_E3M2:
+             return ACLFloatManager<float6_e3m2fn>::npy_descr;
+         case ACL_FLOAT6_E2M3:
+             return ACLFloatManager<float6_e2m3fn>::npy_descr;
+         case ACL_FLOAT4_E2M1:
+             return ACLFloatManager<float4_e2m1fn>::npy_descr;
+         case ACL_FLOAT4_E1M2:
+             return ACLFloatManager<float4_e1m2fn>::npy_descr;
+         case ACL_INT4:
+             return ACLIntManager<int4>::npy_descr;
+         case ACL_UINT1:
+             return ACLIntManager<uint1>::npy_descr;
+         default:
+             return nullptr;
+     }
+ }
+ 
+ // 获取特定类型的 dtype 类型号
+ template<typename T>
+ int GetACLFloatTypeNum() {
+     return ACLFloatManager<T>::npy_type;
+ }
+ 
+ // 获取特定类型的 dtype 描述符
+ template<typename T>
+ PyArray_Descr* GetACLFloatDescr() {
+     if (ACLFloatManager<T>::npy_descr == nullptr) {
+         return nullptr;
+     }
+     Py_INCREF(ACLFloatManager<T>::npy_descr);
+     return ACLFloatManager<T>::npy_descr;
+ }
+ 
+ // 创建特定类型的数组
+ template<typename T>
+ PyObject* CreateACLFloatArray(const std::vector<npy_intp>& shape, const std::vector<float>& data = {}) {
+     int type_num = GetACLFloatTypeNum<T>();
+     if (type_num == NPY_NOTYPE) {
+         PyErr_SetString(PyExc_RuntimeError, "dtype not registered");
+         return nullptr;
+     }
+     
+     // 创建数组
+     PyObject* array = PyArray_EMPTY(static_cast<int>(shape.size()), 
+                                   const_cast<npy_intp*>(shape.data()), 
+                                   type_num, 0);
+     if (array == nullptr) {
+         return nullptr;
+     }
+     
+     // 填充数据
+     if (!data.empty()) {
+         T* array_data = static_cast<T*>(PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)));
+         for (size_t i = 0; i < std::min(data.size(), static_cast<size_t>(PyArray_SIZE(reinterpret_cast<PyArrayObject*>(array)))); ++i) {
+             array_data[i] = T(data[i]);
+         }
+     }
+     
+     return array;
+ }
+ 
+ // 从数组获取 float 数据
+ template<typename T>
+ std::vector<float> GetACLFloatArrayData(PyObject* array) {
+     if (!PyArray_Check(array)) {
+         return {};
+     }
+     
+     PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(array);
+     if (PyArray_TYPE(arr) != GetACLFloatTypeNum<T>()) {
+         return {};
+     }
+     
+     npy_intp size = PyArray_SIZE(arr);
+     T* data = static_cast<T*>(PyArray_DATA(arr));
+     
+     std::vector<float> result;
+     result.reserve(size);
+     
+     for (npy_intp i = 0; i < size; ++i) {
+         result.push_back(static_cast<float>(data[i]));
+     }
+     
+     return result;
+ }
+ 
+// 获取类型对象指针（与 acl_float_reg.hpp 声明一致）
+template <typename T>
 PyObject* GetACLFloatTypeObject() {
     return ACLFloatManager<T>::type_ptr;
 }
+
+template <typename T>
+PyObject* GetACLIntTypeObject() {
+    return ACLIntManager<T>::type_ptr;
+}
+
+// 显式实例化，供其它翻译单元链接 GetACL*TypeObject
+template PyObject* GetACLFloatTypeObject<float8_e5m2>();
+template PyObject* GetACLFloatTypeObject<float8_e4m3fn>();
+template PyObject* GetACLFloatTypeObject<float8_e8m0>();
+template PyObject* GetACLFloatTypeObject<bfloat16>();
+template PyObject* GetACLFloatTypeObject<float6_e2m3fn>();
+template PyObject* GetACLFloatTypeObject<float6_e3m2fn>();
+template PyObject* GetACLFloatTypeObject<float4_e2m1fn>();
+template PyObject* GetACLFloatTypeObject<float4_e1m2fn>();
+
+template PyObject* GetACLIntTypeObject<int4>();
+template PyObject* GetACLIntTypeObject<uint1>();
 
 }  // namespace dtypes
 }  // namespace asnumpy
