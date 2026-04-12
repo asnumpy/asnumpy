@@ -109,7 +109,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["asnumpy"]
 
 # MyPy configuration
 [tool.mypy]
