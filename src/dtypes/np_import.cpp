@@ -19,9 +19,13 @@
 #include <asnumpy/dtypes/np_import.hpp>
 
 namespace asnumpy{
-    namespace dtypes{
-        void ImportNumpy(){
-            if (!PyArray_API) { import_array1(); }
-        }
+namespace dtypes{
+
+void ImportNumpy() {
+    if (!PyArray_API) {
+        import_array1();
     }
 }
+
+}  // namespace dtypes
+}  // namespace asnumpy
