@@ -151,12 +151,9 @@ if __name__ == "__main__":
             traceback.print_exc()
 
     # Output summary results
-    logger.info("\n" + "=" * 85)
-    logger.info("Test results summary (based on mid-segment fastest speed)")
-    logger.info("-" * 85)
-    logger.info(f"{'Shape':<15} | {'Data Size':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'Speedup':<10}")
-    logger.info(f"{'':15} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
-    logger.info("-" * 85)
+    print(f"{'Shape':<15} | {'Data Size':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'Speedup':<10}")
+    print(f"{'':15} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
+    print("-" * 85)
 
     for result in results:
         shape_str = str(result['shape'])
@@ -166,9 +163,9 @@ if __name__ == "__main__":
         np_time = f"{result['numpy_metric'] * 1000:.4f}"
         speedup_str = f"{result['speedup']:.2f}x"
 
-        logger.info(f"{shape_str:<15} | {data_size_str:<12} | {asnp_time:<12} | {np_time:<12} | {speedup_str}")
+        print(f"{shape_str:<15} | {data_size_str:<12} | {asnp_time:<12} | {np_time:<12} | {speedup_str}")
 
-    logger.info("-" * 85)
+    print("-" * 85)
 
     # Statistics
     if results:
