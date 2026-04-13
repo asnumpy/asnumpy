@@ -19,6 +19,7 @@ import time
 
 import asnumpy as ap
 import numpy as np
+from loguru import logger
 
 from utils import calculate_stable_metric, create_arrays
 
@@ -60,8 +61,8 @@ def run_test_case(
     iterations: int = 400,
 ) -> dict[str, float]:
     """Run a single test case"""
-    print(f"{'=' * 50}")
-    print(f"Test shape: {shape}")
+    logger.info(f"{'=' * 50}")
+    logger.info(f"Test shape: {shape}")
 
     m1_asnp, m2_asnp, m1_np, m2_np = create_arrays(shape, dtype)
 
@@ -98,9 +99,9 @@ def run_test_case(
         rel_diff = max_diff / max_val if max_val > 0 else max_diff
 
         if rel_diff < 1e-4:
-            print(f"Verification passed: results are consistent (relative diff: {rel_diff:.2e})")
+            logger.info(f"Verification passed: results are consistent (relative diff: {rel_diff:.2e})")
         else:
-            print(f"Results differ (max relative diff: {rel_diff:.2e})")
+            logger.warning(f"Results differ (max relative diff: {rel_diff:.2e})")
 
         return {
             'shape': shape,
@@ -117,11 +118,11 @@ def run_test_case(
 
 
 if __name__ == "__main__":
-    print("=" * 70)
-    print("README example code performance benchmark")
-    print("Test operation: add (element-wise addition)")
-    print("Statistics strategy: after warmup, take mid-segment fastest speed (exclude slowest 10%)")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("README example code performance benchmark")
+    logger.info("Test operation: add (element-wise addition)")
+    logger.info("Statistics strategy: after warmup, take mid-segment fastest speed (exclude slowest 10%)")
+    logger.info("=" * 70)
 
     # Test configuration
     shapes = [
@@ -136,12 +137,12 @@ if __name__ == "__main__":
     warmup_iterations = 40
     test_iterations = 400
 
-    print("\nConfiguration:")
-    print(f"  Data type: {dtype}")
-    print(f"  Warmup iterations: {warmup_iterations}")
-    print(f"  Test iterations: {test_iterations}")
-    print("  Statistics method: sort, exclude slowest 10%, take minimum")
-    print(f"\n{'=' * 70}\n")
+    logger.info("\nConfiguration:")
+    logger.info(f"  Data type: {dtype}")
+    logger.info(f"  Warmup iterations: {warmup_iterations}")
+    logger.info(f"  Test iterations: {test_iterations}")
+    logger.info("  Statistics method: sort, exclude slowest 10%, take minimum")
+    logger.info(f"\n{'=' * 70}\n")
 
     results = []
     for shape in shapes:
@@ -149,14 +150,11 @@ if __name__ == "__main__":
             result = run_test_case(shape, dtype, warmup_iterations, test_iterations)
             results.append(result)
         except Exception as e:
-            print(f"Test failed: {e}")
+            logger.error(f"Test failed: {e}")
             import traceback
             traceback.print_exc()
 
     # Output summary results
-    print("\n" + "=" * 85)
-    print("Test results summary (based on mid-segment fastest speed)")
-    print("-" * 85)
     print(f"{'Shape':<15} | {'Data Size':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'Speedup':<10}")
     print(f"{'':15} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
     print("-" * 85)
@@ -178,14 +176,14 @@ if __name__ == "__main__":
         avg_speedup = sum(r['speedup'] for r in results) / len(results)
         max_speedup = max(r['speedup'] for r in results)
 
-        print(f"\n{'=' * 70}")
-        print("Performance statistics:")
-        print(f"  Average speedup: {avg_speedup:.2f}x")
-        print(f"  Maximum speedup: {max_speedup:.2f}x")
-        print(f"{'=' * 70}")
+        logger.info(f"\n{'=' * 70}")
+        logger.info("Performance statistics:")
+        logger.info(f"  Average speedup: {avg_speedup:.2f}x")
+        logger.info(f"  Maximum speedup: {max_speedup:.2f}x")
+        logger.info(f"{'=' * 70}")
 
-    print("\nNotes:")
-    print("  • Using float32 data type for NPU compatibility")
-    print("  • Iterations adjusted to ensure memory safety")
-    print("  • Uses 'mid-segment fastest speed' algorithm to showcase NPU's true compute capability")
-    print("=" * 70)
+    logger.info("\nNotes:")
+    logger.info("  • Using float32 data type for NPU compatibility")
+    logger.info("  • Iterations adjusted to ensure memory safety")
+    logger.info("  • Uses 'mid-segment fastest speed' algorithm to showcase NPU's true compute capability")
+    logger.info("=" * 70)
