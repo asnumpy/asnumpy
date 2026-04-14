@@ -68,12 +68,14 @@ NPUArray Einsum(const char* subscripts, const std::vector<NPUArray>& operands) {
 	uint64_t workspaceSize = 0;
 	aclOpExecutor* executor;
 	auto error = aclnnEinsumGetWorkspaceSize(input, subscripts, result.tensorPtr, &workspaceSize, &executor);
+	auto tensorListGuard = [&input]() { if(input) aclDestroyTensorList(input); };
 	CheckGetWorkspaceSizeAclnnStatus(error);
 	AclWorkspace workspace(workspaceSize);
 	error = aclnnEinsum(workspace.get(), workspaceSize, executor, nullptr);
 	CheckAclnnStatus(error, "aclnnEinsum error");
 	error = aclrtSynchronizeDevice();
 	CheckSynchronizeDeviceAclnnStatus(error);
+	tensorListGuard();
 	return result;
 }
 
