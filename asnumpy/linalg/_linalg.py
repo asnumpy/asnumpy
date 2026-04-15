@@ -21,6 +21,7 @@ from ..lib.asnumpy_core.linalg import (
     inv as _inv,
     matrix_power as _matrix_power,
     norm as _norm,
+    qr as _qr,
     slogdet as _slogdet,
 )
 from ..utils import ndarray
@@ -32,7 +33,11 @@ def matrix_power(a: ArrayLike, n: int) -> ndarray:
 
 
 def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
-    return ndarray.from_numpy(np.linalg.qr(a, mode))
+    result = _qr(a, mode)
+    if isinstance(result, tuple):
+        q, r = result
+        return (ndarray(q), ndarray(r))
+    return ndarray(result)
 
 
 def norm(
@@ -49,7 +54,13 @@ def det(a: ArrayLike) -> ndarray:
 
 
 def slogdet(a: ArrayLike) -> tuple:
-    return _slogdet(a)
+    # CANN's double-precision slogdet may produce different results from NumPy
+    # for inputs containing nan/inf. Fall back to NumPy for such cases.
+    host = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
+    if np.issubdtype(host.dtype, np.floating) and (np.any(np.isnan(host)) or np.any(np.isinf(host))):
+        return np.linalg.slogdet(host)
+    sign, logdet = _slogdet(a)
+    return (ndarray(sign), ndarray(logdet))
 
 
 def inv(a: ArrayLike) -> ndarray:

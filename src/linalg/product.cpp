@@ -34,10 +34,41 @@
 using namespace asnumpy;
 
 NPUArray Matmul(const NPUArray& x1, const NPUArray& x2) {
-	// 考虑到[1x2][1x2]点积形式不能直接用广播 赫赫
-	auto broadcast = GetBroadcastShape(x1, x2);
-	// throw std::runtime_error(fmt::format("{}",broadcast));
-	auto result = NPUArray(broadcast, ACL_FLOAT);
+	size_t x1_ndim = x1.shape.size();
+	size_t x2_ndim = x2.shape.size();
+
+	// 1-D × 1-D: inner product → scalar
+	if (x1_ndim == 1 && x2_ndim == 1) {
+		NPUArray out({}, x1.aclDtype);
+		uint64_t ws = 0;
+		aclOpExecutor* exec = nullptr;
+		auto err = aclnnDotGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &ws, &exec);
+		CheckGetWorkspaceSizeAclnnStatus(err);
+		AclWorkspace workspace(ws);
+		err = aclnnDot(workspace.get(), ws, exec, nullptr);
+		CheckAclnnStatus(err, "aclnnDot error (matmul 1Dx1D)");
+		err = aclrtSynchronizeDevice();
+		CheckSynchronizeDeviceAclnnStatus(err);
+		return out;
+	}
+
+	// 2-D+ matrix multiplication via aclnnMatmul
+	size_t x1_batch = x1_ndim - 2;
+	size_t x2_batch = x2_ndim - 2;
+	size_t out_batch = std::max(x1_batch, x2_batch);
+
+	std::vector<int64_t> out_shape;
+	for (size_t i = 0; i < out_batch; i++) {
+		ssize_t x1_pos = static_cast<ssize_t>(i) - static_cast<ssize_t>(out_batch - x1_batch);
+		ssize_t x2_pos = static_cast<ssize_t>(i) - static_cast<ssize_t>(out_batch - x2_batch);
+		int64_t d1 = (x1_pos >= 0 && x1_pos < static_cast<ssize_t>(x1_batch)) ? x1.shape[x1_pos] : 1;
+		int64_t d2 = (x2_pos >= 0 && x2_pos < static_cast<ssize_t>(x2_batch)) ? x2.shape[x2_pos] : 1;
+		out_shape.push_back(std::max(d1, d2));
+	}
+	out_shape.push_back(x1.shape[x1_ndim - 2]); // M
+	out_shape.push_back(x2.shape[x2_ndim - 1]); // N
+
+	auto result = NPUArray(out_shape, x1.aclDtype);
 	int8_t use_fp16 = 2;
 	uint64_t workspaceSize = 0;
 	aclOpExecutor* executor;

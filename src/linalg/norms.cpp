@@ -23,15 +23,36 @@
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_norm.h>
-#include <aclnnop/aclnn_logdet.h>
 #include <aclnnop/aclnn_exp.h>
 #include <aclnnop/aclnn_slogdet.h>
+#include <aclnnop/aclnn_mul.h>
+#include <aclnnop/aclnn_cast.h>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <stdexcept>
 
 using namespace asnumpy;
+
+namespace {
+
+// Helper: cast NPUArray to target dtype
+NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) {
+    auto result = NPUArray(input.shape, targetDtype);
+    uint64_t wsSize = 0;
+    aclOpExecutor* exec = nullptr;
+    auto err = aclnnCastGetWorkspaceSize(input.tensorPtr, targetDtype, result.tensorPtr,
+        &wsSize, &exec);
+    CheckGetWorkspaceSizeAclnnStatus(err);
+    AclWorkspace ws(wsSize);
+    err = aclnnCast(ws.get(), wsSize, exec, nullptr);
+    CheckAclnnStatus(err, "aclnnCast error");
+    err = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(err);
+    return result;
+}
+
+} // anonymous namespace
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
     auto shape = a.shape;
@@ -45,7 +66,7 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
             shape.erase(shape.begin() + axis[i]);
         }
     }
-    auto ord_scalar = aclCreateScalar(&ord, ACL_FLOAT);
+    auto ord_scalar = aclCreateScalar(&ord, ACL_DOUBLE);
     aclIntArray* axis_array = aclCreateIntArray(axis.data(), axis.size());
     auto result = NPUArray(shape, ACL_FLOAT);
     uint64_t workspaceSize = 0;
@@ -64,44 +85,73 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
 NPUArray Linalg_Det(const NPUArray& a) {
     std::vector<int64_t> shape = a.shape;
     shape.erase(shape.end() - 2, shape.end());
-    auto temp = NPUArray(shape, ACL_DOUBLE);
-    uint64_t workspaceSize1 = 0;
-    aclOpExecutor* executor1;
-    auto error1 = aclnnLogdetGetWorkspaceSize(a.tensorPtr, temp.tensorPtr, &workspaceSize1, &executor1);
-    CheckGetWorkspaceSizeAclnnStatus(error1);
-    AclWorkspace workspace1(workspaceSize1);
-    error1 = aclnnLogdet(workspace1.get(), workspaceSize1, executor1, nullptr);
-    CheckAclnnStatus(error1, "aclnnLogdet error");
-    error1 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error1);
-    
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_DOUBLE);
-    return ExecuteUnaryOp(
-        temp,
-        dtype, 
-        [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
-            return aclnnExpGetWorkspaceSize(in, out, workspaceSize, executor);
-        },
-        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
-            return aclnnExp(workspace, workspaceSize, executor, nullptr);
-        },
-        "Linalg_Det"
-    );
-}
 
-std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a) {
-    auto shape = a.shape;
-    shape.erase(shape.end() - 2, shape.end());
-    auto signout = NPUArray(shape, ACL_DOUBLE);
-    auto logout = NPUArray(shape, ACL_DOUBLE);
+    // Cast input to double for numerical stability in LU decomposition
+    NPUArray aDouble = (a.aclDtype != ACL_DOUBLE) ? CastToDtype(a, ACL_DOUBLE) : a;
+
+    auto sign = NPUArray(shape, ACL_DOUBLE);
+    auto logdet = NPUArray(shape, ACL_DOUBLE);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnSlogdetGetWorkspaceSize(a.tensorPtr, signout.tensorPtr, logout.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, sign.tensorPtr, logdet.tensorPtr,
+        &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
     AclWorkspace workspace(workspaceSize);
     error = aclnnSlogdet(workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, "aclnnSlogdet error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
+
+    auto absDet = ExecuteUnaryOp(
+        logdet,
+        NPUArray::GetPyDtype(ACL_DOUBLE),
+        [](aclTensor* in, aclTensor* out, uint64_t* ws, aclOpExecutor** exec) {
+            return aclnnExpGetWorkspaceSize(in, out, ws, exec);
+        },
+        [](void* ws, uint64_t wsSize, aclOpExecutor* exec, void* stream) {
+            return aclnnExp(ws, wsSize, exec, nullptr);
+        },
+        "Linalg_Det_Exp"
+    );
+
+    auto detDouble = ExecuteBinaryOp(
+        sign, absDet, NPUArray::GetPyDtype(ACL_DOUBLE),
+        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* ws, aclOpExecutor** exec) {
+            return aclnnMulGetWorkspaceSize(in1, in2, out, ws, exec);
+        },
+        [](void* ws, uint64_t wsSize, aclOpExecutor* exec, void* stream) {
+            return aclnnMul(ws, wsSize, exec, nullptr);
+        },
+        "Linalg_Det_Mul"
+    );
+
+    // Cast result back to input dtype
+    return (a.aclDtype != ACL_DOUBLE) ? CastToDtype(detDouble, a.aclDtype) : detDouble;
+}
+
+std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a) {
+    auto shape = a.shape;
+    shape.erase(shape.end() - 2, shape.end());
+
+    // Cast input to double for numerical stability in LU decomposition
+    NPUArray aDouble = (a.aclDtype != ACL_DOUBLE) ? CastToDtype(a, ACL_DOUBLE) : a;
+
+    auto signout = NPUArray(shape, ACL_DOUBLE);
+    auto logout = NPUArray(shape, ACL_DOUBLE);
+    uint64_t workspaceSize = 0;
+    aclOpExecutor* executor;
+    auto error = aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, signout.tensorPtr, logout.tensorPtr,
+        &workspaceSize, &executor);
+    CheckGetWorkspaceSizeAclnnStatus(error);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnSlogdet(workspace.get(), workspaceSize, executor, nullptr);
+    CheckAclnnStatus(error, "aclnnSlogdet error");
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+
+    // Cast results back to input dtype
+    if (a.aclDtype != ACL_DOUBLE) {
+        return {CastToDtype(signout, a.aclDtype), CastToDtype(logout, a.aclDtype)};
+    }
     return {signout, logout};
 }
