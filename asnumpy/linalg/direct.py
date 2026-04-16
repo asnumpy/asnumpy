@@ -14,10 +14,10 @@
 # limitations under the License.
 # *****************************************************************************
 
+import numpy as np
+
 from ..lib.asnumpy_core import (
     dot as _dot,
-    inner as _inner,
-    outer as _outer,
     vdot as _vdot,
     matmul as _matmul,
     einsum as _einsum,
@@ -31,11 +31,15 @@ def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
 
 
 def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
-    return ndarray(_inner(a, b))
+    na = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
+    nb = b.to_numpy() if hasattr(b, 'to_numpy') else np.asarray(b)
+    return ndarray.from_numpy(np.asarray(np.inner(na, nb)))
 
 
 def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
-    return ndarray(_outer(a, b))
+    na = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
+    nb = b.to_numpy() if hasattr(b, 'to_numpy') else np.asarray(b)
+    return ndarray.from_numpy(np.asarray(np.outer(na, nb)))
 
 
 def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:

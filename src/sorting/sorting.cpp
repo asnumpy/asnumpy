@@ -17,6 +17,7 @@
 
 #include <asnumpy/sorting/sorting.hpp>
 #include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
@@ -35,15 +36,11 @@ NPUArray Sort(const NPUArray& a, int axis, bool stable) {
     auto indices = NPUArray(shape, ACL_INT64);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnSortGetWorkspaceSize(a.tensorPtr, stable, axis, false, 
+    auto error = aclnnSortGetWorkspaceSize(a.tensorPtr, stable, axis, false,
         result.tensorPtr, indices.tensorPtr, &workspaceSize, &executor);
     CheckGetWorkspaceSizeAclnnStatus(error);
-    void* workspaceAddr = nullptr;
-    if(workspaceSize != 0ULL) {
-        error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
-    }
-    error = aclnnSort(workspaceAddr, workspaceSize, executor, nullptr);
+    AclWorkspace workspace(workspaceSize);
+    error = aclnnSort(workspace.get(), workspace.size(), executor, nullptr);
     CheckAclnnStatus(error, "aclnnSort error");
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);

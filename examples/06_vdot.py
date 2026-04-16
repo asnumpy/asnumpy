@@ -21,33 +21,17 @@ import asnumpy as ap
 import numpy as np
 from loguru import logger
 
-from utils import calculate_stable_metric
+from utils import calculate_stable_metric, create_arrays
 
 
-def create_arrays(shape: tuple[int, ...], dtype: np.dtype):
-    """Create asnumpy and numpy test arrays"""
-    # NumPy baseline data
-    if dtype == np.bool_:
-        # For bool type, generate random boolean values (~50% True, ~50% False)
-        m1_np = np.random.rand(*shape) > 0.5
-    else:
-        # For other types, generate random data
-        m1_np = np.random.rand(*shape).astype(dtype)
-
-    # AsNumpy test data - converted from NumPy
-    m1_asnp = ap.ndarray.from_numpy(m1_np)
-
-    return m1_asnp, m1_np
-
-
-def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) -> list:
+def bench_vdot(vdot_func, m1, m2, warmup: int, iterations: int, is_npu: bool = False) -> list:
     """
-    Benchmark function for all reduction operation.
+    Benchmark function for vdot operation.
     Memory-optimized: explicitly delete intermediate variables to avoid OOM.
     """
     # 1. Warmup phase
     for _ in range(warmup):
-        res = all_func(m1)
+        res = vdot_func(m1, m2)
         del res  # Release immediately
 
     # 2. Benchmark phase
@@ -56,11 +40,11 @@ def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) 
         start = time.perf_counter()
 
         # Execute computation
-        res = all_func(m1)
+        res = vdot_func(m1, m2)
         end = time.perf_counter()
         times.append(end - start)
 
-        # Explicitly delete result objects (all returns scalar, but keep consistent)
+        # Key optimization: explicitly delete result objects to prevent memory accumulation
         del res
 
     # Force garbage collection
@@ -70,32 +54,28 @@ def bench_all(all_func, m1, warmup: int, iterations: int, is_npu: bool = False) 
     return times
 
 
-def run_test_case(
-    shape: tuple[int, ...],
-    dtype: np.dtype,
-    warmup: int = 40,
-    iterations: int = 400,
-) -> dict[str, float]:
+def run_test_case(shape: tuple[int, ...], dtype: np.dtype = np.float32,
+                  warmup: int = 40, iterations: int = 400) -> dict[str, float]:
     """Run a single test case"""
     logger.info(f"{'=' * 50}")
-    logger.info(f"Test shape: {shape}, dtype: {dtype}")
+    logger.info(f"Test shape: {shape}")
 
-    m1_asnp, m1_np = create_arrays(shape, dtype)
+    m1_asnp, m2_asnp, m1_np, m2_np = create_arrays(shape, dtype)
 
     try:
         # --- Benchmark AsNumpy ---
-        asnp_times = bench_all(
-            ap.all,
-            m1_asnp,
+        asnp_times = bench_vdot(
+            ap.vdot,
+            m1_asnp, m2_asnp,
             warmup=warmup,
             iterations=iterations,
             is_npu=True
         )
 
         # --- Benchmark NumPy ---
-        np_times = bench_all(
-            np.all,
-            m1_np,
+        np_times = bench_vdot(
+            np.vdot,
+            m1_np, m2_np,
             warmup=warmup,
             iterations=iterations,
             is_npu=False
@@ -107,63 +87,61 @@ def run_test_case(
         speedup = metric_np / metric_asnp if metric_asnp > 0 else 0
 
         # Verify result consistency
-        result_asnp = ap.all(m1_asnp)
-        # all() returns a scalar, may need conversion
-        if hasattr(result_asnp, "to_numpy"):
-            result_asnp = result_asnp.to_numpy()
-        result_np = np.all(m1_np)
+        result_asnp = ap.vdot(m1_asnp, m2_asnp).to_numpy()
+        result_np = np.vdot(m1_np, m2_np)
 
-        # For bool results, compare directly
-        if result_asnp == result_np:
-            logger.info(f"Verification passed: results are consistent (result: {result_np})")
+        max_diff = np.max(np.abs(result_asnp - result_np))
+        max_val = np.max(np.abs(result_np))
+        rel_diff = max_diff / max_val if max_val > 0 else max_diff
+
+        if rel_diff < 1e-4:
+            logger.info(f"Verification passed: results are consistent (relative diff: {rel_diff:.2e})")
         else:
-            logger.warning(f"Results differ (NumPy: {result_np}, AsNumpy: {result_asnp})")
+            logger.warning(f"Results differ (max relative diff: {rel_diff:.2e})")
 
         return {
             'shape': shape,
-            'dtype': str(dtype),
             'asnumpy_metric': metric_asnp,
             'numpy_metric': metric_np,
             'speedup': speedup,
+            'relative_diff': rel_diff
         }
 
     finally:
         # Explicitly clean up large objects for current shape
-        del m1_asnp, m1_np
+        del m1_asnp, m2_asnp, m1_np, m2_np
         gc.collect()
 
 
 if __name__ == "__main__":
     logger.info("=" * 70)
     logger.info("README example code performance benchmark")
-    logger.info("Test operation: all (reduction - check if all elements are True)")
+    logger.info("Test operation: vdot (vector dot product)")
     logger.info("Statistics strategy: after warmup, take mid-segment fastest speed (exclude slowest 10%)")
     logger.info("=" * 70)
 
-    # Test configuration - multiple shapes and data types
-    test_configs: list[tuple[tuple[int, ...], np.dtype]] = [
-        # bool type tests
-        ((1000, 1000), np.bool_),
-        ((2000, 2000), np.bool_),
-        ((3000, 3000), np.bool_),
-        # float32 type tests
-        ((1000, 1000), np.float32),
-        ((2000, 2000), np.float32),
-        ((3000, 3000), np.float32),
+    # Test configuration
+    shapes = [
+        (500, 500),            # Medium scale
+        (1000, 1000),          # Large scale test
+        (2000, 2000),          # Larger scale test
+        (3000, 3000),          # Extra large scale test
     ]
+    dtype = np.dtype(np.float32)
 
     # Adjusted parameters: reduced iterations to fit NPU memory limits
     warmup_iterations = 40
     test_iterations = 400
 
     logger.info("\nConfiguration:")
+    logger.info(f"  Data type: {dtype}")
     logger.info(f"  Warmup iterations: {warmup_iterations}")
     logger.info(f"  Test iterations: {test_iterations}")
     logger.info("  Statistics method: sort, exclude slowest 10%, take minimum")
     logger.info(f"\n{'=' * 70}\n")
 
     results = []
-    for shape, dtype in test_configs:
+    for shape in shapes:
         try:
             result = run_test_case(shape, dtype, warmup_iterations, test_iterations)
             results.append(result)
@@ -173,28 +151,21 @@ if __name__ == "__main__":
             traceback.print_exc()
 
     # Output summary results
-    print("\n" + "=" * 95)
-    print("Test results summary (based on mid-segment fastest speed)")
-    print("-" * 95)
-    print(f"{'Shape':<15} | {'Type':<10} | {'Data Size':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'Speedup':<10}")
-    print(f"{'':15} | {'':10} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
-    print("-" * 95)
+    print(f"{'Shape':<15} | {'Data Size':<12} | {'AsNumpy':<12} | {'NumPy':<12} | {'Speedup':<10}")
+    print(f"{'':15} | {'':12} | {'(ms)':<12} | {'(ms)':<12} | {'':10}")
+    print("-" * 85)
 
     for result in results:
         shape_str = str(result['shape'])
-        dtype_str = result['dtype']
         data_size = np.prod(result['shape'])
         data_size_str = f"{data_size:,}"
         asnp_time = f"{result['asnumpy_metric'] * 1000:.4f}"
         np_time = f"{result['numpy_metric'] * 1000:.4f}"
         speedup_str = f"{result['speedup']:.2f}x"
 
-        print(
-            f"{shape_str:<15} | {dtype_str:<10} | {data_size_str:<12} "
-            f"| {asnp_time:<12} | {np_time:<12} | {speedup_str}"
-        )
+        print(f"{shape_str:<15} | {data_size_str:<12} | {asnp_time:<12} | {np_time:<12} | {speedup_str}")
 
-    print("-" * 95)
+    print("-" * 85)
 
     # Statistics
     if results:
@@ -208,8 +179,8 @@ if __name__ == "__main__":
         logger.info(f"{'=' * 70}")
 
     logger.info("\nNotes:")
-    logger.info("  • Testing both bool and float32 data types")
-    logger.info("  • all() is a reduction operation that returns a scalar result")
+    logger.info("  • Using float32 data type for NPU compatibility")
+    logger.info("  • vdot flattens input arrays and computes vector dot product")
     logger.info("  • Iterations adjusted to ensure memory safety")
     logger.info("  • Uses 'mid-segment fastest speed' algorithm to showcase NPU's true compute capability")
     logger.info("=" * 70)

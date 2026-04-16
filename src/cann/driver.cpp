@@ -16,13 +16,18 @@
 
 
 #include "asnumpy/cann/driver.hpp"
-#include "fmt/core.h"
+#include "fmt/format.h"
+#include <stdexcept>
 
 void asnumpy::cann::init() {
     auto ret = aclInit(nullptr);
     if (ret != ACL_SUCCESS) {
         auto message = aclGetRecentErrMsg();
-        fmt::print("{}", message);
+        throw std::runtime_error(fmt::format(
+            "aclInit failed with code={}. {}",
+            ret,
+            message ? message : "(no detail message)"
+        ));
     }
 }
 
@@ -30,6 +35,10 @@ void asnumpy::cann::finalize() {
     auto ret = aclFinalize();
     if (ret != ACL_SUCCESS) {
         auto message = aclGetRecentErrMsg();
-        fmt::print("{}", message);
+        throw std::runtime_error(fmt::format(
+            "aclFinalize failed with code={}. {}",
+            ret,
+            message ? message : "(no detail message)"
+        ));
     }
 }
