@@ -30,7 +30,6 @@
  * @throws std::runtime_error If memory allocation fails or data type is not supported.
  */
 NPUArray::NPUArray(const std::vector<int64_t>& shape, py::dtype dtype) {
-    // fmt::println("构造函数");
     this->shape = shape;
     this->dtype = dtype;
     this->aclDtype = GetACLDataType(dtype);
@@ -39,8 +38,7 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, py::dtype dtype) {
     this->devicePtr = nullptr;
     auto error = aclrtMalloc(&this->devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
     if(error != ACL_SUCCESS) {
-        std::cout << "error = " << error << std::endl;
-        throw std::runtime_error("NPUArray malloc error!");
+        throw std::runtime_error(fmt::format("NPUArray malloc error! code={}", error));
     }
     this->strides.resize(this->shape.size());
     auto currentStride = 1;
@@ -68,16 +66,15 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, aclDataType acl_type) {
     this->aclDtype = acl_type;
     this->tensorSize = GetShapeSize(shape);
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-    
+
     // 直接使用 ACL 类型，不创建 NumPy dtype
     // 为了兼容性，创建一个空的 py::dtype 对象
     this->dtype = GetPyDtype(acl_type);
-    
-    void *devicePtr = nullptr;
-    auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+
+    this->devicePtr = nullptr;
+    auto error = aclrtMalloc(&this->devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
     if(error != ACL_SUCCESS) {
-        std::cout << "error = " << error << std::endl;
-        throw std::runtime_error("NPUArray malloc error!");
+        throw std::runtime_error(fmt::format("NPUArray malloc error! code={}", error));
     }
     this->strides.resize(this->shape.size());
     auto currentStride = 1;
@@ -85,7 +82,7 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, aclDataType acl_type) {
         this->strides[i] = currentStride;
         currentStride *= this->shape[i];
     }
-    tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), acl_type, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), devicePtr);
+    tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), acl_type, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
 }
 
 
@@ -98,23 +95,22 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, aclDataType acl_type) {
  * @param other The NPUArray to copy from.
  */
 NPUArray::NPUArray(const NPUArray& other) {
-    // fmt::println("拷贝构造函数");
     this->shape = other.shape;
     this->dtype = other.dtype;
     this->aclDtype = other.aclDtype;
     this->tensorSize = other.tensorSize;
     this->strides = other.strides;
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-    void *devicePtr = nullptr;
-    auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    this->devicePtr = nullptr;
+    auto error = aclrtMalloc(&this->devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
     if(error != ACL_SUCCESS) {
-        throw std::runtime_error("NPUArray copy constructor malloc error!");
+        throw std::runtime_error(fmt::format("NPUArray copy constructor malloc error! code={}", error));
     }
-    this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), devicePtr);
+    this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
     void* srcPtr = nullptr;
     error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
     if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
-    error = aclrtMemcpy(devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
+    error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
     error = aclrtSynchronizeDevice();
     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
@@ -130,7 +126,6 @@ NPUArray::NPUArray(const NPUArray& other) {
  * @param other The NPUArray to move from.
  */
 NPUArray::NPUArray(NPUArray&& other) noexcept {
-    // fmt::println("移动构造函数");
     this->tensorPtr = other.tensorPtr;
     this->shape = std::move(other.shape);
     this->dtype = other.dtype;
@@ -152,10 +147,12 @@ NPUArray::NPUArray(NPUArray&& other) noexcept {
  * @return Reference to this NPUArray.
  */
 NPUArray& NPUArray::operator=(const NPUArray& other) {
-    // fmt::println("拷贝赋值运算符");
     if(this != &other) {
         if(this->tensorPtr) {
             aclDestroyTensor(this->tensorPtr);
+        }
+        if(this->devicePtr) {
+            aclrtFree(this->devicePtr);
         }
         this->shape = other.shape;
         this->dtype = other.dtype;
@@ -163,18 +160,17 @@ NPUArray& NPUArray::operator=(const NPUArray& other) {
         this->tensorSize = other.tensorSize;
         this->strides = other.strides;
 
-
         auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-        void *devicePtr = nullptr;
-        auto error = aclrtMalloc(&devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
+        this->devicePtr = nullptr;
+        auto error = aclrtMalloc(&this->devicePtr, tensorByteSize, ACL_MEM_MALLOC_HUGE_FIRST);
         if(error != ACL_SUCCESS) {
-            throw std::runtime_error("NPUArray copy assignment malloc error!");
+            throw std::runtime_error(fmt::format("NPUArray copy assignment malloc error! code={}", error));
         }
-        this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), devicePtr);
+        this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
         void* srcPtr = nullptr;
         error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
         if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
-        error = aclrtMemcpy(devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
+        error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
         error = aclrtSynchronizeDevice();
         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
@@ -193,18 +189,22 @@ NPUArray& NPUArray::operator=(const NPUArray& other) {
  * @return Reference to this NPUArray.
  */
 NPUArray& NPUArray::operator=(NPUArray&& other) noexcept {
-    // fmt::println("移动赋值运算符");
     if(this != &other) {
         if(this->tensorPtr) {
             aclDestroyTensor(this->tensorPtr);
         }
+        if(this->devicePtr) {
+            aclrtFree(this->devicePtr);
+        }
         this->tensorPtr = other.tensorPtr;
+        this->devicePtr = other.devicePtr;
         this->shape = std::move(other.shape);
         this->dtype = other.dtype;
         this->aclDtype = other.aclDtype;
         this->tensorSize = other.tensorSize;
         this->strides = std::move(other.strides);
         other.tensorPtr = nullptr;
+        other.devicePtr = nullptr;
     }
     return *this;
 }
@@ -214,14 +214,11 @@ NPUArray& NPUArray::operator=(NPUArray&& other) noexcept {
  * @brief Destructor that releases resources occupied by NPUArray.
  */
 NPUArray::~NPUArray() {
-    // fmt::println("析构函数");
     if(this->tensorPtr) {
-        // fmt::println("析构函数：销毁aclTensor");
         auto error = aclDestroyTensor(this->tensorPtr);
         this->tensorPtr = nullptr;
     }
     if (this->devicePtr) {
-        // fmt::println("析构函数：aclrtFree");
         auto error = aclrtFree(this->devicePtr);
         this->devicePtr = nullptr;
     }

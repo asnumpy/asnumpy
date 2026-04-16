@@ -29,35 +29,79 @@
 
 using namespace asnumpy;
 
-std::pair<NPUArray, NPUArray> Linalg_Qr(const NPUArray& a, const std::string& mode) {
+py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
     int size = a.shape.size();
-    int k = a.shape[size-2] < a.shape.back() ? a.shape[size-2] : a.shape.back();
-    auto shapeQ = a.shape;
-    auto shapeR = a.shape;
+    int64_t m = a.shape[size - 2];
+    int64_t n = a.shape.back();
+    int64_t k = m < n ? m : n;
     int64_t num = 0;
+    std::vector<int64_t> shapeR;
+
     if (mode == "complete") {
         num = 1;
+        shapeR = a.shape;
     }
     else if (mode == "r") {
-        shapeQ = a.shape;
-        shapeR[size-2] = k;
         num = 2;
+        shapeR = a.shape;
+        shapeR[size - 2] = k;
     }
     else {
-        shapeQ.back() = k;
-        shapeR[size-2] = k;
+        // reduced (default)
         num = 0;
+        shapeR = a.shape;
+        shapeR[size - 2] = k;
     }
-    auto resultQ = NPUArray(shapeQ, a.aclDtype);
+
     auto resultR = NPUArray(shapeR, a.aclDtype);
+
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
-    AclWorkspace workspace(workspaceSize);
-    error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "aclnnLinalgQr error");
-    error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
-    return {resultQ, resultR};
+    aclError error;
+
+    if (mode == "r") {
+        // r mode: only return R, create empty Q tensor directly (shape [0])
+        int64_t emptyShape = 0;
+        int64_t emptyStride = 1;
+        aclTensor* emptyQ = aclCreateTensor(&emptyShape, 1, a.aclDtype,
+            &emptyStride, 0, ACL_FORMAT_ND, &emptyShape, 1, nullptr);
+
+        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, emptyQ, resultR.tensorPtr,
+            &workspaceSize, &executor);
+        CheckGetWorkspaceSizeAclnnStatus(error);
+
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
+        CheckAclnnStatus(error, "aclnnLinalgQr error");
+        error = aclrtSynchronizeDevice();
+        CheckSynchronizeDeviceAclnnStatus(error);
+
+        aclDestroyTensor(emptyQ);
+
+        return py::cast(std::move(resultR));
+    }
+    else {
+        // complete / reduced: return (Q, R)
+        std::vector<int64_t> shapeQ = a.shape;
+        if (mode == "complete") {
+            shapeQ.back() = m;
+        }
+        else {
+            shapeQ.back() = k;
+        }
+
+        auto resultQ = NPUArray(shapeQ, a.aclDtype);
+
+        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr,
+            &workspaceSize, &executor);
+        CheckGetWorkspaceSizeAclnnStatus(error);
+
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
+        CheckAclnnStatus(error, "aclnnLinalgQr error");
+        error = aclrtSynchronizeDevice();
+        CheckSynchronizeDeviceAclnnStatus(error);
+
+        return py::make_tuple(py::cast(std::move(resultQ)), py::cast(std::move(resultR)));
+    }
 }

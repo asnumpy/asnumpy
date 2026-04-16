@@ -30,10 +30,9 @@
 using namespace asnumpy;
 
 NPUArray Linalg_Inv(const NPUArray& a) {
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_DOUBLE);
     return ExecuteUnaryOp(
         a,
-        dtype,
+        a.dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnInverseGetWorkspaceSize(in, out, workspaceSize, executor);
         },
