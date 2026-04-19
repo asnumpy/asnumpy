@@ -46,6 +46,33 @@
 
 namespace asnumpy {
 
+/**
+ * @brief 为标量比较操作创建 aclScalar 对象
+ *
+ * 根据输入数组的数据类型和可选的输出数据类型，确定标量的目标数据类型，
+ * 然后使用 CreateScalar 函数创建 aclScalar 对象。
+ *
+ * @param x1 输入数组
+ * @param scalar Python 标量对象
+ * @param dtype 可选的输出数据类型
+ * @return aclScalar* 创建的标量对象
+ */
+static aclScalar* CreateScalarForComparison(
+    const NPUArray& x1,
+    const py::object& scalar,
+    std::optional<py::dtype> dtype) {
+    
+    // 确定标量的数据类型：如果提供了dtype则使用dtype，否则使用输入数组的数据类型
+    aclDataType scalar_dtype;
+    if (dtype.has_value()) {
+        scalar_dtype = NPUArray::GetACLDataType(*dtype);
+    } else {
+        scalar_dtype = x1.aclDtype;
+    }
+    
+    return CreateScalar(scalar, scalar_dtype);
+}
+
 /// Reduce array by logical AND operation over all elements.
 NPUArray All(const NPUArray& x) {
     auto result = NPUArray({}, ACL_BOOL);
@@ -369,16 +396,9 @@ NPUArray greater(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
 NPUArray greater(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](greater) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
-
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
+    
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnGtScalarGetWorkspaceSize(
@@ -418,15 +438,8 @@ NPUArray greater_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py:
 NPUArray greater_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](greater_equal) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -468,15 +481,8 @@ NPUArray less(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
 NPUArray less(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](less) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -518,15 +524,8 @@ NPUArray less_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
 NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](less_equal) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -566,15 +565,8 @@ NPUArray equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> 
 /// Element-wise equal comparison between an array and a scalar.
 NPUArray equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape, dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](not_equal) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
@@ -615,15 +607,8 @@ NPUArray not_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
 NPUArray not_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-
-    double scalar_val = 0;
-    try {
-        scalar_val = py::cast<double>(scalar);
-    } catch (const py::cast_error& e) {
-        throw std::runtime_error("[logic.cpp](not_equal) Invalid scalar type: "
-                                 + std::string(e.what()));
-    }
-    aclScalar* acl_scalar = aclCreateScalar(&scalar_val, x1.aclDtype);
+    
+    aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
