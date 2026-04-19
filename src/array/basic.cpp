@@ -19,6 +19,7 @@
 #include <asnumpy/cann/driver.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/executor_cache.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <fmt/core.h>
@@ -58,15 +59,10 @@ NPUArray EmptyLike(const NPUArray& prototype, py::dtype dtype) {
 
 NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
     auto array = NPUArray(shape, dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
-    auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZeroGetWorkspaceSize error = {}",error));
-    }
-    AclWorkspace workspace(workspaceSize);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_inplace_zero(array);
+    AclWorkspace workspace(handle.workspace_size);
     aclrtStream stream = asnumpy::cann::get_stream();
-    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, stream);
+    auto error = aclnnInplaceZero(workspace.get(), handle.workspace_size, handle.executor, stream);
     if(error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZero error = {}",error));
     }
@@ -79,15 +75,10 @@ NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
 
 NPUArray Zeros_like(const NPUArray& other, py::dtype dtype) {
     auto array = NPUArray(other.shape, dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
-    auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZeroGetWorkspaceSize error = {}",error));
-    }
-    AclWorkspace workspace(workspaceSize);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_inplace_zero(array);
+    AclWorkspace workspace(handle.workspace_size);
     aclrtStream stream = asnumpy::cann::get_stream();
-    error = aclnnInplaceZero(workspace.get(), workspaceSize, executor, stream);
+    auto error = aclnnInplaceZero(workspace.get(), handle.workspace_size, handle.executor, stream);
     if(error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZero error = {}",error));
     }
@@ -184,15 +175,10 @@ NPUArray Eye(int64_t n, py::dtype dtype) {
 
 NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype) {
     auto array = NPUArray(shape, dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
-    auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](ones) aclnnInplaceOneGetWorkspaceSize error = {}", error));
-    }
-    AclWorkspace workspace(workspaceSize);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_inplace_one(array);
+    AclWorkspace workspace(handle.workspace_size);
     aclrtStream stream = asnumpy::cann::get_stream();
-    error = aclnnInplaceOne(workspace.get(), workspaceSize, executor, stream);
+    auto error = aclnnInplaceOne(workspace.get(), handle.workspace_size, handle.executor, stream);
     if(error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[basic.cpp](ones) aclnnInplaceOne error = {}", error));
     }
@@ -228,15 +214,10 @@ NPUArray Identity(int64_t n, py::dtype dtype) {
 
 NPUArray ones_like(const NPUArray& other, py::dtype dtype) {
     auto array = NPUArray(other.shape, dtype);
-    uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
-    auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if (error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](ones_like) aclnnInplaceOneGetWorkspaceSize error = {}", error));
-    }
-    AclWorkspace workspace(workspaceSize);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_inplace_one(array);
+    AclWorkspace workspace(handle.workspace_size);
     aclrtStream stream = asnumpy::cann::get_stream();
-    error = aclnnInplaceOne(workspace.get(), workspaceSize, executor, stream);
+    auto error = aclnnInplaceOne(workspace.get(), handle.workspace_size, handle.executor, stream);
     if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[basic.cpp](ones_like) aclnnInplaceOne error = {}", error));
     }

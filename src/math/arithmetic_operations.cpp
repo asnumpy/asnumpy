@@ -21,6 +21,7 @@
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/executor_cache.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -55,30 +56,15 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(out_shape, out_dtype);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_binary_add(
+        x1, x2, out);
+    AclWorkspace workspace(handle.workspace_size);
 
-    int32_t one = 1;
-    aclScalar* alpha_scalar = aclCreateScalar(&one, ACL_INT32);
-    if (!alpha_scalar) {
-        throw std::runtime_error("[arithmetic_operations.cpp](Add) Failed to create alpha scalar");
-    }
-
-    uint64_t workspaceSize = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnAddGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr,
-        &workspaceSize, &executor
-    );
-    CheckGetWorkspaceSizeAclnnStatus(error);
-
-    AclWorkspace workspace(workspaceSize);
-
-    error = aclnnAdd(workspace.get(), workspaceSize, executor, nullptr);
+    auto error = aclnnAdd(workspace.get(), handle.workspace_size, handle.executor, nullptr);
     CheckExecuteAclnnStatus(error, "Add");
 
     error = aclrtSynchronizeDevice();
     CheckSynchronizeDeviceAclnnStatus(error);
-
-    aclDestroyScalar(alpha_scalar);
 
     return out;
 }
@@ -154,19 +140,19 @@ NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
  * @brief Element-wise multiplication using aclnnMul.
  */
 NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
+    auto out_shape = GetBroadcastShape(x1, x2);
     auto out_dtype = dtype.value_or(x1.dtype);
-    return ExecuteBinaryOp(
-        x1,
-        x2,                                           
-        out_dtype,                                     
-        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
-            return aclnnMulGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
-        },
-        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
-            return aclnnMul(workspace, workspaceSize, executor, nullptr);
-        },
-        "Multiply"                                       
-    );
+    auto out = NPUArray(out_shape, out_dtype);
+    const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_binary_mul(
+        x1, x2, out);
+    AclWorkspace workspace(handle.workspace_size);
+
+    auto error = aclnnMul(workspace.get(), handle.workspace_size, handle.executor, nullptr);
+    CheckExecuteAclnnStatus(error, "Multiply");
+
+    error = aclrtSynchronizeDevice();
+    CheckSynchronizeDeviceAclnnStatus(error);
+    return out;
 }
 
 /**

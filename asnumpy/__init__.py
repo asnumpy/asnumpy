@@ -163,7 +163,21 @@ from .nn import softmax
 
 from .utils import broadcast_shape, ndarray
 
-from .memory import clear_cache, memory_stats, trim_cache
+from .memory import (
+    benchmark_allocator,
+    clear_cache,
+    clear_descriptor_cache,
+    clear_executor_cache,
+    descriptor_stats,
+    executor_stats,
+    memory_debug_stats,
+    memory_stats,
+    refresh_memory_pool_config,
+    reset_descriptor_stats,
+    reset_executor_stats,
+    reset_memory_stats,
+    trim_cache,
+)
 
 from .io import save, savez, savez_compressed, load
 
@@ -320,6 +334,19 @@ __all__ = [
     # .utils
     "broadcast_shape",
     "ndarray",
+    "benchmark_allocator",
+    "clear_cache",
+    "descriptor_stats",
+    "clear_descriptor_cache",
+    "executor_stats",
+    "clear_executor_cache",
+    "memory_debug_stats",
+    "memory_stats",
+    "refresh_memory_pool_config",
+    "reset_descriptor_stats",
+    "reset_executor_stats",
+    "reset_memory_stats",
+    "trim_cache",
     # .io
     "load",
     "save",

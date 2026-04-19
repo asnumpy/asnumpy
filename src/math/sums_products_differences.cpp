@@ -17,6 +17,7 @@
 
 #include <asnumpy/math/sums_products_differences.hpp>
 #include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/utils/executor_cache.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 
@@ -117,16 +118,12 @@ namespace asnumpy {
         else {
             shape.erase(shape.begin() + ax);
         }
-        std::vector<int64_t> tmp{axis};
-        aclIntArray* axis_array = aclCreateIntArray(tmp.data(), tmp.size());
         auto result = NPUArray(shape, outDtype);
-        uint64_t workspaceSize = 0;
-        aclOpExecutor* executor;
-        auto error = aclnnReduceSumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, 
-            result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        AclWorkspace workspace(workspaceSize);
-        error = aclnnReduceSum(workspace.get(), workspaceSize, executor, nullptr);
+        std::vector<int64_t> axes{ax};
+        const auto handle = asnumpy::utils::ExecutorCache::instance().prepare_reduce_sum(
+            a, result, axes, keepdims);
+        AclWorkspace workspace(handle.workspace_size);
+        auto error = aclnnReduceSum(workspace.get(), handle.workspace_size, handle.executor, nullptr);
         CheckAclnnStatus(error, "aclnnReduceSum error");
         error = aclrtSynchronizeDevice();
         CheckSynchronizeDeviceAclnnStatus(error);

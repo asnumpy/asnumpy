@@ -27,13 +27,13 @@ namespace asnumpy {
 
 AclWorkspace::AclWorkspace(uint64_t size) : size_(size) {
     if (size_ > 0ULL) {
-        ptr_ = memory::MemoryPool::instance().malloc(size_);
+        ptr_ = memory::MemoryPool::instance().malloc(size_, memory::PoolDomain::Workspace);
     }
 }
 
 AclWorkspace::~AclWorkspace() {
     if (ptr_) {
-        memory::MemoryPool::instance().free(ptr_);
+        memory::MemoryPool::instance().free(ptr_, memory::PoolDomain::Workspace);
     }
 }
 
@@ -47,7 +47,7 @@ AclWorkspace& AclWorkspace::operator=(AclWorkspace&& other) noexcept {
     if (this != &other) {
         // Free current resource
         if (ptr_) {
-            memory::MemoryPool::instance().free(ptr_);
+            memory::MemoryPool::instance().free(ptr_, memory::PoolDomain::Workspace);
         }
         // Take ownership of other resource
         ptr_ = other.ptr_;

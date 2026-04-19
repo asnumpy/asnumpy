@@ -42,6 +42,10 @@ public:
 
 private:
     void* devicePtr;
+    void build_contiguous_strides();
+    size_t tensor_byte_size() const;
+    void acquire_tensor_descriptor();
+    void release_resources() noexcept;
 
 public:
     /**

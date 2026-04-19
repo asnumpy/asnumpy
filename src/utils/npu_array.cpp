@@ -17,15 +17,33 @@
 
  #include <asnumpy/utils/npu_array.hpp>
  #include <asnumpy/memory/MemoryPool.hpp>
+ #include <asnumpy/utils/tensor_descriptor_cache.hpp>
  #include <cstddef>
- 
- 
+ #include <optional>
+
+
+ namespace {
+
+ asnumpy::utils::TensorDescriptorMeta MakeTensorMeta(const NPUArray& array) {
+     return {
+         array.shape,
+         array.strides,
+         array.aclDtype,
+         ACL_FORMAT_ND,
+         0,
+         array.shape
+     };
+ }
+
+ } // namespace
+
+
  /**
   * @brief Constructor that creates an NPUArray with specified shape and data type.
-  * 
+  *
   * Creates an array (aclTensor) stored on NPU by calling aclCreateTensor,
   * and initializes its shape and data type.
-  * 
+  *
   * @param shape Vector containing array dimensions, defining the array shape.
   * @param dtype np.dtype defining the data type of array elements.
   * @throws std::runtime_error If memory allocation fails or data type is not supported.
@@ -36,28 +54,29 @@
      this->dtype = dtype;
      this->aclDtype = GetACLDataType(dtype);
      tensorSize = GetShapeSize(shape);
-     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-     this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+     auto tensorByteSize = this->tensor_byte_size();
+     this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(
+         tensorByteSize, asnumpy::memory::PoolDomain::Tensor);
      if(this->devicePtr == nullptr && tensorByteSize > 0) {
          throw std::runtime_error("NPUArray malloc error!");
      }
-     this->strides.resize(this->shape.size());
-     auto currentStride = 1;
-     for(int64_t i = this->shape.size() - 1; i >= 0; i--) {
-         this->strides[i] = currentStride;
-         currentStride *= this->shape[i];
+     this->build_contiguous_strides();
+     try {
+         this->acquire_tensor_descriptor();
+     } catch (...) {
+         this->release_resources();
+         throw;
      }
-     tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), GetACLDataType(this->dtype), this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
  }
- 
- 
+
+
  /**
   * @brief Constructor that creates an NPUArray with specified shape and ACL data type.
-  * 
+  *
   * Creates an array (aclTensor) stored on NPU by calling aclCreateTensor,
   * and initializes its shape and ACL data type directly.
   * This constructor bypasses NumPy dtype conversion for better performance.
-  * 
+  *
   * @param shape Vector containing array dimensions, defining the array shape.
   * @param acl_type ACL data type constant.
   * @throws std::runtime_error If memory allocation fails or data type is not supported.
@@ -66,32 +85,33 @@
      this->shape = shape;
      this->aclDtype = acl_type;
      this->tensorSize = GetShapeSize(shape);
-     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-     
+     auto tensorByteSize = this->tensor_byte_size();
+
      // 直接使用 ACL 类型，不创建 NumPy dtype
      // 为了兼容性，创建一个空的 py::dtype 对象
      this->dtype = GetPyDtype(acl_type);
-     
-     this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+
+      this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(
+          tensorByteSize, asnumpy::memory::PoolDomain::Tensor);
      if(this->devicePtr == nullptr && tensorByteSize > 0) {
          throw std::runtime_error("NPUArray malloc error!");
      }
-     this->strides.resize(this->shape.size());
-     auto currentStride = 1;
-     for(int64_t i = this->shape.size() - 1; i >= 0; i--) {
-         this->strides[i] = currentStride;
-         currentStride *= this->shape[i];
+     this->build_contiguous_strides();
+     try {
+         this->acquire_tensor_descriptor();
+     } catch (...) {
+         this->release_resources();
+         throw;
      }
-     tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), acl_type, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
  }
- 
- 
+
+
  /**
   * @brief Copy constructor - deep copy.
-  * 
+  *
   * Creates a new NPUArray with the same content as the given NPUArray.
   * The new object owns its own memory space and is completely independent of the original.
-  * 
+  *
   * @param other The NPUArray to copy from.
   */
  NPUArray::NPUArray(const NPUArray& other) {
@@ -101,28 +121,34 @@
      this->aclDtype = other.aclDtype;
      this->tensorSize = other.tensorSize;
      this->strides = other.strides;
-     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-     this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
+     auto tensorByteSize = this->tensor_byte_size();
+      this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(
+          tensorByteSize, asnumpy::memory::PoolDomain::Tensor);
      if(this->devicePtr == nullptr && tensorByteSize > 0) {
          throw std::runtime_error("NPUArray copy constructor malloc error!");
      }
-     this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
-     void* srcPtr = nullptr;
-     auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
-     if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
-     error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
-     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
-     error = aclrtSynchronizeDevice();
-     if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
+     try {
+         this->acquire_tensor_descriptor();
+         void* srcPtr = nullptr;
+         auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
+         if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
+         error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
+         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
+         error = aclrtSynchronizeDevice();
+         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
+     } catch (...) {
+         this->release_resources();
+         throw;
+     }
  }
- 
- 
+
+
  /**
   * @brief Move constructor.
-  * 
+  *
   * Transfers ownership of resources from the given NPUArray to the new object.
   * The original object is left in an invalid state.
-  * 
+  *
   * @param other The NPUArray to move from.
   */
  NPUArray::NPUArray(NPUArray&& other) noexcept {
@@ -137,68 +163,90 @@
      other.tensorPtr = nullptr;
      other.devicePtr = nullptr;
  }
- 
- 
+
+
  /**
   * @brief Copy assignment operator.
-  * 
+  *
   * Implements deep copy assignment, ensuring the current object is completely independent of the right-hand object.
-  * 
+  *
   * @param other The NPUArray to copy from.
   * @return Reference to this NPUArray.
   */
  NPUArray& NPUArray::operator=(const NPUArray& other) {
      // fmt::println("拷贝赋值运算符");
      if(this != &other) {
-         if(this->tensorPtr) {
-             aclDestroyTensor(this->tensorPtr);
-         }
-         if(this->devicePtr) {
-             asnumpy::memory::MemoryPool::instance().free(this->devicePtr);
-         }
+         auto oldShape = this->shape;
+         auto oldStrides = this->strides;
+         auto oldDtype = this->dtype;
+         auto oldAclDtype = this->aclDtype;
+         auto oldTensorSize = this->tensorSize;
+         auto oldTensorPtr = this->tensorPtr;
+         auto oldDevicePtr = this->devicePtr;
+         auto oldMeta = oldTensorPtr ? std::optional<asnumpy::utils::TensorDescriptorMeta>(MakeTensorMeta(*this)) : std::nullopt;
+
          this->shape = other.shape;
          this->dtype = other.dtype;
          this->aclDtype = other.aclDtype;
          this->tensorSize = other.tensorSize;
          this->strides = other.strides;
- 
- 
-         auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
-         this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(tensorByteSize);
-         if(this->devicePtr == nullptr && tensorByteSize > 0) {
-             throw std::runtime_error("NPUArray copy assignment malloc error!");
+         this->tensorPtr = nullptr;
+         this->devicePtr = nullptr;
+
+         try {
+             auto tensorByteSize = this->tensor_byte_size();
+             this->devicePtr = asnumpy::memory::MemoryPool::instance().malloc(
+                 tensorByteSize, asnumpy::memory::PoolDomain::Tensor);
+             if(this->devicePtr == nullptr && tensorByteSize > 0) {
+                 throw std::runtime_error("NPUArray copy assignment malloc error!");
+             }
+             this->acquire_tensor_descriptor();
+             void* srcPtr = nullptr;
+             auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
+             if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
+             error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
+             if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
+             error = aclrtSynchronizeDevice();
+             if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
+         } catch (...) {
+             this->release_resources();
+             this->shape = std::move(oldShape);
+             this->strides = std::move(oldStrides);
+             this->dtype = oldDtype;
+             this->aclDtype = oldAclDtype;
+             this->tensorSize = oldTensorSize;
+             this->tensorPtr = oldTensorPtr;
+             this->devicePtr = oldDevicePtr;
+             throw;
          }
-         this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), this->devicePtr);
-         void* srcPtr = nullptr;
-         auto error = aclGetRawTensorAddr(other.tensorPtr, &srcPtr);
-         if(error != ACL_SUCCESS || !srcPtr) throw std::runtime_error(fmt::format("Failed to get source tensor data pointer. error: {}", error));
-         error = aclrtMemcpy(this->devicePtr, tensorByteSize, srcPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_DEVICE);
-         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data. error: {}", error));
-         error = aclrtSynchronizeDevice();
-         if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to synchronize after tensor copy. error: {}", error));
+
+         if(oldDevicePtr) {
+              asnumpy::memory::MemoryPool::instance().free(
+                  oldDevicePtr, asnumpy::memory::PoolDomain::Tensor);
+         }
+         if(oldTensorPtr && oldMeta.has_value()) {
+             asnumpy::utils::TensorDescriptorCache::instance().release(*oldMeta, oldTensorPtr);
+         }
      }
      return *this;
  }
- 
- 
+
+
  /**
   * @brief Move assignment operator.
-  * 
+  *
   * Transfers ownership of resources from the given NPUArray to the current object.
   * The original object is left in an invalid state.
-  * 
+  *
   * @param other The NPUArray to move from.
   * @return Reference to this NPUArray.
   */
  NPUArray& NPUArray::operator=(NPUArray&& other) noexcept {
      // fmt::println("移动赋值运算符");
      if(this != &other) {
-         if(this->tensorPtr) {
-             aclDestroyTensor(this->tensorPtr);
-         }
-         if(this->devicePtr) {
-             asnumpy::memory::MemoryPool::instance().free(this->devicePtr);
-         }
+         auto oldTensorPtr = this->tensorPtr;
+         auto oldDevicePtr = this->devicePtr;
+         auto oldMeta = oldTensorPtr ? std::optional<asnumpy::utils::TensorDescriptorMeta>(MakeTensorMeta(*this)) : std::nullopt;
          this->tensorPtr = other.tensorPtr;
          this->shape = std::move(other.shape);
          this->dtype = other.dtype;
@@ -208,35 +256,74 @@
          this->devicePtr = other.devicePtr;
          other.tensorPtr = nullptr;
          other.devicePtr = nullptr;
+         if(oldDevicePtr) {
+              asnumpy::memory::MemoryPool::instance().free(
+                  oldDevicePtr, asnumpy::memory::PoolDomain::Tensor);
+         }
+         if(oldTensorPtr && oldMeta.has_value()) {
+             asnumpy::utils::TensorDescriptorCache::instance().release(*oldMeta, oldTensorPtr);
+         }
      }
      return *this;
  }
- 
- 
+
+
  /**
   * @brief Destructor that releases resources occupied by NPUArray.
   */
  NPUArray::~NPUArray() {
      // fmt::println("析构函数");
-     if(this->tensorPtr) {
-         // fmt::println("析构函数：销毁aclTensor");
-         auto error = aclDestroyTensor(this->tensorPtr);
-         this->tensorPtr = nullptr;
-     }
-     if (this->devicePtr) {
-         // fmt::println("析构函数：aclrtFree");
-         asnumpy::memory::MemoryPool::instance().free(this->devicePtr);
-         this->devicePtr = nullptr;
+     this->release_resources();
+ }
+
+
+ void NPUArray::build_contiguous_strides() {
+     this->strides.resize(this->shape.size());
+     int64_t currentStride = 1;
+     for(int64_t i = static_cast<int64_t>(this->shape.size()) - 1; i >= 0; i--) {
+         this->strides[i] = currentStride;
+         currentStride *= this->shape[i];
      }
  }
- 
- 
+
+
+ size_t NPUArray::tensor_byte_size() const {
+     return this->tensorSize * GetDataTypeSize(this->aclDtype);
+ }
+
+
+ void NPUArray::acquire_tensor_descriptor() {
+     this->tensorPtr = asnumpy::utils::TensorDescriptorCache::instance().acquire(
+         MakeTensorMeta(*this), this->devicePtr);
+ }
+
+
+ void NPUArray::release_resources() noexcept {
+     auto tensorToRelease = this->tensorPtr;
+     auto ptrToFree = this->devicePtr;
+     auto meta = tensorToRelease ? std::optional<asnumpy::utils::TensorDescriptorMeta>(MakeTensorMeta(*this)) : std::nullopt;
+
+     this->tensorPtr = nullptr;
+     this->devicePtr = nullptr;
+
+     if (ptrToFree) {
+          asnumpy::memory::MemoryPool::instance().free(
+              ptrToFree, asnumpy::memory::PoolDomain::Tensor);
+     }
+     if (tensorToRelease && meta.has_value()) {
+         // 归还到 descriptor cache 时内部地址可能仍指向已经回收到内存池的 devicePtr，
+         // 下次命中时会先通过 aclSetRawTensorAddr 重新绑定。
+         asnumpy::utils::TensorDescriptorCache::instance().release(*meta, tensorToRelease);
+     }
+ }
+
+
  /**
   * @brief Static method to create NPUArray from NumPy array.
-  * 
+  *
   * Creates an NPUArray from a NumPy array and copies data
   * from host memory to NPU device memory.
-  * 
+  *
   * @param host_data Input NumPy array.
   * @return NPUArray The created NPUArray.
   * @throws std::runtime_error If getting tensor data pointer fails or data copy fails.
@@ -254,13 +341,13 @@
      if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("aclrtSynchronizeStream error: {}", error));
      return result;
  }
- 
- 
+
+
  /**
   * @brief Convert NPUArray to NumPy array.
-  * 
+  *
   * Copies data from NPU device memory to host memory and returns a NumPy array.
-  * 
+  *
   * @return py::array The converted NumPy array.
   * @throws std::runtime_error If getting tensor data pointer fails or data copy fails.
   * @throws std::runtime_error If tensor size doesn't match NumPy array size.
@@ -270,19 +357,19 @@
      void* rawDataPtr = nullptr;
      auto error = aclGetRawTensorAddr(this->tensorPtr, &rawDataPtr);
      if (error != ACL_SUCCESS || !rawDataPtr) throw std::runtime_error(fmt::format("Failed to get tensor data pointer. error: {}", error));
-     
+
      // 创建结果数组
      py::array result(this->dtype, this->shape);
      py::buffer_info info = result.request();
      if(tensorByteSize == 0) return result;
-     
+
      // 对于特殊类型，需要特殊处理
      if (this->aclDtype == ACL_FLOAT16 || this->aclDtype == ACL_BF16) {
          // 对于 float16 和 bf16，我们需要先复制到临时缓冲区，然后转换
          std::vector<uint16_t> temp_buffer(this->tensorSize);
          error = aclrtMemcpy(temp_buffer.data(), tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
          if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data to host. error: {}", error));
-         
+
          // 转换为 float32
          float* result_ptr = static_cast<float*>(info.ptr);
          for (size_t i = 0; i < this->tensorSize; ++i) {
@@ -304,16 +391,16 @@
          error = aclrtMemcpy(info.ptr, tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
          if(error != ACL_SUCCESS) throw std::runtime_error(fmt::format("Failed to copy tensor data to host. error: {}", error));
      }
-     
+
      return result;
  }
- 
- 
+
+
  /**
   * @brief Helper function to calculate total size of array.
-  * 
+  *
   * Calculates the total number of elements for a given shape.
-  * 
+  *
   * @param shape Vector containing array dimensions, defining the array shape.
   * @return int64_t Total number of elements in the array.
   * @throws std::runtime_error If any dimension in shape is less than or equal to 0.
@@ -328,13 +415,13 @@
      }
      return shapeSize;
  }
- 
- 
+
+
  /**
   * @brief Helper function to convert py::dtype to aclDataType.
-  * 
+  *
   * Converts Python data type to ACL data type for NPU operations.
-  * 
+  *
   * @param dtype Input py::dtype.
   * @return aclDataType The converted aclDataType.
   * @throws std::runtime_error If input data type is not supported.
@@ -355,13 +442,13 @@
      if(dtype.is(py::dtype::of<std::complex<double>>())) return ACL_COMPLEX128;
      throw std::runtime_error("Unsupported py::dtype for aclDataType.");
  }
- 
- 
+
+
  /**
   * @brief Helper function to convert aclDataType to py::dtype.
-  * 
+  *
   * Converts ACL data type to Python data type for NumPy compatibility.
-  * 
+  *
   * @param acl_type Input aclDataType.
   * @return py::dtype The converted py::dtype.
   * @throws std::runtime_error If input data type is not supported.
@@ -400,13 +487,13 @@
              throw std::runtime_error("Unsupported aclDataType for py::dtype conversion.");
      }
  }
- 
- 
+
+
  /**
   * @brief Helper function to get byte size corresponding to aclDataType.
-  * 
+  *
   * Returns the byte size corresponding to ACL data type for memory allocation.
-  * 
+  *
   * @param dataType Input aclDataType.
   * @return int64_t Byte size of the data type.
   * @throws std::runtime_error If input data type is not supported.
@@ -445,23 +532,23 @@
              throw std::runtime_error("Unsupported aclDataType for size calculation.");
      }
  }
- 
- 
- 
+
+
+
  std::vector<int64_t> GetBroadcastShape(const NPUArray& a, const NPUArray& b) {
      const std::vector<int64_t>& shapeA = a.shape;
      const std::vector<int64_t>& shapeB = b.shape;
- 
+
      size_t ndimA = shapeA.size();
      size_t ndimB = shapeB.size();
      size_t ndimOut = std::max(ndimA, ndimB);
- 
+
      std::vector<int64_t> result(ndimOut, 1);
- 
+
      for (size_t i = 0; i < ndimOut; ++i) {
          int64_t dimA = (i < ndimA) ? shapeA[ndimA - 1 - i] : 1;
          int64_t dimB = (i < ndimB) ? shapeB[ndimB - 1 - i] : 1;
- 
+
          if (dimA == dimB || dimA == 1 || dimB == 1) {
              result[ndimOut - 1 - i] = std::max(dimA, dimB);
          } else {
@@ -473,7 +560,6 @@
              );
          }
      }
- 
+
      return result;
  }
- 
