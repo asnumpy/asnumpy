@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <complex>
 #include <string>
+#include <fmt/core.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/cast.h>
 

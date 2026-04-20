@@ -195,7 +195,7 @@ aclScalar* CreateScalar(ValueType value, aclDataType dtype) {
             return aclCreateScalar(&converted, ACL_INT32);
         }
         default:
-            throw std::runtime_error("Unsupported dtype: " + std::to_string(static_cast<int>(dtype)));
+            throw std::runtime_error(fmt::format("Unsupported dtype: {}", static_cast<int>(dtype)));
     }
 }
 
@@ -230,105 +230,43 @@ template aclScalar* CreateScalar<uint8_t>(uint8_t, aclDataType);
 template aclScalar* CreateScalar<bool>(bool, aclDataType);
 
 // 3) CreateScalar(py::object scalar, aclDataType dtype) —— Python 对象版本
+template<typename T>
+aclScalar* CreateScalarFromPython(const py::object& scalar, aclDataType dtype) {
+    try {
+        T value = py::cast<T>(scalar);
+        return CreateScalar(value, dtype);
+    } catch (const py::cast_error& e) {
+        throw std::runtime_error(fmt::format("Failed to convert Python object to {}: {}", typeid(T).name(), e.what()));
+    }
+}
+
+// 类型映射表
+using TypeHandler = std::function<aclScalar*(const py::object&, aclDataType)>;
+static const std::unordered_map<aclDataType, TypeHandler> type_handlers = {
+    {ACL_FLOAT,   CreateScalarFromPython<float>},
+    {ACL_DOUBLE,  CreateScalarFromPython<double>},
+    {ACL_INT32,   CreateScalarFromPython<int32_t>},
+    {ACL_INT64,   CreateScalarFromPython<int64_t>},
+    {ACL_INT8,    CreateScalarFromPython<int8_t>},
+    {ACL_INT16,   CreateScalarFromPython<int16_t>},
+    {ACL_UINT8,   CreateScalarFromPython<uint8_t>},
+    {ACL_UINT16,  CreateScalarFromPython<uint16_t>},
+    {ACL_UINT32,  CreateScalarFromPython<uint32_t>},
+    {ACL_UINT64,  CreateScalarFromPython<uint64_t>},
+    {ACL_BOOL,    CreateScalarFromPython<bool>},
+};
+
 aclScalar* CreateScalar(const py::object& scalar, aclDataType dtype) {
-    switch (dtype) {
-        case ACL_FLOAT: {
-            try {
-                float value = py::cast<float>(scalar);
-                return CreateScalar(value, ACL_FLOAT);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to float: " + std::string(e.what()));
-            }
-        }
-        case ACL_DOUBLE: {
-            try {
-                double value = py::cast<double>(scalar);
-                return CreateScalar(value, ACL_DOUBLE);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to double: " + std::string(e.what()));
-            }
-        }
-        case ACL_INT32: {
-            try {
-                int32_t value = py::cast<int32_t>(scalar);
-                return CreateScalar(value, ACL_INT32);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to int32: " + std::string(e.what()));
-            }
-        }
-        case ACL_INT64: {
-            try {
-                int64_t value = py::cast<int64_t>(scalar);
-                return CreateScalar(value, ACL_INT64);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to int64: " + std::string(e.what()));
-            }
-        }
-        case ACL_INT8: {
-            try {
-                int8_t value = py::cast<int8_t>(scalar);
-                return CreateScalar(value, ACL_INT8);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to int8: " + std::string(e.what()));
-            }
-        }
-        case ACL_INT16: {
-            try {
-                int16_t value = py::cast<int16_t>(scalar);
-                return CreateScalar(value, ACL_INT16);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to int16: " + std::string(e.what()));
-            }
-        }
-        case ACL_UINT8: {
-            try {
-                uint8_t value = py::cast<uint8_t>(scalar);
-                return CreateScalar(value, ACL_UINT8);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to uint8: " + std::string(e.what()));
-            }
-        }
-        case ACL_UINT16: {
-            try {
-                uint16_t value = py::cast<uint16_t>(scalar);
-                return CreateScalar(value, ACL_UINT16);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to uint16: " + std::string(e.what()));
-            }
-        }
-        case ACL_UINT32: {
-            try {
-                uint32_t value = py::cast<uint32_t>(scalar);
-                return CreateScalar(value, ACL_UINT32);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to uint32: " + std::string(e.what()));
-            }
-        }
-        case ACL_UINT64: {
-            try {
-                uint64_t value = py::cast<uint64_t>(scalar);
-                return CreateScalar(value, ACL_UINT64);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to uint64: " + std::string(e.what()));
-            }
-        }
-        case ACL_BOOL: {
-            try {
-                bool value = py::cast<bool>(scalar);
-                return CreateScalar(value, ACL_BOOL);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to bool: " + std::string(e.what()));
-            }
-        }
-        // 对于其他数据类型，尝试转换为 double 然后使用 CreateScalar
-        default: {
-            try {
-                double value = py::cast<double>(scalar);
-                return CreateScalar(value, dtype);
-            } catch (const py::cast_error& e) {
-                throw std::runtime_error("Failed to convert Python object to appropriate type for dtype " +
-                                         std::to_string(static_cast<int>(dtype)) + ": " + std::string(e.what()));
-            }
-        }
+    auto it = type_handlers.find(dtype);
+    if (it != type_handlers.end()) {
+        return it->second(scalar, dtype);
+    }
+    
+    // default
+    try {
+        double value = py::cast<double>(scalar);
+        return CreateScalar(value, dtype);
+    } catch (const py::cast_error& e) {
+        throw std::runtime_error(fmt::format("Failed to convert Python object to appropriate type for dtype {}: {}", static_cast<int>(dtype), e.what()));
     }
 }
