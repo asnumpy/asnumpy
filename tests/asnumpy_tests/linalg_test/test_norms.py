@@ -44,6 +44,23 @@ def _create_array(xp, data, dtype):
     return xp.ndarray.from_numpy(np_arr)
 
 
+def _assert_slogdet_allclose(data, rtol=1e-5, atol=1e-5):
+    """辅助函数：比较 numpy 和 asnumpy 的 slogdet 结果
+
+    slogdet 返回元组 (sign, logdet)，numpy_asnumpy_allclose 装饰器
+    无法正确处理元组返回值，因此使用此函数手动逐项比较。
+    """
+    import asnumpy as ap
+
+    np_sign, np_logdet = numpy.linalg.slogdet(data)
+
+    a = _create_array(ap, data, data.dtype)
+    ap_sign, ap_logdet = ap.linalg.slogdet(a)
+
+    numpy.testing.assert_allclose(ap_sign.to_numpy(), np_sign, rtol=rtol, atol=atol)
+    numpy.testing.assert_allclose(ap_logdet.to_numpy(), np_logdet, rtol=rtol, atol=atol)
+
+
 # ==========================================================================
 # 1. 范数测试 (Norm)
 # ==========================================================================
@@ -406,122 +423,100 @@ def test_det_random_5x5_fp64(xp, dtype):
 
 # ---------- 3.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_2x2(xp, dtype):
+def test_slogdet_2x2(dtype):
     """2x2 slogdet"""
-    data = [[1.0, 2.0], [3.0, 4.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[1.0, 2.0], [3.0, 4.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_3x3(xp, dtype):
+def test_slogdet_3x3(dtype):
     """3x3 slogdet"""
-    data = [[6.0, 1.0, 1.0],
-            [4.0, -2.0, 5.0],
-            [2.0, 8.0, 7.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[6.0, 1.0, 1.0],
+                        [4.0, -2.0, 5.0],
+                        [2.0, 8.0, 7.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 # ---------- 3.2 FP32/FP64 精度验证 ----------
 @testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-4)
-def test_slogdet_fp32_precision(xp, dtype):
+def test_slogdet_fp32_precision(dtype):
     """FP32 精度: slogdet"""
     numpy.random.seed(42)
     data = numpy.random.uniform(-5, 5, (4, 4)).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data, rtol=1e-4, atol=1e-4)
 
 
 @testing.for_dtypes([numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-10, atol=1e-10)
-def test_slogdet_fp64_precision(xp, dtype):
+def test_slogdet_fp64_precision(dtype):
     """FP64 精度: slogdet (高精度)"""
     numpy.random.seed(42)
     data = numpy.random.uniform(-5, 5, (4, 4)).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data, rtol=1e-10, atol=1e-10)
 
 
 # ---------- 3.3 特殊矩阵 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_identity(xp, dtype):
+def test_slogdet_identity(dtype):
     """单位阵: sign=1, logdet=0"""
-    data = [[1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_negative_det(xp, dtype):
+def test_slogdet_negative_det(dtype):
     """负行列式: sign=-1"""
-    data = [[-1.0, 0.0],
-            [0.0, 1.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[-1.0, 0.0],
+                        [0.0, 1.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_diagonal(xp, dtype):
+def test_slogdet_diagonal(dtype):
     """对角阵: sign 和 logdet 验证"""
-    data = [[2.0, 0.0, 0.0],
-            [0.0, 3.0, 0.0],
-            [0.0, 0.0, 5.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[2.0, 0.0, 0.0],
+                        [0.0, 3.0, 0.0],
+                        [0.0, 0.0, 5.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 # ---------- 3.4 奇异矩阵边界 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_singular(xp, dtype):
+def test_slogdet_singular(dtype):
     """奇异矩阵: sign=0, logdet=-inf"""
-    data = [[1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[1.0, 2.0, 3.0],
+                        [4.0, 5.0, 6.0],
+                        [7.0, 8.0, 9.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_zero_matrix(xp, dtype):
+def test_slogdet_zero_matrix(dtype):
     """奇异矩阵: 全零矩阵"""
-    data = [[0.0, 0.0],
-            [0.0, 0.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    data = numpy.array([[0.0, 0.0],
+                        [0.0, 0.0]], dtype=dtype)
+    _assert_slogdet_allclose(data)
 
 
 # ---------- 3.5 广播行为 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
-def test_slogdet_batch_matrices(xp, dtype):
+def test_slogdet_batch_matrices(dtype):
     """广播: 批量矩阵 slogdet"""
     data = numpy.array([
         [[1.0, 2.0], [3.0, 4.0]],
         [[2.0, 0.0], [0.0, 3.0]],
     ]).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-4)
-def test_slogdet_batch_3x3(xp, dtype):
+def test_slogdet_batch_3x3(dtype):
     """广播: 批量 3x3 slogdet"""
     numpy.random.seed(42)
     data = numpy.random.uniform(-3, 3, (2, 3, 3)).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data, rtol=1e-4, atol=1e-4)
 
 
 # ---------- 3.6 空矩阵输入 ----------
@@ -536,20 +531,16 @@ def test_slogdet_empty_matrix(xp, dtype):
 
 # ---------- 3.7 随机矩阵 ----------
 @testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
-def test_slogdet_random_4x4(xp, dtype):
+def test_slogdet_random_4x4(dtype):
     """随机矩阵: 4x4 slogdet"""
     numpy.random.seed(99)
     data = numpy.random.uniform(-10, 10, (4, 4)).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data, rtol=1e-3, atol=1e-3)
 
 
 @testing.for_dtypes([numpy.float64])
-@testing.numpy_asnumpy_allclose(rtol=1e-10, atol=1e-10)
-def test_slogdet_random_5x5_fp64(xp, dtype):
+def test_slogdet_random_5x5_fp64(dtype):
     """随机矩阵: 5x5 FP64 slogdet"""
     numpy.random.seed(111)
     data = numpy.random.uniform(-10, 10, (5, 5)).astype(dtype)
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.slogdet(a)
+    _assert_slogdet_allclose(data, rtol=1e-10, atol=1e-10)
