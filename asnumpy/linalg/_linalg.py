@@ -25,7 +25,7 @@ from ..lib.asnumpy_core.linalg import (
     slogdet as _slogdet,
 )
 from ..utils import ndarray
-from .._types import ArrayLike, AxisLike
+from .._types import ArrayLike
 
 
 def _as_host_array(a: ArrayLike) -> np.ndarray:
@@ -40,7 +40,43 @@ def _to_asnumpy_array(value) -> ndarray:
     return ndarray.from_numpy(np.asarray(value))
 
 
-def _normalize_norm_axis(axis: AxisLike, ndim: int):
+def _normalize_norm_axis(axis, ndim: int):
+    if axis is None:
+        return None
+    if isinstance(axis, tuple):
+        axes = axis
+    elif isinstance(axis, list):
+        axes = tuple(axis)
+    else:
+        axes = (axis,)
+
+    normalized = []
+    for item in axes:
+        idx = int(item)
+        if idx < 0:
+            idx += ndim
+        if idx < 0 or idx >= ndim:
+            raise np.AxisError(idx, ndim=ndim)
+        normalized.append(idx)
+
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("Duplicate axes given.")
+    return tuple(normalized)
+
+
+def _as_host_array(a: ArrayLike) -> np.ndarray:
+    if hasattr(a, 'to_numpy'):
+        return a.to_numpy()
+    return np.asarray(a)
+
+
+def _to_asnumpy_array(value) -> ndarray:
+    if isinstance(value, ndarray):
+        return value
+    return ndarray.from_numpy(np.asarray(value))
+
+
+def _normalize_norm_axis(axis, ndim: int):
     if axis is None:
         return None
     if isinstance(axis, tuple):
@@ -81,20 +117,15 @@ def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
     return ndarray(result)
 
 
-def norm(
-    a: ArrayLike,
-    ord: Optional[Union[str, int, float]] = None,
-    axis: AxisLike = None,
-    keepdims: bool = False,
-) -> ndarray:
-    host = _as_host_array(a)
+def norm(x: ArrayLike, ord=None, axis=None, keepdims: bool = False) -> ndarray:
+    host = _as_host_array(x)
     normalized_axis = _normalize_norm_axis(axis, host.ndim)
 
     try:
         result = np.linalg.norm(host, ord=ord, axis=normalized_axis, keepdims=keepdims)
     except TypeError:
         if normalized_axis is None and ord is None:
-            return ndarray(_norm(a, 2.0, (), keepdims))
+            return ndarray(_norm(x, 2.0, (), keepdims))
         raise
 
     return _to_asnumpy_array(result)

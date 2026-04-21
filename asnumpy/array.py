@@ -15,7 +15,7 @@
 # *****************************************************************************
 
 from loguru import logger
-from ._types import ArrayLike, DTypeLike, ShapeLike, ScalarLike
+from ._types import ArrayLike, DTypeLike
 from .lib.asnumpy_core.array import (
     empty as _empty,
     empty_like as _empty_like,
@@ -33,71 +33,103 @@ from .utils import ndarray, _convert_dtype
 
 
 @logger.catch
-def zeros(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
+def zeros(shape, dtype: DTypeLike = None, order: str = "C", *, like: ArrayLike = None) -> ndarray:
     logger.debug(f"Creating zeros array shape={shape}, dtype={dtype}")
     return ndarray(_zeros(shape, _convert_dtype(dtype)))
 
 
 @logger.catch
-def zeros_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
-    logger.debug(f"Creating zeros_like array other={other}, dtype={dtype}")
-    return ndarray(_zeros_like(other, _convert_dtype(dtype)))
+def zeros_like(
+    a: ArrayLike, dtype: DTypeLike = None, order: str = "K", subok: bool = True, shape=None
+) -> ndarray:
+    logger.debug(f"Creating zeros_like array a={a}, dtype={dtype}")
+    return ndarray(_zeros_like(a, _convert_dtype(dtype)))
 
 
 @logger.catch
-def full(shape: ShapeLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
-    logger.debug(f"Creating full array shape={shape}, value={value}, dtype={dtype}")
-    return ndarray(_full(shape, value, _convert_dtype(dtype)))
+def full(
+    shape, fill_value, dtype: DTypeLike = None, order: str = "C", *, like: ArrayLike = None
+) -> ndarray:
+    logger.debug(f"Creating full array shape={shape}, fill_value={fill_value}, dtype={dtype}")
+    return ndarray(_full(shape, fill_value, _convert_dtype(dtype)))
 
 
 @logger.catch
-def full_like(other: ArrayLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
-    logger.debug(f"Creating full_like array other={other}, value={value}, dtype={dtype}")
-    return ndarray(_full_like(other, value, _convert_dtype(dtype)))
+def full_like(
+    a: ArrayLike,
+    fill_value,
+    dtype: DTypeLike = None,
+    order: str = "K",
+    subok: bool = True,
+    shape=None,
+) -> ndarray:
+    logger.debug(f"Creating full_like array a={a}, fill_value={fill_value}, dtype={dtype}")
+    return ndarray(_full_like(a, fill_value, _convert_dtype(dtype)))
 
 
 @logger.catch
-def empty(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
+def empty(shape, dtype: DTypeLike = None, order: str = "C", *, like: ArrayLike = None) -> ndarray:
     logger.debug(f"Creating empty array shape={shape}, dtype={dtype}")
     return ndarray(_empty(shape, _convert_dtype(dtype)))
 
 
 @logger.catch
-def empty_like(prototype: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def empty_like(
+    prototype: ArrayLike,
+    dtype: DTypeLike = None,
+    order: str = "K",
+    subok: bool = True,
+    shape=None,
+    *,
+    device: str = None,
+) -> ndarray:
     logger.debug(f"Creating empty_like array prototype={prototype}, dtype={dtype}")
     return ndarray(_empty_like(prototype, _convert_dtype(dtype)))
 
 
 @logger.catch
-def eye(n: int, dtype: DTypeLike = None) -> ndarray:
-    logger.debug(f"Creating eye array n={n}, dtype={dtype}")
-    return ndarray(_eye(n, _convert_dtype(dtype)))
+def eye(
+    N: int,
+    M: int = None,
+    k: int = 0,
+    dtype: DTypeLike = None,
+    order: str = "C",
+    *,
+    like: ArrayLike = None,
+) -> ndarray:
+    logger.debug(f"Creating eye array N={N}, M={M}, k={k}, dtype={dtype}")
+    return ndarray(_eye(N, _convert_dtype(dtype)))
 
 
 @logger.catch
-def ones(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
+def ones(shape, dtype: DTypeLike = None, order: str = "C", *, like: ArrayLike = None) -> ndarray:
     logger.debug(f"Creating ones array shape={shape}, dtype={dtype}")
     return ndarray(_ones(shape, _convert_dtype(dtype)))
 
 
 @logger.catch
-def ones_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
-    logger.debug(f"Creating ones_like array other={other}, dtype={dtype}")
-    return ndarray(_ones_like(other, _convert_dtype(dtype)))
+def ones_like(
+    a: ArrayLike, dtype: DTypeLike = None, order: str = "K", subok: bool = True, shape=None
+) -> ndarray:
+    logger.debug(f"Creating ones_like array a={a}, dtype={dtype}")
+    return ndarray(_ones_like(a, _convert_dtype(dtype)))
 
 
 @logger.catch
-def identity(n: int, dtype: DTypeLike = None) -> ndarray:
+def identity(n: int, dtype: DTypeLike = None, *, like: ArrayLike = None) -> ndarray:
     logger.debug(f"Creating identity array n={n}, dtype={dtype}")
     return ndarray(_identity(n, _convert_dtype(dtype)))
 
 
 @logger.catch
 def linspace(
-    start: ScalarLike,
-    end: ScalarLike,
-    steps: int = 50,
+    start,
+    stop,
+    num: int = 50,
+    endpoint: bool = True,
+    retstep: bool = False,
     dtype: DTypeLike = None,
+    axis: int = 0,
 ) -> ndarray:
-    logger.debug(f"Creating linspace array start={start}, end={end}, steps={steps}, dtype={dtype}")
-    return ndarray(_linspace(start, end, steps, _convert_dtype(dtype)))
+    logger.debug(f"Creating linspace array start={start}, stop={stop}, num={num}, dtype={dtype}")
+    return ndarray(_linspace(start, stop, num, _convert_dtype(dtype)))
