@@ -14,9 +14,11 @@
 # limitations under the License.
 # *****************************************************************************
 
-import asnumpy as ap
-import numpy as np
 from loguru import logger
+import numpy as np
+
+import asnumpy as ap
+
 
 
 def test_dtypes_is_submodule():
