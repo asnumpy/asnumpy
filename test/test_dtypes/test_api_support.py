@@ -1,3 +1,19 @@
+# *****************************************************************************
+# Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+
 #!/usr/bin/env python3
 """
 测试自定义 dtype（如 bfloat16）对各种 asnumpy API 的支持情况
@@ -28,19 +44,21 @@
 - 其他数学函数：sign, heaviside, sinc, lcm, gcd, signbit, nan_to_num, clip, maximum, minimum, fmax, fmin, relu, gelu, real
 - 线性代数：dot, vdot, inner, outer, matmul, einsum
 """
-import numpy as np
-import asnumpy as ap
+
 import logging
 
+import asnumpy as ap
+import numpy as np
+
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 # ============================================================================
 # 配置：可替换的 dtype 类型
 # ============================================================================
 # 要测试的 dtype 类型，可以轻松替换为其他类型
-# 
+#
 # 示例配置：
 #   - bfloat16: TEST_DTYPE = ap.bfloat16, TEST_DTYPE_NAME = "bfloat16", TEST_DTYPE_ACL_VALUE = 27
 #   - float8_e5m2: TEST_DTYPE = ap.float8_e5m2, TEST_DTYPE_NAME = "float8_e5m2", TEST_DTYPE_ACL_VALUE = 26
@@ -55,9 +73,10 @@ TEST_DTYPE_ACL_VALUE = 27  # ACL_BF16，其他类型需要相应修改
 # 辅助函数
 # ============================================================================
 
+
 def _expected_numpy_dtype(expected_dtype):
     """将配置中的 expected_dtype 规范为 np.dtype。"""
-    if hasattr(expected_dtype, '_dtype'):
+    if hasattr(expected_dtype, "_dtype"):
         return expected_dtype._dtype
     return np.dtype(expected_dtype)
 
@@ -65,7 +84,7 @@ def _expected_numpy_dtype(expected_dtype):
 def _dtype_is_bfloat16(dt):
     """是否为 bfloat16（与 NPUArray::ToNumpy 对 ACL_BF16 升为 float32 的约定一致）。"""
     dt = np.dtype(dt)
-    return dt.name == 'bfloat16' or 'bfloat' in dt.name
+    return dt.name == "bfloat16" or "bfloat" in dt.name
 
 
 def verify_array_properties(arr, expected_shape, expected_dtype, operator_name):
@@ -76,22 +95,26 @@ def verify_array_properties(arr, expected_shape, expected_dtype, operator_name):
     2) to_numpy()：NPU 实现里 bfloat16 在主机侧升为 float32，故期望 bfloat16 时
        应断言 cpu_arr.dtype == float32，而非 bfloat16。
     """
-    assert list(arr.shape) == list(expected_shape), \
+    assert list(arr.shape) == list(expected_shape), (
         f"{operator_name}: shape 不匹配，期望 {expected_shape}，实际 {arr.shape}"
+    )
 
     expected_dtype_obj = _expected_numpy_dtype(expected_dtype)
     actual_storage = np.dtype(arr.dtype)
-    assert actual_storage == expected_dtype_obj, \
+    assert actual_storage == expected_dtype_obj, (
         f"{operator_name}: 存储 dtype 不匹配，期望 {expected_dtype_obj}，实际 {actual_storage}"
+    )
 
     try:
         cpu_arr = arr.to_numpy()
         if _dtype_is_bfloat16(expected_dtype_obj):
-            assert cpu_arr.dtype == np.float32, \
+            assert cpu_arr.dtype == np.float32, (
                 f"{operator_name}: bfloat16 经 to_numpy 应为 float32，实际 {cpu_arr.dtype}"
+            )
         else:
-            assert cpu_arr.dtype == expected_dtype_obj, \
+            assert cpu_arr.dtype == expected_dtype_obj, (
                 f"{operator_name}: to_numpy dtype 不匹配，期望 {expected_dtype_obj}，实际 {cpu_arr.dtype}"
+            )
         logger.info(
             f"[PASS] {operator_name}: shape={arr.shape}, storage_dtype={actual_storage}, "
             f"to_numpy_dtype={cpu_arr.dtype}"
@@ -106,22 +129,23 @@ def verify_array_properties(arr, expected_shape, expected_dtype, operator_name):
 def test_api(api_name, test_func, description=""):
     """
     统一的 API 测试包装器
-    
+
     Args:
         api_name: API 名称
         test_func: 测试函数
         description: 测试描述
     """
     try:
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info(f"测试 {api_name}" + (f": {description}" if description else ""))
-        logger.info(f"{'='*60}")
+        logger.info(f"{'=' * 60}")
         test_func()
         logger.info(f"[PASS] {api_name} 测试通过")
         return True
     except Exception as e:
         logger.error(f"[FAIL] {api_name} 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -129,6 +153,7 @@ def test_api(api_name, test_func, description=""):
 # ============================================================================
 # 数组创建 API 测试
 # ============================================================================
+
 
 def test_ones():
     """测试 ones API"""
@@ -189,6 +214,7 @@ def test_zeros_like():
 # ============================================================================
 # 数学运算 API 测试
 # ============================================================================
+
 
 def test_add():
     """测试 add API"""
@@ -276,6 +302,7 @@ def test_square():
 # 三角函数 API 测试
 # ============================================================================
 
+
 def test_tan():
     """测试 tan API"""
     arr = ap.full(shape=(2, 3), value=1.0, dtype=TEST_DTYPE)
@@ -331,6 +358,7 @@ def test_radians():
 # 双曲函数 API 测试
 # ============================================================================
 
+
 def test_sinh():
     """测试 sinh API"""
     arr = ap.full(shape=(2, 3), value=1.0, dtype=TEST_DTYPE)
@@ -376,6 +404,7 @@ def test_arctanh():
 # ============================================================================
 # 指数对数函数 API 测试
 # ============================================================================
+
 
 def test_expm1():
     """测试 expm1 API"""
@@ -432,6 +461,7 @@ def test_logaddexp2():
 # 舍入函数 API 测试
 # ============================================================================
 
+
 def test_around():
     """测试 around API"""
     arr = ap.full(shape=(2, 3), value=3.14159, dtype=TEST_DTYPE)
@@ -484,6 +514,7 @@ def test_trunc():
 # ============================================================================
 # 算术运算 API 测试
 # ============================================================================
+
 
 def test_true_divide():
     """测试 true_divide API"""
@@ -579,6 +610,7 @@ def test_reciprocal():
 # 归约操作 API 测试
 # ============================================================================
 
+
 def test_sum():
     """测试 sum API"""
     arr = ap.ones(shape=(2, 3), dtype=TEST_DTYPE)
@@ -669,6 +701,7 @@ def test_cross():
 # ============================================================================
 # 逻辑运算 API 测试
 # ============================================================================
+
 
 def test_greater():
     """测试 greater API"""
@@ -817,6 +850,7 @@ def test_logical_xor():
 # 其他 API 测试
 # ============================================================================
 
+
 def test_clip():
     """测试 clip API"""
     arr = ap.full(shape=(2, 3), value=5.0, dtype=TEST_DTYPE)
@@ -934,6 +968,7 @@ def test_real():
 # 线性代数 API 测试
 # ============================================================================
 
+
 def test_dot():
     """测试 dot API"""
     a = ap.full(shape=(3,), value=1.0, dtype=TEST_DTYPE)
@@ -990,12 +1025,13 @@ def test_einsum():
 # 主测试函数
 # ============================================================================
 
+
 def run_all_tests():
     """运行所有测试"""
     logger.info("=" * 60)
     logger.info(f"开始测试 {TEST_DTYPE_NAME} 对各种 API 的支持")
     logger.info("=" * 60)
-    
+
     # 定义所有测试用例
     test_cases = [
         # 数组创建
@@ -1008,7 +1044,6 @@ def run_all_tests():
         ("ndarray", test_ndarray_constructor, "NPUArray 构造函数"),
         ("ones_like", test_ones_like, "创建与给定数组形状相同的全1数组"),
         ("zeros_like", test_zeros_like, "创建与给定数组形状相同的全0数组"),
-        
         # 数学运算 - 基础算术
         ("add", test_add, "加法运算"),
         ("subtract", test_subtract, "减法运算"),
@@ -1017,7 +1052,6 @@ def run_all_tests():
         ("power", test_power, "幂运算"),
         ("absolute", test_abs, "绝对值"),
         ("square", test_square, "平方"),
-        
         # 数学运算 - 指数对数
         ("exp", test_exp, "指数函数"),
         ("expm1", test_expm1, "exp(x)-1"),
@@ -1028,7 +1062,6 @@ def run_all_tests():
         ("log1p", test_log1p, "log(1+x)"),
         ("logaddexp", test_logaddexp, "log(exp(x1)+exp(x2))"),
         ("logaddexp2", test_logaddexp2, "log2(2^x1+2^x2)"),
-        
         # 数学运算 - 三角函数
         ("sin", test_sin, "正弦函数"),
         ("cos", test_cos, "余弦函数"),
@@ -1039,7 +1072,6 @@ def run_all_tests():
         ("arctan2", test_arctan2, "arctan2函数"),
         ("hypot", test_hypot, "欧几里得范数"),
         ("radians", test_radians, "角度转弧度"),
-        
         # 数学运算 - 双曲函数
         ("sinh", test_sinh, "双曲正弦"),
         ("cosh", test_cosh, "双曲余弦"),
@@ -1047,7 +1079,6 @@ def run_all_tests():
         ("arcsinh", test_arcsinh, "反双曲正弦"),
         ("arccosh", test_arccosh, "反双曲余弦"),
         ("arctanh", test_arctanh, "反双曲正切"),
-        
         # 数学运算 - 舍入函数
         ("around", test_around, "四舍五入"),
         ("round_", test_round_, "四舍五入"),
@@ -1056,7 +1087,6 @@ def run_all_tests():
         ("floor", test_floor, "向下取整"),
         ("ceil", test_ceil, "向上取整"),
         ("trunc", test_trunc, "截断"),
-        
         # 数学运算 - 算术运算
         ("true_divide", test_true_divide, "真除法"),
         ("floor_divide", test_floor_divide, "向下整除"),
@@ -1069,7 +1099,6 @@ def run_all_tests():
         ("positive", test_positive, "正号"),
         ("negative", test_negative, "负号"),
         ("reciprocal", test_reciprocal, "倒数"),
-        
         # 归约操作
         ("sum", test_sum, "求和"),
         ("prod", test_prod, "求积"),
@@ -1080,7 +1109,6 @@ def run_all_tests():
         ("nancumprod", test_nancumprod, "忽略NaN的累积积"),
         ("nancumsum", test_nancumsum, "忽略NaN的累积和"),
         ("cross", test_cross, "向量叉积"),
-        
         # 逻辑运算 - 比较
         ("greater", test_greater, "大于比较"),
         ("greater_equal", test_greater_equal, "大于等于比较"),
@@ -1088,7 +1116,6 @@ def run_all_tests():
         ("less_equal", test_less_equal, "小于等于比较"),
         ("equal", test_equal, "相等比较"),
         ("not_equal", test_not_equal, "不等比较"),
-        
         # 逻辑运算 - 逻辑操作
         ("all", test_all, "全为真"),
         ("any", test_any, "任一为真"),
@@ -1096,13 +1123,11 @@ def run_all_tests():
         ("logical_or", test_logical_or, "逻辑或"),
         ("logical_not", test_logical_not, "逻辑非"),
         ("logical_xor", test_logical_xor, "逻辑异或"),
-        
         # 逻辑运算 - 有限性检查
         ("isfinite", test_isfinite, "是否有限"),
         ("isinf", test_isinf, "是否无穷"),
         ("isneginf", test_isneginf, "是否负无穷"),
         ("isposinf", test_isposinf, "是否正无穷"),
-        
         # 其他数学函数
         ("sign", test_sign, "符号函数"),
         ("heaviside", test_heaviside, "阶跃函数"),
@@ -1119,7 +1144,6 @@ def run_all_tests():
         ("relu", test_relu, "ReLU激活函数"),
         ("gelu", test_gelu, "GELU激活函数"),
         ("real", test_real, "取实部"),
-        
         # 线性代数
         ("dot", test_dot, "点积"),
         ("vdot", test_vdot, "向量点积"),
@@ -1128,17 +1152,17 @@ def run_all_tests():
         ("matmul", test_matmul, "矩阵乘法"),
         ("einsum", test_einsum, "Einstein求和"),
     ]
-    
+
     # 运行测试
     results = []
     for api_name, test_func, description in test_cases:
         success = test_api(api_name, test_func, description)
         results.append((api_name, success))
-    
+
     # 统计结果
     passed = sum(1 for _, success in results if success)
     total = len(results)
-    
+
     logger.info("\n" + "=" * 60)
     logger.info("测试结果汇总")
     logger.info("=" * 60)
@@ -1146,16 +1170,15 @@ def run_all_tests():
     logger.info(f"通过: {passed} 个")
     logger.info(f"失败: {total - passed} 个")
     logger.info("=" * 60)
-    
+
     # 打印失败的 API
     failed_apis = [name for name, success in results if not success]
     if failed_apis:
         logger.warning(f"失败的 API: {', '.join(failed_apis)}")
-    
+
     return passed == total
 
 
 if __name__ == "__main__":
     success = run_all_tests()
     exit(0 if success else 1)
-
