@@ -191,11 +191,28 @@ _NUMPY_DTYPE_NAMES = {
     "bool_",
 }
 
+_ASNUMPY_CUSTOM_DTYPE_NAMES = {
+    # float types
+    "float8_e5m2",
+    "float8_e4m3fn",
+    "float8_e8m0",
+    "bfloat16",
+    "float6_e2m3fn",
+    "float6_e3m2fn",
+    "float4_e2m1fn",
+    "float4_e1m2fn",
+    # int types
+    "int4",
+    "uint1",
+}
+
 _LAZY_MAPPING = {
     # .array
     "empty": ".array", "empty_like": ".array", "eye": ".array", "full": ".array",
     "full_like": ".array", "identity": ".array", "linspace": ".array", "ones": ".array",
     "ones_like": ".array", "zeros": ".array", "zeros_like": ".array",
+    # .dtypes
+    "dtypes": ".dtypes",
     # .linalg
     "linalg": ".linalg",
     # .linalg.direct
@@ -268,6 +285,11 @@ def __getattr__(name):
             return module
         return getattr(module, name)
 
+    # Custom dtype aliases (e.g., ap.float8_e5m2 -> asnumpy.dtypes.float8_e5m2)
+    if name in _ASNUMPY_CUSTOM_DTYPE_NAMES:
+        dtypes_mod = importlib.import_module(".dtypes", package=__package__)
+        return getattr(dtypes_mod, name)
+
     # Fall back to numpy for dtype aliases (e.g., ap.float32 -> np.float32)
     if name in _NUMPY_DTYPE_NAMES:
         return getattr(np, name)
@@ -276,7 +298,7 @@ def __getattr__(name):
 
 
 def __dir__():
-    return __all__ + ["__version__"] + list(_NUMPY_DTYPE_NAMES)
+    return __all__ + ["__version__"] + list(_NUMPY_DTYPE_NAMES) + list(_ASNUMPY_CUSTOM_DTYPE_NAMES)
 
 
 

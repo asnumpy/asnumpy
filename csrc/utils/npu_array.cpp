@@ -15,9 +15,31 @@
  *****************************************************************************/
 
 #include <asnumpy/utils/npu_array.hpp>
+<<<<<<< HEAD:csrc/utils/npu_array.cpp
 #include <asnumpy/utils/status_handler.hpp>
+=======
+#include <asnumpy/dtypes/desc.hpp>
+#include <asnumpy/dtypes/registry.hpp>
+>>>>>>> f71a1a9 (feat(dtypes): integrate new dtype module into core code):src/utils/npu_array.cpp
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 
+<<<<<<< HEAD:csrc/utils/npu_array.cpp
+=======
+namespace {
+
+py::dtype py_dtype_from_registered_descr(PyArray_Descr* descr) {
+    if (descr == nullptr) {
+        throw std::runtime_error("Custom dtype descriptor is not registered.");
+    }
+    Py_INCREF(reinterpret_cast<PyObject*>(descr));
+    return py::reinterpret_steal<py::dtype>(reinterpret_cast<PyObject*>(descr));
+}
+
+}  // namespace
+
+>>>>>>> f71a1a9 (feat(dtypes): integrate new dtype module into core code):src/utils/npu_array.cpp
 /**
  * @brief Constructor that creates an NPUArray with specified shape and data type.
  *
@@ -285,9 +307,23 @@ NPUArray NPUArray::FromNumpy(py::array hostData) {
  */
 py::array NPUArray::ToNumpy() const {
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
+<<<<<<< HEAD:csrc/utils/npu_array.cpp
 
     // create result array
     py::array result(this->dtype, this->shape);
+=======
+    void* rawDataPtr = nullptr;
+    auto error = aclGetRawTensorAddr(this->tensorPtr, &rawDataPtr);
+    if (error != ACL_SUCCESS || !rawDataPtr) throw std::runtime_error(fmt::format("Failed to get tensor data pointer. error: {}", error));
+    
+    // 创建结果数组
+    // For float16/bf16, we materialize float32 on host to preserve values.
+    py::dtype out_dtype = this->dtype;
+    if (this->aclDtype == ACL_FLOAT16 || this->aclDtype == ACL_BF16) {
+        out_dtype = py::dtype::of<float>();
+    }
+    py::array result(out_dtype, this->shape);
+>>>>>>> f71a1a9 (feat(dtypes): integrate new dtype module into core code):src/utils/npu_array.cpp
     py::buffer_info info = result.request();
     if (tensorByteSize == 0)
         return result;
@@ -362,6 +398,7 @@ int64_t NPUArray::GetShapeSize(const std::vector<int64_t>& shape) {
  * @throws std::runtime_error If input data type is not supported.
  */
 aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
+<<<<<<< HEAD:csrc/utils/npu_array.cpp
     if (dtype.is(py::dtype("float16")))
         return ACL_FLOAT16;
     if (dtype.is(py::dtype::of<float>()))
@@ -391,6 +428,30 @@ aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
     if (dtype.is(py::dtype::of<std::complex<double>>()))
         return ACL_COMPLEX128;
     throw std::runtime_error("[npu_array.cpp](GetACLDataType) Unsupported py::dtype for aclDataType.");
+=======
+    if(dtype.is(py::dtype::of<float>())) return ACL_FLOAT;
+    if(dtype.is(py::dtype::of<double>())) return ACL_DOUBLE;
+    if(dtype.is(py::dtype::of<int8_t>())) return ACL_INT8;
+    if(dtype.is(py::dtype::of<int16_t>())) return ACL_INT16;
+    if(dtype.is(py::dtype::of<int32_t>())) return ACL_INT32;
+    if(dtype.is(py::dtype::of<int64_t>())) return ACL_INT64;
+    if(dtype.is(py::dtype::of<uint8_t>())) return ACL_UINT8;
+    if(dtype.is(py::dtype::of<uint16_t>())) return ACL_UINT16;
+    if(dtype.is(py::dtype::of<uint32_t>())) return ACL_UINT32;
+    if(dtype.is(py::dtype::of<uint64_t>())) return ACL_UINT64;
+    if(dtype.is(py::dtype::of<bool>())) return ACL_BOOL;
+    if(dtype.is(py::dtype::of<std::complex<float>>())) return ACL_COMPLEX64;
+    if(dtype.is(py::dtype::of<std::complex<double>>())) return ACL_COMPLEX128;
+
+    // Custom dtypes are NumPy dtypes (PyArray_Descr) registered by AsNumpy.
+    // Prefer matching via `type_num` rather than relying on dtype.name strings.
+    aclDataType custom_acl{};
+    auto* descr = reinterpret_cast<PyArray_Descr*>(dtype.ptr());
+    if (asnumpy::dtypes::TryGetAclTypeFromArrayDescr(descr, custom_acl)) {
+        return custom_acl;
+    }
+    throw std::runtime_error("Unsupported py::dtype for aclDataType.");
+>>>>>>> f71a1a9 (feat(dtypes): integrate new dtype module into core code):src/utils/npu_array.cpp
 }
 
 /**
@@ -404,6 +465,7 @@ aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
  */
 py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
     switch (acl_type) {
+<<<<<<< HEAD:csrc/utils/npu_array.cpp
     case ACL_FLOAT:
         return py::dtype::of<float>();
     case ACL_DOUBLE:
@@ -462,6 +524,32 @@ py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
         return py::dtype::of<uint8_t>(); // Float4 E1M2 format maps to uint8
     default:
         throw std::runtime_error("[npu_array.cpp](GetPyDtype) Unsupported aclDataType for py::dtype conversion.");
+=======
+        case ACL_FLOAT: return py::dtype::of<float>();
+        case ACL_DOUBLE: return py::dtype::of<double>();
+        case ACL_FLOAT16: return py::dtype("float16");
+        case ACL_INT8: return py::dtype::of<int8_t>();
+        case ACL_INT16: return py::dtype::of<int16_t>();
+        case ACL_INT32: return py::dtype::of<int32_t>();
+        case ACL_INT64: return py::dtype::of<int64_t>();
+        case ACL_UINT8: return py::dtype::of<uint8_t>();
+        case ACL_UINT16: return py::dtype::of<uint16_t>();
+        case ACL_UINT32: return py::dtype::of<uint32_t>();
+        case ACL_UINT64: return py::dtype::of<uint64_t>();
+        case ACL_BOOL: return py::dtype::of<bool>();
+        case ACL_COMPLEX64: return py::dtype::of<std::complex<float>>();
+        case ACL_COMPLEX128: return py::dtype::of<std::complex<double>>();
+        case ACL_COMPLEX32: return py::dtype::of<std::complex<float>>(); // complex32 映射到 complex64
+        case ACL_STRING: return py::dtype::of<char*>();      // 字符串指针
+        case ACL_DT_UNDEFINED: return py::dtype::of<uint8_t>(); // 未定义类型映射到 uint8
+        default:
+            // Try custom dtype registry first (float8/bf16/int4/uint1/etc).
+            asnumpy::dtypes::InitAndRegisterDtypes();
+            if (auto* descr = asnumpy::dtypes::RegisteredArrayDescrForAclType(acl_type)) {
+                return py_dtype_from_registered_descr(descr);
+            }
+            throw std::runtime_error("Unsupported aclDataType for py::dtype conversion.");
+>>>>>>> f71a1a9 (feat(dtypes): integrate new dtype module into core code):src/utils/npu_array.cpp
     }
 }
 
