@@ -19,8 +19,9 @@
 测试 float_types.hpp 中定义的浮点类型是否正确注册到 NumPy 并绑定到模块
 """
 
-import asnumpy as ap
 import numpy as np
+
+import asnumpy as ap
 
 
 def test_float_types_registration():
