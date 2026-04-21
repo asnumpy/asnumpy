@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # *****************************************************************************
 # Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
 #
@@ -13,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************************
-
-#!/usr/bin/env python3
 """
 测试自定义 dtype（如 bfloat16）对各种 asnumpy API 的支持情况
 
@@ -47,8 +47,9 @@
 
 import logging
 
-import asnumpy as ap
 import numpy as np
+
+import asnumpy as ap
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -76,8 +77,6 @@ TEST_DTYPE_ACL_VALUE = 27  # ACL_BF16，其他类型需要相应修改
 
 def _expected_numpy_dtype(expected_dtype):
     """将配置中的 expected_dtype 规范为 np.dtype。"""
-    if hasattr(expected_dtype, "_dtype"):
-        return expected_dtype._dtype
     return np.dtype(expected_dtype)
 
 
@@ -126,7 +125,7 @@ def verify_array_properties(arr, expected_shape, expected_dtype, operator_name):
         logger.info(f"[PASS] {operator_name}: shape={arr.shape}, storage_dtype={actual_storage}")
 
 
-def test_api(api_name, test_func, description=""):
+def _run_api_test(api_name, test_func, description=""):
     """
     统一的 API 测试包装器
 
@@ -1027,13 +1026,21 @@ def test_einsum():
 
 
 def run_all_tests():
-    """运行所有测试"""
+    """运行所有测试（入口）。"""
+    _print_test_start_banner()
+    test_cases = _build_test_cases()
+    results = _run_test_cases(test_cases)
+    return _print_test_summary(results)
+
+
+def _print_test_start_banner() -> None:
     logger.info("=" * 60)
     logger.info(f"开始测试 {TEST_DTYPE_NAME} 对各种 API 的支持")
     logger.info("=" * 60)
 
-    # 定义所有测试用例
-    test_cases = [
+
+def _build_test_cases():
+    return [
         # 数组创建
         ("ones", test_ones, "创建全1数组"),
         ("zeros", test_zeros, "创建全0数组"),
@@ -1153,13 +1160,16 @@ def run_all_tests():
         ("einsum", test_einsum, "Einstein求和"),
     ]
 
-    # 运行测试
+
+def _run_test_cases(test_cases):
     results = []
     for api_name, test_func, description in test_cases:
-        success = test_api(api_name, test_func, description)
+        success = _run_api_test(api_name, test_func, description)
         results.append((api_name, success))
+    return results
 
-    # 统计结果
+
+def _print_test_summary(results) -> bool:
     passed = sum(1 for _, success in results if success)
     total = len(results)
 
@@ -1171,7 +1181,6 @@ def run_all_tests():
     logger.info(f"失败: {total - passed} 个")
     logger.info("=" * 60)
 
-    # 打印失败的 API
     failed_apis = [name for name, success in results if not success]
     if failed_apis:
         logger.warning(f"失败的 API: {', '.join(failed_apis)}")
