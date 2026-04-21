@@ -16,7 +16,9 @@
 
 #include <asnumpy/statistics/averages_and_variances.hpp>
 #include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -44,6 +46,7 @@ namespace asnumpy {
         }
 
         NPUArray FlattenArray(const NPUArray& a) {
+            LOG_DEBUG("aclnnFlatten start: input_shape={}, aclDtype={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype));
             int64_t totalElements = CalculateTotalElements(a.shape);
             std::vector<int64_t> flatShape = {1, totalElements};
             auto temp = NPUArray(flatShape, a.aclDtype);
@@ -51,19 +54,16 @@ namespace asnumpy {
             uint64_t workspaceSize = 0;
             aclOpExecutor* executor;
             auto error = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, temp.tensorPtr, &workspaceSize, &executor);
-            CheckGetWorkspaceSizeAclnnStatus(error);
-            
-            void* workspaceAddr = nullptr;
-            if (workspaceSize != 0ULL) {
-                error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-                CheckMallocAclnnStatus(error);
-            }
-            
-            error = aclnnFlatten(workspaceAddr, workspaceSize, executor, nullptr);
-            CheckAclnnStatus(error, "aclnnFlatten error");
+            ACLNN_CHECK(error, "aclnnFlattenGetWorkspaceSize");
+
+            AclWorkspace workspace(workspaceSize);
+
+            error = aclnnFlatten(workspace.get(), workspaceSize, executor, nullptr);
+            ACLNN_CHECK(error, "aclnnFlatten");
             error = aclrtSynchronizeDevice();
-            CheckSynchronizeDeviceAclnnStatus(error);
-            
+            ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+            LOG_INFO("aclnnFlatten completed");
+
             return temp;
         }
 
@@ -85,12 +85,14 @@ namespace asnumpy {
                 return results[0];
             }
             else {
-                throw std::runtime_error("Unsupported array data type!");
+                throw std::runtime_error(
+                    fmt::format("[averages_and_variances.cpp]({}) unsupported dtype", __func__));
             }
         }
     }
 
     NPUArray Mean(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype) {
+        LOG_DEBUG("aclnnMean start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
         py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
         auto shape = a.shape;
         int64_t ax = axis;
@@ -109,20 +111,18 @@ namespace asnumpy {
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
         auto error = aclnnMeanGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        void* workspaceAddr = nullptr;
-        if(workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        error = aclnnMean(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnMean error");
+        ACLNN_CHECK(error, "aclnnMeanGetWorkspaceSize");
+        AclWorkspace workspace(workspaceSize);
+        error = aclnnMean(workspace.get(), workspaceSize, executor, nullptr);
+        ACLNN_CHECK(error, "aclnnMean");
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+        LOG_INFO("aclnnMean completed");
         return result;
     }
 
     double Mean(const NPUArray& a) {
+        LOG_DEBUG("aclnnMean start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
         auto temp = FlattenArray(a);
         
         std::vector<int64_t> tmp{1};
@@ -132,19 +132,15 @@ namespace asnumpy {
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
         auto error = aclnnMeanGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
-        
-        void* workspaceAddr = nullptr;
-        if (workspaceSize != 0ULL) {
-            error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-            CheckMallocAclnnStatus(error);
-        }
-        
-        error = aclnnMean(workspaceAddr, workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnMean error");
+        ACLNN_CHECK(error, "aclnnMeanGetWorkspaceSize");
+
+        AclWorkspace workspace(workspaceSize);
+
+        error = aclnnMean(workspace.get(), workspaceSize, executor, nullptr);
+        ACLNN_CHECK(error, "aclnnMean");
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
-        
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+        LOG_INFO("aclnnMean completed");
         return ExtractScalarValue(result);
     }
 }

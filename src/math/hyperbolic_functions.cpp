@@ -16,7 +16,6 @@
 
 
 #include <asnumpy/math/hyperbolic_functions.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
@@ -44,22 +43,24 @@ NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSinhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSinh(workspace, workspaceSize, executor, nullptr);
         },
-        "Sinh"                                       
+        "Sinh",
+        "aclnnSinh"
     );
 }
 
@@ -74,22 +75,24 @@ NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnCoshGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnCosh(workspace, workspaceSize, executor, nullptr);
         },
-        "Cosh"
+        "Cosh",
+        "aclnnCosh"
     );
 }
 
@@ -104,22 +107,24 @@ NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnTanhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnTanh(workspace, workspaceSize, executor, nullptr);
         },
-        "Tanh"
+        "Tanh",
+        "aclnnTanh"
     );
 }
 
@@ -134,22 +139,24 @@ NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAsinhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAsinh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arcsinh"
+        "Arcsinh",
+        "aclnnAsinh"
     );
 }
 
@@ -164,22 +171,24 @@ NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAcoshGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAcosh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arccosh"
+        "Arccosh",
+        "aclnnAcosh"
     );
 }
 
@@ -194,22 +203,24 @@ NPUArray Arctanh(const NPUArray& x, std::optional<py::dtype> dtype) {
         in_dtype == ACL_UINT8 || in_dtype == ACL_BOOL) {
         out_dtype = ACL_FLOAT;  // 默认转 float32
     }
+    ACL_DTYPE_WARN(in_dtype, out_dtype, __func__);
     // 再把 out_dtype 转回 py::dtype，传给 NPUArray 构造函数
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAtanhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAtanh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arctanh"
+        "Arctanh",
+        "aclnnAtanh"
     );
 }
 

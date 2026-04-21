@@ -17,6 +17,7 @@
 #include "asnumpy/utils/acl_resource.hpp"
 #include "asnumpy/utils/status_handler.hpp"
 #include <acl/acl.h>
+#include <spdlog/spdlog.h>
 
 namespace asnumpy {
 
@@ -27,7 +28,8 @@ namespace asnumpy {
 AclWorkspace::AclWorkspace(uint64_t size) : size_(size) {
     if (size_ > 0ULL) {
         auto error = aclrtMalloc(&ptr_, size_, ACL_MEM_MALLOC_HUGE_FIRST);
-        CheckMallocAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtMalloc");
+        spdlog::info("AclWorkspace allocated {} bytes", size_);
     }
 }
 

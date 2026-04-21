@@ -17,6 +17,7 @@
 
 #include <asnumpy/linalg/decompositions.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 
 #include <acl/acl.h>
@@ -30,6 +31,7 @@
 using namespace asnumpy;
 
 py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
+    LOG_DEBUG("aclnnLinalgQr start: input_shape={}, aclDtype={}, mode={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), mode);
     int size = a.shape.size();
     int64_t m = a.shape[size - 2];
     int64_t n = a.shape.back();
@@ -68,16 +70,16 @@ py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
 
         error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, emptyQ, resultR.tensorPtr,
             &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnLinalgQrGetWorkspaceSize");
 
         AclWorkspace workspace(workspaceSize);
         error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLinalgQr error");
+        ACLNN_CHECK(error, "aclnnLinalgQr");
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
         aclDestroyTensor(emptyQ);
-
+        LOG_INFO("aclnnLinalgQr completed");
         return py::cast(std::move(resultR));
     }
     else {
@@ -94,14 +96,15 @@ py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
 
         error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr,
             &workspaceSize, &executor);
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnLinalgQrGetWorkspaceSize");
 
         AclWorkspace workspace(workspaceSize);
         error = aclnnLinalgQr(workspace.get(), workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnLinalgQr error");
+        ACLNN_CHECK(error, "aclnnLinalgQr");
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
+        LOG_INFO("aclnnLinalgQr completed");
         return py::make_tuple(py::cast(std::move(resultQ)), py::cast(std::move(resultR)));
     }
 }

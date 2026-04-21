@@ -149,7 +149,6 @@ def test_any_all_false(xp, dtype):
 
 
 # ---------- 1.5 空数组 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.numpy_asnumpy_array_equal()
 def test_all_empty(xp):
     """测试 all: 空数组应返回 True (空归约的数学定义)"""
@@ -157,7 +156,6 @@ def test_all_empty(xp):
     return xp.all(a)
 
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.numpy_asnumpy_array_equal()
 def test_any_empty(xp):
     """测试 any: 空数组应返回 False (空归约的数学定义)"""
@@ -278,7 +276,6 @@ def test_isinf_all_inf(xp, dtype):
 
 
 # ---------- 2.5 空数组 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite_empty(xp, dtype):
@@ -287,7 +284,6 @@ def test_isfinite_empty(xp, dtype):
     return xp.isfinite(a)
 
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isinf_empty(xp, dtype):
@@ -471,7 +467,6 @@ def test_logical_xor_broadcast(xp, dtype):
 
 
 # ---------- 3.5 空数组 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_and_empty(xp, dtype):
@@ -481,7 +476,6 @@ def test_logical_and_empty(xp, dtype):
     return xp.logical_and(x1, x2)
 
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_logical_not_empty(xp, dtype):
@@ -819,7 +813,6 @@ def test_greater_scalar_values(xp, dtype):
     return xp.greater(a, 2.0)
 
 
-@pytest.mark.xfail(reason="greater scalar: type mismatch when array dtype != float64", strict=True)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_greater_scalar_int(xp, dtype):
@@ -875,7 +868,6 @@ def test_not_equal_scalar(xp, dtype):
 
 
 # ---------- 4.6 空数组 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_greater_empty(xp, dtype):
@@ -885,7 +877,6 @@ def test_greater_empty(xp, dtype):
     return xp.greater(a, b)
 
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_equal_empty(xp, dtype):
@@ -895,7 +886,6 @@ def test_equal_empty(xp, dtype):
     return xp.equal(a, b)
 
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_less_empty(xp, dtype):
