@@ -87,7 +87,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
 
     bind_array(array);
     bind_cann(cann);
-    // bind_dtypes(dtypes);
+    bind_dtypes(dtypes);
     bind_fft(fft);
     bind_linalg(linalg);
     bind_linalg_no_submodule(module);

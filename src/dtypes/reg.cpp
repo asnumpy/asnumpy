@@ -22,6 +22,7 @@
 #include <asnumpy/dtypes/int_types.hpp>
 #include <asnumpy/dtypes/acl_float_reg.hpp>
 #include <asnumpy/dtypes/acl_int_reg.hpp>
+#include <asnumpy/dtypes/registry.hpp>
 
 namespace asnumpy {
 namespace dtypes {
@@ -233,6 +234,11 @@ namespace dtypes {
  
  // 对外暴露统一初始化与注册入口
  void InitAndRegisterDtypes() {
+    static bool initialized = false;
+    if (initialized) {
+        return;
+    }
+
      // 1) 确保只导入一次 NumPy C API
      ImportNumpy();
      
@@ -249,6 +255,8 @@ namespace dtypes {
      // 3) 直接注册所有 ACL 整数类型
      IntTypeRegistrar<int4>::RegisterDtype();
      IntTypeRegistrar<uint1>::RegisterDtype();
+
+    initialized = true;
  }
  
  // 检查所有类型是否已注册
@@ -296,6 +304,31 @@ namespace dtypes {
      }
  }
  
+bool TryGetAclTypeFromArrayDescr(PyArray_Descr* descr, aclDataType& out_acl_type) {
+    if (descr == nullptr) {
+        return false;
+    }
+
+    // Ensure NumPy C-API is ready and custom dtypes are registered.
+    InitAndRegisterDtypes();
+
+    const int type_num = descr->type_num;
+
+    // Custom dtypes: match by typenum assigned during registration
+    if (type_num == ACLFloatManager<bfloat16>::npy_type) { out_acl_type = ACL_BF16; return true; }
+    if (type_num == ACLFloatManager<float8_e5m2>::npy_type) { out_acl_type = ACL_FLOAT8_E5M2; return true; }
+    if (type_num == ACLFloatManager<float8_e4m3fn>::npy_type) { out_acl_type = ACL_FLOAT8_E4M3FN; return true; }
+    if (type_num == ACLFloatManager<float8_e8m0>::npy_type) { out_acl_type = ACL_FLOAT8_E8M0; return true; }
+    if (type_num == ACLFloatManager<float6_e2m3fn>::npy_type) { out_acl_type = ACL_FLOAT6_E2M3; return true; }
+    if (type_num == ACLFloatManager<float6_e3m2fn>::npy_type) { out_acl_type = ACL_FLOAT6_E3M2; return true; }
+    if (type_num == ACLFloatManager<float4_e2m1fn>::npy_type) { out_acl_type = ACL_FLOAT4_E2M1; return true; }
+    if (type_num == ACLFloatManager<float4_e1m2fn>::npy_type) { out_acl_type = ACL_FLOAT4_E1M2; return true; }
+    if (type_num == ACLIntManager<int4>::npy_type) { out_acl_type = ACL_INT4; return true; }
+    if (type_num == ACLIntManager<uint1>::npy_type) { out_acl_type = ACL_UINT1; return true; }
+
+    return false;
+}
+
  // 获取特定类型的 dtype 类型号
  template<typename T>
  int GetACLFloatTypeNum() {
