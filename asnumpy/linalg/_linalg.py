@@ -25,7 +25,7 @@ from ..lib.asnumpy_core.linalg import (
     slogdet as _slogdet,
 )
 from ..utils import ndarray
-from .._types import ArrayLike, AxisLike
+from .._types import ArrayLike
 
 
 def matrix_power(a: ArrayLike, n: int) -> ndarray:
@@ -40,13 +40,8 @@ def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
     return ndarray(result)
 
 
-def norm(
-    a: ArrayLike,
-    ord: Optional[Union[str, int, float]] = None,
-    axis: AxisLike = None,
-    keepdims: bool = False,
-) -> ndarray:
-    return ndarray(_norm(a, ord, axis, keepdims))
+def norm(x: ArrayLike, ord=None, axis=None, keepdims: bool = False) -> ndarray:
+    return ndarray(_norm(x, ord, axis, keepdims))
 
 
 def det(a: ArrayLike) -> ndarray:

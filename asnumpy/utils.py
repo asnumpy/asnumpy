@@ -20,15 +20,12 @@ import numpy as np
 from .lib.asnumpy_core import ndarray as _ndarray
 from .lib.asnumpy_core import broadcast_shape as _broadcast_shape
 
-
 class ndarray(_ndarray):
     @overload
-    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None:
-        ...
+    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: ...
 
     @overload
-    def __init__(self, other: _ndarray) -> None:
-        ...
+    def __init__(self, other: _ndarray) -> None: ...
 
     def __init__(self, shape_or_array, dtype: np.dtype = None):
         if isinstance(shape_or_array, _ndarray):
@@ -36,16 +33,10 @@ class ndarray(_ndarray):
         elif isinstance(shape_or_array, (Sequence, int)):
             if dtype is None:
                 raise ValueError("dtype must be specified when initializing with shape")
-            shape = (
-                shape_or_array
-                if isinstance(shape_or_array, Sequence)
-                else (shape_or_array,)
-            )
+            shape = shape_or_array if isinstance(shape_or_array, Sequence) else (shape_or_array,)
             super().__init__(shape, np.dtype(dtype))
         else:
-            raise TypeError(
-                f"Unsupported type for initialization: {type(shape_or_array)}"
-            )
+            raise TypeError(f"Unsupported type for initialization: {type(shape_or_array)}")
 
     def __repr__(self) -> str:
         return f"ndarray(shape={self.shape}, dtype={self.dtype})"

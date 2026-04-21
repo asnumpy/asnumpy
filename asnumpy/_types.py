@@ -14,29 +14,29 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union, Sequence, TypeVar
+from typing import Union, Sequence, TypeVar, Any
 import numpy as np
 
 
 ArrayLike = Union[
-    "ndarray",  # NPUArray
     np.ndarray,
+    "ndarray",  # NPUArray
+    bool,
     int,
     float,
     complex,
-    bool,
-    Sequence,
+    str,
+    bytes,
+    Sequence[Any],
+    object,
 ]
 
-DTypeLike = Union[np.dtype, str, type, None]
-
-ShapeLike = Union[int, Sequence[int]]
-
-AxisLike = Union[int, Sequence[int], None]
-
-AxisOptional = Union[int, Sequence[int], None]
-
-ScalarLike = Union[int, float, complex, bool]
+DTypeLike = Union[
+    np.dtype,
+    type,
+    str,
+    None,
+]
 
 T = TypeVar("T")
 
@@ -44,9 +44,5 @@ T = TypeVar("T")
 __all__ = [
     "ArrayLike",
     "DTypeLike",
-    "ShapeLike",
-    "AxisLike",
-    "AxisOptional",
-    "ScalarLike",
     "T",
 ]

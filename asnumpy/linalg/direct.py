@@ -26,7 +26,7 @@ from ..utils import ndarray
 from .._types import ArrayLike
 
 
-def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
+def dot(a: ArrayLike, b: ArrayLike, out=None) -> ndarray:
     return ndarray(_dot(a, b))
 
 
@@ -36,7 +36,7 @@ def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
     return ndarray.from_numpy(np.asarray(np.inner(na, nb)))
 
 
-def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
+def outer(a: ArrayLike, b: ArrayLike, out=None) -> ndarray:
     na = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
     nb = b.to_numpy() if hasattr(b, 'to_numpy') else np.asarray(b)
     return ndarray.from_numpy(np.asarray(np.outer(na, nb)))
@@ -46,12 +46,12 @@ def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
     return ndarray(_vdot(a, b))
 
 
-def matmul(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def matmul(x1: ArrayLike, x2: ArrayLike, out=None) -> ndarray:
     return ndarray(_matmul(x1, x2))
 
 
-def einsum(subscripts: str, *operands: ArrayLike) -> ndarray:
-    return ndarray(_einsum(subscripts, *operands))
+def einsum(*operands: ArrayLike, out=None, optimize: bool = False, **kwargs) -> ndarray:
+    return ndarray(_einsum(*operands))
 
 
 _direct_all_ = [

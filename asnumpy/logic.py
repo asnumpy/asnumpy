@@ -14,7 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
-from ._types import ArrayLike, DTypeLike, AxisLike
+from ._types import ArrayLike, DTypeLike
 from .lib.asnumpy_core.logic import (
     all as _all,
     any as _any,
@@ -36,69 +36,186 @@ from .lib.asnumpy_core.logic import (
 from .utils import ndarray, _convert_dtype
 
 
-def all(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:
+def all(a: ArrayLike, axis=None, out=None, keepdims=False, *, where=True):
     if axis is None:
-        return ndarray(_all(x))
-    return ndarray(_all(x, axis, keepdims))
+        return ndarray(_all(a))
+    return ndarray(_all(a, axis, keepdims))
 
 
-def any(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:
+def any(a: ArrayLike, axis=None, out=None, keepdims=False, *, where=True):
     if axis is None:
-        return ndarray(_any(x))
-    return ndarray(_any(x, axis, keepdims))
+        return ndarray(_any(a))
+    return ndarray(_any(a, axis, keepdims))
 
 
-def isfinite(x: ArrayLike) -> ndarray:
+def isfinite(
+    x: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_isfinite(x))
 
 
-def isinf(x: ArrayLike) -> ndarray:
+def isinf(
+    x: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_isinf(x))
 
 
-def isneginf(x: ArrayLike) -> ndarray:
+def isneginf(x: ArrayLike, out=None):
     return ndarray(_isneginf(x))
 
 
-def isposinf(x: ArrayLike) -> ndarray:
+def isposinf(x: ArrayLike, out=None):
     return ndarray(_isposinf(x))
 
 
-def logical_and(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def logical_and(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_logical_and(x1, x2))
 
 
-def logical_or(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def logical_or(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_logical_or(x1, x2))
 
 
-def logical_not(x: ArrayLike) -> ndarray:
+def logical_not(
+    x: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_logical_not(x))
 
 
-def logical_xor(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def logical_xor(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_logical_xor(x1, x2))
 
 
-def greater(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def greater(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_greater(x1, x2, _convert_dtype(dtype)))
 
 
-def greater_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def greater_equal(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_greater_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def less(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def less(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_less(x1, x2, _convert_dtype(dtype)))
 
 
-def less_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def less_equal(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_less_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def equal(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def not_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def not_equal(
+    x1: ArrayLike,
+    x2: ArrayLike,
+    out=None,
+    *,
+    where=True,
+    casting="same_kind",
+    order="K",
+    dtype: DTypeLike = None,
+    subok=True,
+):
     return ndarray(_not_equal(x1, x2, _convert_dtype(dtype)))

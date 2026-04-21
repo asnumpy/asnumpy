@@ -31,60 +31,59 @@ from ..lib.asnumpy_core.random import (
     weibull as _weibull,
 )
 from ..utils import ndarray, _convert_size
-from .._types import ShapeLike
 
 
-def pareto(a: float, size: ShapeLike) -> ndarray:
+def pareto(a: float, size=None) -> ndarray:
     return ndarray(_pareto(a, _convert_size(size)))
 
 
-def rayleigh(scale: float, size: ShapeLike) -> ndarray:
+def rayleigh(scale: float, size=None) -> ndarray:
     return ndarray(_rayleigh(scale, _convert_size(size)))
 
 
-def normal(loc: float, scale: float, size: ShapeLike) -> ndarray:
+def normal(loc: float, scale: float, size=None) -> ndarray:
     return ndarray(_normal(loc, scale, _convert_size(size)))
 
 
-def uniform(low: float, high: float, size: ShapeLike) -> ndarray:
+def uniform(low: float, high: float, size=None) -> ndarray:
     return ndarray(_uniform(low, high, _convert_size(size)))
 
 
-def standard_normal(size: ShapeLike) -> ndarray:
+def standard_normal(size=None) -> ndarray:
     return ndarray(_standard_normal(_convert_size(size)))
 
 
-def standard_cauchy(size: ShapeLike) -> ndarray:
+def standard_cauchy(size=None) -> ndarray:
     return ndarray(_standard_cauchy(_convert_size(size)))
 
 
-def weibull(a: float, size: ShapeLike) -> ndarray:
+def weibull(a: float, size=None) -> ndarray:
     return ndarray(_weibull(a, _convert_size(size)))
 
 
-def binomial(n: int, p: float, size: ShapeLike) -> ndarray:
+def binomial(n: int, p: float, size=None) -> ndarray:
     return ndarray(_binomial(n, p, _convert_size(size)))
 
 
-def exponential(scale: float, size: ShapeLike) -> ndarray:
+def exponential(scale: float, size=None) -> ndarray:
     return ndarray(_exponential(scale, _convert_size(size)))
 
 
-def geometric(p: float, size: ShapeLike) -> ndarray:
+def geometric(p: float, size=None) -> ndarray:
     return ndarray(_geometric(p, _convert_size(size)))
 
 
-def gumbel(loc: float, scale: float, size: ShapeLike) -> ndarray:
+def gumbel(loc: float, scale: float, size=None) -> ndarray:
     return ndarray(_gumbel(loc, scale, _convert_size(size)))
 
 
-def laplace(loc: float, scale: float, size: ShapeLike) -> ndarray:
+def laplace(loc: float, scale: float, size=None) -> ndarray:
     return ndarray(_laplace(loc, scale, _convert_size(size)))
 
 
-def logistic(loc: float, scale: float, size: ShapeLike) -> ndarray:
+def logistic(loc: float, scale: float, size=None) -> ndarray:
     return ndarray(_logistic(loc, scale, _convert_size(size)))
 
 
-def lognormal(mean: float, sigma: float, size: ShapeLike) -> ndarray:
+def lognormal(mean: float, sigma: float, size=None) -> ndarray:
     return ndarray(_lognormal(mean, sigma, _convert_size(size)))

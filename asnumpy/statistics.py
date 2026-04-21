@@ -14,18 +14,18 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union
 from .lib.asnumpy_core.statistics import mean as _mean
 from .utils import ndarray, _convert_dtype
-from ._types import ArrayLike, AxisLike, DTypeLike
+from ._types import ArrayLike, DTypeLike
 
 
 def mean(
     a: ArrayLike,
-    axis: AxisLike = None,
-    keepdims: bool = False,
+    axis=None,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
-    if axis is None:
-        return _mean(a)
+    out=None,
+    keepdims: bool = False,
+    *,
+    where=None,
+) -> ndarray:
     return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))

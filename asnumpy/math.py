@@ -15,7 +15,7 @@
 # *****************************************************************************
 
 from typing import Optional, Union
-from ._types import ArrayLike, AxisOptional, DTypeLike
+from ._types import ArrayLike, DTypeLike
 from .lib.asnumpy_core.math import (
     absolute as _absolute,
     add as _add,
@@ -106,79 +106,86 @@ from .utils import ndarray, _convert_dtype
 
 
 # Trigonometric functions
-def sin(x: ArrayLike) -> ndarray:
+def sin(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sin(x))
 
 
-def cos(x: ArrayLike) -> ndarray:
+def cos(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_cos(x))
 
 
-def tan(x: ArrayLike) -> ndarray:
+def tan(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_tan(x))
 
 
-def arcsin(x: ArrayLike) -> ndarray:
+def arcsin(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arcsin(x))
 
 
-def arccos(x: ArrayLike) -> ndarray:
+def arccos(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arccos(x))
 
 
-def arctan(x: ArrayLike) -> ndarray:
+def arctan(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arctan(x))
 
 
-def arctan2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def arctan2(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_arctan2(x1, x2))
 
 
-def hypot(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def hypot(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_hypot(x1, x2))
 
 
-def radians(x: ArrayLike) -> ndarray:
+def radians(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_radians(x))
 
 
-def deg2rad(x: ArrayLike) -> ndarray:
+def deg2rad(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_radians(x))
 
 
-def degrees(x: ArrayLike) -> ndarray:
+def degrees(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_degrees(x))
 
 
-def rad2deg(x: ArrayLike) -> ndarray:
+def rad2deg(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_rad2deg(x))
 
 
 # Miscellaneous functions
-def absolute(x: ArrayLike) -> ndarray:
+def absolute(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_absolute(x))
 
 
-def fabs(x: ArrayLike) -> ndarray:
+def fabs(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fabs(x))
 
 
-def sign(x: ArrayLike) -> ndarray:
+def sign(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sign(x))
 
 
-def heaviside(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def heaviside(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_heaviside(x1, x2))
 
 
 def clip(
-    a: ArrayLike, a_min: Union[ArrayLike, float], a_max: Union[ArrayLike, float]
+    a: ArrayLike, a_min: Union[ArrayLike, float], a_max: Union[ArrayLike, float], out=None, **kwargs
 ) -> ndarray:
     return ndarray(_clip(a, a_min, a_max))
 
 
 def nan_to_num(
     x: ArrayLike,
+    copy=True,
     nan: float = 0.0,
     posinf: Optional[float] = None,
     neginf: Optional[float] = None,
@@ -186,102 +193,106 @@ def nan_to_num(
     return ndarray(_nan_to_num(x, nan, posinf, neginf))
 
 
-def sqrt(x: ArrayLike) -> ndarray:
+def sqrt(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sqrt(x))
 
 
-def square(x: ArrayLike) -> ndarray:
+def square(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_square(x))
 
 
-def relu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+# not in numpy
+def relu(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_relu(x, _convert_dtype(dtype)))
 
 
-def gelu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+# not in numpy
+def gelu(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_gelu(x, _convert_dtype(dtype)))
 
 
 # Arithmetic operations
 def add(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_add(x1, x2, _convert_dtype(dtype)))
 
 
-def reciprocal(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def reciprocal(
+    x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_reciprocal(x, _convert_dtype(dtype)))
 
 
-def positive(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def positive(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_positive(x, _convert_dtype(dtype)))
 
 
-def negative(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def negative(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_negative(x, _convert_dtype(dtype)))
 
 
 def multiply(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_multiply(x1, x2, _convert_dtype(dtype)))
 
 
 def divide(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def true_divide(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_true_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def subtract(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_subtract(x1, x2, _convert_dtype(dtype)))
 
 
 def floor_divide(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_floor_divide(x1, x2, _convert_dtype(dtype)))
 
 
 def float_power(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_float_power(x1, x2, _convert_dtype(dtype)))
 
 
 def fmod(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_fmod(x1, x2, _convert_dtype(dtype)))
 
 
 def mod(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_mod(x1, x2, _convert_dtype(dtype)))
 
 
-def modf(x: ArrayLike) -> tuple:
+def modf(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> tuple:
     frac, inte = _modf(x)
     return [ndarray(frac), ndarray(inte)]
 
 
 def remainder(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_remainder(x1, x2, _convert_dtype(dtype)))
 
 
 def divmod(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> tuple:
     res1, res2 = _divmod(x1, x2)
     _type = _convert_dtype(dtype)
@@ -289,7 +300,7 @@ def divmod(
 
 
 def power(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_power(x1, x2, _convert_dtype(dtype)))
 
@@ -297,9 +308,12 @@ def power(
 # Sums, products, differences
 def prod(
     a: ArrayLike,
-    axis: AxisOptional = None,
-    keepdims: bool = False,
+    axis=None,
     dtype: DTypeLike = None,
+    out=None,
+    keepdims: bool = False,
+    initial=None,
+    where=None,
 ) -> Union[ndarray, float]:
     if axis is None:
         return _prod(a)
@@ -308,9 +322,12 @@ def prod(
 
 def sum(
     a: ArrayLike,
-    axis: AxisOptional = None,
-    keepdims: bool = False,
+    axis=None,
     dtype: DTypeLike = None,
+    out=None,
+    keepdims: bool = False,
+    initial=None,
+    where=None,
 ) -> Union[ndarray, float]:
     if axis is None:
         return _sum(a)
@@ -319,9 +336,12 @@ def sum(
 
 def nanprod(
     a: ArrayLike,
-    axis: AxisOptional = None,
-    keepdims: bool = False,
+    axis=None,
     dtype: DTypeLike = None,
+    out=None,
+    keepdims: bool = False,
+    initial=None,
+    where=None,
 ) -> Union[ndarray, float]:
     if axis is None:
         return _nanprod(a)
@@ -330,91 +350,91 @@ def nanprod(
 
 def nansum(
     a: ArrayLike,
-    axis: AxisOptional = None,
-    keepdims: bool = False,
+    axis=None,
     dtype: DTypeLike = None,
+    out=None,
+    keepdims: bool = False,
+    initial=None,
+    where=None,
 ) -> Union[ndarray, float]:
     if axis is None:
         return _nansum(a)
     return ndarray(_nansum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
-def cumprod(
-    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
-) -> ndarray:
+def cumprod(a: ArrayLike, axis=None, dtype: DTypeLike = None, out=None) -> ndarray:
     return ndarray(_cumprod(a, axis, _convert_dtype(dtype)))
 
 
-def cumsum(
-    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
-) -> ndarray:
+def cumsum(a: ArrayLike, axis=None, dtype: DTypeLike = None, out=None) -> ndarray:
     return ndarray(_cumsum(a, axis, _convert_dtype(dtype)))
 
 
-def nancumprod(
-    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
-) -> ndarray:
+def nancumprod(a: ArrayLike, axis=None, dtype: DTypeLike = None, out=None) -> ndarray:
     return ndarray(_nancumprod(a, axis, _convert_dtype(dtype)))
 
 
-def nancumsum(
-    a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None
-) -> ndarray:
+def nancumsum(a: ArrayLike, axis=None, dtype: DTypeLike = None, out=None) -> ndarray:
     return ndarray(_nancumsum(a, axis, _convert_dtype(dtype)))
 
 
-def cross(a: ArrayLike, b: ArrayLike, axis: AxisOptional = None) -> ndarray:
+def cross(a: ArrayLike, b: ArrayLike, axisa=-1, axisb=-1, axisc=-1, axis=None) -> ndarray:
     return ndarray(_cross(a, b, axis))
 
 
 # Exponents and logarithms
-def exp(x: ArrayLike) -> ndarray:
+def exp(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_exp(x))
 
 
-def expm1(x: ArrayLike) -> ndarray:
+def expm1(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_expm1(x))
 
 
-def exp2(x: ArrayLike) -> ndarray:
+def exp2(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_exp2(x))
 
 
-def log(x: ArrayLike) -> ndarray:
+def log(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_log(x))
 
 
-def log10(x: ArrayLike) -> ndarray:
+def log10(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_log10(x))
 
 
-def log2(x: ArrayLike) -> ndarray:
+def log2(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_log2(x))
 
 
-def log1p(x: ArrayLike) -> ndarray:
+def log1p(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_log1p(x))
 
 
-def logaddexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def logaddexp(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_logaddexp(x1, x2))
 
 
-def logaddexp2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def logaddexp2(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_logaddexp2(x1, x2))
 
 
 # Handling complex numbers
-def real(x: ArrayLike) -> ndarray:
-    return ndarray(_real(x))
+def real(val: ArrayLike) -> ndarray:
+    return ndarray(_real(val))
 
 
 # Floating point routines
-def signbit(x: ArrayLike) -> ndarray:
+def signbit(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     result = ndarray(_signbit(x))
     # CANN's aclnnSignbit does not handle IEEE 754 negative zero (-0.0).
     # Detect -0.0 via numpy and patch the result.
     import numpy as np
+
     np_x = x.to_numpy()
     neg_zero_mask = np.signbit(np_x) & (np_x == 0)
     if neg_zero_mask.any():
@@ -424,113 +444,117 @@ def signbit(x: ArrayLike) -> ndarray:
     return result
 
 
-def ldexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def ldexp(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_ldexp(x1, x2))
 
 
-def copysign(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def copysign(
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
+) -> ndarray:
     return ndarray(_copysign(x1, x2))
 
 
 # Hyperbolic functions
-def sinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def sinh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sinh(x, _convert_dtype(dtype)))
 
 
-def cosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def cosh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_cosh(x, _convert_dtype(dtype)))
 
 
-def tanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def tanh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_tanh(x, _convert_dtype(dtype)))
 
 
-def arcsinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def arcsinh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arcsinh(x, _convert_dtype(dtype)))
 
 
-def arccosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def arccosh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arccosh(x, _convert_dtype(dtype)))
 
 
-def arctanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def arctanh(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arctanh(x, _convert_dtype(dtype)))
 
 
 # Other special functions
-def sinc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
-    return ndarray(_sinc(x, _convert_dtype(dtype)))
+def sinc(x: ArrayLike) -> ndarray:
+    return ndarray(_sinc(x))
 
 
 # Rational routines
 def gcd(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_gcd(x1, x2, _convert_dtype(dtype)))
 
 
 def lcm(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_lcm(x1, x2, _convert_dtype(dtype)))
 
 
 # Rounding
-def around(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
-    return ndarray(_around(x, decimals, _convert_dtype(dtype)))
+def around(a: ArrayLike, decimals: int = 0, out=None) -> ndarray:
+    return ndarray(_around(a, decimals))
 
 
-def round_(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
-    return ndarray(_round_(x, decimals, _convert_dtype(dtype)))
+def round_(a: ArrayLike, decimals: int = 0, out=None) -> ndarray:
+    return ndarray(_round_(a, decimals))
 
 
-def rint(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def rint(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_rint(x, _convert_dtype(dtype)))
 
 
-def fix(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
-    return ndarray(_fix(x, _convert_dtype(dtype)))
+def fix(x: ArrayLike, out=None) -> ndarray:
+    return ndarray(_fix(x))
 
 
-def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def floor(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_floor(x, _convert_dtype(dtype)))
 
 
-def ceil(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def ceil(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_ceil(x, _convert_dtype(dtype)))
 
 
-def trunc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def trunc(x: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None) -> ndarray:
     return ndarray(_trunc(x, _convert_dtype(dtype)))
 
 
 # Extrema finding
 def maximum(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_maximum(x1, x2, _convert_dtype(dtype)))
 
 
 def minimum(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_minimum(x1, x2, _convert_dtype(dtype)))
 
 
 def fmax(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_fmax(x1, x2, _convert_dtype(dtype)))
 
 
 def fmin(
-    x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None
+    x1: ArrayLike, x2: ArrayLike, /, out=None, *, casting="same_kind", dtype: DTypeLike = None
 ) -> ndarray:
     return ndarray(_fmin(x1, x2, _convert_dtype(dtype)))
 
 
 def max(
-    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
+    a: ArrayLike, axis=None, out=None, keepdims: bool = False, initial=None, where=None
 ) -> Union[ndarray, float]:
     if axis is None:
         return _max(a)
@@ -538,7 +562,7 @@ def max(
 
 
 def amax(
-    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
+    a: ArrayLike, axis=None, out=None, keepdims: bool = False, initial=None, where=None
 ) -> Union[ndarray, float]:
     if axis is None:
         return _amax(a)
@@ -546,7 +570,7 @@ def amax(
 
 
 def nanmax(
-    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
+    a: ArrayLike, axis=None, out=None, keepdims: bool = False, initial=None, where=None
 ) -> Union[ndarray, float]:
     if axis is None:
         return _nanmax(a)
@@ -554,7 +578,7 @@ def nanmax(
 
 
 def min(
-    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
+    a: ArrayLike, axis=None, out=None, keepdims: bool = False, initial=None, where=None
 ) -> Union[ndarray, float]:
     if axis is None:
         return _min(a)
@@ -562,7 +586,7 @@ def min(
 
 
 def amin(
-    a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
+    a: ArrayLike, axis=None, out=None, keepdims: bool = False, initial=None, where=None
 ) -> Union[ndarray, float]:
     if axis is None:
         return _amin(a)
