@@ -17,10 +17,10 @@
 
 #include <asnumpy/array/basic.hpp>
 #include <asnumpy/utils/status_handler.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
-#include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <aclnnop/aclnn_fill_scalar.h>
@@ -34,66 +34,65 @@
 namespace asnumpy {
 
 NPUArray Empty(const std::vector<int64_t>& shape, py::dtype dtype) {
+    LOG_DEBUG("Empty start: input_shape={}", detail::FormatShape(shape));
     try {
-        return NPUArray(shape, dtype);
+        auto result = NPUArray(shape, dtype);
+        LOG_INFO("Empty completed");
+        return result;
     } catch (const std::exception& e) {
-        throw std::runtime_error(fmt::format("[creation.cpp](empty) NPUArray construction error = {}", e.what()));
+        throw std::runtime_error(fmt::format("[basic.cpp](empty) NPUArray construction error = {}", e.what()));
     }
 }
 
 NPUArray EmptyLike(const NPUArray& prototype, py::dtype dtype) {
+    LOG_DEBUG("EmptyLike start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(prototype.shape), prototype.tensorSize, AclDtypeName(prototype.aclDtype));
     try {
         // 若未指定dtype，使用原型数组的dtype
         py::dtype target_dtype = dtype.is_none() ? prototype.dtype() : dtype;
         // 基于原型的形状和目标dtype创建空数组
-        return NPUArray(prototype.shape, target_dtype);
+        auto result = NPUArray(prototype.shape, target_dtype);
+        LOG_INFO("EmptyLike completed");
+        return result;
     } catch (const std::exception& e) {
-        throw std::runtime_error(fmt::format("[creation.cpp](empty_like) NPUArray construction error = {}", e.what()));
+        throw std::runtime_error(fmt::format("[basic.cpp](empty_like) NPUArray construction error = {}", e.what()));
     }
 }
 
 
 NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceZero start: input_shape={}", detail::FormatShape(shape));
     auto array = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZeroGetWorkspaceSize error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnInplaceZeroGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceZero(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclnnInplaceZero error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnInplaceZero");
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros) aclrtSynchronizeDevice error = {}", error));
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnInplaceZero completed");
     return array;
 }
 
 NPUArray Zeros_like(const NPUArray& other, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceZero start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZeroGetWorkspaceSize error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnInplaceZeroGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceZero(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclnnInplaceZero error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnInplaceZero");
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](zeros_like) aclrtSynchronizeDevice error = {}", error));
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnInplaceZero completed");
     return array;
 }
 
 NPUArray Full(const std::vector<int64_t>& shape, const py::object& value, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceFillScalar start: input_shape={}", detail::FormatShape(shape));
     auto array = NPUArray(shape, dtype);
     double valueDouble = 0;
     if (value.is_none()) {
@@ -110,24 +109,26 @@ NPUArray Full(const std::vector<int64_t>& shape, const py::object& value, py::dt
     auto error = aclnnInplaceFillScalarGetWorkspaceSize(array.tensorPtr, scalar, &workspaceSize, &executor);
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full) aclnnInplaceFillScalarGetWorkspaceSize error = {}", error));
+        ACLNN_CHECK(error, "aclnnInplaceFillScalarGetWorkspaceSize");
     }
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceFillScalar(workspace.get(), workspace.size(), executor, nullptr);
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full) aclnnInplaceFillScalar error = {}", error));
+        ACLNN_CHECK(error, "aclnnInplaceFillScalar");
     }
     error = aclrtSynchronizeDevice();
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full) aclrtSynchronizeDevice error = {}", error));
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     }
     aclDestroyScalar(scalar);
+    LOG_INFO("aclnnInplaceFillScalar completed");
     return array;
 }
 
 NPUArray Full_like(const NPUArray& other, const py::object& value, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceFillScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     double valueDouble = 0;
     if (value.is_none()) {
@@ -144,155 +145,96 @@ NPUArray Full_like(const NPUArray& other, const py::object& value, py::dtype dty
     auto error = aclnnInplaceFillScalarGetWorkspaceSize(array.tensorPtr, scalar, &workspaceSize, &executor);
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclnnInplaceFillScalarGetWorkspaceSize error = {}", error));
+        ACLNN_CHECK(error, "aclnnInplaceFillScalarGetWorkspaceSize");
     }
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceFillScalar(workspace.get(), workspace.size(), executor, nullptr);
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclnnInplaceFillScalar error = {}", error));
+        ACLNN_CHECK(error, "aclnnInplaceFillScalar");
     }
     error = aclrtSynchronizeDevice();
     if(error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
-        throw std::runtime_error(fmt::format("[basic.cpp](full_like) aclrtSynchronizeDevice error = {}", error));
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     }
     aclDestroyScalar(scalar);
+    LOG_INFO("aclnnInplaceFillScalar completed");
     return array;
 }
 
 NPUArray Eye(int64_t n, py::dtype dtype) {
+    LOG_DEBUG("aclnnEye start: n={}", n);
     auto array = NPUArray({n, n}, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](eye) aclnnEyeGetWorkspaceSize error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnEyeGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnEye(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](eye) aclnnEye error = {}", error));
-    }
+    ACLNN_CHECK(error, "aclnnEye");
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
-        throw std::runtime_error(fmt::format("[basic.cpp](eye) aclrtSynchronizeDevice error = {}", error));
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnEye completed");
     return array;
 }
 
 NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceOne start: input_shape={}", detail::FormatShape(shape));
     auto array = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclnnInplaceOneGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnInplaceOneGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceOne(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclnnInplaceOne error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnInplaceOne");
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnInplaceOne completed");
     return array;
 }
 
 
 NPUArray Identity(int64_t n, py::dtype dtype) {
+    LOG_DEBUG("aclnnEye start: n={}", n);
     auto array = NPUArray({n, n}, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
 
     auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclnnEyeGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnEyeGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnEye(workspace.get(), workspace.size(), executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclnnEye error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnEye");
 
     error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](identity) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg != nullptr && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
+    LOG_INFO("aclnnEye completed");
     return array;
 }
 
 NPUArray ones_like(const NPUArray& other, py::dtype dtype) {
+    LOG_DEBUG("aclnnInplaceOne start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclnnInplaceOneGetWorkspaceSize error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnInplaceOneGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceOne(workspace.get(), workspace.size(), executor, nullptr);
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclnnInplaceOne error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACLNN_CHECK(error, "aclnnInplaceOne");
     error = aclrtSynchronizeDevice();
-    if (error != ACL_SUCCESS) {
-        std::string error_msg = fmt::format("[basic.cpp](ones_like) aclrtSynchronizeDevice error = {}", error);
-        const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && strlen(detailed_msg) > 0) {
-            error_msg += std::string(" - ") + detailed_msg;
-        }
-        throw std::runtime_error(error_msg);
-    }
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnInplaceOne completed");
     return array;
 }
 
 NPUArray Linspace(const py::object& start, const py::object& end, const py::object& steps, const py::object& dtype) {
+    LOG_DEBUG("aclnnLinspace start");
     double start_val = 0.0, end_val = 0.0;
     int64_t steps_val = 0;
 
@@ -382,11 +324,7 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
 
     if (error != ACL_SUCCESS) {
         scalarGuard();
-        std::string msg = "[basic.cpp](linspace) aclnnLinspaceGetWorkspaceSize error = " +
-                          std::to_string(error);
-        const char* detail = aclGetRecentErrMsg();
-        if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-        throw std::runtime_error(msg);
+        ACLNN_CHECK(error, "aclnnLinspaceGetWorkspaceSize");
     }
 
     AclWorkspace workspace(workspaceSize);
@@ -394,22 +332,17 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
     error = aclnnLinspace(workspace.get(), workspace.size(), executor, nullptr);
     if (error != ACL_SUCCESS) {
         scalarGuard();
-        std::string msg = "[basic.cpp](linspace) aclnnLinspace error = " + std::to_string(error);
-        const char* detail = aclGetRecentErrMsg();
-        if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-        throw std::runtime_error(msg);
+        ACLNN_CHECK(error, "aclnnLinspace");
     }
 
     error = aclrtSynchronizeDevice();
     if (error != ACL_SUCCESS) {
         scalarGuard();
-        std::string msg = "[basic.cpp](linspace) aclrtSynchronizeDevice error = " + std::to_string(error);
-        const char* detail = aclGetRecentErrMsg();
-        if (detail && std::strlen(detail) > 0) msg += " - " + std::string(detail);
-        throw std::runtime_error(msg);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     }
 
     scalarGuard();
+    LOG_INFO("aclnnLinspace completed");
     return out;
 }
 

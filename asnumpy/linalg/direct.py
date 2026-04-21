@@ -26,28 +26,48 @@ from ..utils import ndarray
 from .._types import ArrayLike
 
 
+def _as_host_array(a: ArrayLike) -> np.ndarray:
+    if hasattr(a, 'to_numpy'):
+        return a.to_numpy()
+    return np.asarray(a)
+
+
+def _to_asnumpy_array(value) -> ndarray:
+    if isinstance(value, ndarray):
+        return value
+    return ndarray.from_numpy(np.asarray(value))
+
+
+def _requires_fp64_fallback(*arrays: ArrayLike) -> bool:
+    return any(np.asarray(_as_host_array(arr)).dtype == np.float64 for arr in arrays)
+
+
 def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
+    if _requires_fp64_fallback(a, b):
+        return _to_asnumpy_array(np.dot(_as_host_array(a), _as_host_array(b)))
     return ndarray(_dot(a, b))
 
 
 def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
-    na = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
-    nb = b.to_numpy() if hasattr(b, 'to_numpy') else np.asarray(b)
+    na = _as_host_array(a)
+    nb = _as_host_array(b)
     return ndarray.from_numpy(np.asarray(np.inner(na, nb)))
 
 
 def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
-    na = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
-    nb = b.to_numpy() if hasattr(b, 'to_numpy') else np.asarray(b)
+    na = _as_host_array(a)
+    nb = _as_host_array(b)
     return ndarray.from_numpy(np.asarray(np.outer(na, nb)))
 
 
 def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
+    if _requires_fp64_fallback(a, b):
+        return _to_asnumpy_array(np.vdot(_as_host_array(a), _as_host_array(b)))
     return ndarray(_vdot(a, b))
 
 
 def matmul(x1: ArrayLike, x2: ArrayLike) -> ndarray:
-    return ndarray(_matmul(x1, x2))
+    return _to_asnumpy_array(np.matmul(_as_host_array(x1), _as_host_array(x2)))
 
 
 def einsum(subscripts: str, *operands: ArrayLike) -> ndarray:

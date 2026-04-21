@@ -18,7 +18,6 @@
 #include <asnumpy/math/miscellaneous.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_ops_macros.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
@@ -150,6 +149,8 @@ namespace asnumpy {
 }*/
 
 NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max) {
+    LOG_DEBUG("aclnnClampTensor start: a_shape={}, aclDtype={}",
+              detail::FormatShape(a.shape), AclDtypeName(a.aclDtype));
     auto temp = GetBroadcastShape(a, a_min);
     auto x = NPUArray(temp, ACL_FLOAT);
     auto broadcast = GetBroadcastShape(x, a_max);
@@ -157,19 +158,22 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max) {
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
     auto error = aclnnClampTensorGetWorkspaceSize(a.tensorPtr, a_min.tensorPtr, a_max.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnClampTensorGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnClampTensor(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Clip");
+    ACLNN_CHECK(error, "aclnnClampTensor");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnClampTensor completed");
     return result;
 }
 
 NPUArray Clip(const NPUArray& a, float a_min, float a_max) {
+    LOG_DEBUG("aclnnClamp start: a_shape={}, aclDtype={}, a_min={}, a_max={}",
+              detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), a_min, a_max);
     auto shape = a.shape;
     auto amin_scalar = aclCreateScalar(&a_min, ACL_FLOAT);
     auto amax_scalar = aclCreateScalar(&a_max, ACL_FLOAT);
@@ -177,107 +181,121 @@ NPUArray Clip(const NPUArray& a, float a_min, float a_max) {
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
     auto error = aclnnClampGetWorkspaceSize(a.tensorPtr, amin_scalar, amax_scalar, result.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnClampGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnClamp(workspace.get(), workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "Clip");
+    ACLNN_CHECK(error, "aclnnClamp");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnClamp completed");
     return result;
 }
 
 NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max) {
+    LOG_DEBUG("aclnnClampMin start: a_shape={}, aclDtype={}, a_min={}",
+              detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), a_min);
     auto shape = a.shape;
     auto amin_scalar = aclCreateScalar(&a_min, ACL_FLOAT);
     auto temp = NPUArray(shape, ACL_FLOAT);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
     auto error1 = aclnnClampMinGetWorkspaceSize(a.tensorPtr, amin_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
-    CheckGetWorkspaceSizeAclnnStatus(error1);
+    ACLNN_CHECK(error1, "aclnnClampMinGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
 
     error1 = aclnnClampMin(workspace1.get(), workspaceSize1, executor1, nullptr);
-    CheckAclnnStatus(error1, "aclnnClampMin error");
+    ACLNN_CHECK(error1, "aclnnClampMin");
     error1 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error1);
+    ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnClampMin completed");
 
     py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         temp,
-        a_max,                                           
-        dtype,                                     
+        a_max,
+        dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnClampMaxTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnClampMaxTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "Clip"
+        "Clip",
+        "aclnnClampMaxTensor"
     );
 }
 
 NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
+    LOG_DEBUG("aclnnClampMax start: a_shape={}, aclDtype={}, a_max={}",
+              detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), a_max);
     auto shape = a.shape;
     auto amax_scalar = aclCreateScalar(&a_max, ACL_FLOAT);
     auto temp = NPUArray(shape, ACL_FLOAT);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
     auto error1 = aclnnClampMaxGetWorkspaceSize(a.tensorPtr, amax_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
-    CheckGetWorkspaceSizeAclnnStatus(error1);
+    ACLNN_CHECK(error1, "aclnnClampMaxGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
 
     error1 = aclnnClampMax(workspace1.get(), workspaceSize1, executor1, nullptr);
-    CheckAclnnStatus(error1, "aclnnClampMax error");
+    ACLNN_CHECK(error1, "aclnnClampMax");
     error1 = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error1);
+    ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnClampMax completed");
 
     py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         temp,
-        a_min,                                           
-        dtype,                                     
+        a_min,
+        dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnClampMinTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnClampMinTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "Clip"
+        "Clip",
+        "aclnnClampMinTensor"
     );
 }
 
 NPUArray Sqrt(const NPUArray& x) {
     aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE ||
         x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
         aclType = x.aclDtype;
     }
+    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
     py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return ExecuteUnaryOp(
-        x,                                           
-        dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSqrtGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSqrt(workspace, workspaceSize, executor, nullptr);
         },
-        "Sqrt"
+        "Sqrt",
+        "aclnnSqrt"
     );
 }
 
 NPUArray Square(const NPUArray& x) {
+    LOG_DEBUG("aclnnPowTensorScalar start: input_shape={}, tensorSize={}, aclDtype={}",
+              detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
     auto shape = x.shape;
     auto dtype = NPUArray::GetACLDataType(x.dtype);
     auto temp = ACL_FLOAT;
     if (dtype == ACL_DOUBLE) {
         temp = ACL_DOUBLE;
     }
+    ACL_DTYPE_WARN(dtype, temp, __func__);
     NPUArray result(shape, temp);
     float two = 2.0f;
     aclScalar* scalar = aclCreateScalar(&two, ACL_FLOAT);;
@@ -287,21 +305,23 @@ NPUArray Square(const NPUArray& x) {
     aclOpExecutor* executor = nullptr;
     auto error = aclnnPowTensorScalarGetWorkspaceSize(
         x.tensorPtr, scalar, result.tensorPtr, &workspaceSize, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnPowTensorScalarGetWorkspaceSize");
 
     // 分配 workspace
     AclWorkspace workspace(workspaceSize);
 
     // 执行计算
     error = aclnnPowTensorScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Square");
+    ACLNN_CHECK(error, "aclnnPowTensorScalar");
 
     // 同步
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
     // 释放资源
     aclDestroyScalar(scalar);
+
+    LOG_INFO("aclnnPowTensorScalar completed");
 
     return result;
 }
@@ -323,6 +343,8 @@ NPUArray Fabs(const NPUArray& x){
  * Creates an output array and applies aclnnNanToNum to replace NaN, +inf, and -inf.
  */
 NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object neginf) {
+    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}",
+              detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
     auto out = NPUArray(x.shape, x.aclDtype);
 
     // Convert optional posinf/neginf to floats; use NaN as "not provided" sentinel.
@@ -343,15 +365,17 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
         &workspaceSize,
         &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnNanToNumGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnNanToNum(workspace.get(), workspaceSize, executor, nullptr);
-    CheckAclnnStatus(error, "Nan_to_num error");
+    ACLNN_CHECK(error, "aclnnNanToNum");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+
+    LOG_INFO("aclnnNanToNum completed");
 
     return out;
 }
@@ -370,16 +394,17 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  */
  NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    return ExecuteUnaryOp(
-        x,                                           
-        out_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnReluGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnRelu(workspace, workspaceSize, executor, nullptr);
         },
-        "Relu"
+        "Relu",
+        "aclnnRelu"
     );
 }
 
@@ -400,16 +425,17 @@ NPUArray Nan_to_num(const NPUArray& x, float nan, py::object posinf, py::object 
  */
  NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-    return ExecuteUnaryOp(
-        x,                                           
-        out_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnGeluGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnGelu(workspace, workspaceSize, executor, nullptr);
         },
-        "Gelu"
+        "Gelu",
+        "aclnnGelu"
     );
 }
 }

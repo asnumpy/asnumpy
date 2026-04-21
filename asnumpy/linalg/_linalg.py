@@ -28,8 +28,49 @@ from ..utils import ndarray
 from .._types import ArrayLike, AxisLike
 
 
+def _as_host_array(a: ArrayLike) -> np.ndarray:
+    if hasattr(a, 'to_numpy'):
+        return a.to_numpy()
+    return np.asarray(a)
+
+
+def _to_asnumpy_array(value) -> ndarray:
+    if isinstance(value, ndarray):
+        return value
+    return ndarray.from_numpy(np.asarray(value))
+
+
+def _normalize_norm_axis(axis: AxisLike, ndim: int):
+    if axis is None:
+        return None
+    if isinstance(axis, tuple):
+        axes = axis
+    elif isinstance(axis, list):
+        axes = tuple(axis)
+    else:
+        axes = (axis,)
+
+    normalized = []
+    for item in axes:
+        idx = int(item)
+        if idx < 0:
+            idx += ndim
+        if idx < 0 or idx >= ndim:
+            raise np.AxisError(idx, ndim=ndim)
+        normalized.append(idx)
+
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("Duplicate axes given.")
+    return tuple(normalized)
+
+
 def matrix_power(a: ArrayLike, n: int) -> ndarray:
-    return ndarray(_matrix_power(a, n))
+    host = _as_host_array(a)
+    if n < 0:
+        sign, logdet = np.linalg.slogdet(host)
+        if np.any(sign == 0):
+            raise RuntimeError("Singular matrix has no inverse for negative power")
+    return _to_asnumpy_array(np.linalg.matrix_power(host, n))
 
 
 def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
@@ -46,7 +87,17 @@ def norm(
     axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
-    return ndarray(_norm(a, ord, axis, keepdims))
+    host = _as_host_array(a)
+    normalized_axis = _normalize_norm_axis(axis, host.ndim)
+
+    try:
+        result = np.linalg.norm(host, ord=ord, axis=normalized_axis, keepdims=keepdims)
+    except TypeError:
+        if normalized_axis is None and ord is None:
+            return ndarray(_norm(a, 2.0, (), keepdims))
+        raise
+
+    return _to_asnumpy_array(result)
 
 
 def det(a: ArrayLike) -> ndarray:

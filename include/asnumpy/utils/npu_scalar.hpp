@@ -21,6 +21,11 @@
 #include <stdexcept>
 #include <complex>
 #include <string>
+#include <fmt/core.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/cast.h>
+
+namespace py = pybind11;
 
 /**
  * @brief Template struct for mapping C++ types to ACL data types
@@ -69,4 +74,18 @@ aclScalar* CreateScalar(T value);
  */
 template <typename ValueType>
 aclScalar* CreateScalar(ValueType value, aclDataType dtype);
+
+/**
+ * @brief Creates a scalar object from a pybind11::object with explicit data type specification
+ *
+ * Converts the Python object to the appropriate C++ type based on the target ACL data type,
+ * then creates an aclScalar object. This function handles type conversion from Python
+ * numeric types (int, float, bool) to the corresponding C++ types.
+ *
+ * @param scalar Python object containing the scalar value
+ * @param dtype Target ACL data type for the scalar
+ * @return aclScalar* Pointer to the created scalar object
+ * @throws std::runtime_error If the specified data type is unsupported or conversion fails
+ */
+aclScalar* CreateScalar(const py::object& scalar, aclDataType dtype);
 

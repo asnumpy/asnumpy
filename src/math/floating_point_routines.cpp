@@ -20,6 +20,7 @@
 #include <asnumpy/math/miscellaneous.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -34,16 +35,17 @@ namespace asnumpy {
 
 NPUArray Signbit(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
-        x,                                           
-        dtype,                                     
+    return EXECUTE_UNARY_OP(
+        x,
+        dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSignbitGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSignbit(workspace, workspaceSize, executor, nullptr);
         },
-        "Signbit"                                       
+        "Signbit",
+        "aclnnSignbit"
     );
 }
 
@@ -51,7 +53,6 @@ NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2) {
     py::object base_scalar = py::float_(2.0);
     NPUArray pow2 = Power(base_scalar, x2);
     NPUArray result = Multiply(x1, pow2);
-
     return result;
 }
 
@@ -59,7 +60,6 @@ NPUArray Copysign(const NPUArray& x1, const NPUArray& x2) {
     NPUArray temp1 = Absolute(x1);
     NPUArray temp2 = Sign(x2);
     NPUArray result = Multiply(temp1, temp2);
-
     return result;
 }    
 

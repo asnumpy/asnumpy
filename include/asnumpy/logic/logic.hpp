@@ -17,6 +17,7 @@
 #pragma once
 
 #include "../utils/npu_array.hpp"
+#include "../utils/npu_scalar.hpp"
 #include <utility>
 
 namespace asnumpy{

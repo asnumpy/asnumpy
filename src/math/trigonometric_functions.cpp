@@ -17,7 +17,6 @@
 
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/math/trigonometric_functions.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
@@ -45,21 +44,23 @@
 namespace asnumpy {
     NPUArray Sin(const NPUArray& x) {
         aclDataType aclType = ACL_DOUBLE;
-        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE || 
+        if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE ||
             x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                           
-            dtype,                                      
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnSinGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnSin(workspace, workspaceSize, executor, nullptr);
             },
-            "Sin"                                       
+            "Sin",
+            "aclnnSin"
         );
     }
 
@@ -70,17 +71,19 @@ namespace asnumpy {
             x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                          
-            dtype,                                     
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnCosGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnCos(workspace, workspaceSize, executor, nullptr);
             },
-            "Cos"                                       
+            "Cos",
+            "aclnnCos"
         );
     }
 
@@ -91,17 +94,19 @@ namespace asnumpy {
             x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                          
-            dtype,                                     
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnTanGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnTan(workspace, workspaceSize, executor, nullptr);
             },
-            "Tan"                                       
+            "Tan",
+            "aclnnTan"
         );
     }
 
@@ -111,17 +116,19 @@ namespace asnumpy {
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                          
-            dtype,                                     
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnAsinGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnAsin(workspace, workspaceSize, executor, nullptr);
             },
-            "Arcsin"                                       
+            "Arcsin",
+            "aclnnAsin"
         );
     }
 
@@ -131,17 +138,19 @@ namespace asnumpy {
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                          
-            dtype,                                     
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnAcosGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnAcos(workspace, workspaceSize, executor, nullptr);
             },
-            "Arccos"                                       
+            "Arccos",
+            "aclnnAcos"
         );
     }
 
@@ -151,22 +160,27 @@ namespace asnumpy {
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE){
             aclType = x.aclDtype;
         }
+        ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
          py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            x,                                          
-            dtype,                                     
+        return EXECUTE_UNARY_OP(
+            x,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnAtanGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnAtan(workspace, workspaceSize, executor, nullptr);
             },
-            "Arctan"                                       
+            "Arctan",
+            "aclnnAtan"
         );
     }
 
 
     NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
+        LOG_DEBUG("aclnnMul start: a_shape={}, b_shape={}, aclDtype={}",
+                  detail::FormatShape(a.shape), detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
+
         auto broadcast = GetBroadcastShape(a, b);
 
         // 步骤1: 计算a的平方 (a²)
@@ -179,15 +193,16 @@ namespace asnumpy {
             &a_sq_workspace_size,
             &a_sq_executor
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
 
         AclWorkspace a_sq_workspace(a_sq_workspace_size);
 
         error = aclnnMul(a_sq_workspace.get(), a_sq_workspace_size, a_sq_executor, nullptr);
-        CheckAclnnStatus(error, "aclnnMul error");
+        ACLNN_CHECK(error, "aclnnMul");
 
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+        LOG_INFO("aclnnMul completed");
 
         // 步骤2: 计算b的平方 (b²)
         NPUArray b_squared(b.shape, b.dtype);
@@ -199,17 +214,20 @@ namespace asnumpy {
             &b_sq_workspace_size,
             &b_sq_executor
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
 
         AclWorkspace b_sq_workspace(b_sq_workspace_size);
 
         error = aclnnMul(b_sq_workspace.get(), b_sq_workspace_size, b_sq_executor, nullptr);
-        CheckAclnnStatus(error, "aclnnMul error");
+        ACLNN_CHECK(error, "aclnnMul");
 
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+        LOG_INFO("aclnnMul completed");
 
         // 步骤3: 计算平方和 (a² + b²)
+        LOG_DEBUG("aclnnAdd start: a_squared_shape={}, b_squared_shape={}, aclDtype={}",
+                  detail::FormatShape(a_squared.shape), detail::FormatShape(b_squared.shape), AclDtypeName(a.aclDtype));
         auto dtype = a.aclDtype;
         if (a.aclDtype == b.aclDtype) {
             dtype = a.aclDtype;
@@ -238,21 +256,24 @@ namespace asnumpy {
             alpha_scalar, sum_squares.tensorPtr,
             &add_workspace_size, &add_executor
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnAddGetWorkspaceSize");
 
         AclWorkspace add_workspace(add_workspace_size);
 
         error = aclnnAdd(add_workspace.get(), add_workspace_size, add_executor, nullptr);
-        CheckAclnnStatus(error, "aclnnAdd error");
+        ACLNN_CHECK(error, "aclnnAdd");
 
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+        LOG_INFO("aclnnAdd completed");
 
         // 步骤4: 计算平方根 (√(a² + b²))
+        LOG_DEBUG("aclnnSqrt start: input_shape={}, aclDtype={}", detail::FormatShape(sum_squares.shape), AclDtypeName(sum_squares.aclDtype));
         aclDataType aclType = ACL_DOUBLE;
         if (sum_squares.aclDtype == ACL_FLOAT || sum_squares.aclDtype == ACL_FLOAT16 || sum_squares.aclDtype == ACL_DOUBLE || sum_squares.aclDtype == ACL_COMPLEX64 || sum_squares.aclDtype == ACL_COMPLEX128){
             aclType = sum_squares.aclDtype;
         }
+        ACL_DTYPE_WARN(sum_squares.aclDtype, aclType, __func__);
         NPUArray result(broadcast, aclType);
         uint64_t sqrt_workspace_size = 0;
         aclOpExecutor* sqrt_executor = nullptr;
@@ -260,17 +281,19 @@ namespace asnumpy {
             sum_squares.tensorPtr, result.tensorPtr,
             &sqrt_workspace_size, &sqrt_executor
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnSqrtGetWorkspaceSize");
 
         AclWorkspace sqrt_workspace(sqrt_workspace_size);
 
         error = aclnnSqrt(sqrt_workspace.get(), sqrt_workspace_size, sqrt_executor, nullptr);
-        CheckAclnnStatus(error, "aclnnSqrt error");
+        ACLNN_CHECK(error, "aclnnSqrt");
 
         // 同步设备并释放资源
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
         aclDestroyScalar(alpha_scalar);
+
+        LOG_INFO("aclnnSqrt completed");
 
         return result;
     }
@@ -281,29 +304,37 @@ namespace asnumpy {
         if (x.aclDtype == ACL_DOUBLE || y.aclDtype == ACL_DOUBLE){
             aclType = ACL_DOUBLE;
         }
+        ACL_DTYPE_WARN(y.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteBinaryOp(
+        return EXECUTE_BINARY_OP(
             y,
-            x,                                           
-            dtype,                                     
+            x,
+            dtype,
             [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnAtan2GetWorkspaceSize(in1, in2, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnAtan2(workspace, workspaceSize, executor, nullptr);
             },
-            "Arctan2"                                       
+            "Arctan2",
+            "aclnnAtan2"
         );
     }
 
 
     NPUArray Radians(const NPUArray& x) {
+        LOG_DEBUG("aclnnForeachMulScalar start: input_shape={}, aclDtype={}",
+                  detail::FormatShape(x.shape), AclDtypeName(x.aclDtype));
+
         // 业务参数校验
         if (x.tensorSize == 0) {
-            throw std::runtime_error("Radians: input tensor has no elements");
+            throw std::invalid_argument(
+                fmt::format("[trigonometric_functions.cpp]({}) input tensor has no elements", __func__));
         }
         if (x.aclDtype != ACL_FLOAT && x.aclDtype != ACL_DOUBLE && x.aclDtype != ACL_FLOAT16) {
-            throw std::runtime_error("Radians: input must be float, double or float16 type");
+            throw std::invalid_argument(
+                fmt::format("[trigonometric_functions.cpp]({}) input must be float, double or float16 type, got {}",
+                             __func__, AclDtypeName(x.aclDtype)));
         }
 
         // 初始化结果张量（与输入同形状同类型）
@@ -318,23 +349,22 @@ namespace asnumpy {
         aclrtStream stream = nullptr;
         uint64_t workspace_size = 0;
         aclOpExecutor *executor = nullptr;
-        void *workspace_addr = nullptr;
         aclTensorList *input_list = nullptr;  // 输入张量列表
         aclTensorList *output_list = nullptr; // 输出张量列表
 
         try {
             // 获取标量张量的设备指针
             auto error = aclGetRawTensorAddr(scalar_factor.tensorPtr, &scalar_factor_ptr);
-            if (error != ACL_SUCCESS || !scalar_factor_ptr) {
-                throw std::runtime_error(fmt::format("Failed to get scalar factor pointer, error: {}", error));
-            }
+            ACL_RT_CHECK(error, "aclGetRawTensorAddr");
 
             // 拷贝转换因子到设备（按数据类型适配）
             if (x.aclDtype == ACL_FLOAT) {
                 float factor = static_cast<float>(rad_factor);
-                aclrtMemcpy(scalar_factor_ptr, sizeof(float), &factor, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
+                error = aclrtMemcpy(scalar_factor_ptr, sizeof(float), &factor, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
+                ACL_RT_CHECK(error, "aclrtMemcpy");
             } else if (x.aclDtype == ACL_DOUBLE) {
-                aclrtMemcpy(scalar_factor_ptr, sizeof(double), &rad_factor, sizeof(double), ACL_MEMCPY_HOST_TO_DEVICE);
+                error = aclrtMemcpy(scalar_factor_ptr, sizeof(double), &rad_factor, sizeof(double), ACL_MEMCPY_HOST_TO_DEVICE);
+                ACL_RT_CHECK(error, "aclrtMemcpy");
             } else if (x.aclDtype == ACL_FLOAT16) {
                 float factor_float = static_cast<float>(rad_factor);
                 uint32_t float_bits;
@@ -344,44 +374,39 @@ namespace asnumpy {
                     (((float_bits >> 13) - 0x1C000U) & 0x7C00U) |
                     ((float_bits >> 13) & 0x03FFU)
                 );
-                aclrtMemcpy(scalar_factor_ptr, sizeof(uint16_t), &fp16_bits, sizeof(uint16_t), ACL_MEMCPY_HOST_TO_DEVICE);
+                error = aclrtMemcpy(scalar_factor_ptr, sizeof(uint16_t), &fp16_bits, sizeof(uint16_t), ACL_MEMCPY_HOST_TO_DEVICE);
+                ACL_RT_CHECK(error, "aclrtMemcpy");
             }
 
             // 创建执行流
-            aclrtCreateStream(&stream);
+            error = aclrtCreateStream(&stream);
+            ACL_RT_CHECK(error, "aclrtCreateStream");
 
             // 关键修复：将单个张量包装为张量列表（匹配接口参数要求）
-            // 输入张量列表（包含1个元素）
             aclTensor* input_tensors[] = {x.tensorPtr};
-            input_list = aclCreateTensorList(input_tensors, 1);  // 直接用数组初始化列表
-            
-            // 输出张量列表（包含1个元素）
+            input_list = aclCreateTensorList(input_tensors, 1);
+
             aclTensor* output_tensors[] = {result.tensorPtr};
             output_list = aclCreateTensorList(output_tensors, 1);
 
-            // 获取工作空间大小（使用张量列表作为参数）
-            aclnnForeachMulScalarGetWorkspaceSize(
-                input_list,          // 输入张量列表（第一个参数类型匹配）
-                scalar_factor.tensorPtr,
-                output_list,         // 输出张量列表
-                &workspace_size,
-                &executor
+            // 获取工作空间大小
+            error = aclnnForeachMulScalarGetWorkspaceSize(
+                input_list, scalar_factor.tensorPtr, output_list,
+                &workspace_size, &executor
             );
+            ACLNN_CHECK(error, "aclnnForeachMulScalarGetWorkspaceSize");
 
             // 分配工作空间
             AclWorkspace workspace(workspace_size);
 
             // 执行标量乘法
-            aclnnForeachMulScalar(
-                workspace.get(),
-                workspace_size,
-                executor,
-                stream
-            );
-            aclrtSynchronizeStream(stream);
+            error = aclnnForeachMulScalar(workspace.get(), workspace_size, executor, stream);
+            ACLNN_CHECK(error, "aclnnForeachMulScalar");
+
+            error = aclrtSynchronizeStream(stream);
+            ACL_RT_CHECK(error, "aclrtSynchronizeStream");
         }
         catch (const std::exception& e) {
-            // 释放资源（包含张量列表）
             if (input_list != nullptr) {
                 aclDestroyTensorList(input_list);
             }
@@ -393,11 +418,16 @@ namespace asnumpy {
             }
             throw;
         }
+        
+        LOG_INFO("aclnnForeachMulScalar completed");
 
         return result;
     }
 
     NPUArray Degrees(const NPUArray& x) {
+        LOG_DEBUG("aclnnMul start: input_shape={}, aclDtype={}",
+                  detail::FormatShape(x.shape), AclDtypeName(x.aclDtype));
+
         aclDataType aclType = ACL_DOUBLE;
         if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
             aclType = x.aclDtype;
@@ -407,12 +437,12 @@ namespace asnumpy {
         auto factorArr = NPUArray({1}, aclType);
         void* factorPtr = nullptr;
         auto error = aclGetRawTensorAddr(factorArr.tensorPtr, &factorPtr);
-        CheckAclnnStatus(error, "Failed to get factor tensor pointer");
+        ACL_RT_CHECK(error, "aclGetRawTensorAddr");
         double hostValue = factor;
         error = aclrtMemcpy(factorPtr, sizeof(double),
                             &hostValue, sizeof(double),
                             ACL_MEMCPY_HOST_TO_DEVICE);
-        CheckAclnnStatus(error, "Write const factor error");
+        ACL_RT_CHECK(error, "Write const factor");
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor = nullptr;
         error = aclnnMulGetWorkspaceSize(
@@ -422,12 +452,15 @@ namespace asnumpy {
             &workspaceSize,
             &executor
         );
-        CheckGetWorkspaceSizeAclnnStatus(error);
+        ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
         AclWorkspace workspace(workspaceSize);
         error = aclnnMul(workspace.get(), workspaceSize, executor, nullptr);
-        CheckAclnnStatus(error, "aclnnMul error");
+        ACLNN_CHECK(error, "aclnnMul");
         error = aclrtSynchronizeDevice();
-        CheckSynchronizeDeviceAclnnStatus(error);
+        ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+
+        LOG_INFO("aclnnMul completed");
+
         return out;
     }
 }
