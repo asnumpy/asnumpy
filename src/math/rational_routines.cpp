@@ -17,7 +17,6 @@
 
 #include <asnumpy/math/rational_routines.hpp>
 #include <asnumpy/utils/npu_array.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
@@ -45,6 +44,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     auto out = NPUArray(shape, out_dtype);
 
     // 步骤1: 计算x1和x2的乘积 (a * b)
+    LOG_DEBUG("aclnnMul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     NPUArray product(shape, out_dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
@@ -53,14 +53,18 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         product.tensorPtr,
         &mul_workspace_size, &mul_executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
 
     AclWorkspace mul_workspace(mul_workspace_size);
 
     error = aclnnMul(mul_workspace.get(), mul_workspace_size, mul_executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Lcm");
+    ACLNN_CHECK(error, "aclnnMul");
+    error = aclrtSynchronizeDevice();
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnMul completed");
 
     // 步骤2: 计算x1和x2的绝对值乘积 (|a * b|)
+    LOG_DEBUG("aclnnAbs start: input_shape={}, aclDtype={}", detail::FormatShape(product.shape), AclDtypeName(product.aclDtype));
     NPUArray abs_product(shape, out_dtype);
     uint64_t abs_workspace_size = 0;
     aclOpExecutor* abs_executor = nullptr;
@@ -68,28 +72,32 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         product.tensorPtr, abs_product.tensorPtr,
         &abs_workspace_size, &abs_executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnAbsGetWorkspaceSize");
 
     AclWorkspace abs_workspace(abs_workspace_size);
 
     error = aclnnAbs(abs_workspace.get(), abs_workspace_size, abs_executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Lcm");
+    ACLNN_CHECK(error, "aclnnAbs");
+    error = aclrtSynchronizeDevice();
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnAbs completed");
 
     // 步骤3: 计算x1和x2的最大公约数 (GCD(a, b))
     NPUArray gcd_result = Gcd(x1, x2);  // 复用已实现的Gcd函数
 
     // 步骤4: 计算LCM = |a*b| / GCD(a,b)
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         abs_product,
-        gcd_result,                                           
-        out_dtype,                                     
+        gcd_result,
+        out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnDivGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnDiv(workspace, workspaceSize, executor, nullptr);
         },
-        "Lcm"
+        "Lcm",
+        "aclnnDiv"
     );
 }
     
@@ -102,17 +110,18 @@ NPUArray Gcd(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     if (dtype != std::nullopt) {
         out_dtype = *dtype;
     }
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1,
-        x2,                                           
-        out_dtype,                                     
+        x2,
+        out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnGcdGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnGcd(workspace, workspaceSize, executor, nullptr);
         },
-        "Gcd"
+        "Gcd",
+        "aclnnGcd"
     );
 }
 

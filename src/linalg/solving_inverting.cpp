@@ -16,7 +16,6 @@
 
 
 #include <asnumpy/linalg/solving_inverting.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
@@ -30,7 +29,7 @@
 using namespace asnumpy;
 
 NPUArray Linalg_Inv(const NPUArray& a) {
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         a,
         a.dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -39,6 +38,7 @@ NPUArray Linalg_Inv(const NPUArray& a) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnInverse(workspace, workspaceSize, executor, nullptr);
         },
-        "Linalg_Inv"
+        "Linalg_Inv",
+        "aclnnInverse"
     );
 }

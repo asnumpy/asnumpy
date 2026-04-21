@@ -16,46 +16,59 @@
 
 
 #include <asnumpy/utils/status_handler.hpp>
+#include <spdlog/spdlog.h>
+#include <fmt/format.h>
+#include <stdexcept>
+#include <cstring>
 
+namespace asnumpy {
 
+namespace {
 
+// Extract basename from full path: "/path/to/file.cpp" -> "file.cpp"
+const char* basename(const char* path) {
+    if (!path) return "unknown";
+    const char* last_slash = std::strrchr(path, '/');
+    return last_slash ? last_slash + 1 : path;
+}
 
-void CheckAclnnStatus(aclnnStatus status, const std::string& context)
-{
+// Safely get ACL error detail message
+std::string get_error_detail() {
+    const char* msg = aclGetRecentErrMsg();
+    if (msg && std::strlen(msg) > 0) {
+        return std::string(" - ") + msg;
+    }
+    return "";
+}
+
+} // anonymous namespace
+
+void CheckAclnnStatus(aclnnStatus status, const char* file, const char* func, const char* api_name) {
+    CheckAclnnStatus(status, file, func, std::string(api_name));
+}
+
+void CheckAclRuntimeStatus(aclError status, const char* file, const char* func, const char* api_name) {
+    CheckAclRuntimeStatus(status, file, func, std::string(api_name));
+}
+
+void CheckAclnnStatus(aclnnStatus status, const char* file, const char* func, const std::string& api_name) {
     if (status != ACL_SUCCESS) {
-
-        const char* error_msg = aclGetRecentErrMsg();
-        std::string full_error_msg;
-        
-        if (!context.empty()){
-            full_error_msg = fmt::format("{} error code: {}. ",context,status);
-        }
-        else{
-            full_error_msg = fmt::format("error code: {}. ",status);
-        }
-
-        if (error_msg != nullptr) {
-            full_error_msg += fmt::format("Details: {}", error_msg);
-        }
-        
-        throw std::runtime_error(full_error_msg);
+        auto detail = get_error_detail();
+        auto error_msg = fmt::format("[{}]({}) {} error = {}{}",
+                                     basename(file), func, api_name, status, detail);
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
     }
 }
 
-
-void CheckGetWorkspaceSizeAclnnStatus(aclnnStatus status){
-    CheckAclnnStatus(status, "Failed to allocate workspace.");
+void CheckAclRuntimeStatus(aclError status, const char* file, const char* func, const std::string& api_name) {
+    if (status != ACL_SUCCESS) {
+        auto detail = get_error_detail();
+        auto error_msg = fmt::format("[{}]({}) {} error = {}{}",
+                                     basename(file), func, api_name, status, detail);
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
+    }
 }
 
-void CheckMallocAclnnStatus(aclnnStatus status){
-    CheckAclnnStatus(status, "Failed to allocate workspace memory.");
-}
-
-
-void CheckSynchronizeDeviceAclnnStatus(aclnnStatus status){
-    CheckAclnnStatus(status, "Failed to synchronize device.");
-}
-
-void CheckExecuteAclnnStatus(aclnnStatus status, const std::string& op_name) {
-    CheckAclnnStatus(status, op_name + " execute failed");
-}
+} // namespace asnumpy

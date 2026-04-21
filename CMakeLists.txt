@@ -73,6 +73,23 @@ else()
     message(STATUS "Using system fmt: ${fmt_VERSION}")
 endif()
 
+# ========== spdlog (system package first, fallback to FetchContent) ==========
+find_package(spdlog QUIET)
+if(NOT spdlog_FOUND)
+    message(STATUS "spdlog not found in system, fetching from GitHub...")
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.15.1
+    )
+    set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+    set(SPDLOG_TEST OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(spdlog)
+else()
+    message(STATUS "Using system spdlog: ${spdlog_VERSION}")
+endif()
+
 # ========== Source directories ==========
 include_directories(include)
 add_subdirectory(src)

@@ -18,48 +18,37 @@
 
 #include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
-#include <fmt/core.h>
 
-#define CHECK_RET(cond, return_expr)                                                                                   \
-    do {                                                                                                               \
-        if (!(cond)) {                                                                                                 \
-            return_expr;                                                                                               \
-        }                                                                                                              \
-    }                                                                                                                  \
-    while (0)
-
-#define LOG_PRINT(message, ...)                                                                                        \
-    do {                                                                                                               \
-        throw std::runtime_error(fmt::format(message, ##__VA_ARGS__));                                                 \
-    }                                                                                                                  \
-    while (0)
-
-
-#define EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc)                                               \
+#define EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc, AclnnApiName)                                \
     do {                                                                                                               \
         asnumpy::AclWorkspace workspace(workspaceSize);                                                               \
         auto error_func = AclnnFunc(workspace.get(), workspace.size(), executor, nullptr);                            \
-        CheckAclnnStatus(error_func, fmt::format("[{}] Failed to execute operation.", #OpName));                       \
+        ACLNN_CHECK(error_func, AclnnApiName);                                                                        \
         auto error_sync = aclrtSynchronizeDevice();                                                                    \
-        CheckSynchronizeDeviceAclnnStatus(error_sync);                                                                 \
+        ACL_RT_CHECK(error_sync, AclnnApiName ": aclrtSynchronizeDevice");                                            \
     }                                                                                                                  \
     while (0)
 
 #define DEFINE_UNARY_OP(OpName, AclnnGetWorkspaceSizeFunc, AclnnFunc)                                                  \
     NPUArray OpName(const NPUArray& x) {                                                                               \
+        LOG_DEBUG("{} start: input_shape={}, tensorSize={}, aclDtype={}",                                              \
+                  #AclnnFunc, detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));                    \
         auto shape = x.shape;                                                                                          \
         auto dtype = x.dtype;                                                                                          \
         auto result = NPUArray(shape, dtype);                                                                          \
         uint64_t workspaceSize = 0;                                                                                    \
         aclOpExecutor* executor;                                                                                       \
         auto error = AclnnGetWorkspaceSizeFunc(x.tensorPtr, result.tensorPtr, &workspaceSize, &executor);              \
-        CheckGetWorkspaceSizeAclnnStatus(error);                                                                       \
-        EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc);                                              \
+        ACLNN_CHECK(error, #AclnnFunc "GetWorkspaceSize");                                                            \
+        EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc, #AclnnFunc);                                 \
+        LOG_INFO("{} completed", #AclnnFunc);                                                                          \
         return result;                                                                                                 \
     }
 
 #define DEFINE_BINARY_OP(OpName, AclnnGetWorkspaceSizeFunc, AclnnFunc)                                                 \
     NPUArray OpName(const NPUArray& x1, const NPUArray& x2) {                                                          \
+        LOG_DEBUG("{} start: x1_shape={}, x2_shape={}, aclDtype={}",                                                   \
+                  #AclnnFunc, detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));  \
         auto shape = GetBroadcastShape(x1, x2);                                                                        \
         auto dtype = x1.dtype;                                                                                         \
         auto result = NPUArray(shape, dtype);                                                                          \
@@ -67,7 +56,8 @@
         aclOpExecutor* executor;                                                                                       \
         auto error =                                                                                                   \
             AclnnGetWorkspaceSizeFunc(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);        \
-        CheckGetWorkspaceSizeAclnnStatus(error);                                                                       \
-        EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc);                                              \
+        ACLNN_CHECK(error, #AclnnFunc "GetWorkspaceSize");                                                            \
+        EXECUTE_OP_WORKSPACE(OpName, workspaceSize, executor, AclnnFunc, #AclnnFunc);                                 \
+        LOG_INFO("{} completed", #AclnnFunc);                                                                          \
         return result;                                                                                                 \
     }

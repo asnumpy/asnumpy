@@ -16,6 +16,8 @@
 
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <stdexcept>
 
 void bind_array(pybind11::module_& array);
 void bind_cann(pybind11::module_& cann);
@@ -36,9 +38,37 @@ void bind_statistics(pybind11::module_& statistics);
 void bind_nn(pybind11::module_& nn);
 }
 
+// Global storage for CannError exception class (used by translator)
+static pybind11::object g_cann_error_cls;
+
 
 PYBIND11_MODULE(asnumpy_core, module) {
     module.doc() = "*** AsNumpy Core ***";
+
+    // Register custom CANN error exception (subclass of RuntimeError)
+    g_cann_error_cls = pybind11::register_exception<std::runtime_error>(module, "CannError");
+
+    // Register exception translators
+    pybind11::register_exception_translator([](std::exception_ptr p) {
+        try {
+            if (p) std::rethrow_exception(p);
+        } catch (const std::invalid_argument& e) {
+            PyErr_SetString(PyExc_ValueError, e.what());
+        } catch (const std::out_of_range& e) {
+            PyErr_SetString(PyExc_IndexError, e.what());
+        } catch (const std::bad_alloc& e) {
+            PyErr_SetString(PyExc_MemoryError, e.what());
+        } catch (const std::runtime_error& e) {
+            // ACL error messages contain "error ="; classify as CannError
+            std::string msg = e.what();
+            if (msg.find("error =") != std::string::npos) {
+                PyErr_SetObject(g_cann_error_cls.ptr(), pybind11::str(msg).ptr());
+            } else {
+                PyErr_SetString(PyExc_RuntimeError, msg.c_str());
+            }
+        }
+    });
+
     auto array = module.def_submodule("array");
     auto cann = module.def_submodule("cann");
     auto dtypes = module.def_submodule("dtypes");
@@ -53,7 +83,7 @@ PYBIND11_MODULE(asnumpy_core, module) {
     auto testing = module.def_submodule("testing");
     // auto utils = module.def_submodule("utils");
     auto version = module.def_submodule("version");
-    
+
 
     bind_array(array);
     bind_cann(cann);

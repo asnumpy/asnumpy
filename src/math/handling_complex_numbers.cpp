@@ -16,7 +16,6 @@
 
 
 #include <asnumpy/math/handling_complex_numbers.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
@@ -34,17 +33,19 @@ namespace asnumpy{
         if (val.aclDtype == ACL_COMPLEX64 || val.aclDtype == ACL_COMPLEX128){
             aclType = ACL_FLOAT;
         }
+        ACL_DTYPE_WARN(val.aclDtype, aclType, __func__);
         py::dtype dtype = NPUArray::GetPyDtype(aclType);
-        return ExecuteUnaryOp(
-            val,                                           
-            dtype,                                      
+        return EXECUTE_UNARY_OP(
+            val,
+            dtype,
             [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnRealGetWorkspaceSize(in, out, workspaceSize, executor);
             },
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnReal(workspace, workspaceSize, executor, nullptr);
             },
-            "Real"                                       
+            "Real",
+            "aclnnReal"
         );
     }
 }

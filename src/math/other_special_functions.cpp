@@ -19,7 +19,6 @@
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_sinc.h>
 #include <asnumpy/math/other_special_functions.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <fmt/format.h>
 #include <stdexcept>
@@ -34,16 +33,17 @@ NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype) {
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
     }
-    return ExecuteUnaryOp(
-        x,                                           
-        out_py_dtype,                                      
+    return EXECUTE_UNARY_OP(
+        x,
+        out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSincGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSinc(workspace, workspaceSize, executor, nullptr);
         },
-        "Sinc"
+        "Sinc",
+        "aclnnSinc"
     );
 }
 

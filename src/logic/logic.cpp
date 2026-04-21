@@ -16,10 +16,11 @@
 
 
 #include <asnumpy/logic/logic.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/status_handler.hpp>
 #include <fmt/core.h>
+#include <stdexcept>
 
 #include <aclnnop/aclnn_all.h>
 #include <aclnnop/aclnn_any.h>
@@ -75,6 +76,7 @@ static aclScalar* CreateScalarForComparison(
 
 /// Reduce array by logical AND operation over all elements.
 NPUArray All(const NPUArray& x) {
+    LOG_DEBUG("aclnnAll start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
     auto result = NPUArray({}, ACL_BOOL);
 
     uint64_t workspaceSize = 0;
@@ -84,7 +86,8 @@ NPUArray All(const NPUArray& x) {
     // dim=[] (全局 reduce)
     aclIntArray* aclDim = aclCreateIntArray(nullptr, 0);
     if (!aclDim) {
-        throw std::runtime_error("[logic.cpp](All) failed to create empty aclIntArray");
+        throw std::runtime_error(fmt::format(
+            "[logic.cpp]({}) failed to create empty aclIntArray", __func__));
     }
 
     auto error = aclnnAllGetWorkspaceSize(
@@ -95,22 +98,24 @@ NPUArray All(const NPUArray& x) {
         &workspaceSize,
         &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnAllGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnAll(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "All");
+    ACLNN_CHECK(error, "aclnnAll");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyIntArray(aclDim);
 
+    LOG_INFO("aclnnAll completed");
     return result;
 }
 
 /// Reduce array by logical AND operation over specified dimensions.
 NPUArray All(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) {
+    LOG_DEBUG("aclnnAll start: input_shape={}, tensorSize={}, aclDtype={}, dim={}, keepdims={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), detail::FormatShape(dim), keepdims);
     std::vector<int64_t> shape = x.shape;
     if (keepdims) {
         for (int i=0; i<dim.size(); i++) {
@@ -133,7 +138,8 @@ NPUArray All(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
     // 构造 dim 数组
     aclIntArray* aclDim = aclCreateIntArray(dim.data(), dim.size());
     if (!aclDim) {
-        throw std::runtime_error("[logic.cpp](All) failed to create aclIntArray");
+        throw std::runtime_error(fmt::format(
+            "[logic.cpp]({}) failed to create aclIntArray", __func__));
     }
 
     auto error = aclnnAllGetWorkspaceSize(
@@ -144,22 +150,24 @@ NPUArray All(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
         &workspaceSize,
         &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnAllGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnAll(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "All");
+    ACLNN_CHECK(error, "aclnnAll");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyIntArray(aclDim);
 
+    LOG_INFO("aclnnAll completed");
     return result;
 }
 
 /// Reduce array by logical OR operation over all elements.
 NPUArray Any(const NPUArray& x) {
+    LOG_DEBUG("aclnnAny start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
     auto result = NPUArray({}, ACL_BOOL);
 
     uint64_t workspaceSize = 0;
@@ -180,22 +188,24 @@ NPUArray Any(const NPUArray& x) {
         &workspaceSize,
         &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnAnyGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnAny(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Any");
+    ACLNN_CHECK(error, "aclnnAny");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyIntArray(aclDim);
 
+    LOG_INFO("aclnnAny completed");
     return result;
 }
 
 /// Reduce array by logical OR operation over specified dimensions.
 NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) {
+    LOG_DEBUG("aclnnAny start: input_shape={}, tensorSize={}, aclDtype={}, dim={}, keepdims={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), detail::FormatShape(dim), keepdims);
     std::vector<int64_t> shape = x.shape;
     if (keepdims) {
         for (int i=0; i<dim.size(); i++) {
@@ -218,7 +228,8 @@ NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
     // 构造 dim 数组
     aclIntArray* aclDim = aclCreateIntArray(dim.data(), dim.size());
     if (!aclDim) {
-        throw std::runtime_error("[logic.cpp](Any) failed to create aclIntArray");
+        throw std::runtime_error(fmt::format(
+            "[logic.cpp]({}) failed to create aclIntArray", __func__));
     }
 
     auto error = aclnnAnyGetWorkspaceSize(
@@ -229,17 +240,18 @@ NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
         &workspaceSize,
         &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnAnyGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnAny(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "Any");
+    ACLNN_CHECK(error, "aclnnAny");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyIntArray(aclDim);
 
+    LOG_INFO("aclnnAny completed");
     return result;
 }
 
@@ -247,7 +259,7 @@ NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
 NPUArray IsFinite(const NPUArray& x) {
     // 输出布尔数组，shape 与输入一致
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         x,
         dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -256,14 +268,15 @@ NPUArray IsFinite(const NPUArray& x) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnIsFinite(workspace, workspaceSize, executor, nullptr);
         },
-        "IsFinite"
+        "IsFinite",
+        "aclnnIsFinite"
     );
 }
 
 /// Check element-wise infinity of the input array.
 NPUArray IsInf(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         x,
         dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -272,14 +285,15 @@ NPUArray IsInf(const NPUArray& x) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnIsInf(workspace, workspaceSize, executor, nullptr);
         },
-        "IsInf"
+        "IsInf",
+        "aclnnIsInf"
     );
 }
 
 /// Test element-wise for negative infinity (-inf).
 NPUArray IsNegInf(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         x,
         dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -288,14 +302,15 @@ NPUArray IsNegInf(const NPUArray& x) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnIsNegInf(workspace, workspaceSize, executor, nullptr);
         },
-        "IsNegInf"
+        "IsNegInf",
+        "aclnnIsNegInf"
     );
 }
 
 /// Test element-wise for positive infinity (+inf).
 NPUArray IsPosInf(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         x,
         dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -304,14 +319,15 @@ NPUArray IsPosInf(const NPUArray& x) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnIsPosInf(workspace, workspaceSize, executor, nullptr);
         },
-        "IsPosInf"
+        "IsPosInf",
+        "aclnnIsPosInf"
     );
 }
 
 /// Perform element-wise logical AND between two boolean arrays.
 NPUArray LogicalAnd(const NPUArray& x, const NPUArray& y) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x, 
         y, 
         dtype,
@@ -321,14 +337,15 @@ NPUArray LogicalAnd(const NPUArray& x, const NPUArray& y) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLogicalAnd(workspace, workspaceSize, executor, nullptr);
         },
-        "LogicalAnd"
+        "LogicalAnd",
+        "aclnnLogicalAnd"
     );
 }
 
 /// Perform element-wise logical OR between two boolean arrays.
 NPUArray LogicalOr(const NPUArray& x, const NPUArray& y) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x, 
         y, 
         dtype,
@@ -338,14 +355,15 @@ NPUArray LogicalOr(const NPUArray& x, const NPUArray& y) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLogicalOr(workspace, workspaceSize, executor, nullptr);
         },
-        "LogicalOr"
+        "LogicalOr",
+        "aclnnLogicalOr"
     );
 }
 
 /// Perform element-wise logical NOT on a boolean array.
 NPUArray LogicalNot(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteUnaryOp(
+    return EXECUTE_UNARY_OP(
         x,
         dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -354,14 +372,15 @@ NPUArray LogicalNot(const NPUArray& x) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLogicalNot(workspace, workspaceSize, executor, nullptr);
         },
-        "LogicalNot"
+        "LogicalNot",
+        "aclnnLogicalNot"
     );
 }
 
 /// Perform element-wise logical XOR between two boolean arrays.
 NPUArray LogicalXor(const NPUArray& x, const NPUArray& y) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x, 
         y, 
         dtype,
@@ -371,14 +390,15 @@ NPUArray LogicalXor(const NPUArray& x, const NPUArray& y) {
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLogicalXor(workspace, workspaceSize, executor, nullptr);
         },
-        "LogicalXor"
+        "LogicalXor",
+        "aclnnLogicalXor"
     );
 }
 
 /// Element-wise greater-than comparison between two arrays.
 NPUArray greater(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -388,39 +408,41 @@ NPUArray greater(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnGtTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "greater"
+        "greater",
+        "aclnnGtTensor"
     );
 }
 
 /// Element-wise greater-than comparison between an array and a scalar.
 NPUArray greater(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnGtScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
-    
+
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnGtScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnGtScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnGtScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "greater");
+    ACLNN_CHECK(error, "aclnnGtScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnGtScalar completed");
     return out;
 }
 
 /// Element-wise greater-than-or-equal comparison between two arrays.
 NPUArray greater_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -430,15 +452,16 @@ NPUArray greater_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py:
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnGeTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "greater_equal"
+        "greater_equal",
+        "aclnnGeTensor"
     );
 }
 
 /// Element-wise greater-than-or-equal comparison between an array and a scalar.
 NPUArray greater_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnGeScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
@@ -446,16 +469,17 @@ NPUArray greater_equal(const NPUArray& x1, const py::object& scalar, std::option
     auto error = aclnnGeScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnGeScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnGeScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "greater_equal");
+    ACLNN_CHECK(error, "aclnnGeScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnGeScalar completed");
     return out;
 }
 
@@ -463,7 +487,7 @@ NPUArray greater_equal(const NPUArray& x1, const py::object& scalar, std::option
 /// Element-wise less-than comparison between two arrays.
 NPUArray less(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -473,15 +497,16 @@ NPUArray less(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLtTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "less"
+        "less",
+        "aclnnLtTensor"
     );
 }
 
 /// Element-wise less-than comparison between an array and a scalar.
 NPUArray less(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnLtScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
@@ -489,16 +514,17 @@ NPUArray less(const NPUArray& x1, const py::object& scalar, std::optional<py::dt
     auto error = aclnnLtScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnLtScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnLtScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "less");
+    ACLNN_CHECK(error, "aclnnLtScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnLtScalar completed");
     return out;
 }
 
@@ -506,7 +532,7 @@ NPUArray less(const NPUArray& x1, const py::object& scalar, std::optional<py::dt
 /// Element-wise less-than-or-equal comparison between two arrays.
 NPUArray less_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -516,15 +542,16 @@ NPUArray less_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnLeTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "less_equal"
+        "less_equal",
+        "aclnnLeTensor"
     );
 }
 
 /// Element-wise less-than-or-equal comparison between an array and a scalar.
 NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnLeScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
@@ -532,23 +559,24 @@ NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<
     auto error = aclnnLeScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnLeScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnLeScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "less_equal");
+    ACLNN_CHECK(error, "aclnnLeScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnLeScalar completed");
     return out;
 }
 
 /// Element-wise equality comparison between two arrays.
 NPUArray equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -558,14 +586,15 @@ NPUArray equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> 
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnEqTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "equal"
+        "equal",
+        "aclnnEqTensor"
     );
 }
 
 /// Element-wise equal comparison between an array and a scalar.
 NPUArray equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnEqScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape, dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
@@ -573,23 +602,24 @@ NPUArray equal(const NPUArray& x1, const py::object& scalar, std::optional<py::d
     auto error = aclnnEqScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnEqScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnEqScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "equal");
+    ACLNN_CHECK(error, "aclnnEqScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnEqScalar completed");
     return out;
 }
 
 /// Element-wise not-equal comparison between two arrays.
 NPUArray not_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(py::dtype::of<bool>());
-    return ExecuteBinaryOp(
+    return EXECUTE_BINARY_OP(
         x1, 
         x2, 
         out_dtype,
@@ -599,15 +629,16 @@ NPUArray not_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnNeTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "not_equal"
+        "not_equal",
+        "aclnnNeTensor"
     );
 }
 
 /// Element-wise not-equal comparison between an array and a scalar.
 NPUArray not_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype) {
+    LOG_DEBUG("aclnnNeScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x1.shape), x1.tensorSize, AclDtypeName(x1.aclDtype));
     auto out = NPUArray(x1.shape,
                         dtype.value_or(py::dtype::of<bool>()));
-    
     aclScalar* acl_scalar = CreateScalarForComparison(x1, scalar, dtype);
 
     uint64_t workspaceSize = 0;
@@ -615,16 +646,17 @@ NPUArray not_equal(const NPUArray& x1, const py::object& scalar, std::optional<p
     auto error = aclnnNeScalarGetWorkspaceSize(
         x1.tensorPtr, acl_scalar, out.tensorPtr, &workspaceSize, &executor
     );
-    CheckGetWorkspaceSizeAclnnStatus(error);
+    ACLNN_CHECK(error, "aclnnNeScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
 
     error = aclnnNeScalar(workspace.get(), workspaceSize, executor, nullptr);
-    CheckExecuteAclnnStatus(error, "not_equal");
+    ACLNN_CHECK(error, "aclnnNeScalar");
 
     error = aclrtSynchronizeDevice();
-    CheckSynchronizeDeviceAclnnStatus(error);
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(acl_scalar);
+    LOG_INFO("aclnnNeScalar completed");
     return out;
 }
 

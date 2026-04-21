@@ -16,10 +16,10 @@
 
 
 #include <acl/acl.h>
+#include <aclnn/acl_meta.h>
 #include <aclnn/aclnn_base.h>
 #include <asnumpy/linalg/product.hpp>
 #include <asnumpy/utils/npu_array.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <fmt/core.h>
@@ -34,6 +34,7 @@
 using namespace asnumpy;
 
 NPUArray Matmul(const NPUArray& x1, const NPUArray& x2) {
+	LOG_DEBUG("aclnnMatmul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
 	size_t x1_ndim = x1.shape.size();
 	size_t x2_ndim = x2.shape.size();
 
@@ -43,12 +44,13 @@ NPUArray Matmul(const NPUArray& x1, const NPUArray& x2) {
 		uint64_t ws = 0;
 		aclOpExecutor* exec = nullptr;
 		auto err = aclnnDotGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &ws, &exec);
-		CheckGetWorkspaceSizeAclnnStatus(err);
+		ACLNN_CHECK(err, "aclnnDotGetWorkspaceSize");
 		AclWorkspace workspace(ws);
 		err = aclnnDot(workspace.get(), ws, exec, nullptr);
-		CheckAclnnStatus(err, "aclnnDot error (matmul 1Dx1D)");
+		ACLNN_CHECK(err, "aclnnDot");
 		err = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(err);
+		ACL_RT_CHECK(err, "aclrtSynchronizeDevice");
+		LOG_INFO("aclnnMatmul completed");
 		return out;
 	}
 
@@ -74,16 +76,18 @@ NPUArray Matmul(const NPUArray& x1, const NPUArray& x2) {
 	aclOpExecutor* executor;
 	auto error = aclnnMatmulGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, use_fp16, 
 		&workspaceSize, &executor);
-	CheckGetWorkspaceSizeAclnnStatus(error);
+	ACLNN_CHECK(error, "aclnnMatmulGetWorkspaceSize");
 	AclWorkspace workspace(workspaceSize);
 	error = aclnnMatmul(workspace.get(), workspaceSize, executor, nullptr);
-	CheckAclnnStatus(error, "aclnnMatmul error");
+	ACLNN_CHECK(error, "aclnnMatmul");
 	error = aclrtSynchronizeDevice();
-	CheckSynchronizeDeviceAclnnStatus(error);
+	ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+	LOG_INFO("aclnnMatmul completed");
 	return result;
 }
 
 NPUArray Einsum(const char* subscripts, const std::vector<NPUArray>& operands) {
+	LOG_DEBUG("aclnnEinsum start: subscripts={}, x1_shape={}, x2_shape={}, aclDtype={}", subscripts, detail::FormatShape(operands[0].shape), detail::FormatShape(operands[1].shape), AclDtypeName(operands[0].aclDtype));
 	// aclnnEinsum目前只支持'abcd,abced->abce'，'a,b->ab'(outer)操作，所以就当一共两个操作数来实现:)
 	std::vector<aclTensor*> tmp{operands[0].tensorPtr, operands[1].tensorPtr};
 	auto input = aclCreateTensorList(tmp.data(), tmp.size());
@@ -99,18 +103,18 @@ NPUArray Einsum(const char* subscripts, const std::vector<NPUArray>& operands) {
 	uint64_t workspaceSize = 0;
 	aclOpExecutor* executor;
 	auto error = aclnnEinsumGetWorkspaceSize(input, subscripts, result.tensorPtr, &workspaceSize, &executor);
-	auto tensorListGuard = [&input]() { if(input) aclDestroyTensorList(input); };
-	CheckGetWorkspaceSizeAclnnStatus(error);
+	ACLNN_CHECK(error, "aclnnEinsumGetWorkspaceSize");
 	AclWorkspace workspace(workspaceSize);
 	error = aclnnEinsum(workspace.get(), workspaceSize, executor, nullptr);
-	CheckAclnnStatus(error, "aclnnEinsum error");
+	ACLNN_CHECK(error, "aclnnEinsum");
 	error = aclrtSynchronizeDevice();
-	CheckSynchronizeDeviceAclnnStatus(error);
-	tensorListGuard();
+	ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+	LOG_INFO("aclnnEinsum completed");
 	return result;
 }
 
 NPUArray Matrix_power(const NPUArray& a, int64_t n) {
+	LOG_DEBUG("aclnnMatmul start: input_shape={}, aclDtype={}, n={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), n);
 	auto shape = a.shape;
 	auto temp = NPUArray(shape, a.aclDtype);
 	auto ax = NPUArray(shape, a.aclDtype);
@@ -120,12 +124,13 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor;
 		auto error = aclnnEyeGetWorkspaceSize(shape[0], shape[1], result.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(error);
+		ACLNN_CHECK(error, "aclnnEyeGetWorkspaceSize");
 		AclWorkspace workspace(workspaceSize);
 		error = aclnnEye(workspace.get(), workspaceSize, executor, nullptr);
-		CheckAclnnStatus(error, "aclnnEye error");
+		ACLNN_CHECK(error, "aclnnEye");
 		error = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error);
+		ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+		LOG_INFO("aclnnMatmul completed");
 		return result;
 	}
 
@@ -134,12 +139,12 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 		uint64_t workspaceSize1 = 0;
 		aclOpExecutor* executor1;
 		auto error1 = aclnnInverseGetWorkspaceSize(a.tensorPtr, temp.tensorPtr, &workspaceSize1, &executor1);
-		CheckGetWorkspaceSizeAclnnStatus(error1);
+		ACLNN_CHECK(error1, "aclnnInverseGetWorkspaceSize");
 		AclWorkspace workspace1(workspaceSize1);
 		error1 = aclnnInverse(workspace1.get(), workspaceSize1, executor1, nullptr);
-		CheckAclnnStatus(error1, "aclnnInverse error");
+		ACLNN_CHECK(error1, "aclnnInverse");
 		error1 = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error1);
+		ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
 		ax = NPUArray(temp);
 	}
 	else {
@@ -149,6 +154,7 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 	}
 
 	if (absn == 1) {
+		LOG_INFO("aclnnMatmul completed");
 		return temp;
 	}
 
@@ -159,15 +165,13 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 		aclOpExecutor* executor2;
 		auto error2 = aclnnMatmulGetWorkspaceSize(temp.tensorPtr, ax.tensorPtr, x.tensorPtr, use_fp16, &workspaceSize2,
 												  &executor2);
-		CheckGetWorkspaceSizeAclnnStatus(error2);
+		ACLNN_CHECK(error2, "aclnnMatmulGetWorkspaceSize");
 		AclWorkspace workspace2(workspaceSize2);
 		error2 = aclnnMatmul(workspace2.get(), workspaceSize2, executor2, nullptr);
-		CheckAclnnStatus(error2, "aclnnMatmul error");
+		ACLNN_CHECK(error2, "aclnnMatmul");
 		error2 = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error2);
-		aclTensor* swap = temp.tensorPtr;
-		temp.tensorPtr = x.tensorPtr;
-		x.tensorPtr = swap;
+		ACL_RT_CHECK(error2, "aclrtSynchronizeDevice");
+		temp = std::move(x);
 	}
 
 	int8_t use_fp16 = 2;
@@ -175,12 +179,13 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
 	aclOpExecutor* executor2;
 	auto error2 = aclnnMatmulGetWorkspaceSize(temp.tensorPtr, ax.tensorPtr, result.tensorPtr, use_fp16, &workspaceSize2,
 											  &executor2);
-	CheckGetWorkspaceSizeAclnnStatus(error2);
+	ACLNN_CHECK(error2, "aclnnMatmulGetWorkspaceSize");
 	AclWorkspace workspace2(workspaceSize2);
 	error2 = aclnnMatmul(workspace2.get(), workspaceSize2, executor2, nullptr);
-	CheckAclnnStatus(error2, "aclnnMatmul error");
+	ACLNN_CHECK(error2, "aclnnMatmul");
 	error2 = aclrtSynchronizeDevice();
-	CheckSynchronizeDeviceAclnnStatus(error2);
+	ACL_RT_CHECK(error2, "aclrtSynchronizeDevice");
+	LOG_INFO("aclnnMatmul completed");
 	return result;
 }
 
@@ -188,9 +193,10 @@ NPUArray Matrix_power(const NPUArray& a, int64_t n) {
  * @brief Compute the dot product of two arrays.
  */
 NPUArray dot(const NPUArray& a, const NPUArray& b) {
+	LOG_DEBUG("aclnnDot start:={}, b_shape={}, aclDtype={}", detail::FormatShape(a.shape), detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
 	// case 1: both are scalars
 	if (a.shape.size() == 0 && b.shape.size() == 0) {
-		return ExecuteBinaryOp(
+		return EXECUTE_BINARY_OP(
             a,
 			b,
             a.dtype,
@@ -200,7 +206,8 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
             [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
                 return aclnnDot(workspace, workspaceSize, executor, nullptr);
             },
-            "dot"
+            "dot",
+            "aclnnDot"
         );
 	}
 
@@ -210,16 +217,17 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		auto error = aclnnDotGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(error);
+		ACLNN_CHECK(error, "aclnnDotGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		error = aclnnDot(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(error, "dot");
+		ACLNN_CHECK(error, "aclnnDot");
 
 		error = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error);
+		ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
+		LOG_INFO("aclnnDot completed");
 		return out;
 	}
 
@@ -233,16 +241,17 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
 		int8_t cubeMathType = 0; // KEEP_DTYPE
 		auto error = aclnnMmGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, cubeMathType, 
 			&workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(error);
+		ACLNN_CHECK(error, "aclnnMmGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		error = aclnnMm(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(error, "dot");
+		ACLNN_CHECK(error, "aclnnMm");
 
 		error = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error);
+		ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
+		LOG_INFO("aclnnDot completed");
 		return out;
 	}
 
@@ -257,6 +266,7 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
  *       This project has not implemented reshape yet.
 //  */
 NPUArray vdot(const NPUArray& a, const NPUArray& b) {
+	LOG_DEBUG("aclnnDot start: a_shape={}, b_shape={}, aclDtype={}", detail::FormatShape(a.shape), detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
 	aclnnStatus ret; // For receiving API return status
 	const int64_t num_elements = a.tensorSize;
 	// ===================================================================================
@@ -271,13 +281,13 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		ret = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 0, a_flat.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(ret);
+		ACLNN_CHECK(ret, "aclnnFlattenGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		// Pass nullptr for the stream, as in the dot function
 		ret = aclnnFlatten(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(ret, "vdot");
+		ACLNN_CHECK(ret, "aclnnFlatten");
 	}
 
 	// Flatten 'b'
@@ -285,13 +295,13 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		ret = aclnnFlattenGetWorkspaceSize(b.tensorPtr, 0, b_flat.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(ret);
+		ACLNN_CHECK(ret, "aclnnFlattenGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		// Pass nullptr for the stream
 		ret = aclnnFlatten(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(ret, "vdot");
+		ACLNN_CHECK(ret, "aclnnFlatten");
 	}
 
 	// ===================================================================================
@@ -303,7 +313,7 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 	aclTensor* a_1d_view = aclCreateTensor(vector_shape.data(), vector_shape.size(), a.aclDtype, vector_stride.data(), 
 						0, ACL_FORMAT_ND, flat_shape.data(), flat_shape.size(), a_flat.device_address());
 	if (!a_1d_view) {
-		throw std::runtime_error("[vdot] aclCreateTensor for a_1d_view failed.");
+		throw std::runtime_error("[product.cpp](vdot) aclCreateTensor for a_1d_view failed");
 	}
 
 	aclTensor* b_1d_view =
@@ -311,7 +321,7 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 						flat_shape.data(), flat_shape.size(), b_flat.device_address());
 	if (!b_1d_view) {
 		aclDestroyTensor(a_1d_view);
-		throw std::runtime_error("[vdot] aclCreateTensor for b_1d_view failed.");
+		throw std::runtime_error("[product.cpp](vdot) aclCreateTensor for b_1d_view failed");
 	}
 
 	// ===================================================================================
@@ -323,13 +333,13 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		ret = aclnnDotGetWorkspaceSize(a_1d_view, b_1d_view, out.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(ret);
+		ACLNN_CHECK(ret, "aclnnDotGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		// Pass nullptr for the stream
 		ret = aclnnDot(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(ret, "vdot");
+		ACLNN_CHECK(ret, "aclnnDot");
 	}
 
 	// Manually destroy the created tensor views before returning
@@ -338,7 +348,8 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
 
 	// Synchronize the device to wait for computation to complete, as in the dot function
 	ret = aclrtSynchronizeDevice();
-	CheckSynchronizeDeviceAclnnStatus(ret);
+	ACL_RT_CHECK(ret, "aclrtSynchronizeDevice");
+	LOG_INFO("aclnnDot completed");
 	return out;
 }
 
@@ -346,6 +357,7 @@ NPUArray vdot(const NPUArray& a, const NPUArray& b) {
  * @brief Compute the inner product of two arrays.
  */
 NPUArray inner(const NPUArray& a, const NPUArray& b) {
+	LOG_DEBUG("aclnnDot start: a_shape={}, b_shape={}, aclDtype={}", detail::FormatShape(a.shape), detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
 	py::dtype dtype = a.dtype;
 	// case 1: 1D × 1D
 	if (a.shape.size() == 1 && b.shape.size() == 1) {
@@ -354,15 +366,16 @@ NPUArray inner(const NPUArray& a, const NPUArray& b) {
 		uint64_t workspaceSize = 0;
 		aclOpExecutor* executor = nullptr;
 		auto error = aclnnDotGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(error);
+		ACLNN_CHECK(error, "aclnnDotGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		error = aclnnDot(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(error, "inner");
+		ACLNN_CHECK(error, "aclnnDot");
 
 		error = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error);
+		ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+		LOG_INFO("aclnnDot completed");
 		return out;
 	}
 
@@ -376,15 +389,16 @@ NPUArray inner(const NPUArray& a, const NPUArray& b) {
 		int8_t cubeMathType = 0; // KEEP_DTYPE
 		auto error = aclnnMmGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, cubeMathType, 
 			&workspaceSize, &executor);
-		CheckGetWorkspaceSizeAclnnStatus(error);
+		ACLNN_CHECK(error, "aclnnMmGetWorkspaceSize");
 
 		AclWorkspace workspace(workspaceSize);
 
 		error = aclnnMm(workspace.get(), workspaceSize, executor, nullptr);
-		CheckExecuteAclnnStatus(error, "inner");
+		ACLNN_CHECK(error, "aclnnMm");
 
 		error = aclrtSynchronizeDevice();
-		CheckSynchronizeDeviceAclnnStatus(error);
+		ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+		LOG_INFO("aclnnDot completed");
 		return out;
 	}
 
@@ -396,6 +410,7 @@ NPUArray inner(const NPUArray& a, const NPUArray& b) {
  * @brief Compute the outer product of two arrays.
  */
 NPUArray outer(const NPUArray& a, const NPUArray& b) {
+	LOG_DEBUG("aclnnMul start: a_shape={}, b_shape={}, aclDtype={}", detail::FormatShape(a.shape), detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
 	py::dtype dtype = a.dtype;
 	// Step 1: flatten a -> (m, 1) 有bug，aclnnFlatten无法展开为(m, 1)格式
 	auto a_flat = NPUArray({static_cast<int64_t>(a.tensorSize), 1}, a.aclDtype);
@@ -403,12 +418,12 @@ NPUArray outer(const NPUArray& a, const NPUArray& b) {
 		uint64_t ws = 0;
 		aclOpExecutor* exec = nullptr;
 		auto err = aclnnFlattenGetWorkspaceSize(a.tensorPtr, 1, a_flat.tensorPtr, &ws, &exec);
-		CheckGetWorkspaceSizeAclnnStatus(err);
+		ACLNN_CHECK(err, "aclnnFlattenGetWorkspaceSize");
 
 		AclWorkspace workspace(ws);
 
 		err = aclnnFlatten(workspace.get(), ws, exec, nullptr);
-		CheckExecuteAclnnStatus(err, "outer");
+		ACLNN_CHECK(err, "aclnnFlatten");
 	}
 
 	// Step 2: flatten b -> (1, n)
@@ -417,12 +432,12 @@ NPUArray outer(const NPUArray& a, const NPUArray& b) {
 		uint64_t ws = 0;
 		aclOpExecutor* exec = nullptr;
 		auto err = aclnnFlattenGetWorkspaceSize(b.tensorPtr, 0, b_flat.tensorPtr, &ws, &exec);
-		CheckGetWorkspaceSizeAclnnStatus(err);
+		ACLNN_CHECK(err, "aclnnFlattenGetWorkspaceSize");
 
 		AclWorkspace workspace(ws);
 
 		err = aclnnFlatten(workspace.get(), ws, exec, nullptr);
-		CheckExecuteAclnnStatus(err, "outer");
+		ACLNN_CHECK(err, "aclnnFlatten");
 	}
 
 	// Step 3: elementwise multiply (m,1) * (1,n) -> (m,n)
@@ -434,16 +449,17 @@ NPUArray outer(const NPUArray& a, const NPUArray& b) {
 		uint64_t ws = 0;
 		aclOpExecutor* exec = nullptr;
 		auto err = aclnnMulGetWorkspaceSize(a_flat.tensorPtr, b_flat.tensorPtr, out.tensorPtr, &ws, &exec);
-		CheckGetWorkspaceSizeAclnnStatus(err);
+		ACLNN_CHECK(err, "aclnnMulGetWorkspaceSize");
 
 		AclWorkspace workspace(ws);
 
 		err = aclnnMul(workspace.get(), ws, exec, nullptr);
-		CheckExecuteAclnnStatus(err, "outer");
+		ACLNN_CHECK(err, "aclnnMul");
 	}
 
 	auto err = aclrtSynchronizeDevice();
-	CheckSynchronizeDeviceAclnnStatus(err);
+	ACL_RT_CHECK(err, "aclrtSynchronizeDevice");
 
+	LOG_INFO("aclnnMul completed");
 	return out;
 }
