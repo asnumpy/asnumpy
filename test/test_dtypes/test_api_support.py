@@ -1040,8 +1040,39 @@ def _print_test_start_banner() -> None:
 
 
 def _build_test_cases():
-    return [
+    return (
         # 数组创建
+        _cases_array_creation()
+        # 数学运算 - 基础算术
+        + _cases_basic_arithmetic()
+        # 数学运算 - 指数对数
+        + _cases_exponent_log()
+        # 数学运算 - 三角函数
+        + _cases_trigonometric()
+        # 数学运算 - 双曲函数
+        + _cases_hyperbolic()
+        # 数学运算 - 舍入函数
+        + _cases_rounding()
+        # 数学运算 - 算术运算
+        + _cases_arithmetic_ops()
+        # 归约操作
+        + _cases_reductions()
+        # 逻辑运算 - 比较
+        + _cases_comparisons()
+        # 逻辑运算 - 逻辑操作
+        + _cases_logical_ops()
+        # 逻辑运算 - 有限性检查
+        + _cases_finite_checks()
+        # 其他数学函数
+        + _cases_other_math()
+        # 线性代数
+        + _cases_linalg()
+    )
+
+
+def _cases_array_creation():
+    # 数组创建
+    return [
         ("ones", test_ones, "创建全1数组"),
         ("zeros", test_zeros, "创建全0数组"),
         ("empty", test_empty, "创建未初始化数组"),
@@ -1051,7 +1082,12 @@ def _build_test_cases():
         ("ndarray", test_ndarray_constructor, "NPUArray 构造函数"),
         ("ones_like", test_ones_like, "创建与给定数组形状相同的全1数组"),
         ("zeros_like", test_zeros_like, "创建与给定数组形状相同的全0数组"),
-        # 数学运算 - 基础算术
+    ]
+
+
+def _cases_basic_arithmetic():
+    # 数学运算 - 基础算术
+    return [
         ("add", test_add, "加法运算"),
         ("subtract", test_subtract, "减法运算"),
         ("multiply", test_multiply, "乘法运算"),
@@ -1059,7 +1095,12 @@ def _build_test_cases():
         ("power", test_power, "幂运算"),
         ("absolute", test_abs, "绝对值"),
         ("square", test_square, "平方"),
-        # 数学运算 - 指数对数
+    ]
+
+
+def _cases_exponent_log():
+    # 数学运算 - 指数对数
+    return [
         ("exp", test_exp, "指数函数"),
         ("expm1", test_expm1, "exp(x)-1"),
         ("exp2", test_exp2, "2的x次幂"),
@@ -1069,7 +1110,12 @@ def _build_test_cases():
         ("log1p", test_log1p, "log(1+x)"),
         ("logaddexp", test_logaddexp, "log(exp(x1)+exp(x2))"),
         ("logaddexp2", test_logaddexp2, "log2(2^x1+2^x2)"),
-        # 数学运算 - 三角函数
+    ]
+
+
+def _cases_trigonometric():
+    # 数学运算 - 三角函数
+    return [
         ("sin", test_sin, "正弦函数"),
         ("cos", test_cos, "余弦函数"),
         ("tan", test_tan, "正切函数"),
@@ -1079,14 +1125,24 @@ def _build_test_cases():
         ("arctan2", test_arctan2, "arctan2函数"),
         ("hypot", test_hypot, "欧几里得范数"),
         ("radians", test_radians, "角度转弧度"),
-        # 数学运算 - 双曲函数
+    ]
+
+
+def _cases_hyperbolic():
+    # 数学运算 - 双曲函数
+    return [
         ("sinh", test_sinh, "双曲正弦"),
         ("cosh", test_cosh, "双曲余弦"),
         ("tanh", test_tanh, "双曲正切"),
         ("arcsinh", test_arcsinh, "反双曲正弦"),
         ("arccosh", test_arccosh, "反双曲余弦"),
         ("arctanh", test_arctanh, "反双曲正切"),
-        # 数学运算 - 舍入函数
+    ]
+
+
+def _cases_rounding():
+    # 数学运算 - 舍入函数
+    return [
         ("around", test_around, "四舍五入"),
         ("round_", test_round_, "四舍五入"),
         ("rint", test_rint, "最近整数"),
@@ -1094,7 +1150,12 @@ def _build_test_cases():
         ("floor", test_floor, "向下取整"),
         ("ceil", test_ceil, "向上取整"),
         ("trunc", test_trunc, "截断"),
-        # 数学运算 - 算术运算
+    ]
+
+
+def _cases_arithmetic_ops():
+    # 数学运算 - 算术运算
+    return [
         ("true_divide", test_true_divide, "真除法"),
         ("floor_divide", test_floor_divide, "向下整除"),
         ("float_power", test_float_power, "浮点幂"),
@@ -1106,7 +1167,12 @@ def _build_test_cases():
         ("positive", test_positive, "正号"),
         ("negative", test_negative, "负号"),
         ("reciprocal", test_reciprocal, "倒数"),
-        # 归约操作
+    ]
+
+
+def _cases_reductions():
+    # 归约操作
+    return [
         ("sum", test_sum, "求和"),
         ("prod", test_prod, "求积"),
         ("cumsum", test_cumsum, "累积和"),
@@ -1116,26 +1182,46 @@ def _build_test_cases():
         ("nancumprod", test_nancumprod, "忽略NaN的累积积"),
         ("nancumsum", test_nancumsum, "忽略NaN的累积和"),
         ("cross", test_cross, "向量叉积"),
-        # 逻辑运算 - 比较
+    ]
+
+
+def _cases_comparisons():
+    # 逻辑运算 - 比较
+    return [
         ("greater", test_greater, "大于比较"),
         ("greater_equal", test_greater_equal, "大于等于比较"),
         ("less", test_less, "小于比较"),
         ("less_equal", test_less_equal, "小于等于比较"),
         ("equal", test_equal, "相等比较"),
         ("not_equal", test_not_equal, "不等比较"),
-        # 逻辑运算 - 逻辑操作
+    ]
+
+
+def _cases_logical_ops():
+    # 逻辑运算 - 逻辑操作
+    return [
         ("all", test_all, "全为真"),
         ("any", test_any, "任一为真"),
         ("logical_and", test_logical_and, "逻辑与"),
         ("logical_or", test_logical_or, "逻辑或"),
         ("logical_not", test_logical_not, "逻辑非"),
         ("logical_xor", test_logical_xor, "逻辑异或"),
-        # 逻辑运算 - 有限性检查
+    ]
+
+
+def _cases_finite_checks():
+    # 逻辑运算 - 有限性检查
+    return [
         ("isfinite", test_isfinite, "是否有限"),
         ("isinf", test_isinf, "是否无穷"),
         ("isneginf", test_isneginf, "是否负无穷"),
         ("isposinf", test_isposinf, "是否正无穷"),
-        # 其他数学函数
+    ]
+
+
+def _cases_other_math():
+    # 其他数学函数
+    return [
         ("sign", test_sign, "符号函数"),
         ("heaviside", test_heaviside, "阶跃函数"),
         ("sinc", test_sinc, "sinc函数"),
@@ -1151,7 +1237,12 @@ def _build_test_cases():
         ("relu", test_relu, "ReLU激活函数"),
         ("gelu", test_gelu, "GELU激活函数"),
         ("real", test_real, "取实部"),
-        # 线性代数
+    ]
+
+
+def _cases_linalg():
+    # 线性代数
+    return [
         ("dot", test_dot, "点积"),
         ("vdot", test_vdot, "向量点积"),
         ("inner", test_inner, "内积"),
