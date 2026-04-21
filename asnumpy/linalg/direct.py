@@ -42,7 +42,7 @@ def _requires_fp64_fallback(*arrays: ArrayLike) -> bool:
     return any(np.asarray(_as_host_array(arr)).dtype == np.float64 for arr in arrays)
 
 
-def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
+def dot(a: ArrayLike, b: ArrayLike, out=None) -> ndarray:
     if _requires_fp64_fallback(a, b):
         return _to_asnumpy_array(np.dot(_as_host_array(a), _as_host_array(b)))
     return ndarray(_dot(a, b))
@@ -54,7 +54,7 @@ def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
     return ndarray.from_numpy(np.asarray(np.inner(na, nb)))
 
 
-def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
+def outer(a: ArrayLike, b: ArrayLike, out=None) -> ndarray:
     na = _as_host_array(a)
     nb = _as_host_array(b)
     return ndarray.from_numpy(np.asarray(np.outer(na, nb)))
@@ -66,12 +66,12 @@ def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
     return ndarray(_vdot(a, b))
 
 
-def matmul(x1: ArrayLike, x2: ArrayLike) -> ndarray:
+def matmul(x1: ArrayLike, x2: ArrayLike, out=None) -> ndarray:
     return _to_asnumpy_array(np.matmul(_as_host_array(x1), _as_host_array(x2)))
 
 
-def einsum(subscripts: str, *operands: ArrayLike) -> ndarray:
-    return ndarray(_einsum(subscripts, *operands))
+def einsum(*operands: ArrayLike, out=None, optimize: bool = False, **kwargs) -> ndarray:
+    return ndarray(_einsum(*operands))
 
 
 _direct_all_ = [
