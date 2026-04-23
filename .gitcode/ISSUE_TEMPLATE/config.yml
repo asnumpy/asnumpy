@@ -1,0 +1,22 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: "AsNumpy Documentation"
+    url: https://gitcode.com/cann/asnumpy/tree/master/docs
+    about: Check the official docs for API usage and contribution guidelines.
+
+  - name: "FAQs"
+    url: https://gitcode.com/cann/asnumpy/tree/master/docs/faq.md
+    about: Check FAQs for quick answers to common questions.
+
+  - name: "Ascend Developer Community Forum"
+    url: https://www.hiascend.com/forum/
+    about: Discuss with other developers about Ascend AI processors and CANN.
+
+  - name: "CANN Official Documentation"
+    url: https://www.hiascend.com/document
+    about: Refer to CANN's official technical documentation.
+
+  - name: "OpenBOAT Operator Repository"
+    url: https://gitcode.com/HIT1920/OpenBOAT
+    about: The Ascend C operator repository that AsNumpy depends on.

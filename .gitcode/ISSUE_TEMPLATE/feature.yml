@@ -1,0 +1,52 @@
+name: "Feature Request"
+description: "Suggest an idea or new feature for AsNumpy"
+title: "[FEATURE] "
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Related Problem"
+      description: "What problem does this feature solve?"
+      placeholder: |
+        Example: Missing np.linalg.eig forces data copy to CPU.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Desired Solution"
+      description: "What API or behavior would you like?"
+      placeholder: |
+        Hope to add ap.linalg.eig with interface consistent with NumPy.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: numpy_api
+    attributes:
+      label: "Corresponding NumPy API"
+      description: "Which NumPy API does this correspond to?"
+      options:
+        - "np.add / np.sum (Basic math)"
+        - "np.matmul (Matrix multiplication)"
+        - "np.dot (Dot product)"
+        - "np.linalg (Linear Algebra)"
+        - "np.random (Random sampling)"
+        - "np.fft (FFT)"
+        - "Other (describe below)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional Context"
+      description: "Other context, use cases, or references"
+      placeholder: |
+        Example: Refer to NumPy implementation or Ascend C operator ideas.
+    validations:
+      required: false

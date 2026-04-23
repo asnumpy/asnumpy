@@ -1,0 +1,79 @@
+name: "Bug Report"
+description: "Report an issue to help improve AsNumpy"
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Problem Description"
+      description: "Describe the problem clearly"
+      placeholder: "Got a segmentation fault when using ap.sum()..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Provide minimal reproducible code"
+      placeholder: |
+        import asnumpy as ap
+        a = ap.array([1, 2, 3])
+        result = ap.sum(a)
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect?"
+      placeholder: "Should return the sum 6"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: npu_model
+    attributes:
+      label: "NPU Model"
+      description: "NPU model used"
+      options:
+        - "Atlas 300T / Atlas 800 (Model 9000)"
+        - "Atlas 910B"
+        - "Ascend 310P"
+        - "Other (specify below)"
+    validations:
+      required: true
+
+  - type: input
+    id: cann_version
+    attributes:
+      label: "CANN Version"
+      description: "CANN version"
+      placeholder: "8.2.RC1.alpha003"
+    validations:
+      required: true
+
+  - type: input
+    id: asnumpy_version
+    attributes:
+      label: "AsNumpy Version"
+      description: "AsNumpy version"
+      placeholder: "commit id or v0.x.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment Info"
+      description: "OS, Python version, etc."
+      placeholder: |
+        OS: Ubuntu 22.04
+        Python: 3.10.12
+        NumPy: 1.24.0
+    validations:
+      required: true
