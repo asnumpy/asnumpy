@@ -127,7 +127,6 @@ def test_dot_nonsquare_3x2_2x1(xp, dtype):
 
 
 # ---------- 1.5 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_dot_empty(xp, dtype):
@@ -186,7 +185,6 @@ def test_inner_fp64_precision(xp, dtype):
 
 
 # ---------- 2.3 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_inner_empty(xp, dtype):
@@ -245,7 +243,6 @@ def test_outer_fp64_precision(xp, dtype):
 
 
 # ---------- 3.3 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_outer_empty(xp, dtype):
@@ -304,7 +301,6 @@ def test_vdot_fp64_precision(xp, dtype):
 
 
 # ---------- 4.3 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_vdot_empty(xp, dtype):
@@ -382,7 +378,6 @@ def test_matmul_broadcast(xp, dtype):
 
 
 # ---------- 5.5 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_matmul_empty(xp, dtype):
@@ -468,7 +463,6 @@ def test_matrix_power_singular_negative(xp, dtype):
 
 
 # ---------- 6.6 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_matrix_power_empty(xp, dtype):

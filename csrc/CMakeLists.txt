@@ -18,6 +18,7 @@ add_library(asnumpy INTERFACE)
 add_library(ascend_sdk INTERFACE)
 
 target_include_directories(asnumpy INTERFACE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(asnumpy INTERFACE SPDLOG_FMT_EXTERNAL)
 
 target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/include)
 target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/lib64)

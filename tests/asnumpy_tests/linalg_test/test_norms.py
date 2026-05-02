@@ -232,7 +232,6 @@ def test_norm_batch_vectors(xp, dtype):
 
 
 # ---------- 1.8 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_norm_empty_vector(xp, dtype):

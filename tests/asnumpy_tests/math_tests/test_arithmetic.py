@@ -110,7 +110,6 @@ def test_arithmetic_float16_xfail(xp, dtype):
     return xp.add(a, b)
 
 
-@pytest.mark.xfail(reason="Mismatch: AsNumpy outputs float32 for integer inputs (Numpy is float64)")
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_allclose()
 def test_arithmetic_int_mismatch_xfail(xp, dtype):

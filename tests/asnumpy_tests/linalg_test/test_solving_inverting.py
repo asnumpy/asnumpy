@@ -190,7 +190,6 @@ def test_inv_nonsquare(xp, dtype):
 
 
 # ---------- 1.7 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_empty_matrix(xp, dtype):
