@@ -24,7 +24,11 @@
 import numpy
 import pytest
 from asnumpy import testing
-from tests.asnumpy_tests.math_tests.conftest import _create_array
+def _create_array(xp, data, dtype):
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
 
 
 # ========== 1. 指数运算 (Exp, Expm1) ==========
@@ -95,6 +99,7 @@ def test_exp_int_mismatch_xfail(xp, dtype):
     return xp.exp(a)
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_log_domain_error(xp, dtype):

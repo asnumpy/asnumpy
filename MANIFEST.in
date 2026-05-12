@@ -1,30 +1,28 @@
-# 包含根目录的重要配置文件
+# Root-level config files
 include CMakeLists.txt
 include pyproject.toml
-include uv.lock
 include LICENSE
 include README.md
 include contributors.json
 
-# 递归包含源代码和资源
-recursive-include asnumpy *
-recursive-include include *
+# Source code and resources (recursive)
 recursive-include src *
-recursive-include python *
-recursive-include third_party *
+recursive-include include *
+recursive-include csrc *
+recursive-include bindings/python *
 
-# 包含示例和测试代码
+# Examples and tests
 recursive-include examples *.py *.md
-recursive-include test *.py *.cpp *.hpp
+recursive-include tests *.py *.cpp *.hpp
 
-# 包含文档源文件
+# Documentation sources
 recursive-include docs *.md *.rst *.txt
 
-# 排除文档构建目录
+# Exclude documentation build artifacts
 prune docs/build
 prune docs/_build
 
-# 全局排除规则
+# Global exclude rules
 global-exclude __pycache__ *.py[cod]
 global-exclude *.a *.o *.obj *.lib *.so
 global-exclude *.dll *.dylib
