@@ -23,7 +23,7 @@ if(POLICY CMP0135)
 endif()
 
 # C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -56,52 +56,20 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 # NumPy include
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# ========== fmt (system package first, fallback to FetchContent) ==========
-find_package(fmt QUIET)
-if(NOT fmt_FOUND)
-    message(STATUS "fmt not found in system, fetching from GitHub...")
-    FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-        GIT_TAG 12.0.0
-    )
-    set(FMT_TEST OFF CACHE BOOL "" FORCE)
-    set(FMT_DOC OFF CACHE BOOL "" FORCE)
-    set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(fmt)
-else()
-    message(STATUS "Using system fmt: ${fmt_VERSION}")
-endif()
+# ========== fmt (system package only) ==========
+find_package(fmt REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
+message(STATUS "Using system fmt: ${fmt_VERSION}")
 
-# ========== spdlog (system package first, fallback to FetchContent) ==========
-find_package(spdlog QUIET)
-if(NOT spdlog_FOUND)
-    message(STATUS "spdlog not found in system, fetching from GitHub...")
-    FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG v1.15.1
-    )
-    set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
-    set(SPDLOG_TEST OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(spdlog)
-else()
-    message(STATUS "Using system spdlog: ${spdlog_VERSION}")
-endif()
+# ========== spdlog (system package only) ==========
+find_package(spdlog REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
+message(STATUS "Using system spdlog: ${spdlog_VERSION}")
+add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
 # ========== Source directories ==========
 include_directories(include)
-add_subdirectory(src)
-add_subdirectory(python)
+add_subdirectory(csrc)
+add_subdirectory(bindings/python)
 
-# ========== Install Python package ==========
 if(SKBUILD)
     message(STATUS "Building with scikit-build-core")
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/asnumpy/"
-            DESTINATION "asnumpy"
-            FILES_MATCHING
-            PATTERN "*.py"
-            PATTERN "__pycache__" EXCLUDE
-            PATTERN "*.pyc" EXCLUDE)
 endif()

@@ -22,7 +22,11 @@
 import numpy
 import pytest
 from asnumpy import testing
-from tests.asnumpy_tests.math_tests.conftest import _create_array
+def _create_array(xp, data, dtype):
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
 
 
 # ========== 1. 求和 (Sum) ==========

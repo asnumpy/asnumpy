@@ -24,7 +24,11 @@
 import numpy
 import pytest
 from asnumpy import testing
-from tests.asnumpy_tests.math_tests.conftest import _create_array
+def _create_array(xp, data, dtype):
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
 
 
 # ========== 1. 基础四则运算 (Add, Sub, Mul, Div) ==========
@@ -110,7 +114,6 @@ def test_arithmetic_float16_xfail(xp, dtype):
     return xp.add(a, b)
 
 
-@pytest.mark.xfail(reason="Mismatch: AsNumpy outputs float32 for integer inputs (Numpy is float64)")
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_allclose()
 def test_arithmetic_int_mismatch_xfail(xp, dtype):

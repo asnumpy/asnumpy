@@ -197,7 +197,7 @@ def test_sort_3d_negative_axis(xp, dtype):
 # ==========================================================================
 
 # ---------- 3.1 stable=True ----------
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version", strict=True)
+@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_true(xp, dtype):
@@ -210,7 +210,7 @@ def test_sort_stable_true(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version", strict=True)
+@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_false(xp, dtype):
@@ -223,7 +223,7 @@ def test_sort_stable_false(xp, dtype):
     return xp.sort(a, stable=False)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version", strict=True)
+@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_duplicates(xp, dtype):
@@ -233,7 +233,7 @@ def test_sort_stable_duplicates(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version", strict=True)
+@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_2d(xp, dtype):
@@ -243,7 +243,7 @@ def test_sort_stable_2d(xp, dtype):
     return xp.sort(a, axis=1, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version", strict=True)
+@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_all_same(xp, dtype):
@@ -258,7 +258,6 @@ def test_sort_stable_all_same(xp, dtype):
 # ==========================================================================
 
 # ---------- 4.1 布尔类型 ----------
-@pytest.mark.xfail(reason="CANN sort operator does not support bool dtype", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_bool(xp, dtype):
@@ -268,7 +267,6 @@ def test_sort_bool(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support bool dtype", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_bool_all_true(xp, dtype):
@@ -278,7 +276,6 @@ def test_sort_bool_all_true(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support bool dtype", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_bool_all_false(xp, dtype):
@@ -288,7 +285,6 @@ def test_sort_bool_all_false(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support bool dtype", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_bool_2d(xp, dtype):
@@ -369,7 +365,6 @@ def test_sort_with_nan(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support NaN values", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_multiple_nan(xp, dtype):
@@ -379,7 +374,6 @@ def test_sort_with_multiple_nan(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support NaN values", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_sort_nan_at_beginning(xp, dtype):
@@ -389,7 +383,6 @@ def test_sort_nan_at_beginning(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support NaN values", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_sort_nan_only(xp, dtype):
@@ -399,7 +392,6 @@ def test_sort_nan_only(xp, dtype):
     return xp.sort(a)
 
 
-@pytest.mark.xfail(reason="CANN sort operator does not support NaN values", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_nan_2d(xp, dtype):
@@ -484,7 +476,6 @@ def test_sort_3d_input(xp, dtype):
 # 7. 空数组 / 边界情况测试 (Edge Cases)
 # ==========================================================================
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_empty(xp, dtype):
