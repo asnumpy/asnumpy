@@ -95,6 +95,9 @@ class _AsnpNpz:
             self._cache[key] = NPUArray.from_numpy(host)  # upload to NPU
         return self._cache[key]
 
+    def __iter__(self):
+        return iter(self.files)
+
     def close(self):
         self._npz.close()
 
@@ -105,9 +108,6 @@ class _AsnpNpz:
 
     def keys(self):
         return self.files
-
-    def __iter__(self):
-        return iter(self.files)
 
 
 def load(file, mmap_mode=None, allow_pickle=False, **kwargs):
