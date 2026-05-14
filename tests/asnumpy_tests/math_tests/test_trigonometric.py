@@ -16,18 +16,11 @@
 
 import numpy
 import pytest
+from tests.asnumpy_tests.math_tests._helpers import (
+    create_array as _create_array,
+)
+
 from asnumpy import testing
-
-
-# ========== 辅助函数 ==========
-
-
-def _create_array(xp, data, dtype):
-    np_arr = numpy.array(data, dtype=dtype)
-    if xp is numpy:
-        return np_arr
-    return xp.ndarray.from_numpy(np_arr)
-
 
 # ========== 1. 基础三角函数测试 (Sin, Cos, Tan) ==========
 

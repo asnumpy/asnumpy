@@ -21,13 +21,11 @@
 
 import numpy
 import pytest
-from asnumpy import testing
-def _create_array(xp, data, dtype):
-    np_arr = numpy.array(data, dtype=dtype)
-    if xp is numpy:
-        return np_arr
-    return xp.ndarray.from_numpy(np_arr)
+from tests.asnumpy_tests.math_tests._helpers import (
+    create_array as _create_array,
+)
 
+from asnumpy import testing
 
 # ========== 1. 求和 (Sum) ==========
 
