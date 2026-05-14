@@ -82,13 +82,11 @@ PYBIND11_MODULE(_core, module) {
     auto statistics = module.def_submodule("statistics");
     auto nn = module.def_submodule("nn");
     auto testing = module.def_submodule("testing");
-    // auto utils = module.def_submodule("utils");
     auto version = module.def_submodule("version");
 
 
     bind_array(array);
     bind_cann(cann);
-    // bind_dtypes(dtypes);
     bind_fft(fft);
     bind_linalg(linalg);
     bind_linalg_no_submodule(module);

@@ -14,96 +14,263 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union
+
 import numpy as np
-from ._types import ArrayLike, AxisOptional, DTypeLike
+
 from ._core.math import (
     absolute as _absolute,
+)
+from ._core.math import (
     add as _add,
+)
+from ._core.math import (
     amax as _amax,
+)
+from ._core.math import (
     amin as _amin,
-    around as _around,
+)
+from ._core.math import (
     arccos as _arccos,
+)
+from ._core.math import (
     arccosh as _arccosh,
+)
+from ._core.math import (
     arcsin as _arcsin,
+)
+from ._core.math import (
     arcsinh as _arcsinh,
+)
+from ._core.math import (
     arctan as _arctan,
+)
+from ._core.math import (
     arctan2 as _arctan2,
+)
+from ._core.math import (
     arctanh as _arctanh,
+)
+from ._core.math import (
+    around as _around,
+)
+from ._core.math import (
     ceil as _ceil,
+)
+from ._core.math import (
     clip as _clip,
+)
+from ._core.math import (
     copysign as _copysign,
+)
+from ._core.math import (
     cos as _cos,
+)
+from ._core.math import (
     cosh as _cosh,
+)
+from ._core.math import (
     cross as _cross,
+)
+from ._core.math import (
     cumprod as _cumprod,
+)
+from ._core.math import (
     cumsum as _cumsum,
+)
+from ._core.math import (
     degrees as _degrees,
+)
+from ._core.math import (
     divide as _divide,
+)
+from ._core.math import (
     divmod as _divmod,
+)
+from ._core.math import (
     exp as _exp,
+)
+from ._core.math import (
     exp2 as _exp2,
+)
+from ._core.math import (
     expm1 as _expm1,
+)
+from ._core.math import (
     fabs as _fabs,
+)
+from ._core.math import (
     fix as _fix,
+)
+from ._core.math import (
     float_power as _float_power,
+)
+from ._core.math import (
     floor as _floor,
+)
+from ._core.math import (
     floor_divide as _floor_divide,
+)
+from ._core.math import (
     fmax as _fmax,
+)
+from ._core.math import (
     fmin as _fmin,
+)
+from ._core.math import (
     fmod as _fmod,
+)
+from ._core.math import (
     gcd as _gcd,
+)
+from ._core.math import (
     gelu as _gelu,
+)
+from ._core.math import (
     heaviside as _heaviside,
+)
+from ._core.math import (
     hypot as _hypot,
+)
+from ._core.math import (
     lcm as _lcm,
+)
+from ._core.math import (
     ldexp as _ldexp,
+)
+from ._core.math import (
     log as _log,
-    log10 as _log10,
+)
+from ._core.math import (
     log1p as _log1p,
+)
+from ._core.math import (
     log2 as _log2,
+)
+from ._core.math import (
+    log10 as _log10,
+)
+from ._core.math import (
     logaddexp as _logaddexp,
+)
+from ._core.math import (
     logaddexp2 as _logaddexp2,
+)
+from ._core.math import (
     max as _max,
+)
+from ._core.math import (
     maximum as _maximum,
+)
+from ._core.math import (
     min as _min,
+)
+from ._core.math import (
     minimum as _minimum,
+)
+from ._core.math import (
     mod as _mod,
+)
+from ._core.math import (
     modf as _modf,
+)
+from ._core.math import (
     multiply as _multiply,
+)
+from ._core.math import (
     nan_to_num as _nan_to_num,
+)
+from ._core.math import (
     nancumprod as _nancumprod,
+)
+from ._core.math import (
     nancumsum as _nancumsum,
+)
+from ._core.math import (
     nanmax as _nanmax,
+)
+from ._core.math import (
     nanprod as _nanprod,
+)
+from ._core.math import (
     nansum as _nansum,
+)
+from ._core.math import (
     negative as _negative,
+)
+from ._core.math import (
     positive as _positive,
+)
+from ._core.math import (
     power as _power,
+)
+from ._core.math import (
     prod as _prod,
+)
+from ._core.math import (
     rad2deg as _rad2deg,
+)
+from ._core.math import (
     radians as _radians,
-    reciprocal as _reciprocal,
+)
+from ._core.math import (
     real as _real,
+)
+from ._core.math import (
+    reciprocal as _reciprocal,
+)
+from ._core.math import (
     relu as _relu,
+)
+from ._core.math import (
     remainder as _remainder,
+)
+from ._core.math import (
     rint as _rint,
+)
+from ._core.math import (
     round_ as _round_,
+)
+from ._core.math import (
     sign as _sign,
+)
+from ._core.math import (
     signbit as _signbit,
+)
+from ._core.math import (
     sin as _sin,
+)
+from ._core.math import (
     sinc as _sinc,
+)
+from ._core.math import (
     sinh as _sinh,
+)
+from ._core.math import (
     sqrt as _sqrt,
+)
+from ._core.math import (
     square as _square,
+)
+from ._core.math import (
     subtract as _subtract,
+)
+from ._core.math import (
     sum as _sum,
+)
+from ._core.math import (
     tan as _tan,
+)
+from ._core.math import (
     tanh as _tanh,
+)
+from ._core.math import (
     true_divide as _true_divide,
+)
+from ._core.math import (
     trunc as _trunc,
 )
-from .utils import ndarray, _convert_dtype
+from ._types import ArrayLike, AxisOptional, DTypeLike
+from .utils import _convert_dtype, ndarray
 
 
 # Trigonometric functions
@@ -173,7 +340,7 @@ def heaviside(x1: ArrayLike, x2: ArrayLike) -> ndarray:
 
 
 def clip(
-    a: ArrayLike, a_min: Union[ArrayLike, float], a_max: Union[ArrayLike, float]
+    a: ArrayLike, a_min: ArrayLike | float, a_max: ArrayLike | float
 ) -> ndarray:
     return ndarray(_clip(a, a_min, a_max))
 
@@ -181,8 +348,8 @@ def clip(
 def nan_to_num(
     x: ArrayLike,
     nan: float = 0.0,
-    posinf: Optional[float] = None,
-    neginf: Optional[float] = None,
+    posinf: float | None = None,
+    neginf: float | None = None,
 ) -> ndarray:
     return ndarray(_nan_to_num(x, nan, posinf, neginf))
 
@@ -301,7 +468,7 @@ def prod(
     axis: AxisOptional = None,
     keepdims: bool = False,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _prod(a)
     return ndarray(_prod(a, axis, keepdims, _convert_dtype(dtype)))
@@ -312,7 +479,7 @@ def sum(
     axis: AxisOptional = None,
     keepdims: bool = False,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _sum(a)
     return ndarray(_sum(a, axis, keepdims, _convert_dtype(dtype)))
@@ -323,7 +490,7 @@ def nanprod(
     axis: AxisOptional = None,
     keepdims: bool = False,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _nanprod(a)
     return ndarray(_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
@@ -334,7 +501,7 @@ def nansum(
     axis: AxisOptional = None,
     keepdims: bool = False,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _nansum(a)
     return ndarray(_nansum(a, axis, keepdims, _convert_dtype(dtype)))
@@ -415,7 +582,6 @@ def signbit(x: ArrayLike) -> ndarray:
     result = ndarray(_signbit(x))
     # CANN's aclnnSignbit does not handle IEEE 754 negative zero (-0.0).
     # Detect -0.0 via numpy and patch the result.
-    import numpy as np
     np_x = x.to_numpy()
     neg_zero_mask = np.signbit(np_x) & (np_x == 0)
     if neg_zero_mask.any():
@@ -539,7 +705,7 @@ def fmin(
 
 def max(
     a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _max(a)
     return ndarray(_max(a, axis, keepdims))
@@ -547,7 +713,7 @@ def max(
 
 def amax(
     a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _amax(a)
     return ndarray(_amax(a, axis, keepdims))
@@ -555,7 +721,7 @@ def amax(
 
 def nanmax(
     a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _nanmax(a)
     return ndarray(_nanmax(a, axis, keepdims))
@@ -563,7 +729,7 @@ def nanmax(
 
 def min(
     a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _min(a)
     return ndarray(_min(a, axis, keepdims))
@@ -571,7 +737,7 @@ def min(
 
 def amin(
     a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _amin(a)
     return ndarray(_amin(a, axis, keepdims))

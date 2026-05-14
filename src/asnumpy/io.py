@@ -27,6 +27,7 @@ Implements:
 """
 
 import numpy as _np
+
 from ._core import ndarray as NPUArray
 
 
@@ -88,6 +89,12 @@ class _AsnpNpz:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    def __getitem__(self, key):
+        if key not in self._cache:
+            host = self._npz[key]  # lazy unzip → numpy.ndarray
+            self._cache[key] = NPUArray.from_numpy(host)  # upload to NPU
+        return self._cache[key]
+
     def close(self):
         self._npz.close()
 
@@ -101,12 +108,6 @@ class _AsnpNpz:
 
     def __iter__(self):
         return iter(self.files)
-
-    def __getitem__(self, key):
-        if key not in self._cache:
-            host = self._npz[key]  # lazy unzip → numpy.ndarray
-            self._cache[key] = NPUArray.from_numpy(host)  # upload to NPU
-        return self._cache[key]
 
 
 def load(file, mmap_mode=None, allow_pickle=False, **kwargs):

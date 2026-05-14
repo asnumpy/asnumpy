@@ -15,11 +15,14 @@
 # *****************************************************************************
 
 import operator
-from typing import Sequence, Union, overload
-from loguru import logger
+from collections.abc import Sequence
+from typing import overload
+
 import numpy as np
-from ._core import ndarray as _ndarray
+from loguru import logger
+
 from ._core import broadcast_shape as _broadcast_shape
+from ._core import ndarray as _ndarray
 
 
 class ndarray(_ndarray):
@@ -109,15 +112,16 @@ def _convert_dtype(dtype):
 
 
 @logger.catch(reraise=True)
-def _convert_size(size: Union[int, Sequence[int]]) -> Sequence[int]:
+def _convert_size(size: int | Sequence[int]) -> Sequence[int]:
     """Convert size from int to tuple"""
     logger.debug(f"Converting size {size}")
     if isinstance(size, int):
         return (size,)
     return size
 
+
 @logger.catch(reraise=True)
-def _normalize_shape(shape: Union[int, Sequence[int]]) -> list[int]:
+def _normalize_shape(shape: int | Sequence[int]) -> list[int]:
     """Normalize a shape argument to a list and reject negative dimensions."""
     logger.debug(f"Normalizing shape {shape}")
 
@@ -130,4 +134,3 @@ def _normalize_shape(shape: Union[int, Sequence[int]]) -> list[int]:
         raise ValueError("negative dimensions are not allowed")
 
     return normalized
-
