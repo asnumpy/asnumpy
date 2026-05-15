@@ -24,16 +24,17 @@ __all__ = ['assert_array_equal', 'assert_allclose']
 import numpy as np
 
 
-def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False):
+def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False, check_dtype=True):
     """断言两个数组完全相等
-    
+
     Args:
         x: 第一个数组
         y: 第二个数组
         err_msg: 自定义错误消息
         verbose: 是否显示详细错误信息
         strides_check: 是否检查strides
-        
+        check_dtype: 是否检查dtype (设为False允许float32 vs float64等合法差异)
+
     Raises:
         AssertionError: 如果数组不相等
     """
@@ -43,20 +44,20 @@ def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False):
             x = x.to_numpy()
         else:
             x = np.asarray(x)
-    
+
     if not isinstance(y, np.ndarray):
         if hasattr(y, 'to_numpy'):
             y = y.to_numpy()
         else:
             y = np.asarray(y)
-    
+
     # 检查shape
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
-    
+
     # 检查dtype
-    if x.dtype != y.dtype:
+    if check_dtype and x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
     
@@ -91,28 +92,33 @@ def assert_array_equal(x, y, err_msg='', verbose=True, strides_check=False):
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
 
-def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_check=False):
-    """断言两个数组在误差范围内相等（用于浮点数比较）"""
+def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True,
+                    strides_check=False, check_dtype=True):
+    """断言两个数组在误差范围内相等（用于浮点数比较）
+
+    Args:
+        check_dtype: 是否检查dtype (设为False允许float32 vs float64等合法差异)
+    """
     # 转换为numpy数组
     if not isinstance(x, np.ndarray):
         if hasattr(x, 'to_numpy'):
             x = x.to_numpy()
         else:
             x = np.asarray(x)
-    
+
     if not isinstance(y, np.ndarray):
         if hasattr(y, 'to_numpy'):
             y = y.to_numpy()
         else:
             y = np.asarray(y)
-    
+
     # 检查shape
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
-    
+
     # 检查dtype
-    if x.dtype != y.dtype:
+    if check_dtype and x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
     

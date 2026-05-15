@@ -226,6 +226,8 @@ _LAZY_MAPPING = {
     "AxisLike": "._types", "AxisOptional": "._types", "ScalarLike": "._types",
     # .utils
     "broadcast_shape": ".utils", "ndarray": ".utils",
+    # .ascendc (experimental)
+    "ascendc": ".ascendc",
 }
 
 

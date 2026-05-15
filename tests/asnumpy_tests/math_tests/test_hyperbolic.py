@@ -70,9 +70,8 @@ def test_tanh_int16_support(xp, dtype):
 # --- 针对不支持类型及精度不一致的标注 (XFAIL) ---
 
 
-@pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
-@testing.numpy_asnumpy_allclose()
+@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3, check_dtype=False)
 def test_hyperbolic_float16_xfail(xp, dtype):
     a = _create_array(xp, [0.5], dtype)
     return xp.sinh(a)

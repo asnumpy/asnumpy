@@ -26,6 +26,6 @@
 
 namespace asnumpy {
     NPUArray Mean(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype=std::nullopt);
-    double Mean(const NPUArray& a);
+    py::object Mean(const NPUArray& a);
 }
 
