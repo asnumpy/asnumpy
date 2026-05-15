@@ -67,22 +67,22 @@ namespace asnumpy {
             return temp;
         }
 
-        double ExtractScalarValue(const NPUArray& result) {
+        py::object ExtractScalarValue(const NPUArray& result) {
             py::array x = result.ToNumpy();
             py::dtype dt = x.dtype();
             py::buffer_info buf = x.request();
-            
+
             if (dt.is(py::dtype::of<int>())) {
                 int* results = static_cast<int*>(buf.ptr);
-                return results[0];
-            } 
+                return py::int_(results[0]);
+            }
             else if (dt.is(py::dtype::of<double>())) {
                 double* results = static_cast<double*>(buf.ptr);
-                return results[0];
+                return py::float_(results[0]);
             }
             else if (dt.is(py::dtype::of<float>())) {
                 float* results = static_cast<float*>(buf.ptr);
-                return results[0];
+                return py::float_(results[0]);
             }
             else {
                 throw std::runtime_error(
@@ -95,9 +95,14 @@ namespace asnumpy {
         LOG_DEBUG("aclnnMean start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
         py::dtype outDtype = dtype.has_value() ? dtype.value() : a.dtype;
         auto shape = a.shape;
+        int64_t ndim = static_cast<int64_t>(shape.size());
         int64_t ax = axis;
+        if (axis < -ndim || axis >= ndim) {
+            throw std::invalid_argument(
+                fmt::format("[averages_and_variances.cpp](Mean) axis {} is out of bounds for array of dimension {}", axis, ndim));
+        }
         if (axis < 0) {
-            ax = shape.size() + axis;
+            ax = ndim + axis;
         }
         if (keepdims) {
             shape[ax] = 1;
@@ -121,14 +126,14 @@ namespace asnumpy {
         return result;
     }
 
-    double Mean(const NPUArray& a) {
+    py::object Mean(const NPUArray& a) {
         LOG_DEBUG("aclnnMean start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
         auto temp = FlattenArray(a);
-        
+
         std::vector<int64_t> tmp{1};
         aclIntArray* axis_array = aclCreateIntArray(tmp.data(), tmp.size());
         auto result = NPUArray({1}, a.aclDtype);
-        
+
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;
         auto error = aclnnMeanGetWorkspaceSize(temp.tensorPtr, axis_array, false, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);

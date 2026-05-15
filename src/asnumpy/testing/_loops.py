@@ -408,49 +408,29 @@ def _make_decorator(check_func, name, type_check, accept_error, sp_name=None, sc
     return decorator
 
 
-def numpy_asnumpy_array_equal(err_msg='', verbose=True, name='xp', type_check=True, 
-                               accept_error=False, sp_name=None, scipy_name=None, 
-                               strides_check=False):
+def numpy_asnumpy_array_equal(err_msg='', verbose=True, name='xp', type_check=True,
+                               accept_error=False, sp_name=None, scipy_name=None,
+                               strides_check=False, check_dtype=True):
     """装饰器：比较NumPy和AsNumPy的结果是否完全相等
-    
+
     Args:
-        err_msg: 错误消息
-        verbose: 是否显示详细信息
-        name: xp参数名
-        type_check: 是否进行类型检查
-        accept_error: 是否接受错误
-        sp_name: scipy参数名（保留）
-        scipy_name: scipy模块名（保留）
-        strides_check: 是否检查strides
-        
-    Returns:
-        装饰器函数
+        check_dtype: 是否检查dtype (设为False允许float32 vs float64等合法差异)
     """
     def check_func(x, y):
-        _array.assert_array_equal(x, y, err_msg, verbose, strides_check=strides_check)
+        _array.assert_array_equal(x, y, err_msg, verbose, strides_check=strides_check,
+                                  check_dtype=check_dtype)
     return _make_decorator(check_func, name, type_check, accept_error, sp_name, scipy_name)
 
 
-def numpy_asnumpy_allclose(rtol=1e-7, atol=0, err_msg='', verbose=True, name='xp', 
-                            type_check=True, accept_error=False, sp_name=None, 
-                            scipy_name=None, strides_check=False):
+def numpy_asnumpy_allclose(rtol=1e-7, atol=0, err_msg='', verbose=True, name='xp',
+                            type_check=True, accept_error=False, sp_name=None,
+                            scipy_name=None, strides_check=False, check_dtype=True):
     """装饰器：比较NumPy和AsNumPy的浮点结果是否在误差范围内
-    
+
     Args:
-        rtol: 相对容差
-        atol: 绝对容差
-        err_msg: 错误消息
-        verbose: 是否显示详细信息
-        name: xp参数名
-        type_check: 是否进行类型检查
-        accept_error: 是否接受错误
-        sp_name: scipy参数名（保留）
-        scipy_name: scipy模块名（保留）
-        strides_check: 是否检查strides
-        
-    Returns:
-        装饰器函数
+        check_dtype: 是否检查dtype (设为False允许float32 vs float64等合法差异)
     """
     def check_func(x, y):
-        _array.assert_allclose(x, y, rtol, atol, err_msg, verbose, strides_check=strides_check)
+        _array.assert_allclose(x, y, rtol, atol, err_msg, verbose, strides_check=strides_check,
+                               check_dtype=check_dtype)
     return _make_decorator(check_func, name, type_check, accept_error, sp_name, scipy_name)

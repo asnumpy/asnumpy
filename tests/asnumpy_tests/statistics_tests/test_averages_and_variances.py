@@ -89,7 +89,6 @@ def test_mean_basic_global_float32():
     _assert_mean_allclose(data)
 
 
-@pytest.mark.xfail(reason="asnumpy.mean returns float64 scalar for float32 global reduction", strict=True)
 def test_mean_basic_global_float32_dtype():
     """测试 mean: 全局均值返回 dtype 与 NumPy 一致"""
     data = numpy.array([1.0, 2.0, 3.0, 4.0], dtype=numpy.float32)
@@ -175,7 +174,6 @@ def test_mean_empty_1d():
         _assert_mean_allclose(data, equal_nan=True)
 
 
-@pytest.mark.xfail(reason="NPU reduction operator does not support empty arrays", strict=True)
 def test_mean_empty_axis0():
     """测试 mean: 空维度数组 axis=0"""
     data = numpy.zeros((0, 3), dtype=numpy.float32)
@@ -183,7 +181,6 @@ def test_mean_empty_axis0():
         _assert_mean_allclose(data, axis=0, equal_nan=True)
 
 
-@pytest.mark.xfail(reason="NPU reduction operator does not support empty arrays", strict=True)
 def test_mean_empty_axis1_keepdims():
     """测试 mean: 空维度数组 axis=1 且 keepdims=True"""
     data = numpy.zeros((2, 0), dtype=numpy.float32)
@@ -220,7 +217,7 @@ def test_mean_invalid_axis_positive():
     data = numpy.array([[1.0, 2.0, 3.0],
                         [4.0, 5.0, 6.0]], dtype=numpy.float32)
     a = ap.ndarray.from_numpy(data)
-    with pytest.raises(Exception):
+    with pytest.raises(numpy.exceptions.AxisError):
         ap.mean(a, axis=2)
 
 
@@ -231,5 +228,5 @@ def test_mean_invalid_axis_negative():
     data = numpy.array([[1.0, 2.0, 3.0],
                         [4.0, 5.0, 6.0]], dtype=numpy.float32)
     a = ap.ndarray.from_numpy(data)
-    with pytest.raises(Exception):
+    with pytest.raises(numpy.exceptions.AxisError):
         ap.mean(a, axis=-3)

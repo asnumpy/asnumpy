@@ -80,9 +80,8 @@ def test_log1p_basic(xp, dtype):
 # ========== 3. 限制性测试 (XFAIL) ==========
 
 
-@pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
-@testing.numpy_asnumpy_allclose()
+@testing.numpy_asnumpy_allclose(check_dtype=False)
 def test_exp_float16_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.exp(a)

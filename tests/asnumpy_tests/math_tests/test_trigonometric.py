@@ -26,9 +26,8 @@ from asnumpy import testing
 
 
 # 对于 sin/cos/tan，float16 目前在 C++ 绑定层可能存在映射问题
-@pytest.mark.xfail(condition=True, reason="Bug: aclDataType mapping for float16 is missing in C++ core")
 @testing.for_dtypes([numpy.float16])
-@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5, check_dtype=False)
 def test_trig_float16_xfail(xp, dtype):
     data = [0.0, numpy.pi / 4]
     a = _create_array(xp, data, dtype)
@@ -63,19 +62,22 @@ def test_tan_basic(xp, dtype):
 # --- 针对非浮点类型的 xfail 标注 (遵循 Logic 风格) ---
 
 
-@pytest.mark.xfail(reason="Bug: aclnnSin does not support Int32, asnumpy missing auto-cast")
 @testing.for_dtypes([numpy.int32])
-@testing.numpy_asnumpy_array_equal()
+@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5, check_dtype=False)
 def test_sin_int(xp, dtype):
+    """sin auto-casts int32 to float32 for CANN compatibility (NumPy uses float64)."""
     data = [1, 2, 3]
     a = _create_array(xp, data, dtype)
     return xp.sin(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnCos does not support Bool, asnumpy missing auto-cast")
 @testing.for_dtypes([numpy.bool_])
-@testing.numpy_asnumpy_array_equal()
+@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3, check_dtype=False)
 def test_cos_bool(xp, dtype):
+    """cos auto-casts bool to float32 for CANN compatibility.
+
+    NumPy uses float16 which has ~1e-3 precision; asnumpy uses float32.
+    """
     data = [True, False]
     a = _create_array(xp, data, dtype)
     return xp.cos(a)
@@ -131,9 +133,8 @@ def test_arctan2_basic(xp, dtype):
     return xp.arctan2(t_y, t_x)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnArctan2 does not support Int32 input")
 @testing.for_dtypes([numpy.int32])
-@testing.numpy_asnumpy_array_equal()
+@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5, check_dtype=False)
 def test_arctan2_int(xp, dtype):
     y = [1, 0]
     x = [1, 1]

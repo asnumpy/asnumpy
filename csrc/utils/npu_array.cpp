@@ -367,6 +367,8 @@ aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
     if(dtype.is(py::dtype::of<bool>())) return ACL_BOOL;
     if(dtype.is(py::dtype::of<std::complex<float>>())) return ACL_COMPLEX64;
     if(dtype.is(py::dtype::of<std::complex<double>>())) return ACL_COMPLEX128;
+    // float16 is identified by NumPy type number NPY_HALF (23) or short string "f2"
+    if(dtype.kind() == 'f' && dtype.itemsize() == 2) return ACL_FLOAT16;
     throw std::runtime_error("[npu_array.cpp](GetACLDataType) Unsupported py::dtype for aclDataType.");
 }
 
