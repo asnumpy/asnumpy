@@ -14,23 +14,23 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include "asnumpy/cann/driver.hpp"
+#include <cstdlib>
+#include <memory>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 #include "asnumpy/utils/status_handler.hpp"
 #include "fmt/format.h"
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <cstdlib>
-#include <stdexcept>
-#include <memory>
 
 namespace {
 spdlog::logger* g_logger = nullptr;
 }
 
 void asnumpy::cann::init_logging() {
-    if (g_logger) return;
+    if (g_logger)
+        return;
 
     auto logger = spdlog::stdout_color_mt("asnumpy");
     logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
@@ -46,12 +46,10 @@ void asnumpy::cann::init_logging() {
 
     // Check ASNUMPY_LOG_DIR for file sink (default: current working directory)
     const char* log_dir = std::getenv("ASNUMPY_LOG_DIR");
-    std::string log_path = (log_dir && log_dir[0] != '\0')
-                               ? std::string(log_dir) + "/asnumpy_cpp.log"
-                               : "asnumpy_cpp.log";
+    std::string log_path =
+        (log_dir && log_dir[0] != '\0') ? std::string(log_dir) + "/asnumpy_cpp.log" : "asnumpy_cpp.log";
     try {
-        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-            log_path, false);
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path, false);
         file_sink->set_level(logger->level());
         file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
         logger->sinks().push_back(file_sink);
@@ -77,12 +75,9 @@ void asnumpy::cann::init() {
         auto message = aclGetRecentErrMsg();
         std::string detail = message ? std::string(" - ") + message : "";
         spdlog::error("[driver.cpp](init) aclInit error = {}{}", ret, detail);
-        throw std::runtime_error(fmt::format(
-            "[driver.cpp](init) aclInit error = {}{}",
-            ret, detail
-        ));
+        throw std::runtime_error(fmt::format("[driver.cpp](init) aclInit error = {}{}", ret, detail));
     }
-        LOG_INFO("CANN backend initialized successfully");
+    LOG_INFO("CANN backend initialized successfully");
 }
 
 void asnumpy::cann::finalize() {
@@ -91,10 +86,7 @@ void asnumpy::cann::finalize() {
         auto message = aclGetRecentErrMsg();
         std::string detail = message ? std::string(" - ") + message : "";
         spdlog::error("[driver.cpp](finalize) aclFinalize error = {}{}", ret, detail);
-        throw std::runtime_error(fmt::format(
-            "[driver.cpp](finalize) aclFinalize error = {}{}",
-            ret, detail
-        ));
+        throw std::runtime_error(fmt::format("[driver.cpp](finalize) aclFinalize error = {}{}", ret, detail));
     }
     LOG_INFO("CANN backend finalized");
     shutdown_logging();

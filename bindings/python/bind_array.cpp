@@ -14,10 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/array/basic.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <asnumpy/array/basic.hpp>
 
 namespace py = pybind11;
 using namespace asnumpy;
@@ -29,10 +29,11 @@ void bind_array(pybind11::module_& array) {
     array.def("full", &Full, py::arg("shape"), py::arg("value"), py::arg("dtype"));
     array.def("full_like", &Full_like, py::arg("other"), py::arg("value"), py::arg("dtype"));
     array.def("empty", &Empty, py::arg("shape"), py::arg("dtype"));
-    array.def("empty_like", &EmptyLike, py::arg("prototype"), py::arg("dtype")=py::none());
+    array.def("empty_like", &EmptyLike, py::arg("prototype"), py::arg("dtype") = py::none());
     array.def("eye", &Eye, py::arg("n"), py::arg("dtype"));
     array.def("ones", &Ones, py::arg("shape"), py::arg("dtype"));
     array.def("ones_like", &ones_like, py::arg("other"), py::arg("dtype"));
     array.def("identity", &Identity, py::arg("n"), py::arg("dtype"));
-    array.def("linspace", &Linspace, py::arg("start"), py::arg("end"), py::arg("steps") = 50, py::arg("dtype") = py::none());
+    array.def("linspace", &Linspace, py::arg("start"), py::arg("end"), py::arg("steps") = 50,
+              py::arg("dtype") = py::none());
 }

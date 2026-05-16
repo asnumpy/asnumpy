@@ -30,7 +30,8 @@ namespace detail {
 
 // Extract basename from full path: "/path/to/file.cpp" -> "file.cpp"
 inline const char* LogBasename(const char* path) {
-    if (!path) return "unknown";
+    if (!path)
+        return "unknown";
     const char* last_slash = std::strrchr(path, '/');
     return last_slash ? last_slash + 1 : path;
 }
@@ -84,22 +85,38 @@ void CheckAclRuntimeStatus(aclError status, const char* file, const char* func, 
  */
 inline const char* AclDtypeName(aclDataType dtype) {
     switch (dtype) {
-        case ACL_FLOAT:   return "float32";
-        case ACL_FLOAT16: return "float16";
-        case ACL_DOUBLE:  return "float64";
-        case ACL_INT8:    return "int8";
-        case ACL_INT16:   return "int16";
-        case ACL_INT32:   return "int32";
-        case ACL_INT64:   return "int64";
-        case ACL_UINT8:   return "uint8";
-        case ACL_UINT16:  return "uint16";
-        case ACL_UINT32:  return "uint32";
-        case ACL_UINT64:  return "uint64";
-        case ACL_BOOL:    return "bool";
-        case ACL_COMPLEX64:  return "complex64";
-        case ACL_COMPLEX128: return "complex128";
-        case ACL_BF16:    return "bfloat16";
-        default:          return "unknown";
+    case ACL_FLOAT:
+        return "float32";
+    case ACL_FLOAT16:
+        return "float16";
+    case ACL_DOUBLE:
+        return "float64";
+    case ACL_INT8:
+        return "int8";
+    case ACL_INT16:
+        return "int16";
+    case ACL_INT32:
+        return "int32";
+    case ACL_INT64:
+        return "int64";
+    case ACL_UINT8:
+        return "uint8";
+    case ACL_UINT16:
+        return "uint16";
+    case ACL_UINT32:
+        return "uint32";
+    case ACL_UINT64:
+        return "uint64";
+    case ACL_BOOL:
+        return "bool";
+    case ACL_COMPLEX64:
+        return "complex64";
+    case ACL_COMPLEX128:
+        return "complex128";
+    case ACL_BF16:
+        return "bfloat16";
+    default:
+        return "unknown";
     }
 }
 
@@ -113,35 +130,29 @@ inline const char* AclDtypeName(aclDataType dtype) {
  * @param resolved_dtype The dtype actually used (may differ)
  * @param func Caller function name (typically __func__)
  */
-#define ACL_DTYPE_WARN(actual_dtype, resolved_dtype, func) \
-    do { \
-        if ((actual_dtype) != (resolved_dtype)) { \
-            spdlog::warn("[{}]({}) dtype auto-conversion: {} -> {}", \
-                          ::asnumpy::detail::LogBasename(__FILE__), (func), \
-                          ::asnumpy::AclDtypeName(actual_dtype), ::asnumpy::AclDtypeName(resolved_dtype)); \
-        } \
+#define ACL_DTYPE_WARN(actual_dtype, resolved_dtype, func)                                                             \
+    do {                                                                                                               \
+        if ((actual_dtype) != (resolved_dtype)) {                                                                      \
+            spdlog::warn("[{}]({}) dtype auto-conversion: {} -> {}", ::asnumpy::detail::LogBasename(__FILE__), (func), \
+                         ::asnumpy::AclDtypeName(actual_dtype), ::asnumpy::AclDtypeName(resolved_dtype));              \
+        }                                                                                                              \
     } while (0)
 
 } // namespace asnumpy
 
 // Convenience macros - automatically capture source location
-#define ACLNN_CHECK(status, api_name) \
-    ::asnumpy::CheckAclnnStatus(status, __FILE__, __func__, api_name)
+#define ACLNN_CHECK(status, api_name) ::asnumpy::CheckAclnnStatus(status, __FILE__, __func__, api_name)
 
-#define ACL_RT_CHECK(status, api_name) \
-    ::asnumpy::CheckAclRuntimeStatus(status, __FILE__, __func__, api_name)
+#define ACL_RT_CHECK(status, api_name) ::asnumpy::CheckAclRuntimeStatus(status, __FILE__, __func__, api_name)
 
 // Logging macros with automatic [filename](function) prefix
 // Usage: LOG_DEBUG("{} start: shape={}", op_name, shape);
 // Output: [acl_executor.hpp](Sin) Sin start: shape=3x3
-#define LOG_DEBUG(fmt_str, ...) \
-    spdlog::debug("[{}]({}) " fmt_str, \
-                   ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(,) __VA_ARGS__)
+#define LOG_DEBUG(fmt_str, ...)                                                                                        \
+    spdlog::debug("[{}]({}) " fmt_str, ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(, ) __VA_ARGS__)
 
-#define LOG_INFO(fmt_str, ...) \
-    spdlog::info("[{}]({}) " fmt_str, \
-                  ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(,) __VA_ARGS__)
+#define LOG_INFO(fmt_str, ...)                                                                                         \
+    spdlog::info("[{}]({}) " fmt_str, ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(, ) __VA_ARGS__)
 
-#define LOG_WARN(fmt_str, ...) \
-    spdlog::warn("[{}]({}) " fmt_str, \
-                  ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(,) __VA_ARGS__)
+#define LOG_WARN(fmt_str, ...)                                                                                         \
+    spdlog::warn("[{}]({}) " fmt_str, ::asnumpy::detail::LogBasename(__FILE__), __func__ __VA_OPT__(, ) __VA_ARGS__)

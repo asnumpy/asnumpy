@@ -21,7 +21,7 @@
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 
-#include <utility>
 #include <pybind11/pybind11.h>
+#include <utility>
 
 py::object Linalg_Qr(const NPUArray& a, const std::string& mode);

@@ -16,14 +16,13 @@
 
 #pragma once
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 
 namespace asnumpy {
 namespace dtypes {
 
-inline void f32_exp_frac_to_unbiased_and_mant(uint32_t exp, uint32_t frac, int& e_unbiased,
-                                             float& mant) {
+inline void f32_exp_frac_to_unbiased_and_mant(uint32_t exp, uint32_t frac, int& e_unbiased, float& mant) {
     if (exp == 0) {
         e_unbiased = -126;
         mant = std::ldexp(static_cast<float>(frac), -149);
@@ -33,8 +32,7 @@ inline void f32_exp_frac_to_unbiased_and_mant(uint32_t exp, uint32_t frac, int& 
     mant = 1.0f + static_cast<float>(frac) * (1.0f / 8388608.0f);
 }
 
-inline float mx_decode_sign_exp_mant(uint8_t sign, uint8_t exp, uint8_t mant, int bias,
-                                     float mant_step) {
+inline float mx_decode_sign_exp_mant(uint8_t sign, uint8_t exp, uint8_t mant, int bias, float mant_step) {
     if (exp == 0) {
         float v = static_cast<float>(mant) * mant_step;
         return sign ? -v : v;
@@ -45,6 +43,5 @@ inline float mx_decode_sign_exp_mant(uint8_t sign, uint8_t exp, uint8_t mant, in
     return sign ? -v : v;
 }
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

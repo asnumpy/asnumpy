@@ -25,7 +25,6 @@
 #include <utility>
 
 namespace asnumpy {
-    // Softmax activation function
-    NPUArray Softmax(const NPUArray& x, int64_t axis, std::optional<py::dtype> dtype=std::nullopt);
-}
-
+// Softmax activation function
+NPUArray Softmax(const NPUArray& x, int64_t axis, std::optional<py::dtype> dtype = std::nullopt);
+} // namespace asnumpy

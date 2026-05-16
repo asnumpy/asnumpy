@@ -14,22 +14,20 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/array/basic.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
-#include <asnumpy/utils/npu_scalar.hpp>
-#include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/npu_array.hpp>
+#include <asnumpy/utils/npu_scalar.hpp>
+#include <asnumpy/utils/status_handler.hpp>
 #include <fmt/format.h>
 
+#include <aclnnop/aclnn_arange.h>
+#include <aclnnop/aclnn_eye.h>
 #include <aclnnop/aclnn_fill_scalar.h>
+#include <aclnnop/aclnn_linspace.h>
 #include <aclnnop/aclnn_ones.h>
 #include <aclnnop/aclnn_zero.h>
-#include <aclnnop/aclnn_eye.h>
-#include <aclnnop/aclnn_arange.h>
-#include <aclnnop/aclnn_linspace.h>
-
 
 namespace asnumpy {
 
@@ -45,7 +43,8 @@ NPUArray Empty(const std::vector<int64_t>& shape, py::dtype dtype) {
 }
 
 NPUArray EmptyLike(const NPUArray& prototype, py::dtype dtype) {
-    LOG_DEBUG("EmptyLike start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(prototype.shape), prototype.tensorSize, AclDtypeName(prototype.aclDtype));
+    LOG_DEBUG("EmptyLike start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(prototype.shape),
+              prototype.tensorSize, AclDtypeName(prototype.aclDtype));
     try {
         // 若未指定dtype，使用原型数组的dtype
         py::dtype target_dtype = dtype.is_none() ? prototype.dtype() : dtype;
@@ -58,12 +57,11 @@ NPUArray EmptyLike(const NPUArray& prototype, py::dtype dtype) {
     }
 }
 
-
 NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
     LOG_DEBUG("aclnnInplaceZero start: input_shape={}", detail::FormatShape(shape));
     auto array = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnInplaceZeroGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -76,10 +74,11 @@ NPUArray Zeros(const std::vector<int64_t>& shape, py::dtype dtype) {
 }
 
 NPUArray Zeros_like(const NPUArray& other, py::dtype dtype) {
-    LOG_DEBUG("aclnnInplaceZero start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
+    LOG_DEBUG("aclnnInplaceZero start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape),
+              other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnInplaceZeroGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -105,20 +104,20 @@ NPUArray Full(const std::vector<int64_t>& shape, const py::object& value, py::dt
     }
     aclScalar* scalar = CreateScalar(valueDouble, array.aclDtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceFillScalarGetWorkspaceSize(array.tensorPtr, scalar, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACLNN_CHECK(error, "aclnnInplaceFillScalarGetWorkspaceSize");
     }
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceFillScalar(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACLNN_CHECK(error, "aclnnInplaceFillScalar");
     }
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     }
@@ -128,7 +127,8 @@ NPUArray Full(const std::vector<int64_t>& shape, const py::object& value, py::dt
 }
 
 NPUArray Full_like(const NPUArray& other, const py::object& value, py::dtype dtype) {
-    LOG_DEBUG("aclnnInplaceFillScalar start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
+    LOG_DEBUG("aclnnInplaceFillScalar start: input_shape={}, tensorSize={}, aclDtype={}",
+              detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     double valueDouble = 0;
     if (value.is_none()) {
@@ -141,20 +141,20 @@ NPUArray Full_like(const NPUArray& other, const py::object& value, py::dtype dty
     }
     aclScalar* scalar = CreateScalar(valueDouble, array.aclDtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceFillScalarGetWorkspaceSize(array.tensorPtr, scalar, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACLNN_CHECK(error, "aclnnInplaceFillScalarGetWorkspaceSize");
     }
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceFillScalar(workspace.get(), workspace.size(), executor, nullptr);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACLNN_CHECK(error, "aclnnInplaceFillScalar");
     }
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         aclDestroyScalar(scalar);
         ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     }
@@ -167,7 +167,7 @@ NPUArray Eye(int64_t n, py::dtype dtype) {
     LOG_DEBUG("aclnnEye start: n={}", n);
     auto array = NPUArray({n, n}, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnEyeGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -183,7 +183,7 @@ NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype) {
     LOG_DEBUG("aclnnInplaceOne start: input_shape={}", detail::FormatShape(shape));
     auto array = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnInplaceOneGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -195,12 +195,11 @@ NPUArray Ones(const std::vector<int64_t>& shape, py::dtype dtype) {
     return array;
 }
 
-
 NPUArray Identity(int64_t n, py::dtype dtype) {
     LOG_DEBUG("aclnnEye start: n={}", n);
     auto array = NPUArray({n, n}, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
 
     auto error = aclnnEyeGetWorkspaceSize(n, n, array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnEyeGetWorkspaceSize");
@@ -218,10 +217,11 @@ NPUArray Identity(int64_t n, py::dtype dtype) {
 }
 
 NPUArray ones_like(const NPUArray& other, py::dtype dtype) {
-    LOG_DEBUG("aclnnInplaceOne start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape), other.tensorSize, AclDtypeName(other.aclDtype));
+    LOG_DEBUG("aclnnInplaceOne start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(other.shape),
+              other.tensorSize, AclDtypeName(other.aclDtype));
     auto array = NPUArray(other.shape, dtype);
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
     auto error = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnInplaceOneGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -240,11 +240,10 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
 
     try {
         start_val = py::cast<double>(start);
-        end_val   = py::cast<double>(end);
+        end_val = py::cast<double>(end);
         steps_val = py::cast<int64_t>(steps);
     } catch (const py::cast_error& e) {
-        throw std::runtime_error("[basic.cpp](linspace) Invalid start/end/steps type: " +
-                                 std::string(e.what()));
+        throw std::runtime_error("[basic.cpp](linspace) Invalid start/end/steps type: " + std::string(e.what()));
     }
 
     if (steps_val <= 0) {
@@ -259,8 +258,7 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
         } catch (...) {
             if (py::isinstance<py::str>(dtype)) {
                 final_dtype = py::dtype(py::str(dtype));
-            }
-            else if (py::hasattr(dtype, "__name__")) {
+            } else if (py::hasattr(dtype, "__name__")) {
                 try {
                     auto numpy = py::module_::import("numpy");
                     final_dtype = numpy.attr("dtype")(dtype);
@@ -268,11 +266,9 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
                     throw std::runtime_error("[basic.cpp](linspace) Failed to create dtype from numpy type: " +
                                              std::string(py::str(dtype)));
                 }
-            }
-            else if (py::hasattr(dtype, "dtype")) {
+            } else if (py::hasattr(dtype, "dtype")) {
                 final_dtype = dtype.attr("dtype");
-            }
-            else {
+            } else {
                 try {
                     std::string dtype_str = py::cast<std::string>(dtype);
                     final_dtype = py::dtype(dtype_str);
@@ -294,7 +290,7 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
         // ignore
     }
 
-    std::vector<int64_t> out_shape = { steps_val };
+    std::vector<int64_t> out_shape = {steps_val};
     NPUArray out(out_shape, final_dtype);
 
     if (out.tensorPtr == nullptr) {
@@ -302,25 +298,29 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
     }
 
     aclScalar* acl_start = nullptr;
-    aclScalar* acl_end   = nullptr;
+    aclScalar* acl_end = nullptr;
 
     try {
         acl_start = aclCreateScalar(&start_val, ACL_DOUBLE);
-        acl_end   = aclCreateScalar(&end_val,   ACL_DOUBLE);
+        acl_end = aclCreateScalar(&end_val, ACL_DOUBLE);
     } catch (...) {
-        if (acl_start) aclDestroyScalar(acl_start);
-        if (acl_end)   aclDestroyScalar(acl_end);
+        if (acl_start)
+            aclDestroyScalar(acl_start);
+        if (acl_end)
+            aclDestroyScalar(acl_end);
         throw std::runtime_error("[basic.cpp](linspace) Failed to create ACL scalars.");
     }
 
     // RAII guard for scalar cleanup
-    auto scalarGuard = [&]() { aclDestroyScalar(acl_start); aclDestroyScalar(acl_end); };
+    auto scalarGuard = [&]() {
+        aclDestroyScalar(acl_start);
+        aclDestroyScalar(acl_end);
+    };
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
 
-    auto error = aclnnLinspaceGetWorkspaceSize(
-        acl_start, acl_end, steps_val, out.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnLinspaceGetWorkspaceSize(acl_start, acl_end, steps_val, out.tensorPtr, &workspaceSize, &executor);
 
     if (error != ACL_SUCCESS) {
         scalarGuard();
@@ -346,4 +346,4 @@ NPUArray Linspace(const py::object& start, const py::object& end, const py::obje
     return out;
 }
 
-}
+} // namespace asnumpy

@@ -36,7 +36,7 @@ namespace asnumpy {
  * @endcode
  */
 class AclWorkspace {
-public:
+  public:
     /**
      * @brief Constructor, allocates workspace of specified size
      * @param size workspace size in bytes, if 0 no allocation is made
@@ -75,7 +75,7 @@ public:
      */
     bool valid() const noexcept { return ptr_ != nullptr; }
 
-private:
+  private:
     void* ptr_ = nullptr;
     uint64_t size_ = 0;
 };

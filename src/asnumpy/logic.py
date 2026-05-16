@@ -14,26 +14,56 @@
 # limitations under the License.
 # *****************************************************************************
 
-from ._types import ArrayLike, DTypeLike, AxisLike
 from ._core.logic import (
     all as _all,
+)
+from ._core.logic import (
     any as _any,
+)
+from ._core.logic import (
     equal as _equal,
+)
+from ._core.logic import (
     greater as _greater,
+)
+from ._core.logic import (
     greater_equal as _greater_equal,
+)
+from ._core.logic import (
     isfinite as _isfinite,
+)
+from ._core.logic import (
     isinf as _isinf,
+)
+from ._core.logic import (
     isneginf as _isneginf,
+)
+from ._core.logic import (
     isposinf as _isposinf,
+)
+from ._core.logic import (
     less as _less,
+)
+from ._core.logic import (
     less_equal as _less_equal,
+)
+from ._core.logic import (
     logical_and as _logical_and,
+)
+from ._core.logic import (
     logical_not as _logical_not,
+)
+from ._core.logic import (
     logical_or as _logical_or,
+)
+from ._core.logic import (
     logical_xor as _logical_xor,
+)
+from ._core.logic import (
     not_equal as _not_equal,
 )
-from .utils import ndarray, _convert_dtype
+from ._types import ArrayLike, AxisLike, DTypeLike
+from .utils import _convert_dtype, ndarray
 
 
 def all(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:

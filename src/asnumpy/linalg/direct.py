@@ -18,16 +18,19 @@ import numpy as np
 
 from .._core import (
     dot as _dot,
-    vdot as _vdot,
-    matmul as _matmul,
+)
+from .._core import (
     einsum as _einsum,
 )
-from ..utils import ndarray
+from .._core import (
+    vdot as _vdot,
+)
 from .._types import ArrayLike
+from ..utils import ndarray
 
 
 def _as_host_array(a: ArrayLike) -> np.ndarray:
-    if hasattr(a, 'to_numpy'):
+    if hasattr(a, "to_numpy"):
         return a.to_numpy()
     return np.asarray(a)
 

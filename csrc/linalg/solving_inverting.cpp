@@ -14,7 +14,6 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/linalg/solving_inverting.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 
@@ -30,15 +29,12 @@ using namespace asnumpy;
 
 NPUArray Linalg_Inv(const NPUArray& a) {
     return EXECUTE_UNARY_OP(
-        a,
-        a.dtype,
+        a, a.dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnInverseGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnInverse(workspace, workspaceSize, executor, nullptr);
         },
-        "Linalg_Inv",
-        "aclnnInverse"
-    );
+        "Linalg_Inv", "aclnnInverse");
 }

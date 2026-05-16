@@ -14,10 +14,10 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union
+
 from ._core.statistics import mean as _mean
-from .utils import ndarray, _convert_dtype
 from ._types import ArrayLike, AxisLike, DTypeLike
+from .utils import _convert_dtype, ndarray
 
 
 def mean(
@@ -25,7 +25,7 @@ def mean(
     axis: AxisLike = None,
     keepdims: bool = False,
     dtype: DTypeLike = None,
-) -> Union[ndarray, float]:
+) -> ndarray | float:
     if axis is None:
         return _mean(a, _convert_dtype(dtype))
     return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))

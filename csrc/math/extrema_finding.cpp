@@ -14,20 +14,19 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/math/extrema_finding.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_ops_macros.hpp>
-#include <asnumpy/utils/acl_resource.hpp>
-#include <asnumpy/utils/acl_executor.hpp>
 
-#include <aclnnop/aclnn_maximum.h>
-#include <aclnnop/aclnn_minimum.h>
 #include <aclnnop/aclnn_amax.h>
-#include <aclnnop/aclnn_max.h>
-#include <aclnnop/aclnn_nan_to_num.h>
 #include <aclnnop/aclnn_amin.h>
+#include <aclnnop/aclnn_max.h>
+#include <aclnnop/aclnn_maximum.h>
 #include <aclnnop/aclnn_min.h>
+#include <aclnnop/aclnn_minimum.h>
+#include <aclnnop/aclnn_nan_to_num.h>
 
 #include <cstdint>
 #include <fmt/core.h>
@@ -60,20 +59,15 @@ NPUArray Maximum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
         out_dtype = *dtype;
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMaximumGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnMaximum(workspace, workspaceSize, executor, nullptr);
         },
-        "Maximum",
-        "aclnnMaximum"
-    );
+        "Maximum", "aclnnMaximum");
 }
-
 
 /**
  * @brief Element-wise minimum of two arrays.
@@ -102,18 +96,14 @@ NPUArray Minimum(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
         out_dtype = *dtype;
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMinimumGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnMinimum(workspace, workspaceSize, executor, nullptr);
         },
-        "Minimum",
-        "aclnnMinimum"
-    );
+        "Minimum", "aclnnMinimum");
 }
 
 NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
@@ -128,18 +118,14 @@ NPUArray Fmax(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         out_dtype = *dtype;
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMaximumGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnMaximum(workspace, workspaceSize, executor, nullptr);
         },
-        "Fmax",
-        "aclnnMaximum"
-    );
+        "Fmax", "aclnnMaximum");
 }
 
 NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
@@ -154,22 +140,19 @@ NPUArray Fmin(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         out_dtype = *dtype;
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMinimumGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnMinimum(workspace, workspaceSize, executor, nullptr);
         },
-        "Fmin",
-        "aclnnMinimum"
-    );
+        "Fmin", "aclnnMinimum");
 }
 
 NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims) {
-    LOG_DEBUG("aclnnAmax start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnAmax start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}",
+              detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
     auto shape = a.shape;
     int64_t ax = axis;
     if (axis < 0) {
@@ -177,8 +160,7 @@ NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims) {
     }
     if (keepdims) {
         shape[ax] = 1;
-    }
-    else {
+    } else {
         shape.erase(shape.begin() + ax);
     }
     std::vector<int64_t> data = {ax};
@@ -186,8 +168,8 @@ NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims) {
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnAmaxGetWorkspaceSize(a.tensorPtr, axis_array, keepdims,
-        result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnAmaxGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAmaxGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -202,13 +184,13 @@ NPUArray Max(const NPUArray& a, int64_t axis, bool keepdims) {
 }
 
 double Max(const NPUArray& a) {
-    LOG_DEBUG("aclnnMax start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnMax start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize,
+              AclDtypeName(a.aclDtype));
     std::vector<int64_t> shape = {1};
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnMaxGetWorkspaceSize(a.tensorPtr, result.tensorPtr, 
-        &workspaceSize, &executor);
+    auto error = aclnnMaxGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnMaxGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -218,7 +200,7 @@ double Max(const NPUArray& a) {
 
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
-    
+
     py::array x = result.ToNumpy();
     py::dtype dt = x.dtype();
     py::buffer_info buf = x.request();
@@ -226,26 +208,23 @@ double Max(const NPUArray& a) {
         int* results = static_cast<int*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<double>())) {
+    } else if (dt.is(py::dtype::of<double>())) {
         double* results = static_cast<double*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<float>())) {
+    } else if (dt.is(py::dtype::of<float>())) {
         float* results = static_cast<float*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else {
-        throw std::runtime_error(
-            fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
+    } else {
+        throw std::runtime_error(fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
     }
     return 0;
 }
 
 NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims) {
-    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}",
+              detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
     auto shape = a.shape;
     auto temp = NPUArray(a.shape, a.aclDtype);
     int64_t ax = axis;
@@ -254,17 +233,16 @@ NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims) {
     }
     if (keepdims) {
         shape[ax] = 1;
-    }
-    else {
+    } else {
         shape.erase(shape.begin() + ax);
     }
     std::vector<int64_t> data = {ax};
     auto axis_array = aclCreateIntArray(data.data(), data.size());
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
-        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
-        temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 = aclnnNanToNumGetWorkspaceSize(
+        a.tensorPtr, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnNanToNumGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -275,12 +253,13 @@ NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims) {
     ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnNanToNum completed");
 
-    LOG_DEBUG("aclnnAmax start: input_shape={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(temp.shape), AclDtypeName(temp.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnAmax start: input_shape={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(temp.shape),
+              AclDtypeName(temp.aclDtype), axis, keepdims);
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnAmaxGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims,
-        result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnAmaxGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAmaxGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -295,13 +274,14 @@ NPUArray Nanmax(const NPUArray& a, int64_t axis, bool keepdims) {
 }
 
 double Nanmax(const NPUArray& a) {
-    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape),
+              a.tensorSize, AclDtypeName(a.aclDtype));
     auto temp = NPUArray(a.shape, a.aclDtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
-        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
-        temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 = aclnnNanToNumGetWorkspaceSize(
+        a.tensorPtr, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnNanToNumGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -316,9 +296,9 @@ double Nanmax(const NPUArray& a) {
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    LOG_DEBUG("aclnnMax start: input_shape={}, aclDtype={}", detail::FormatShape(temp.shape), AclDtypeName(temp.aclDtype));
-    auto error = aclnnMaxGetWorkspaceSize(temp.tensorPtr, result.tensorPtr,
-        &workspaceSize, &executor);
+    LOG_DEBUG("aclnnMax start: input_shape={}, aclDtype={}", detail::FormatShape(temp.shape),
+              AclDtypeName(temp.aclDtype));
+    auto error = aclnnMaxGetWorkspaceSize(temp.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnMaxGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -336,26 +316,23 @@ double Nanmax(const NPUArray& a) {
         int* results = static_cast<int*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<double>())) {
+    } else if (dt.is(py::dtype::of<double>())) {
         double* results = static_cast<double*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<float>())) {
+    } else if (dt.is(py::dtype::of<float>())) {
         float* results = static_cast<float*>(buf.ptr);
         LOG_INFO("aclnnMax completed");
         return results[0];
-    }
-    else {
-        throw std::runtime_error(
-            fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
+    } else {
+        throw std::runtime_error(fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
     }
     return 0;
 }
 
 NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims) {
-    LOG_DEBUG("aclnnAmin start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnAmin start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}",
+              detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
     auto shape = a.shape;
     int64_t ax = axis;
     if (axis < 0) {
@@ -363,8 +340,7 @@ NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims) {
     }
     if (keepdims) {
         shape[ax] = 1;
-    }
-    else {
+    } else {
         shape.erase(shape.begin() + ax);
     }
     std::vector<int64_t> data = {ax};
@@ -372,8 +348,8 @@ NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims) {
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnAminGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, 
-        result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnAminGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAminGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -388,13 +364,13 @@ NPUArray Min(const NPUArray& a, int64_t axis, bool keepdims) {
 }
 
 double Min(const NPUArray& a) {
-    LOG_DEBUG("aclnnMin start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnMin start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize,
+              AclDtypeName(a.aclDtype));
     std::vector<int64_t> shape = {1};
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnMinGetWorkspaceSize(a.tensorPtr, result.tensorPtr, 
-        &workspaceSize, &executor);
+    auto error = aclnnMinGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnMinGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -404,7 +380,7 @@ double Min(const NPUArray& a) {
 
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
-    
+
     py::array x = result.ToNumpy();
     py::dtype dt = x.dtype();
     py::buffer_info buf = x.request();
@@ -412,26 +388,23 @@ double Min(const NPUArray& a) {
         int* results = static_cast<int*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<double>())) {
+    } else if (dt.is(py::dtype::of<double>())) {
         double* results = static_cast<double*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<float>())) {
+    } else if (dt.is(py::dtype::of<float>())) {
         float* results = static_cast<float*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else {
-        throw std::runtime_error(
-            fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
+    } else {
+        throw std::runtime_error(fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
     }
     return 0;
 }
 
 NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims) {
-    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}, axis={}, keepdims={}",
+              detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis, keepdims);
     auto shape = a.shape;
     auto temp = NPUArray(a.shape, a.aclDtype);
     int64_t ax = axis;
@@ -440,17 +413,16 @@ NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims) {
     }
     if (keepdims) {
         shape[ax] = 1;
-    }
-    else {
+    } else {
         shape.erase(shape.begin() + ax);
     }
     std::vector<int64_t> data = {ax};
     auto axis_array = aclCreateIntArray(data.data(), data.size());
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
-        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
-        temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 = aclnnNanToNumGetWorkspaceSize(
+        a.tensorPtr, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnNanToNumGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -461,12 +433,13 @@ NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims) {
     ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnNanToNum completed");
 
-    LOG_DEBUG("aclnnAmin start: input_shape={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(temp.shape), AclDtypeName(temp.aclDtype), axis, keepdims);
+    LOG_DEBUG("aclnnAmin start: input_shape={}, aclDtype={}, axis={}, keepdims={}", detail::FormatShape(temp.shape),
+              AclDtypeName(temp.aclDtype), axis, keepdims);
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnAminGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, 
-        result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnAminGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAminGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -481,13 +454,14 @@ NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims) {
 }
 
 double Nanmin(const NPUArray& a) {
-    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnNanToNum start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape),
+              a.tensorSize, AclDtypeName(a.aclDtype));
     auto temp = NPUArray(a.shape, a.aclDtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, -std::numeric_limits<float>::infinity(), 
-        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), 
-        temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 = aclnnNanToNumGetWorkspaceSize(
+        a.tensorPtr, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnNanToNumGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -502,9 +476,9 @@ double Nanmin(const NPUArray& a) {
     auto result = NPUArray(shape, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    LOG_DEBUG("aclnnMin start: input_shape={}, aclDtype={}", detail::FormatShape(temp.shape), AclDtypeName(temp.aclDtype));
-    auto error = aclnnMinGetWorkspaceSize(temp.tensorPtr, result.tensorPtr,
-        &workspaceSize, &executor);
+    LOG_DEBUG("aclnnMin start: input_shape={}, aclDtype={}", detail::FormatShape(temp.shape),
+              AclDtypeName(temp.aclDtype));
+    auto error = aclnnMinGetWorkspaceSize(temp.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnMinGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -522,23 +496,18 @@ double Nanmin(const NPUArray& a) {
         int* results = static_cast<int*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<double>())) {
+    } else if (dt.is(py::dtype::of<double>())) {
         double* results = static_cast<double*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else if (dt.is(py::dtype::of<float>())) {
+    } else if (dt.is(py::dtype::of<float>())) {
         float* results = static_cast<float*>(buf.ptr);
         LOG_INFO("aclnnMin completed");
         return results[0];
-    }
-    else {
-        throw std::runtime_error(
-            fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
+    } else {
+        throw std::runtime_error(fmt::format("[extrema_finding.cpp]({}) unsupported dtype", __func__));
     }
     return 0;
 }
 
-}
-
+} // namespace asnumpy

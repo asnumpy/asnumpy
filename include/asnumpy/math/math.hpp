@@ -16,57 +16,56 @@
 
 #pragma once
 
-#include "../utils/npu_array.hpp"
-#include <utility>
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <aclnnop/aclnn_cumsum.h>
-#include <aclnnop/aclnn_cumprod.h>
-#include <aclnnop/aclnn_nan_to_num.h>
-#include <aclnnop/aclnn_sinh.h>
+#include <aclnnop/aclnn_acos.h>
+#include <aclnnop/aclnn_acosh.h>
+#include <aclnnop/aclnn_add.h>
+#include <aclnnop/aclnn_asin.h>
+#include <aclnnop/aclnn_asinh.h>
+#include <aclnnop/aclnn_atan.h>
+#include <aclnnop/aclnn_atan2.h>
+#include <aclnnop/aclnn_atanh.h>
+#include <aclnnop/aclnn_cast.h>
+#include <aclnnop/aclnn_ceil.h>
+#include <aclnnop/aclnn_cos.h>
 #include <aclnnop/aclnn_cosh.h>
-#include <aclnnop/aclnn_tanh.h>
-#include <aclnnop/aclnn_logaddexp.h>
-#include <aclnnop/aclnn_logaddexp2.h>
-#include <aclnnop/aclnn_sinc.h>
-#include <aclnnop/aclnn_real.h>
+#include <aclnnop/aclnn_cumprod.h>
+#include <aclnnop/aclnn_cumsum.h>
+#include <aclnnop/aclnn_div.h>
+#include <aclnnop/aclnn_exp.h>
+#include <aclnnop/aclnn_exp2.h>
+#include <aclnnop/aclnn_expm1.h>
+#include <aclnnop/aclnn_floor.h>
+#include <aclnnop/aclnn_floor_divide.h>
+#include <aclnnop/aclnn_gcd.h>
+#include <aclnnop/aclnn_linalg_cross.h>
 #include <aclnnop/aclnn_log.h>
 #include <aclnnop/aclnn_log10.h>
-#include <aclnnop/aclnn_log2.h>
 #include <aclnnop/aclnn_log1p.h>
-#include <aclnnop/aclnn_linalg_cross.h>
-#include <aclnnop/aclnn_exp.h>
-#include <aclnnop/aclnn_expm1.h>
-#include <aclnnop/aclnn_exp2.h>
+#include <aclnnop/aclnn_log2.h>
+#include <aclnnop/aclnn_logaddexp.h>
+#include <aclnnop/aclnn_logaddexp2.h>
 #include <aclnnop/aclnn_mul.h>
-#include <aclnnop/aclnn_sqrt.h>
-#include <aclnnop/aclnn_add.h>
-#include <aclnnop/aclnn_atan2.h>
-#include <aclnnop/aclnn_prod.h>
-#include <aclnnop/aclnn_reduce_sum.h>
-#include <aclnnop/aclnn_sum.h>
-#include <aclnnop/aclnn_cast.h>
-#include <aclnnop/aclnn_asinh.h>
-#include <aclnnop/aclnn_acosh.h>
-#include <aclnnop/aclnn_atanh.h>
-#include <aclnnop/aclnn_ceil.h>
-#include <aclnnop/aclnn_trunc.h>
-#include <aclnnop/aclnn_signbit.h>
-#include <aclnnop/aclnn_gcd.h>
-#include <aclnnop/aclnn_div.h>
-#include <aclnnop/aclnn_sin.h>
-#include <aclnnop/aclnn_cos.h>
-#include <aclnnop/aclnn_tan.h>
-#include <aclnnop/aclnn_asin.h>
-#include <aclnnop/aclnn_acos.h>
-#include <aclnnop/aclnn_atan.h>
-#include <aclnnop/aclnn_round.h>
-#include <aclnnop/aclnn_floor.h>
-#include <aclnnop/aclnn_reciprocal.h>
+#include <aclnnop/aclnn_nan_to_num.h>
 #include <aclnnop/aclnn_neg.h>
+#include <aclnnop/aclnn_prod.h>
+#include <aclnnop/aclnn_real.h>
+#include <aclnnop/aclnn_reciprocal.h>
+#include <aclnnop/aclnn_reduce_sum.h>
+#include <aclnnop/aclnn_round.h>
+#include <aclnnop/aclnn_signbit.h>
+#include <aclnnop/aclnn_sin.h>
+#include <aclnnop/aclnn_sinc.h>
+#include <aclnnop/aclnn_sinh.h>
+#include <aclnnop/aclnn_sqrt.h>
 #include <aclnnop/aclnn_sub.h>
-#include <aclnnop/aclnn_floor_divide.h>
-
+#include <aclnnop/aclnn_sum.h>
+#include <aclnnop/aclnn_tan.h>
+#include <aclnnop/aclnn_tanh.h>
+#include <aclnnop/aclnn_trunc.h>
+#include <utility>
+#include "../utils/npu_array.hpp"
 
 NPUArray Cumprod(const NPUArray& a, int64_t axis, py::dtype dtype);
 
@@ -105,7 +104,7 @@ NPUArray Prod(const NPUArray& a, py::dtype dtype);
 
 NPUArray Sum(const NPUArray& a, const std::vector<int64_t>& axis, py::dtype dtype, bool keepdims);
 NPUArray Sum(const NPUArray& a, py::dtype dtype);
-    
+
 NPUArray Nanprod(const NPUArray& a, int64_t axis, py::dtype dtype, bool keepdims);
 NPUArray Nanprod(const NPUArray& a, py::dtype dtype);
 
@@ -154,9 +153,9 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2);
 
 /**
  * @brief Compute the sine of each element in the input array.
- * 
+ *
  * Calculates element-wise sine values on NPU by calling aclnnSin.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise sine values.
@@ -166,9 +165,9 @@ NPUArray sin(const NPUArray& x, py::dtype dtype);
 
 /**
  * @brief Compute the cosine of each element in the input array.
- * 
+ *
  * Calculates element-wise cosine values on NPU by calling aclnnCos.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise cosine values.
@@ -178,9 +177,9 @@ NPUArray cos(const NPUArray& x, py::dtype dtype);
 
 /**
  * @brief Compute the tangent of each element in the input array.
- * 
+ *
  * Calculates element-wise tangent values on NPU by calling aclnnTan.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise tangent values.
@@ -214,9 +213,9 @@ NPUArray arccos(const NPUArray& x, py::dtype dtype);
 
 /**
  * @brief Compute the element-wise arc tangent of input array.
- * 
+ *
  * Applies the inverse tangent function to each element of the input array.
- * 
+ *
  * @param x Input NPUArray.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array where each element is the arctangent of the corresponding input element.

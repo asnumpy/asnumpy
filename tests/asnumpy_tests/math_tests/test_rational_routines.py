@@ -23,8 +23,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -61,7 +61,9 @@ def test_lcm_basic(xp, dtype):
 # ========== 2. 针对低精度整数的 Bug 记录 (XFAIL) ==========
 
 
-@pytest.mark.xfail(reason="[FIXABLE] aclnnGcd/Lcm throws RuntimeError 161002 for Int8/Int16", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnGcd/Lcm throws RuntimeError 161002 for Int8/Int16", strict=True
+)
 @testing.for_dtypes([numpy.int8, numpy.int16])
 @testing.numpy_asnumpy_array_equal()
 def test_rational_low_precision_int_xfail(xp, dtype):
@@ -85,7 +87,10 @@ def test_rational_float_xfail(xp, dtype):
     return xp.gcd(x1, x2)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] behavior mismatch: negative input handling in GCD between NPU and NumPy", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] behavior mismatch: negative input handling in GCD between NPU and NumPy",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32])
 def test_gcd_negative_behavior_xfail(xp, dtype):
     """

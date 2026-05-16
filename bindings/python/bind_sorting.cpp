@@ -14,10 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/sorting/sorting.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <asnumpy/sorting/sorting.hpp>
 
 using namespace asnumpy;
 

@@ -33,4 +33,4 @@ namespace asnumpy {
  */
 NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
-}
+} // namespace asnumpy

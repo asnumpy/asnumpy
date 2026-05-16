@@ -14,10 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/nn/activation.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <asnumpy/nn/activation.hpp>
 
 namespace py = pybind11;
 
@@ -25,11 +25,7 @@ namespace asnumpy {
 
 void bind_nn(py::module_& nn) {
     nn.doc() = "neural network module of asnumpy";
-    nn.def("softmax", &Softmax,
-           py::arg("x"),
-           py::arg("axis") = -1,
-           py::arg("dtype") = py::none());
+    nn.def("softmax", &Softmax, py::arg("x"), py::arg("axis") = -1, py::arg("dtype") = py::none());
 }
 
-}
-
+} // namespace asnumpy

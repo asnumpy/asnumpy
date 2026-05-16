@@ -23,7 +23,10 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
+
+
 def _create_array(xp, data, dtype):
     np_arr = numpy.array(data, dtype=dtype)
     if xp is numpy:
@@ -123,7 +126,9 @@ def test_arithmetic_int_mismatch_xfail(xp, dtype):
     return xp.add(a, b)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] aclnnRemainder does not support BOOL, auto-cast needed", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnRemainder does not support BOOL, auto-cast needed", strict=True
+)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_remainder_bool_xfail(xp, dtype):

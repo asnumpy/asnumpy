@@ -23,8 +23,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -49,7 +49,10 @@ def test_real_complex64_basic(xp, dtype):
     return xp.real(a)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] complex128 output hardcoded to float32 (ACL_FLOAT), should be float64", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] complex128 output hardcoded to float32 (ACL_FLOAT), should be float64",
+    strict=True,
+)
 @testing.for_dtypes([numpy.complex128])
 @testing.numpy_asnumpy_allclose()
 def test_real_complex128_precision_xfail(xp, dtype):

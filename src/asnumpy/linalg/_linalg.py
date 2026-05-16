@@ -14,22 +14,30 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional, Union
+
 import numpy as np
+
 from .._core.linalg import (
     det as _det,
+)
+from .._core.linalg import (
     inv as _inv,
-    matrix_power as _matrix_power,
+)
+from .._core.linalg import (
     norm as _norm,
+)
+from .._core.linalg import (
     qr as _qr,
+)
+from .._core.linalg import (
     slogdet as _slogdet,
 )
-from ..utils import ndarray
 from .._types import ArrayLike, AxisLike
+from ..utils import ndarray
 
 
 def _as_host_array(a: ArrayLike) -> np.ndarray:
-    if hasattr(a, 'to_numpy'):
+    if hasattr(a, "to_numpy"):
         return a.to_numpy()
     return np.asarray(a)
 
@@ -73,7 +81,7 @@ def matrix_power(a: ArrayLike, n: int) -> ndarray:
     return _to_asnumpy_array(np.linalg.matrix_power(host, n))
 
 
-def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
+def qr(a: ArrayLike, mode: str = "reduced") -> ndarray | tuple:
     result = _qr(a, mode)
     if isinstance(result, tuple):
         q, r = result
@@ -83,7 +91,7 @@ def qr(a: ArrayLike, mode: str = "reduced") -> Union[ndarray, tuple]:
 
 def norm(
     a: ArrayLike,
-    ord: Optional[Union[str, int, float]] = None,
+    ord: str | int | float | None = None,
     axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
@@ -107,8 +115,10 @@ def det(a: ArrayLike) -> ndarray:
 def slogdet(a: ArrayLike) -> tuple:
     # CANN's double-precision slogdet may produce different results from NumPy
     # for inputs containing nan/inf. Fall back to NumPy for such cases.
-    host = a.to_numpy() if hasattr(a, 'to_numpy') else np.asarray(a)
-    if np.issubdtype(host.dtype, np.floating) and (np.any(np.isnan(host)) or np.any(np.isinf(host))):
+    host = a.to_numpy() if hasattr(a, "to_numpy") else np.asarray(a)
+    if np.issubdtype(host.dtype, np.floating) and (
+        np.any(np.isnan(host)) or np.any(np.isinf(host))
+    ):
         return np.linalg.slogdet(host)
     sign, logdet = _slogdet(a)
     return (ndarray(sign), ndarray(logdet))

@@ -14,10 +14,9 @@
  * limitations under the License.
  *****************************************************************************/
 
-
+#include <asnumpy/math/math.hpp>
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <asnumpy/math/math.hpp>
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <shape.h>
@@ -29,9 +28,10 @@ NPUArray Cumprod(const NPUArray& a, int64_t axis, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnCumprodGetWorkspaceSize(a.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnCumprodGetWorkspaceSize(a.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr,
+                                              &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnCumprod(workspaceAddr, workspaceSize, executor, nullptr);
@@ -44,9 +44,10 @@ NPUArray Cumsum(const NPUArray& a, int64_t axis, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnCumsumGetWorkspaceSize(a.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnCumsumGetWorkspaceSize(a.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnCumsum(workspaceAddr, workspaceSize, executor, nullptr);
@@ -62,18 +63,20 @@ NPUArray Nancumprod(const NPUArray& a, int64_t axis, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnCumprodGetWorkspaceSize(temp.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 = aclnnCumprodGetWorkspaceSize(temp.tensorPtr, axis_scalar, result.aclDtype, result.tensorPtr,
+                                               &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnCumprod(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -88,18 +91,20 @@ NPUArray Nancumsum(const NPUArray& a, int64_t axis, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnCumsumGetWorkspaceSize(temp.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 = aclnnCumsumGetWorkspaceSize(temp.tensorPtr, axis, result.aclDtype, result.tensorPtr, &workspaceSize2,
+                                              &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnCumsum(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -112,9 +117,10 @@ NPUArray Cross(const NPUArray& a, const NPUArray& b, int64_t axisa, int64_t axis
     auto result = NPUArray(broadcast, a.aclDtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnLinalgCrossGetWorkspaceSize(a.tensorPtr, b.tensorPtr, axis, result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnLinalgCrossGetWorkspaceSize(a.tensorPtr, b.tensorPtr, axis, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLinalgCross(workspaceAddr, workspaceSize, executor, nullptr);
@@ -129,7 +135,7 @@ NPUArray Exp(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnExpGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnExp(workspaceAddr, workspaceSize, executor, nullptr);
@@ -144,7 +150,7 @@ NPUArray Expm1(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnExpm1GetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnExpm1(workspaceAddr, workspaceSize, executor, nullptr);
@@ -159,7 +165,7 @@ NPUArray Exp2(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnExp2GetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnExp2(workspaceAddr, workspaceSize, executor, nullptr);
@@ -174,7 +180,7 @@ NPUArray Log(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnLogGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLog(workspaceAddr, workspaceSize, executor, nullptr);
@@ -189,7 +195,7 @@ NPUArray Log10(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnLog10GetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLog10(workspaceAddr, workspaceSize, executor, nullptr);
@@ -204,7 +210,7 @@ NPUArray Log2(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnLog2GetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLog2(workspaceAddr, workspaceSize, executor, nullptr);
@@ -219,7 +225,7 @@ NPUArray Log1p(const NPUArray& x, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnLog1pGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLog1p(workspaceAddr, workspaceSize, executor, nullptr);
@@ -232,9 +238,10 @@ NPUArray Logaddexp(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
     auto result = NPUArray(broadcast, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnLogAddExpGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnLogAddExpGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLogAddExp(workspaceAddr, workspaceSize, executor, nullptr);
@@ -247,9 +254,10 @@ NPUArray Logaddexp2(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
     auto result = NPUArray(broadcast, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnLogAddExp2GetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnLogAddExp2GetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnLogAddExp2(workspaceAddr, workspaceSize, executor, nullptr);
@@ -264,7 +272,7 @@ NPUArray Sinc(const NPUArray& x) {
     aclOpExecutor* executor;
     auto error = aclnnSincGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnSinc(workspaceAddr, workspaceSize, executor, nullptr);
@@ -279,7 +287,7 @@ NPUArray Real(const NPUArray& val) {
     aclOpExecutor* executor;
     auto error = aclnnRealGetWorkspaceSize(a.tensorPtr, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnReal(workspaceAddr, workspaceSize, executor, nullptr);
@@ -292,9 +300,10 @@ NPUArray Prod(const NPUArray& a, int64_t axis, py::dtype dtype, bool keepdims) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnProdDimGetWorkspaceSize(a.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnProdDimGetWorkspaceSize(a.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr,
+                                              &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnProdDim(workspaceAddr, workspaceSize, executor, nullptr);
@@ -309,7 +318,7 @@ NPUArray Prod(const NPUArray& a, py::dtype dtype) {
     aclOpExecutor* executor;
     auto error = aclnnProdGetWorkspaceSize(a.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnProd(workspaceAddr, workspaceSize, executor, nullptr);
@@ -323,9 +332,10 @@ NPUArray Sum(const NPUArray& a, const std::vector<int64_t>& axis, py::dtype dtyp
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnReduceSumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnReduceSumGetWorkspaceSize(a.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr,
+                                                &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnReduceSum(workspaceAddr, workspaceSize, executor, nullptr);
@@ -335,7 +345,7 @@ NPUArray Sum(const NPUArray& a, const std::vector<int64_t>& axis, py::dtype dtyp
 
 NPUArray Sum(const NPUArray& a, py::dtype dtype) {
     auto shape = a.shape;
-    std::vector<aclTensor *> tmp{a};
+    std::vector<aclTensor*> tmp{a};
     auto input = aclCreateTensorList(tmp.data(), tmp.size());
     auto temp = NPUArray(shape, a.aclDtype);
     auto result = NPUArray(shape, dtype);
@@ -343,17 +353,18 @@ NPUArray Sum(const NPUArray& a, py::dtype dtype) {
     aclOpExecutor* executor1;
     auto error1 = aclnnSumGetWorkspaceSize(input, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnSum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
-    
+
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnCastGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 =
+        aclnnCastGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnCast(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -368,19 +379,21 @@ NPUArray Nanprod(const NPUArray& a, int64_t axis, py::dtype dtype, bool keepdims
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
-    
+
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnProdDimGetWorkspaceSize(temp.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 = aclnnProdDimGetWorkspaceSize(temp.tensorPtr, axis, keepdims, result.aclDtype, result.tensorPtr,
+                                               &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnProdDim(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -395,19 +408,21 @@ NPUArray Nanprod(const NPUArray& a, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
-    
+
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnProdGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 =
+        aclnnProdGetWorkspaceSize(temp.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnProd(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -423,19 +438,21 @@ NPUArray Nansum(const NPUArray& a, const std::vector<int64_t>& axis, py::dtype d
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnNanToNum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
-    
+
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnReduceSumGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 = aclnnReduceSumGetWorkspaceSize(temp.tensorPtr, axis_array, keepdims, result.aclDtype,
+                                                 result.tensorPtr, &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnReduceSum(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -451,31 +468,33 @@ NPUArray Nansum(const NPUArray& a, py::dtype dtype) {
     auto result = NPUArray(shape, dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp1.tensorPtr, &workspaceSize, &executor);
+    auto error =
+        aclnnNanToNumGetWorkspaceSize(a.tensorPtr, scalar, scalar, scalar, temp1.tensorPtr, &workspaceSize, &executor);
     void* workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error = aclnnNanToNum(workspaceAddr, workspaceSize, executor, nullptr);
     error = aclrtSynchronizeDevice();
-    
-    std::vector<aclTensor *> tmp{temp1};
+
+    std::vector<aclTensor*> tmp{temp1};
     auto input = aclCreateTensorList(tmp.data(), tmp.size());
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
     auto error1 = aclnnSumGetWorkspaceSize(tmp, temp2.tensorPtr, &workspaceSize1, &executor1);
     void* workspaceAddr1 = nullptr;
-    if(workspaceSize1 > 0) {
+    if (workspaceSize1 > 0) {
         error1 = aclrtMalloc(&workspaceAddr1, workspaceSize1, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error1 = aclnnSum(workspaceAddr1, workspaceSize1, executor1, nullptr);
     error1 = aclrtSynchronizeDevice();
-    
+
     uint64_t workspaceSize2 = 0;
     aclOpExecutor* executor2;
-    auto error2 = aclnnCastGetWorkspaceSize(temp2.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
+    auto error2 =
+        aclnnCastGetWorkspaceSize(temp2.tensorPtr, result.aclDtype, result.tensorPtr, &workspaceSize2, &executor2);
     void* workspaceAddr2 = nullptr;
-    if(workspaceSize2 > 0) {
+    if (workspaceSize2 > 0) {
         error2 = aclrtMalloc(&workspaceAddr2, workspaceSize2, ACL_MEM_MALLOC_HUGE_FIRST);
     }
     error2 = aclnnCast(workspaceAddr2, workspaceSize2, executor2, nullptr);
@@ -483,13 +502,12 @@ NPUArray Nansum(const NPUArray& a, py::dtype dtype) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise square root of sum of squares of two arrays.
- * 
+ *
  * Equivalent to numpy.hypot(a, b), computes √(a² + b²) for each element.
  * This is the hypotenuse of a right-angled triangle with legs a and b.
- * 
+ *
  * @param a NPUArray, first input array (one leg of the right triangle)
  * @param b NPUArray, second input array (other leg of the right triangle)
  * @return NPUArray Element-wise result of √(a² + b²)
@@ -509,12 +527,8 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     NPUArray a_squared(shape, dtype);
     uint64_t a_sq_workspace_size = 0;
     aclOpExecutor* a_sq_executor = nullptr;
-    auto error = aclnnMulGetWorkspaceSize(
-        a.tensorPtr, a.tensorPtr,
-        a_squared.tensorPtr,
-        &a_sq_workspace_size,
-        &a_sq_executor
-    );
+    auto error =
+        aclnnMulGetWorkspaceSize(a.tensorPtr, a.tensorPtr, a_squared.tensorPtr, &a_sq_workspace_size, &a_sq_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Hypot: a² workspace size failed, error={}", error));
     }
@@ -536,12 +550,8 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     NPUArray b_squared(shape, dtype);
     uint64_t b_sq_workspace_size = 0;
     aclOpExecutor* b_sq_executor = nullptr;
-    error = aclnnMulGetWorkspaceSize(
-        b.tensorPtr, b.tensorPtr,
-        b_squared.tensorPtr,
-        &b_sq_workspace_size,
-        &b_sq_executor
-    );
+    error =
+        aclnnMulGetWorkspaceSize(b.tensorPtr, b.tensorPtr, b_squared.tensorPtr, &b_sq_workspace_size, &b_sq_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Hypot: b² workspace size failed, error={}", error));
     }
@@ -565,12 +575,9 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     aclOpExecutor* add_executor = nullptr;
     int32_t alpha = 1;
     auto alpha_scalar = aclCreateScalar(&alpha, a.aclDtype);
-    
-    error = aclnnAddGetWorkspaceSize(
-        a_squared.tensorPtr, b_squared.tensorPtr,
-        alpha_scalar, sum_squares.tensorPtr,
-        &add_workspace_size, &add_executor
-    );
+
+    error = aclnnAddGetWorkspaceSize(a_squared.tensorPtr, b_squared.tensorPtr, alpha_scalar, sum_squares.tensorPtr,
+                                     &add_workspace_size, &add_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Hypot: sum workspace size failed, error={}", error));
     }
@@ -591,10 +598,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     // 步骤4: 计算平方根 (√(a² + b²))
     uint64_t sqrt_workspace_size = 0;
     aclOpExecutor* sqrt_executor = nullptr;
-    error = aclnnSqrtGetWorkspaceSize(
-        sum_squares.tensorPtr, result.tensorPtr,
-        &sqrt_workspace_size, &sqrt_executor
-    );
+    error = aclnnSqrtGetWorkspaceSize(sum_squares.tensorPtr, result.tensorPtr, &sqrt_workspace_size, &sqrt_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Hypot: sqrt workspace size failed, error={}", error));
     }
@@ -615,20 +619,23 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     // 同步设备并释放资源
     aclrtSynchronizeDevice();
     aclDestroyScalar(alpha_scalar);
-    if (a_sq_workspace) aclrtFree(a_sq_workspace);
-    if (b_sq_workspace) aclrtFree(b_sq_workspace);
-    if (add_workspace) aclrtFree(add_workspace);
-    if (sqrt_workspace) aclrtFree(sqrt_workspace);
+    if (a_sq_workspace)
+        aclrtFree(a_sq_workspace);
+    if (b_sq_workspace)
+        aclrtFree(b_sq_workspace);
+    if (add_workspace)
+        aclrtFree(add_workspace);
+    if (sqrt_workspace)
+        aclrtFree(sqrt_workspace);
 
     return result;
 }
 
-
 /**
  * @brief Compute element-wise arctangent of y/x considering quadrant.
- * 
+ *
  * Equivalent to numpy.arctan2(y, x), returns values in [-π, π] radians.
- * 
+ *
  * @param y NPUArray, numerator (y-coordinate)
  * @param x NPUArray, denominator (x-coordinate)
  * @return NPUArray Result of element-wise arctan2(y, x)
@@ -647,11 +654,7 @@ NPUArray Arctan2(const NPUArray& y, const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAtan2GetWorkspaceSize(
-        y.tensorPtr, x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size, &executor
-    );
+    auto error = aclnnAtan2GetWorkspaceSize(y.tensorPtr, x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arctan2: workspace size failed, error={}", error));
     }
@@ -673,17 +676,17 @@ NPUArray Arctan2(const NPUArray& y, const NPUArray& x) {
 
     // 同步设备并释放资源
     aclrtSynchronizeDevice();
-    if (workspace) aclrtFree(workspace);
+    if (workspace)
+        aclrtFree(workspace);
 
     return result;
 }
 
-
 /**
  * @brief Convert angles from degrees to radians.
- * 
+ *
  * Equivalent to numpy.radians(x), computes x * (π / 180).
- * 
+ *
  * @param x NPUArray, input angles in degrees
  * @return NPUArray Angles converted to radians
  */
@@ -707,12 +710,10 @@ NPUArray Radians(const NPUArray& x) {
     }
 
     // 2. 将标量转换为1D张量（解决参数类型不匹配问题）
-    aclTensorDesc* scalar_desc = aclCreateTensorDesc(acl_dtype, 0, nullptr);  // 0维标量描述符
+    aclTensorDesc* scalar_desc = aclCreateTensorDesc(acl_dtype, 0, nullptr); // 0维标量描述符
     aclTensor* scalar_tensor = nullptr;
-    auto error = aclCreateTensorWithData(scalar_desc, scalar_data, 
-                                        aclGetDataTypeSize(acl_dtype), 
-                                        ACL_MEMCPY_HOST_TO_DEVICE, 
-                                        &scalar_tensor);
+    auto error = aclCreateTensorWithData(scalar_desc, scalar_data, aclGetDataTypeSize(acl_dtype),
+                                         ACL_MEMCPY_HOST_TO_DEVICE, &scalar_tensor);
     if (error != ACL_SUCCESS) {
         aclDestroyTensorDesc(scalar_desc);
         throw runtime_error(fmt::format("Radians: create scalar tensor failed, error={}", error));
@@ -721,13 +722,10 @@ NPUArray Radians(const NPUArray& x) {
     // 3. 获取工作空间大小（现在第二个参数是aclTensor*类型，匹配接口要求）
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    error = aclnnMulGetWorkspaceSize(
-        x.tensorPtr,       // 输入张量
-        scalar_tensor,     // 转换为张量的标量（修复类型不匹配）
-        result.tensorPtr,  // 输出张量
-        &workspace_size, 
-        &executor
-    );
+    error = aclnnMulGetWorkspaceSize(x.tensorPtr,      // 输入张量
+                                     scalar_tensor,    // 转换为张量的标量（修复类型不匹配）
+                                     result.tensorPtr, // 输出张量
+                                     &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         aclDestroyTensor(scalar_tensor);
         aclDestroyTensorDesc(scalar_desc);
@@ -756,19 +754,19 @@ NPUArray Radians(const NPUArray& x) {
 
     // 6. 同步设备并释放资源
     aclrtSynchronizeDevice();
-    if (workspace) aclrtFree(workspace);
+    if (workspace)
+        aclrtFree(workspace);
     aclDestroyTensor(scalar_tensor);
     aclDestroyTensorDesc(scalar_desc);
 
     return result;
 }
 
-
 /**
  * @brief Compute element-wise hyperbolic sine.
- * 
+ *
  * Equivalent to numpy.sinh(x), calculates sinh(x) = (e^x - e^(-x))/2 for each element.
- * 
+ *
  * @param x NPUArray, input array
  * @return NPUArray Element-wise hyperbolic sine of x
  */
@@ -781,12 +779,7 @@ NPUArray Sinh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnSinhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnSinhGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Sinh: get workspace size failed, error={}", error));
     }
@@ -801,11 +794,8 @@ NPUArray Sinh(const NPUArray& x) {
     }
 
     // 执行双曲正弦计算
-    error = aclnnSinh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnSinh(workspace, workspace_size, executor,
+                      nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Sinh: computation failed, error={}", error));
@@ -820,12 +810,11 @@ NPUArray Sinh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise hyperbolic cosine.
- * 
+ *
  * Equivalent to numpy.cosh(x), calculates cosh(x) = (e^x + e^(-x))/2 for each element.
- * 
+ *
  * @param x NPUArray, input array
  * @return NPUArray Element-wise hyperbolic cosine of x
  */
@@ -838,12 +827,7 @@ NPUArray Cosh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnCoshGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnCoshGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Cosh: get workspace size failed, error={}", error));
     }
@@ -858,11 +842,8 @@ NPUArray Cosh(const NPUArray& x) {
     }
 
     // 执行双曲余弦计算
-    error = aclnnCosh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnCosh(workspace, workspace_size, executor,
+                      nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Cosh: computation failed, error={}", error));
@@ -877,12 +858,11 @@ NPUArray Cosh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise hyperbolic tangent.
- * 
+ *
  * Equivalent to numpy.tanh(x), calculates tanh(x) = sinh(x)/cosh(x) for each element.
- * 
+ *
  * @param x NPUArray, input array
  * @return NPUArray Element-wise hyperbolic tangent of x
  */
@@ -895,12 +875,7 @@ NPUArray Tanh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnTanhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnTanhGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Tanh: get workspace size failed, error={}", error));
     }
@@ -915,11 +890,8 @@ NPUArray Tanh(const NPUArray& x) {
     }
 
     // 执行双曲正切计算
-    error = aclnnTanh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnTanh(workspace, workspace_size, executor,
+                      nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Tanh: computation failed, error={}", error));
@@ -934,12 +906,11 @@ NPUArray Tanh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise inverse hyperbolic sine.
- * 
+ *
  * Equivalent to numpy.arcsinh(x), calculates arcsinh(x) = ln(x + √(x² + 1)) for each element.
- * 
+ *
  * @param x NPUArray, input array
  * @return NPUArray Element-wise inverse hyperbolic sine of x
  */
@@ -952,12 +923,7 @@ NPUArray Arcsinh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAsinhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnAsinhGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arcsinh: get workspace size failed, error={}", error));
     }
@@ -972,11 +938,8 @@ NPUArray Arcsinh(const NPUArray& x) {
     }
 
     // 执行反双曲正弦计算
-    error = aclnnAsinh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnAsinh(workspace, workspace_size, executor,
+                       nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arcsinh: computation failed, error={}", error));
@@ -991,12 +954,11 @@ NPUArray Arcsinh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise inverse hyperbolic cosine.
- * 
+ *
  * Equivalent to numpy.arccosh(x), calculates arccosh(x) = ln(x + √(x² - 1)) for x ≥ 1.
- * 
+ *
  * @param x NPUArray, input array (must contain values ≥ 1)
  * @return NPUArray Element-wise inverse hyperbolic cosine of x
  */
@@ -1009,12 +971,7 @@ NPUArray Arccosh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAcoshGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnAcoshGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arccosh: get workspace size failed, error={}", error));
     }
@@ -1029,11 +986,8 @@ NPUArray Arccosh(const NPUArray& x) {
     }
 
     // 执行反双曲余弦计算
-    error = aclnnAcosh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnAcosh(workspace, workspace_size, executor,
+                       nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arccosh: computation failed, error={}", error));
@@ -1048,12 +1002,11 @@ NPUArray Arccosh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise inverse hyperbolic tangent.
- * 
+ *
  * Equivalent to numpy.arctanh(x), calculates arctanh(x) = 0.5*ln((1+x)/(1-x)) for |x| < 1.
- * 
+ *
  * @param x NPUArray, input array (must contain values with absolute value < 1)
  * @return NPUArray Element-wise inverse hyperbolic tangent of x
  */
@@ -1066,12 +1019,7 @@ NPUArray Arctanh(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAtanhGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnAtanhGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arctanh: get workspace size failed, error={}", error));
     }
@@ -1086,11 +1034,8 @@ NPUArray Arctanh(const NPUArray& x) {
     }
 
     // 执行反双曲正切计算
-    error = aclnnAtanh(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnAtanh(workspace, workspace_size, executor,
+                       nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Arctanh: computation failed, error={}", error));
@@ -1105,12 +1050,11 @@ NPUArray Arctanh(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise ceiling of the input.
- * 
+ *
  * Equivalent to numpy.ceil(x), returns the smallest integer greater than or equal to each element.
- * 
+ *
  * @param x NPUArray, input array (floating-point type)
  * @return NPUArray Element-wise ceiling values of x
  */
@@ -1123,12 +1067,7 @@ NPUArray Ceil(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnCeilGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnCeilGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Ceil: get workspace size failed, error={}", error));
     }
@@ -1143,11 +1082,8 @@ NPUArray Ceil(const NPUArray& x) {
     }
 
     // 执行向上取整计算
-    error = aclnnCeil(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnCeil(workspace, workspace_size, executor,
+                      nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Ceil: computation failed, error={}", error));
@@ -1162,12 +1098,11 @@ NPUArray Ceil(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise truncation of the input.
- * 
+ *
  * Equivalent to numpy.trunc(x), returns the integer part of each element by removing fractional parts.
- * 
+ *
  * @param x NPUArray, input array (floating-point type)
  * @return NPUArray Element-wise truncated values of x
  */
@@ -1180,12 +1115,7 @@ NPUArray Trunc(const NPUArray& x) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnTruncGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnTruncGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Trunc: get workspace size failed, error={}", error));
     }
@@ -1200,11 +1130,8 @@ NPUArray Trunc(const NPUArray& x) {
     }
 
     // 执行截断计算（保留整数部分，去除小数）
-    error = aclnnTrunc(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnTrunc(workspace, workspace_size, executor,
+                       nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Trunc: computation failed, error={}", error));
@@ -1219,29 +1146,23 @@ NPUArray Trunc(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise sign bit check.
- * 
+ *
  * Equivalent to numpy.signbit(x), returns a boolean array indicating whether the sign bit is set (negative values).
- * 
+ *
  * @param x NPUArray, input array (numeric type)
  * @return NPUArray Boolean array where True indicates negative elements (sign bit set)
  */
 NPUArray Signbit(const NPUArray& x) {
     // 初始化结果数组（形状与输入一致，数据类型为布尔型）
     auto shape = x.shape;
-    NPUArray result(shape, ACL_BOOL);  // 布尔型输出（True表示负数）
+    NPUArray result(shape, ACL_BOOL); // 布尔型输出（True表示负数）
 
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnSignBitGetWorkspaceSize(
-        x.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnSignBitGetWorkspaceSize(x.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Signbit: get workspace size failed, error={}", error));
     }
@@ -1256,11 +1177,8 @@ NPUArray Signbit(const NPUArray& x) {
     }
 
     // 执行符号位检查（检测是否为负数）
-    error = aclnnSignBit(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnSignBit(workspace, workspace_size, executor,
+                         nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Signbit: computation failed, error={}", error));
@@ -1275,22 +1193,21 @@ NPUArray Signbit(const NPUArray& x) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise least common multiple (LCM).
- * 
+ *
  * Equivalent to numpy.lcm(x1, x2), returns the smallest positive integer divisible by both x1 and x2.
- * 
+ *
  * @param x1 NPUArray, input array (integer type)
  * @param x2 NPUArray, input array (integer type)
  * @return NPUArray Element-wise LCM of x1 and x2
  */
 /**
  * @brief Compute element-wise least common multiple (LCM).
- * 
+ *
  * Equivalent to numpy.lcm(x1, x2), returns the smallest positive integer divisible by both x1 and x2.
  * Implemented using the relationship: LCM(a, b) = |a * b| / GCD(a, b)
- * 
+ *
  * @param x1 NPUArray, input array (integer type)
  * @param x2 NPUArray, input array (integer type)
  * @return NPUArray Element-wise LCM of x1 and x2
@@ -1310,11 +1227,8 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2) {
     NPUArray product(shape, dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
-    auto error = aclnnMulGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr,
-        product.tensorPtr,
-        &mul_workspace_size, &mul_executor
-    );
+    auto error =
+        aclnnMulGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, product.tensorPtr, &mul_workspace_size, &mul_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Lcm: product workspace size failed, error={}", error));
     }
@@ -1337,10 +1251,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2) {
     NPUArray abs_product(shape, dtype);
     uint64_t abs_workspace_size = 0;
     aclOpExecutor* abs_executor = nullptr;
-    error = aclnnAbsGetWorkspaceSize(
-        product.tensorPtr, abs_product.tensorPtr,
-        &abs_workspace_size, &abs_executor
-    );
+    error = aclnnAbsGetWorkspaceSize(product.tensorPtr, abs_product.tensorPtr, &abs_workspace_size, &abs_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(mul_workspace);
         throw runtime_error(fmt::format("Lcm: abs workspace size failed, error={}", error));
@@ -1363,17 +1274,14 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2) {
     }
 
     // 步骤3: 计算x1和x2的最大公约数 (GCD(a, b))
-    NPUArray gcd_result = Gcd(x1, x2);  // 复用已实现的Gcd函数
+    NPUArray gcd_result = Gcd(x1, x2); // 复用已实现的Gcd函数
 
     // 步骤4: 计算LCM = |a*b| / GCD(a,b)
     NPUArray result(shape, dtype);
     uint64_t div_workspace_size = 0;
     aclOpExecutor* div_executor = nullptr;
-    error = aclnnDivGetWorkspaceSize(
-        abs_product.tensorPtr, gcd_result.tensorPtr,
-        result.tensorPtr,
-        &div_workspace_size, &div_executor
-    );
+    error = aclnnDivGetWorkspaceSize(abs_product.tensorPtr, gcd_result.tensorPtr, result.tensorPtr, &div_workspace_size,
+                                     &div_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(mul_workspace);
         aclrtFree(abs_workspace);
@@ -1406,13 +1314,12 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2) {
 
     return result;
 }
-    
 
 /**
  * @brief Compute element-wise greatest common divisor (GCD).
- * 
+ *
  * Equivalent to numpy.gcd(x1, x2), returns the largest positive integer dividing both x1 and x2.
- * 
+ *
  * @param x1 NPUArray, input array (integer type)
  * @param x2 NPUArray, input array (integer type)
  * @return NPUArray Element-wise GCD of x1 and x2
@@ -1431,13 +1338,7 @@ NPUArray Gcd(const NPUArray& x1, const NPUArray& x2) {
     // 获取工作空间大小
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnGcdGetWorkspaceSize(
-        x1.tensorPtr,
-        x2.tensorPtr,
-        result.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnGcdGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, result.tensorPtr, &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Gcd: get workspace size failed, error={}", error));
     }
@@ -1452,11 +1353,8 @@ NPUArray Gcd(const NPUArray& x1, const NPUArray& x2) {
     }
 
     // 执行最大公约数计算
-    error = aclnnGcd(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr  // 无需回调
+    error = aclnnGcd(workspace, workspace_size, executor,
+                     nullptr // 无需回调
     );
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Gcd: computation failed, error={}", error));
@@ -1471,13 +1369,12 @@ NPUArray Gcd(const NPUArray& x1, const NPUArray& x2) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise floating-point power.
- * 
+ *
  * Equivalent to numpy.float_power(x1, x2), computes x1 raised to the power of x2 using floating-point arithmetic.
  * Implemented using the mathematical identity: x1^x2 = exp(x2 * ln(x1))
- * 
+ *
  * @param x1 NPUArray, base array (floating-point type)
  * @param x2 NPUArray, exponent array (floating-point type)
  * @return NPUArray Element-wise result of x1^x2
@@ -1497,12 +1394,7 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2) {
     NPUArray log_x1(shape, dtype);
     uint64_t log_workspace_size = 0;
     aclOpExecutor* log_executor = nullptr;
-    auto error = aclnnLogGetWorkspaceSize(
-        x1.tensorPtr,
-        log_x1.tensorPtr,
-        &log_workspace_size,
-        &log_executor
-    );
+    auto error = aclnnLogGetWorkspaceSize(x1.tensorPtr, log_x1.tensorPtr, &log_workspace_size, &log_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("FloatPower: log workspace size failed, error={}", error));
     }
@@ -1525,13 +1417,8 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2) {
     NPUArray product(shape, dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
-    error = aclnnMulGetWorkspaceSize(
-        x2.tensorPtr,
-        log_x1.tensorPtr,
-        product.tensorPtr,
-        &mul_workspace_size,
-        &mul_executor
-    );
+    error =
+        aclnnMulGetWorkspaceSize(x2.tensorPtr, log_x1.tensorPtr, product.tensorPtr, &mul_workspace_size, &mul_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(log_workspace);
         throw runtime_error(fmt::format("FloatPower: mul workspace size failed, error={}", error));
@@ -1556,12 +1443,7 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2) {
     // 步骤3: 计算指数函数 (exp(x2 * ln(x1)) = x1^x2)
     uint64_t exp_workspace_size = 0;
     aclOpExecutor* exp_executor = nullptr;
-    error = aclnnExpGetWorkspaceSize(
-        product.tensorPtr,
-        result.tensorPtr,
-        &exp_workspace_size,
-        &exp_executor
-    );
+    error = aclnnExpGetWorkspaceSize(product.tensorPtr, result.tensorPtr, &exp_workspace_size, &exp_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(log_workspace);
         aclrtFree(mul_workspace);
@@ -1595,14 +1477,13 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2) {
     return result;
 }
 
-
 /**
  * @brief Compute element-wise floating-point remainder of division.
- * 
+ *
  * Equivalent to numpy.fmod(x1, x2), returns the remainder of x1 divided by x2.
  * The result has the same sign as x1, following the formula:
  * fmod(x1, x2) = x1 - x2 * floor(x1 / x2)
- * 
+ *
  * @param x1 NPUArray, dividend array (floating-point type)
  * @param x2 NPUArray, divisor array (floating-point type)
  * @return NPUArray Element-wise remainder of x1 / x2
@@ -1621,13 +1502,8 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray division(shape, dtype);
     uint64_t div_workspace_size = 0;
     aclOpExecutor* div_executor = nullptr;
-    auto error = aclnnDivGetWorkspaceSize(
-        x1.tensorPtr,
-        x2.tensorPtr,
-        division.tensorPtr,
-        &div_workspace_size,
-        &div_executor
-    );
+    auto error =
+        aclnnDivGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, division.tensorPtr, &div_workspace_size, &div_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Fmod: division workspace size failed, error={}", error));
     }
@@ -1650,12 +1526,7 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray floor_div(shape, dtype);
     uint64_t floor_workspace_size = 0;
     aclOpExecutor* floor_executor = nullptr;
-    error = aclnnFloorGetWorkspaceSize(
-        division.tensorPtr,
-        floor_div.tensorPtr,
-        &floor_workspace_size,
-        &floor_executor
-    );
+    error = aclnnFloorGetWorkspaceSize(division.tensorPtr, floor_div.tensorPtr, &floor_workspace_size, &floor_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         throw runtime_error(fmt::format("Fmod: floor workspace size failed, error={}", error));
@@ -1681,13 +1552,8 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray product(shape, dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
-    error = aclnnMulGetWorkspaceSize(
-        x2.tensorPtr,
-        floor_div.tensorPtr,
-        product.tensorPtr,
-        &mul_workspace_size,
-        &mul_executor
-    );
+    error = aclnnMulGetWorkspaceSize(x2.tensorPtr, floor_div.tensorPtr, product.tensorPtr, &mul_workspace_size,
+                                     &mul_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         aclrtFree(floor_workspace);
@@ -1716,13 +1582,8 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray result(shape, dtype);
     uint64_t sub_workspace_size = 0;
     aclOpExecutor* sub_executor = nullptr;
-    error = aclnnSubGetWorkspaceSize(
-        x1.tensorPtr,
-        product.tensorPtr,
-        result.tensorPtr,
-        &sub_workspace_size,
-        &sub_executor
-    );
+    error =
+        aclnnSubGetWorkspaceSize(x1.tensorPtr, product.tensorPtr, result.tensorPtr, &sub_workspace_size, &sub_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         aclrtFree(floor_workspace);
@@ -1759,15 +1620,14 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2) {
 
     return result;
 }
-    
 
 /**
  * @brief Compute element-wise remainder of division.
- * 
+ *
  * Equivalent to numpy.mod(x1, x2), returns the remainder of x1 divided by x2.
  * The result has the same sign as x2, following the formula:
  * mod(x1, x2) = x1 - x2 * trunc(x1 / x2)
- * 
+ *
  * @param x1 NPUArray, dividend array (numeric type)
  * @param x2 NPUArray, divisor array (numeric type)
  * @return NPUArray Element-wise remainder of x1 / x2
@@ -1786,13 +1646,8 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray division(shape, dtype);
     uint64_t div_workspace_size = 0;
     aclOpExecutor* div_executor = nullptr;
-    auto error = aclnnDivGetWorkspaceSize(
-        x1.tensorPtr,
-        x2.tensorPtr,
-        division.tensorPtr,
-        &div_workspace_size,
-        &div_executor
-    );
+    auto error =
+        aclnnDivGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, division.tensorPtr, &div_workspace_size, &div_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Mod: division workspace size failed, error={}", error));
     }
@@ -1815,12 +1670,7 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray trunc_div(shape, dtype);
     uint64_t trunc_workspace_size = 0;
     aclOpExecutor* trunc_executor = nullptr;
-    error = aclnnTruncGetWorkspaceSize(
-        division.tensorPtr,
-        trunc_div.tensorPtr,
-        &trunc_workspace_size,
-        &trunc_executor
-    );
+    error = aclnnTruncGetWorkspaceSize(division.tensorPtr, trunc_div.tensorPtr, &trunc_workspace_size, &trunc_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         throw runtime_error(fmt::format("Mod: trunc workspace size failed, error={}", error));
@@ -1846,13 +1696,8 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray product(shape, dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
-    error = aclnnMulGetWorkspaceSize(
-        x2.tensorPtr,
-        trunc_div.tensorPtr,
-        product.tensorPtr,
-        &mul_workspace_size,
-        &mul_executor
-    );
+    error = aclnnMulGetWorkspaceSize(x2.tensorPtr, trunc_div.tensorPtr, product.tensorPtr, &mul_workspace_size,
+                                     &mul_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         aclrtFree(trunc_workspace);
@@ -1881,13 +1726,8 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
     NPUArray result(shape, dtype);
     uint64_t sub_workspace_size = 0;
     aclOpExecutor* sub_executor = nullptr;
-    error = aclnnSubGetWorkspaceSize(
-        x1.tensorPtr,
-        product.tensorPtr,
-        result.tensorPtr,
-        &sub_workspace_size,
-        &sub_executor
-    );
+    error =
+        aclnnSubGetWorkspaceSize(x1.tensorPtr, product.tensorPtr, result.tensorPtr, &sub_workspace_size, &sub_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(div_workspace);
         aclrtFree(trunc_workspace);
@@ -1925,14 +1765,13 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2) {
     return result;
 }
 
-
 /**
  * @brief Decompose elements into integer and fractional parts.
- * 
+ *
  * Equivalent to numpy.modf(x), returns a pair of arrays (integer_part, fractional_part)
  * where each element is split into an integer component and a fractional component.
  * Both parts have the same sign as the input and the same data type.
- * 
+ *
  * @param x NPUArray, input array (floating-point type)
  * @return std::pair<NPUArray, NPUArray> Integer part and fractional part of x
  */
@@ -1944,12 +1783,8 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
     NPUArray integer_part(shape, dtype);
     uint64_t trunc_workspace_size = 0;
     aclOpExecutor* trunc_executor = nullptr;
-    auto error = aclnnTruncGetWorkspaceSize(
-        x.tensorPtr,
-        integer_part.tensorPtr,
-        &trunc_workspace_size,
-        &trunc_executor
-    );
+    auto error =
+        aclnnTruncGetWorkspaceSize(x.tensorPtr, integer_part.tensorPtr, &trunc_workspace_size, &trunc_executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Modf: trunc workspace size failed, error={}", error));
     }
@@ -1972,13 +1807,8 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
     NPUArray fractional_part(shape, dtype);
     uint64_t sub_workspace_size = 0;
     aclOpExecutor* sub_executor = nullptr;
-    error = aclnnSubGetWorkspaceSize(
-        x.tensorPtr,
-        integer_part.tensorPtr,
-        fractional_part.tensorPtr,
-        &sub_workspace_size,
-        &sub_executor
-    );
+    error = aclnnSubGetWorkspaceSize(x.tensorPtr, integer_part.tensorPtr, fractional_part.tensorPtr,
+                                     &sub_workspace_size, &sub_executor);
     if (error != ACL_SUCCESS) {
         aclrtFree(trunc_workspace);
         throw runtime_error(fmt::format("Modf: subtraction workspace size failed, error={}", error));
@@ -2009,12 +1839,11 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
     return {integer_part, fractional_part};
 }
 
-
 /**
  * @brief Compute element-wise remainder of division.
- * 
+ *
  * Equivalent to numpy.remainder(x1, x2), same as numpy.mod - returns x1 - x2 * floor(x1 / x2).
- * 
+ *
  * @param x1 NPUArray, dividend array (numeric type)
  * @param x2 NPUArray, divisor array (numeric type)
  * @return NPUArray Element-wise remainder result
@@ -2024,14 +1853,13 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2) {
     return Mod(x1, x2);
 }
 
-
 /**
  * @brief Compute element-wise quotient and remainder.
- * 
+ *
  * Equivalent to numpy.divmod(x1, x2), returns a pair (quotient, remainder) where:
  * - quotient = floor(x1 / x2)
  * - remainder = x1 - x2 * quotient
- * 
+ *
  * @param x1 NPUArray, dividend array (numeric type)
  * @param x2 NPUArray, divisor array (numeric type)
  * @return pair<NPUArray, NPUArray> Pair of quotient and remainder
@@ -2044,18 +1872,12 @@ pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2) {
     auto shape = x1.shape;
     auto dtype = x1.dtype;
     NPUArray quotient(shape, dtype);  // 商
-    NPUArray remainder(shape, dtype);  // 余数
+    NPUArray remainder(shape, dtype); // 余数
 
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnDivmodGetWorkspaceSize(
-        x1.tensorPtr,
-        x2.tensorPtr,
-        quotient.tensorPtr,
-        remainder.tensorPtr,
-        &workspace_size,
-        &executor
-    );
+    auto error = aclnnDivmodGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, quotient.tensorPtr, remainder.tensorPtr,
+                                             &workspace_size, &executor);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Divmod: get workspace size failed, error={}", error));
     }
@@ -2068,12 +1890,7 @@ pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2) {
         }
     }
 
-    error = aclnnDivmod(
-        workspace,
-        workspace_size,
-        executor,
-        nullptr
-    );
+    error = aclnnDivmod(workspace, workspace_size, executor, nullptr);
     if (error != ACL_SUCCESS) {
         throw runtime_error(fmt::format("Divmod: computation failed, error={}", error));
     }
@@ -2086,13 +1903,12 @@ pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2) {
     return {quotient, remainder};
 }
 
-
 /**
  * @brief Compute the sine of each element in the input array.
- * 
+ *
  * Creates an output array stored on NPU and calculates element-wise sine values
  * using the aclnnSin operator.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise sine values.
@@ -2103,16 +1919,16 @@ NPUArray sin(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnSinGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnSinGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](sin) aclnnSinGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
-    if (workspaceSize < 0) throw std::runtime_error("[math.cpp](sin) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    if (workspaceSize < 0)
+        throw std::runtime_error("[math.cpp](sin) Invalid workspaceSize: " + std::to_string(workspaceSize));
 
     void* workspaceAddr = nullptr;
     if (workspaceSize > 0) {
@@ -2120,7 +1936,8 @@ NPUArray sin(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](sin) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2129,8 +1946,10 @@ NPUArray sin(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](sin) aclnnSin error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2138,22 +1957,25 @@ NPUArray sin(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](sin) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    if (workspaceAddr)
+        aclrtFree(workspaceAddr);
 
     return out;
 }
 
 /**
  * @brief Compute the cosine of each element in the input array.
- * 
+ *
  * Creates an output array stored on NPU and calculates element-wise cosine values
  * using the aclnnCos operator.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise cosine values.
@@ -2164,16 +1986,16 @@ NPUArray cos(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnCosGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnCosGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](cos) aclnnCosGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
-    if (workspaceSize < 0) throw std::runtime_error("[math.cpp](cos) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    if (workspaceSize < 0)
+        throw std::runtime_error("[math.cpp](cos) Invalid workspaceSize: " + std::to_string(workspaceSize));
 
     void* workspaceAddr = nullptr;
     if (workspaceSize > 0) {
@@ -2181,7 +2003,8 @@ NPUArray cos(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](cos) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2190,8 +2013,10 @@ NPUArray cos(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](cos) aclnnCos error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2199,22 +2024,25 @@ NPUArray cos(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](cos) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    if (workspaceAddr)
+        aclrtFree(workspaceAddr);
 
     return out;
 }
 
 /**
  * @brief Compute the tangent of each element in the input array.
- * 
+ *
  * Creates an output array stored on NPU and calculates element-wise tangent values
  * using the aclnnTan operator.
- * 
+ *
  * @param x Input array.
  * @param dtype Target numpy dtype for the output array.
  * @return NPUArray Array with element-wise tangent values.
@@ -2225,16 +2053,16 @@ NPUArray tan(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnTanGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnTanGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](tan) aclnnTanGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
-    if (workspaceSize < 0) throw std::runtime_error("[math.cpp](tan) Invalid workspaceSize: " + std::to_string(workspaceSize));
+    if (workspaceSize < 0)
+        throw std::runtime_error("[math.cpp](tan) Invalid workspaceSize: " + std::to_string(workspaceSize));
 
     void* workspaceAddr = nullptr;
     if (workspaceSize > 0) {
@@ -2242,7 +2070,8 @@ NPUArray tan(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](tan) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2251,8 +2080,10 @@ NPUArray tan(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](tan) aclnnTan error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2260,12 +2091,15 @@ NPUArray tan(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](tan) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
-    if (workspaceAddr) aclrtFree(workspaceAddr);
+    if (workspaceAddr)
+        aclrtFree(workspaceAddr);
 
     return out;
 }
@@ -2285,13 +2119,12 @@ NPUArray arcsin(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAsinGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnAsinGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arcsin) aclnnAsinGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2304,7 +2137,8 @@ NPUArray arcsin(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](arcsin) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2313,8 +2147,10 @@ NPUArray arcsin(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arcsin) aclnnAsin error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2322,8 +2158,10 @@ NPUArray arcsin(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arcsin) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2350,13 +2188,12 @@ NPUArray arccos(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAcosGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnAcosGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arccos) aclnnAcosGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2369,7 +2206,8 @@ NPUArray arccos(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](arccos) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2378,8 +2216,10 @@ NPUArray arccos(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arccos) aclnnAcos error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2387,8 +2227,10 @@ NPUArray arccos(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](arccos) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2413,36 +2255,36 @@ NPUArray Arctan(const NPUArray& x, py::dtype dtype) {
     auto out = NPUArray(x.shape, dtype);
 
     uint64_t workspaceSize = 0;
-    aclOpExecutor *executor;
+    aclOpExecutor* executor;
 
     auto error = aclnnAtanGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[math.cpp](arctan) aclnnAtanGetWorkspaceSize error = {}", error));
     }
 
-    if(workspaceSize < 0) {
+    if (workspaceSize < 0) {
         throw std::runtime_error(fmt::format("[math.cpp](arctan) Invalid workspaceSize: {}", workspaceSize));
     }
 
-    void *workspaceAddr = nullptr;
-    if(workspaceSize > 0) {
+    void* workspaceAddr = nullptr;
+    if (workspaceSize > 0) {
         error = aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-        if(error != ACL_SUCCESS) {
+        if (error != ACL_SUCCESS) {
             throw std::runtime_error(fmt::format("[math.cpp](arctan) aclrtMalloc error = {}", error));
         }
     }
 
     error = aclnnAtan(workspaceAddr, workspaceSize, executor, nullptr);
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[math.cpp](arctan) aclnnAtan error = {}", error));
     }
 
     error = aclrtSynchronizeDevice();
-    if(error != ACL_SUCCESS) {
+    if (error != ACL_SUCCESS) {
         throw std::runtime_error(fmt::format("[math.cpp](arctan) aclrtSynchronizeDevice error = {}", error));
     }
 
-    if(workspaceAddr != nullptr) {
+    if (workspaceAddr != nullptr) {
         aclrtFree(workspaceAddr);
     }
 
@@ -2466,13 +2308,13 @@ NPUArray around(const NPUArray& a, int decimals, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnRoundDecimalsGetWorkspaceSize(
-        a.tensorPtr, decimals, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnRoundDecimalsGetWorkspaceSize(a.tensorPtr, decimals, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = "[math.cpp](around) aclnnRoundDecimalsGetWorkspaceSize error = " + std::to_string(error);
+        std::string error_msg =
+            "[math.cpp](around) aclnnRoundDecimalsGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2485,7 +2327,8 @@ NPUArray around(const NPUArray& a, int decimals, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](around) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2494,8 +2337,10 @@ NPUArray around(const NPUArray& a, int decimals, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](around) aclnnRoundDecimals error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2503,8 +2348,10 @@ NPUArray around(const NPUArray& a, int decimals, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](around) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2526,9 +2373,7 @@ NPUArray around(const NPUArray& a, int decimals, py::dtype dtype) {
  * @return NPUArray Array with elements rounded to the specified decimals.
  * @throws std::runtime_error If ACL operation fails.
  */
-NPUArray round_(const NPUArray& a, int decimals, py::dtype dtype) {
-    return around(a, decimals, dtype);
-}
+NPUArray round_(const NPUArray& a, int decimals, py::dtype dtype) { return around(a, decimals, dtype); }
 
 /**
  * @brief Round elements of the array to the nearest integer.
@@ -2546,13 +2391,12 @@ NPUArray rint(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnRoundGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnRoundGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](rint) aclnnRoundGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2565,7 +2409,8 @@ NPUArray rint(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](rint) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2574,8 +2419,10 @@ NPUArray rint(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](rint) aclnnRound error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2583,8 +2430,10 @@ NPUArray rint(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](rint) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2611,13 +2460,12 @@ NPUArray fix(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnTruncGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnTruncGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](fix) aclnnTruncGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2630,7 +2478,8 @@ NPUArray fix(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](fix) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2639,8 +2488,10 @@ NPUArray fix(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](fix) aclnnTrunc error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2648,8 +2499,10 @@ NPUArray fix(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](fix) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2676,13 +2529,12 @@ NPUArray floor(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnFloorGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnFloorGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](floor) aclnnFloorGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2695,7 +2547,8 @@ NPUArray floor(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](floor) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2704,8 +2557,10 @@ NPUArray floor(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](floor) aclnnFloor error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2713,8 +2568,10 @@ NPUArray floor(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](floor) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2743,13 +2600,12 @@ NPUArray add(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAddGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnAddGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](add) aclnnAddGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2762,7 +2618,8 @@ NPUArray add(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](add) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2771,8 +2628,10 @@ NPUArray add(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](add) aclnnAdd error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2780,8 +2639,10 @@ NPUArray add(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](add) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2808,13 +2669,13 @@ NPUArray reciprocal(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnReciprocalGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnReciprocalGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = "[math.cpp](reciprocal) aclnnReciprocalGetWorkspaceSize error = " + std::to_string(error);
+        std::string error_msg =
+            "[math.cpp](reciprocal) aclnnReciprocalGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
         throw std::runtime_error(error_msg);
     }
     if (workspaceSize < 0) {
@@ -2827,7 +2688,8 @@ NPUArray reciprocal(const NPUArray& x, py::dtype dtype) {
         if (error != ACL_SUCCESS) {
             std::string error_msg = "[math.cpp](reciprocal) aclrtMalloc error = " + std::to_string(error);
             const char* detailed_msg = aclGetRecentErrMsg();
-            if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
+            if (detailed_msg && std::strlen(detailed_msg) > 0)
+                error_msg += " - " + std::string(detailed_msg);
             throw std::runtime_error(error_msg);
         }
     }
@@ -2836,8 +2698,10 @@ NPUArray reciprocal(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](reciprocal) aclnnReciprocal error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2845,8 +2709,10 @@ NPUArray reciprocal(const NPUArray& x, py::dtype dtype) {
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](reciprocal) aclrtSynchronizeDevice error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
-        if (detailed_msg && std::strlen(detailed_msg) > 0) error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (detailed_msg && std::strlen(detailed_msg) > 0)
+            error_msg += " - " + std::string(detailed_msg);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2869,9 +2735,9 @@ NPUArray reciprocal(const NPUArray& x, py::dtype dtype) {
 NPUArray positive(const NPUArray& x, py::dtype dtype) {
     // 如果 dtype 相同，直接返回一个拷贝；如果不同，进行 dtype 转换
     if (x.dtype() == dtype) {
-        return NPUArray(x);  // 调用拷贝构造函数
+        return NPUArray(x); // 调用拷贝构造函数
     } else {
-        return NPUArray(x, dtype);  // 使用已有构造逻辑做 dtype 转换
+        return NPUArray(x, dtype); // 使用已有构造逻辑做 dtype 转换
     }
 }
 
@@ -2891,9 +2757,7 @@ NPUArray negative(const NPUArray& x, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnNegGetWorkspaceSize(
-        x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnNegGetWorkspaceSize(x.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](negative) aclnnNegGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
@@ -2923,7 +2787,8 @@ NPUArray negative(const NPUArray& x, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2933,7 +2798,8 @@ NPUArray negative(const NPUArray& x, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -2962,9 +2828,7 @@ NPUArray multiply(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnMulGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnMulGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](multiply) aclnnMulGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
@@ -2994,7 +2858,8 @@ NPUArray multiply(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3004,7 +2869,8 @@ NPUArray multiply(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3033,9 +2899,7 @@ NPUArray divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnDivGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnDivGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](divide) aclnnDivGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
@@ -3065,7 +2929,8 @@ NPUArray divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3075,7 +2940,8 @@ NPUArray divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3104,9 +2970,7 @@ NPUArray subtract(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnSubGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnSubGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
         std::string error_msg = "[math.cpp](subtract) aclnnSubGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
@@ -3136,7 +3000,8 @@ NPUArray subtract(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3146,7 +3011,8 @@ NPUArray subtract(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3162,9 +3028,7 @@ NPUArray subtract(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
  *
  * Provided for NumPy API compatibility.
  */
-NPUArray true_divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
-    return divide(x1, x2, dtype);
-}
+NPUArray true_divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) { return divide(x1, x2, dtype); }
 
 /**
  * @brief Element-wise floor division of two arrays.
@@ -3185,11 +3049,10 @@ NPUArray floor_divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnFloorDivideGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnFloorDivideGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     if (error != ACL_SUCCESS) {
-        std::string error_msg = "[math.cpp](floor_divide) aclnnFloorDivideGetWorkspaceSize error = " + std::to_string(error);
+        std::string error_msg =
+            "[math.cpp](floor_divide) aclnnFloorDivideGetWorkspaceSize error = " + std::to_string(error);
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
@@ -3217,7 +3080,8 @@ NPUArray floor_divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 
@@ -3227,7 +3091,8 @@ NPUArray floor_divide(const NPUArray& x1, const NPUArray& x2, py::dtype dtype) {
         const char* detailed_msg = aclGetRecentErrMsg();
         if (detailed_msg && std::strlen(detailed_msg) > 0)
             error_msg += " - " + std::string(detailed_msg);
-        if (workspaceAddr) aclrtFree(workspaceAddr);
+        if (workspaceAddr)
+            aclrtFree(workspaceAddr);
         throw std::runtime_error(error_msg);
     }
 

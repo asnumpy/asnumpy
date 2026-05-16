@@ -23,7 +23,10 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
+
+
 def _create_array(xp, data, dtype):
     np_arr = numpy.array(data, dtype=dtype)
     if xp is numpy:
@@ -81,8 +84,9 @@ def test_hyperbolic_float16_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: outputs float32 for integer inputs, NumPy outputs float64"
-, strict=True)
+    reason="[FIXABLE] dtype promotion: outputs float32 for integer inputs, NumPy outputs float64",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32, numpy.uint16, numpy.uint32, numpy.uint64])
 @testing.numpy_asnumpy_allclose()
 def test_hyperbolic_mismatch_xfail(xp, dtype):

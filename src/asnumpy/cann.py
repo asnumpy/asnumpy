@@ -15,11 +15,20 @@
 # *****************************************************************************
 
 from loguru import logger
+
 from ._core.cann import (
     finalize as _finalize,
+)
+from ._core.cann import (
     init as _init,
+)
+from ._core.cann import (
     reset_device as _reset_device,
+)
+from ._core.cann import (
     reset_device_force as _reset_device_force,
+)
+from ._core.cann import (
     set_device as _set_device,
 )
 

@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <asnumpy/dtypes/np_import.hpp>
 #include <asnumpy/dtypes/desc.hpp>
+#include <asnumpy/dtypes/np_import.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <type_traits>
@@ -30,12 +30,11 @@
 namespace asnumpy {
 namespace dtypes {
 
-template <typename T>
-struct ACLScalarBase;
+template <typename T> struct ACLScalarBase;
 
 template <typename T, template <typename> class Manager, template <typename> class Scalar, class Policy>
 class ACLTypeRegistrar {
-public:
+  public:
     using ScalarType = Scalar<T>;
     using DescriptorType = TypeDescriptor<T>;
 
@@ -53,8 +52,7 @@ public:
         }
     }
 
-    static void copyswapn(void* dst, npy_intp dstride, void* src, npy_intp sstride, npy_intp n,
-                          int swap, void* arr) {
+    static void copyswapn(void* dst, npy_intp dstride, void* src, npy_intp sstride, npy_intp n, int swap, void* arr) {
         char* dstptr = static_cast<char*>(dst);
         char* srcptr = static_cast<char*>(src);
 
@@ -70,15 +68,15 @@ public:
     static int compare(const void* a, const void* b, void* arr) {
         T ta = *static_cast<const T*>(a);
         T tb = *static_cast<const T*>(b);
-        if (ta < tb) return -1;
-        if (ta > tb) return 1;
+        if (ta < tb)
+            return -1;
+        if (ta > tb)
+            return 1;
         return 0;
     }
 
     static PyObject* getitem(void* data, void* arr) { return Policy::template GetItem<T>(data); }
-    static int setitem(PyObject* obj, void* data, void* arr) {
-        return Policy::template SetItem<T>(obj, data);
-    }
+    static int setitem(PyObject* obj, void* data, void* arr) { return Policy::template SetItem<T>(obj, data); }
 
     template <typename Builtin>
     static void cast_to_builtin(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
@@ -98,8 +96,7 @@ public:
         }
     }
 
-    template <typename U>
-    static void cast_to_acl_type(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+    template <typename U> static void cast_to_acl_type(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
         T* from_ptr = static_cast<T*>(from);
         U* to_ptr = static_cast<U*>(to);
         for (npy_intp i = 0; i < n; i++) {
@@ -107,8 +104,7 @@ public:
         }
     }
 
-    template <typename U>
-    static void cast_from_acl_type(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
+    template <typename U> static void cast_from_acl_type(void* from, void* to, npy_intp n, void* fromarr, void* toarr) {
         U* from_ptr = static_cast<U*>(from);
         T* to_ptr = static_cast<T*>(to);
         for (npy_intp i = 0; i < n; i++) {
@@ -116,9 +112,7 @@ public:
         }
     }
 
-    static void scalar_dealloc(ScalarType* self) {
-        Py_TYPE(self)->tp_free(reinterpret_cast<PyObject*>(self));
-    }
+    static void scalar_dealloc(ScalarType* self) { Py_TYPE(self)->tp_free(reinterpret_cast<PyObject*>(self)); }
 
     static PyObject* scalar_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
         ScalarType* self = reinterpret_cast<ScalarType*>(type->tp_alloc(type, 0));
@@ -153,13 +147,26 @@ public:
 
         bool result = false;
         switch (op) {
-            case Py_LT: result = self_val < other_val; break;
-            case Py_LE: result = self_val <= other_val; break;
-            case Py_EQ: result = self_val == other_val; break;
-            case Py_NE: result = self_val != other_val; break;
-            case Py_GT: result = self_val > other_val; break;
-            case Py_GE: result = self_val >= other_val; break;
-            default: Py_RETURN_NOTIMPLEMENTED;
+        case Py_LT:
+            result = self_val < other_val;
+            break;
+        case Py_LE:
+            result = self_val <= other_val;
+            break;
+        case Py_EQ:
+            result = self_val == other_val;
+            break;
+        case Py_NE:
+            result = self_val != other_val;
+            break;
+        case Py_GT:
+            result = self_val > other_val;
+            break;
+        case Py_GE:
+            result = self_val >= other_val;
+            break;
+        default:
+            Py_RETURN_NOTIMPLEMENTED;
         }
         return PyBool_FromLong(result ? 1 : 0);
     }
@@ -184,29 +191,29 @@ public:
     }
 
     static PyArray_DescrProto GetDescrProto() {
-        PyArray_DescrProto proto = {
-            PyObject_HEAD_INIT(&PyArrayDescr_Type) nullptr,
-            DescriptorType::kNpyDescrKind,
-            DescriptorType::kNpyDescrType,
-            DescriptorType::kNpyDescrByteorder,
-            NPY_USE_SETITEM,
-            0,
-            static_cast<int>(DescriptorType::kSize),
-            static_cast<int>(DescriptorType::kAlignment),
-            nullptr,
-            nullptr,
-            nullptr,
-            GetArrFuncs(),
-            nullptr,
-            nullptr,
-            -1};
+        PyArray_DescrProto proto = {PyObject_HEAD_INIT(&PyArrayDescr_Type) nullptr,
+                                    DescriptorType::kNpyDescrKind,
+                                    DescriptorType::kNpyDescrType,
+                                    DescriptorType::kNpyDescrByteorder,
+                                    NPY_USE_SETITEM,
+                                    0,
+                                    static_cast<int>(DescriptorType::kSize),
+                                    static_cast<int>(DescriptorType::kAlignment),
+                                    nullptr,
+                                    nullptr,
+                                    nullptr,
+                                    GetArrFuncs(),
+                                    nullptr,
+                                    nullptr,
+                                    -1};
         return proto;
     }
 
-    template <typename U>
-    static void RegisterConversionIfRegistered(int type_num) {
-        if (Manager<U>::npy_type == NPY_NOTYPE) return;
-        if (Manager<U>::npy_type == type_num) return;
+    template <typename U> static void RegisterConversionIfRegistered(int type_num) {
+        if (Manager<U>::npy_type == NPY_NOTYPE)
+            return;
+        if (Manager<U>::npy_type == type_num)
+            return;
         PyArray_RegisterCastFunc(PyArray_DescrFromType(type_num), Manager<U>::npy_type,
                                  reinterpret_cast<PyArray_VectorUnaryFunc*>(cast_to_acl_type<U>));
         PyArray_RegisterCastFunc(PyArray_DescrFromType(Manager<U>::npy_type), type_num,
@@ -218,10 +225,9 @@ public:
         static bool initialized = false;
 
         if (!initialized) {
-            static PyMethodDef scalar_methods[] = {
-                {"getACLenum", reinterpret_cast<PyCFunction>(scalar_getACLenum), METH_NOARGS,
-                 "Get ACL data type enumeration value"},
-                {nullptr, nullptr, 0, nullptr}};
+            static PyMethodDef scalar_methods[] = {{"getACLenum", reinterpret_cast<PyCFunction>(scalar_getACLenum),
+                                                    METH_NOARGS, "Get ACL data type enumeration value"},
+                                                   {nullptr, nullptr, 0, nullptr}};
 
             static PyType_Slot type_slots[] = {
                 {Py_tp_new, reinterpret_cast<void*>(scalar_new)},
@@ -245,11 +251,13 @@ public:
             };
 
             PyObject* bases = PyTuple_Pack(1, reinterpret_cast<PyObject*>(&PyGenericArrType_Type));
-            if (bases == nullptr) return nullptr;
+            if (bases == nullptr)
+                return nullptr;
 
             PyObject* type_obj = PyType_FromSpecWithBases(&type_spec, bases);
             Py_DECREF(bases);
-            if (type_obj == nullptr) return nullptr;
+            if (type_obj == nullptr)
+                return nullptr;
 
             type_def = reinterpret_cast<PyTypeObject*>(type_obj);
             initialized = true;
@@ -289,6 +297,5 @@ public:
     }
 };
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

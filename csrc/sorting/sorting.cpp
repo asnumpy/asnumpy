@@ -14,11 +14,10 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/sorting/sorting.hpp>
-#include <asnumpy/utils/npu_array.hpp>
-#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
@@ -32,14 +31,15 @@
 namespace asnumpy {
 
 NPUArray Sort(const NPUArray& a, int axis, bool stable) {
-    LOG_DEBUG("aclnnSort start: input_shape={}, tensorSize={}, aclDtype={}, axis={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype), axis);
+    LOG_DEBUG("aclnnSort start: input_shape={}, tensorSize={}, aclDtype={}, axis={}", detail::FormatShape(a.shape),
+              a.tensorSize, AclDtypeName(a.aclDtype), axis);
     auto shape = a.shape;
     auto result = NPUArray(shape, a.aclDtype);
     auto indices = NPUArray(shape, ACL_INT64);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnSortGetWorkspaceSize(a.tensorPtr, stable, axis, false,
-        result.tensorPtr, indices.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnSortGetWorkspaceSize(a.tensorPtr, stable, axis, false, result.tensorPtr, indices.tensorPtr,
+                                           &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSortGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnSort(workspace.get(), workspace.size(), executor, nullptr);
@@ -50,4 +50,4 @@ NPUArray Sort(const NPUArray& a, int axis, bool stable) {
     return result;
 }
 
-}
+} // namespace asnumpy

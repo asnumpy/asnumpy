@@ -29,6 +29,7 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
 
 # ========== 辅助函数 ==========
@@ -46,6 +47,7 @@ def _create_array(xp, data, dtype):
 # ==========================================================================
 # 1. 基础功能测试 (Basic)
 # ==========================================================================
+
 
 # ---------- 1.1 一维排序 ----------
 @testing.for_dtypes([numpy.int32, numpy.float32])
@@ -113,6 +115,7 @@ def test_sort_two_elements(xp, dtype):
 # ==========================================================================
 # 2. axis 参数测试 (Axis Parameter)
 # ==========================================================================
+
 
 # ---------- 2.1 二维数组 axis ----------
 @testing.for_dtypes([numpy.float32])
@@ -196,8 +199,12 @@ def test_sort_3d_negative_axis(xp, dtype):
 # 3. stable 排序测试 (Stable Sorting)
 # ==========================================================================
 
+
 # ---------- 3.1 stable=True ----------
-@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_true(xp, dtype):
@@ -210,7 +217,10 @@ def test_sort_stable_true(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_false(xp, dtype):
@@ -223,7 +233,10 @@ def test_sort_stable_false(xp, dtype):
     return xp.sort(a, stable=False)
 
 
-@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_duplicates(xp, dtype):
@@ -233,7 +246,10 @@ def test_sort_stable_duplicates(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_2d(xp, dtype):
@@ -243,7 +259,10 @@ def test_sort_stable_2d(xp, dtype):
     return xp.sort(a, axis=1, stable=True)
 
 
-@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
+    strict=True,
+)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_all_same(xp, dtype):
@@ -256,6 +275,7 @@ def test_sort_stable_all_same(xp, dtype):
 # ==========================================================================
 # 4. 各 dtype 测试 (Dtype Support)
 # ==========================================================================
+
 
 # ---------- 4.1 布尔类型 ----------
 @testing.for_dtypes([numpy.bool_])
@@ -328,6 +348,7 @@ def test_sort_float_dtypes(xp, dtype):
 # 5. 特殊输入模式测试 (Special Input Patterns)
 # ==========================================================================
 
+
 # ---------- 5.1 已排序输入 ----------
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -360,7 +381,7 @@ def test_sort_reverse_sorted(xp, dtype):
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_nan(xp, dtype):
     """测试含 NaN 的排序（NaN 应排在末尾）"""
-    data = [3.0, float('nan'), 1.0, 2.0]
+    data = [3.0, float("nan"), 1.0, 2.0]
     a = _create_array(xp, data, dtype)
     return xp.sort(a)
 
@@ -369,7 +390,7 @@ def test_sort_with_nan(xp, dtype):
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_multiple_nan(xp, dtype):
     """测试含多个 NaN 的排序"""
-    data = [float('nan'), 3.0, float('nan'), 1.0, 2.0]
+    data = [float("nan"), 3.0, float("nan"), 1.0, 2.0]
     a = _create_array(xp, data, dtype)
     return xp.sort(a)
 
@@ -378,7 +399,7 @@ def test_sort_with_multiple_nan(xp, dtype):
 @testing.numpy_asnumpy_allclose()
 def test_sort_nan_at_beginning(xp, dtype):
     """测试 NaN 在开头"""
-    data = [float('nan'), 2.0, 1.0]
+    data = [float("nan"), 2.0, 1.0]
     a = _create_array(xp, data, dtype)
     return xp.sort(a)
 
@@ -387,7 +408,7 @@ def test_sort_nan_at_beginning(xp, dtype):
 @testing.numpy_asnumpy_allclose()
 def test_sort_nan_only(xp, dtype):
     """测试全部 NaN 输入"""
-    data = [float('nan'), float('nan'), float('nan')]
+    data = [float("nan"), float("nan"), float("nan")]
     a = _create_array(xp, data, dtype)
     return xp.sort(a)
 
@@ -396,7 +417,7 @@ def test_sort_nan_only(xp, dtype):
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_nan_2d(xp, dtype):
     """测试二维数组含 NaN 排序"""
-    data = [[3.0, float('nan'), 1.0], [2.0, 5.0, float('nan')]]
+    data = [[3.0, float("nan"), 1.0], [2.0, 5.0, float("nan")]]
     a = _create_array(xp, data, dtype)
     return xp.sort(a, axis=1)
 
@@ -442,6 +463,7 @@ def test_sort_random(xp, dtype):
 # 6. 多维输入测试 (Multi-dimensional Input)
 # ==========================================================================
 
+
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_2d_wide(xp, dtype):
@@ -475,6 +497,7 @@ def test_sort_3d_input(xp, dtype):
 # ==========================================================================
 # 7. 空数组 / 边界情况测试 (Edge Cases)
 # ==========================================================================
+
 
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()

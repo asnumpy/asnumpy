@@ -16,9 +16,8 @@
 
 #pragma once
 
-#include <asnumpy/dtypes/float/bit_cast.hpp>
-#include <asnumpy/dtypes/float/float8.hpp>
 #include <asnumpy/dtypes/float/bfloat16.hpp>
-#include <asnumpy/dtypes/float/float6.hpp>
+#include <asnumpy/dtypes/float/bit_cast.hpp>
 #include <asnumpy/dtypes/float/float4.hpp>
-
+#include <asnumpy/dtypes/float/float6.hpp>
+#include <asnumpy/dtypes/float/float8.hpp>

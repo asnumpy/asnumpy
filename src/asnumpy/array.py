@@ -15,21 +15,42 @@
 # *****************************************************************************
 
 from loguru import logger
-from ._types import ArrayLike, DTypeLike, ShapeLike, ScalarLike
+
 from ._core.array import (
     empty as _empty,
+)
+from ._core.array import (
     empty_like as _empty_like,
+)
+from ._core.array import (
     eye as _eye,
+)
+from ._core.array import (
     full as _full,
+)
+from ._core.array import (
     full_like as _full_like,
+)
+from ._core.array import (
     identity as _identity,
+)
+from ._core.array import (
     linspace as _linspace,
+)
+from ._core.array import (
     ones as _ones,
+)
+from ._core.array import (
     ones_like as _ones_like,
+)
+from ._core.array import (
     zeros as _zeros,
+)
+from ._core.array import (
     zeros_like as _zeros_like,
 )
-from .utils import ndarray, _convert_dtype, _normalize_shape
+from ._types import ArrayLike, DTypeLike, ScalarLike, ShapeLike
+from .utils import _convert_dtype, _normalize_shape, ndarray
 
 
 @logger.catch(reraise=True)

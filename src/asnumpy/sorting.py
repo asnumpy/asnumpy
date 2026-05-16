@@ -14,11 +14,11 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Optional
+
 from ._core.sorting import sort as _sort
-from .utils import ndarray
 from ._types import ArrayLike
+from .utils import ndarray
 
 
-def sort(a: ArrayLike, axis: Optional[int] = -1, stable: bool = False) -> ndarray:
+def sort(a: ArrayLike, axis: int | None = -1, stable: bool = False) -> ndarray:
     return ndarray(_sort(a, axis, stable))

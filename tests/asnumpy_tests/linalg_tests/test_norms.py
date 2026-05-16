@@ -31,6 +31,7 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
 
 
@@ -65,6 +66,7 @@ def _assert_slogdet_allclose(data, rtol=1e-5, atol=1e-5):
 # 1. 范数测试 (Norm)
 # ==========================================================================
 
+
 # ---------- 1.1 基础功能: 向量范数 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
@@ -90,7 +92,7 @@ def test_norm_vector_inf(xp, dtype):
     """向量无穷范数"""
     data = [1.0, -5.0, 3.0]
     a = _create_array(xp, data, dtype)
-    return xp.linalg.norm(a, ord=float('inf'))
+    return xp.linalg.norm(a, ord=float("inf"))
 
 
 # ---------- 1.2 基础功能: 矩阵范数 ----------
@@ -109,7 +111,7 @@ def test_norm_matrix_frobenius_explicit(xp, dtype):
     """矩阵 Frobenius 范数 (显式 ord='fro')"""
     data = [[1.0, 2.0], [3.0, 4.0]]
     a = _create_array(xp, data, dtype)
-    return xp.linalg.norm(a, ord='fro')
+    return xp.linalg.norm(a, ord="fro")
 
 
 # ---------- 1.3 FP32/FP64 精度验证 ----------
@@ -265,6 +267,7 @@ def test_norm_random_matrix_fp64(xp, dtype):
 # 2. 行列式测试 (Determinant)
 # ==========================================================================
 
+
 # ---------- 2.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
@@ -279,9 +282,7 @@ def test_det_2x2(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_3x3(xp, dtype):
     """3x3 行列式"""
-    data = [[6.0, 1.0, 1.0],
-            [4.0, -2.0, 5.0],
-            [2.0, 8.0, 7.0]]
+    data = [[6.0, 1.0, 1.0], [4.0, -2.0, 5.0], [2.0, 8.0, 7.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -312,9 +313,7 @@ def test_det_fp64_precision(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_identity(xp, dtype):
     """单位阵: det = 1"""
-    data = [[1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]]
+    data = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -323,9 +322,7 @@ def test_det_identity(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_diagonal(xp, dtype):
     """对角阵: det = 对角线乘积"""
-    data = [[2.0, 0.0, 0.0],
-            [0.0, 3.0, 0.0],
-            [0.0, 0.0, 5.0]]
+    data = [[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -335,9 +332,7 @@ def test_det_diagonal(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_singular_zero(xp, dtype):
     """奇异矩阵: det = 0"""
-    data = [[1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]]
+    data = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -346,8 +341,7 @@ def test_det_singular_zero(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_zero_matrix(xp, dtype):
     """奇异矩阵: 全零矩阵 det = 0"""
-    data = [[0.0, 0.0],
-            [0.0, 0.0]]
+    data = [[0.0, 0.0], [0.0, 0.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -356,8 +350,7 @@ def test_det_zero_matrix(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_rank_deficient(xp, dtype):
     """奇异矩阵: 行线性相关"""
-    data = [[1.0, 2.0],
-            [2.0, 4.0]]
+    data = [[1.0, 2.0], [2.0, 4.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -367,10 +360,12 @@ def test_det_rank_deficient(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_batch_matrices(xp, dtype):
     """广播: 批量矩阵行列式"""
-    data = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0]],
-        [[2.0, 0.0], [0.0, 3.0]],
-    ]).astype(dtype)
+    data = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0]],
+            [[2.0, 0.0], [0.0, 3.0]],
+        ]
+    ).astype(dtype)
     a = _create_array(xp, data, dtype)
     return xp.linalg.det(a)
 
@@ -386,7 +381,9 @@ def test_det_batch_3x3(xp, dtype):
 
 
 # ---------- 2.6 空矩阵输入 ----------
-@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True
+)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_empty_matrix(xp, dtype):
@@ -420,6 +417,7 @@ def test_det_random_5x5_fp64(xp, dtype):
 # 3. 符号行列式测试 (Slogdet)
 # ==========================================================================
 
+
 # ---------- 3.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_2x2(dtype):
@@ -431,9 +429,7 @@ def test_slogdet_2x2(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_3x3(dtype):
     """3x3 slogdet"""
-    data = numpy.array([[6.0, 1.0, 1.0],
-                        [4.0, -2.0, 5.0],
-                        [2.0, 8.0, 7.0]], dtype=dtype)
+    data = numpy.array([[6.0, 1.0, 1.0], [4.0, -2.0, 5.0], [2.0, 8.0, 7.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
@@ -458,26 +454,21 @@ def test_slogdet_fp64_precision(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_identity(dtype):
     """单位阵: sign=1, logdet=0"""
-    data = numpy.array([[1.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0],
-                        [0.0, 0.0, 1.0]], dtype=dtype)
+    data = numpy.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_negative_det(dtype):
     """负行列式: sign=-1"""
-    data = numpy.array([[-1.0, 0.0],
-                        [0.0, 1.0]], dtype=dtype)
+    data = numpy.array([[-1.0, 0.0], [0.0, 1.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_diagonal(dtype):
     """对角阵: sign 和 logdet 验证"""
-    data = numpy.array([[2.0, 0.0, 0.0],
-                        [0.0, 3.0, 0.0],
-                        [0.0, 0.0, 5.0]], dtype=dtype)
+    data = numpy.array([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
@@ -485,17 +476,14 @@ def test_slogdet_diagonal(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_singular(dtype):
     """奇异矩阵: sign=0, logdet=-inf"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0],
-                        [7.0, 8.0, 9.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_zero_matrix(dtype):
     """奇异矩阵: 全零矩阵"""
-    data = numpy.array([[0.0, 0.0],
-                        [0.0, 0.0]], dtype=dtype)
+    data = numpy.array([[0.0, 0.0], [0.0, 0.0]], dtype=dtype)
     _assert_slogdet_allclose(data)
 
 
@@ -503,10 +491,12 @@ def test_slogdet_zero_matrix(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_slogdet_batch_matrices(dtype):
     """广播: 批量矩阵 slogdet"""
-    data = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0]],
-        [[2.0, 0.0], [0.0, 3.0]],
-    ]).astype(dtype)
+    data = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0]],
+            [[2.0, 0.0], [0.0, 3.0]],
+        ]
+    ).astype(dtype)
     _assert_slogdet_allclose(data)
 
 
@@ -519,7 +509,9 @@ def test_slogdet_batch_3x3(dtype):
 
 
 # ---------- 3.6 空矩阵输入 ----------
-@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True
+)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_slogdet_empty_matrix(xp, dtype):

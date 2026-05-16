@@ -18,4 +18,3 @@ add_library(nn OBJECT activation.cpp)
 
 target_include_directories(nn PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(nn PUBLIC fmt::fmt ascend_sdk pybind11::pybind11)
-

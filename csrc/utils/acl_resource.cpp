@@ -15,9 +15,9 @@
  *****************************************************************************/
 
 #include "asnumpy/utils/acl_resource.hpp"
-#include "asnumpy/utils/status_handler.hpp"
 #include <acl/acl.h>
 #include <spdlog/spdlog.h>
+#include "asnumpy/utils/status_handler.hpp"
 
 namespace asnumpy {
 
@@ -39,8 +39,7 @@ AclWorkspace::~AclWorkspace() {
     }
 }
 
-AclWorkspace::AclWorkspace(AclWorkspace&& other) noexcept
-    : ptr_(other.ptr_), size_(other.size_) {
+AclWorkspace::AclWorkspace(AclWorkspace&& other) noexcept : ptr_(other.ptr_), size_(other.size_) {
     other.ptr_ = nullptr;
     other.size_ = 0;
 }

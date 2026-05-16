@@ -31,8 +31,9 @@
 """
 
 import numpy
-import pytest
+
 from asnumpy import testing
+
 
 # ========== 辅助函数 ==========
 def _create_array(xp, data, dtype):
@@ -47,6 +48,7 @@ def _create_array(xp, data, dtype):
 # ==========================================================================
 # 1. 归约运算测试 (Reduction): all, any
 # ==========================================================================
+
 
 # ---------- 1.1 基础功能 ----------
 @testing.for_dtypes([numpy.bool_, numpy.int32])
@@ -167,11 +169,12 @@ def test_any_empty(xp):
 # 2. 无穷/有限检查测试 (Finite Checks)
 # ==========================================================================
 
+
 # ---------- 2.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite(xp, dtype):
-    data = [0.0, 1.0, float('inf'), float('-inf'), float('nan')]
+    data = [0.0, 1.0, float("inf"), float("-inf"), float("nan")]
     a = _create_array(xp, data, dtype)
     return xp.isfinite(a)
 
@@ -179,7 +182,7 @@ def test_isfinite(xp, dtype):
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isinf(xp, dtype):
-    data = [0.0, 1.0, float('inf'), float('-inf'), float('nan')]
+    data = [0.0, 1.0, float("inf"), float("-inf"), float("nan")]
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
@@ -187,7 +190,7 @@ def test_isinf(xp, dtype):
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isposinf(xp, dtype):
-    data = [0.0, float('inf'), float('-inf')]
+    data = [0.0, float("inf"), float("-inf")]
     a = _create_array(xp, data, dtype)
     return xp.isposinf(a)
 
@@ -195,7 +198,7 @@ def test_isposinf(xp, dtype):
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_isneginf(xp, dtype):
-    data = [0.0, float('inf'), float('-inf')]
+    data = [0.0, float("inf"), float("-inf")]
     a = _create_array(xp, data, dtype)
     return xp.isneginf(a)
 
@@ -205,7 +208,7 @@ def test_isneginf(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite_with_nan(xp, dtype):
     """NaN 不是有限数，应返回 False"""
-    data = [float('nan'), 1.0, float('inf')]
+    data = [float("nan"), 1.0, float("inf")]
     a = _create_array(xp, data, dtype)
     return xp.isfinite(a)
 
@@ -214,7 +217,7 @@ def test_isfinite_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isinf_with_nan(xp, dtype):
     """NaN 不是无穷，应返回 False"""
-    data = [float('nan'), float('inf'), float('-inf'), 1.0]
+    data = [float("nan"), float("inf"), float("-inf"), 1.0]
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
@@ -223,7 +226,7 @@ def test_isinf_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isposinf_with_nan(xp, dtype):
     """NaN 不是正无穷，应返回 False"""
-    data = [float('nan'), float('inf'), float('-inf'), 0.0]
+    data = [float("nan"), float("inf"), float("-inf"), 0.0]
     a = _create_array(xp, data, dtype)
     return xp.isposinf(a)
 
@@ -232,7 +235,7 @@ def test_isposinf_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isneginf_with_nan(xp, dtype):
     """NaN 不是负无穷，应返回 False"""
-    data = [float('nan'), float('inf'), float('-inf'), 0.0]
+    data = [float("nan"), float("inf"), float("-inf"), 0.0]
     a = _create_array(xp, data, dtype)
     return xp.isneginf(a)
 
@@ -242,7 +245,7 @@ def test_isneginf_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isfinite_float_dtypes(xp, dtype):
     """isfinite 应支持所有浮点 dtype"""
-    data = [0.0, 1.0, float('inf'), float('-inf')]
+    data = [0.0, 1.0, float("inf"), float("-inf")]
     a = _create_array(xp, data, dtype)
     return xp.isfinite(a)
 
@@ -251,7 +254,7 @@ def test_isfinite_float_dtypes(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isinf_float_dtypes(xp, dtype):
     """isinf 应支持 float32"""
-    data = [0.0, float('inf'), float('-inf'), 1.0]
+    data = [0.0, float("inf"), float("-inf"), 1.0]
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
@@ -270,7 +273,7 @@ def test_isfinite_all_finite(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_isinf_all_inf(xp, dtype):
     """所有元素都是无穷"""
-    data = [float('inf'), float('-inf'), float('inf')]
+    data = [float("inf"), float("-inf"), float("inf")]
     a = _create_array(xp, data, dtype)
     return xp.isinf(a)
 
@@ -295,6 +298,7 @@ def test_isinf_empty(xp, dtype):
 # ==========================================================================
 # 3. 逻辑运算测试 (Logical Operators)
 # ==========================================================================
+
 
 # ---------- 3.1 基础功能 ----------
 @testing.for_dtypes([numpy.bool_, numpy.int32])
@@ -336,8 +340,9 @@ def test_logical_not(xp, dtype):
 
 
 # ---------- 3.2 多 dtype ----------
-@testing.for_dtypes([numpy.bool_, numpy.int8, numpy.int32, numpy.int64,
-                     numpy.float32, numpy.float64])
+@testing.for_dtypes(
+    [numpy.bool_, numpy.int8, numpy.int32, numpy.int64, numpy.float32, numpy.float64]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_logical_and_dtypes(xp, dtype):
     """logical_and 对多种 dtype"""
@@ -352,8 +357,9 @@ def test_logical_and_dtypes(xp, dtype):
     return xp.logical_and(x1, x2)
 
 
-@testing.for_dtypes([numpy.bool_, numpy.int8, numpy.int32, numpy.int64,
-                     numpy.float32, numpy.float64])
+@testing.for_dtypes(
+    [numpy.bool_, numpy.int8, numpy.int32, numpy.int64, numpy.float32, numpy.float64]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_logical_or_dtypes(xp, dtype):
     """logical_or 对多种 dtype"""
@@ -385,8 +391,8 @@ def test_logical_not_dtypes(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_logical_and_with_nan(xp, dtype):
     """NaN 在逻辑运算中视为 True (非零)"""
-    data1 = [float('nan'), float('nan'), 0.0, float('nan')]
-    data2 = [1.0, 0.0, float('nan'), float('nan')]
+    data1 = [float("nan"), float("nan"), 0.0, float("nan")]
+    data2 = [1.0, 0.0, float("nan"), float("nan")]
     x1 = _create_array(xp, data1, dtype)
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_and(x1, x2)
@@ -396,8 +402,8 @@ def test_logical_and_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_logical_or_with_nan(xp, dtype):
     """NaN 在逻辑或中视为 True"""
-    data1 = [float('nan'), float('nan'), 0.0, 0.0]
-    data2 = [0.0, 1.0, float('nan'), 0.0]
+    data1 = [float("nan"), float("nan"), 0.0, 0.0]
+    data2 = [0.0, 1.0, float("nan"), 0.0]
     x1 = _create_array(xp, data1, dtype)
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_or(x1, x2)
@@ -407,7 +413,7 @@ def test_logical_or_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_logical_not_with_nan(xp, dtype):
     """NaN 的逻辑非应为 False (NaN 视为 True)"""
-    data = [float('nan'), 0.0, 1.0]
+    data = [float("nan"), 0.0, 1.0]
     x = _create_array(xp, data, dtype)
     return xp.logical_not(x)
 
@@ -416,8 +422,8 @@ def test_logical_not_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_logical_xor_with_nan(xp, dtype):
     """NaN 在逻辑异或中视为 True"""
-    data1 = [float('nan'), float('nan'), 0.0, 1.0]
-    data2 = [0.0, 1.0, float('nan'), float('nan')]
+    data1 = [float("nan"), float("nan"), 0.0, 1.0]
+    data2 = [0.0, 1.0, float("nan"), float("nan")]
     x1 = _create_array(xp, data1, dtype)
     x2 = _create_array(xp, data2, dtype)
     return xp.logical_xor(x1, x2)
@@ -487,6 +493,7 @@ def test_logical_not_empty(xp, dtype):
 # ==========================================================================
 # 4. 比较运算测试 (Comparisons)
 # ==========================================================================
+
 
 # ---------- 4.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32])
@@ -564,8 +571,7 @@ def test_greater_scalar(xp, dtype):
 
 
 # ---------- 4.2 多 dtype ----------
-@testing.for_dtypes([numpy.bool_, numpy.int32, numpy.int64,
-                     numpy.float32, numpy.float64])
+@testing.for_dtypes([numpy.bool_, numpy.int32, numpy.int64, numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_array_equal()
 def test_greater_dtypes(xp, dtype):
     """greater 对多种 dtype"""
@@ -663,8 +669,8 @@ def test_less_equal_dtypes(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_greater_with_nan(xp, dtype):
     """NaN 与任何值比较都返回 False"""
-    data_a = [float('nan'), 1.0, float('nan')]
-    data_b = [1.0, float('nan'), float('nan')]
+    data_a = [float("nan"), 1.0, float("nan")]
+    data_b = [1.0, float("nan"), float("nan")]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.greater(a, b)
@@ -674,8 +680,8 @@ def test_greater_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_less_with_nan(xp, dtype):
     """NaN 与任何值比较都返回 False"""
-    data_a = [float('nan'), 1.0, float('nan')]
-    data_b = [1.0, float('nan'), float('nan')]
+    data_a = [float("nan"), 1.0, float("nan")]
+    data_b = [1.0, float("nan"), float("nan")]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.less(a, b)
@@ -685,8 +691,8 @@ def test_less_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_greater_equal_with_nan(xp, dtype):
     """NaN >= x 始终为 False"""
-    data_a = [float('nan'), 1.0, 2.0]
-    data_b = [1.0, float('nan'), 2.0]
+    data_a = [float("nan"), 1.0, 2.0]
+    data_b = [1.0, float("nan"), 2.0]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.greater_equal(a, b)
@@ -696,8 +702,8 @@ def test_greater_equal_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_less_equal_with_nan(xp, dtype):
     """NaN <= x 始终为 False"""
-    data_a = [float('nan'), 1.0, 2.0]
-    data_b = [1.0, float('nan'), 2.0]
+    data_a = [float("nan"), 1.0, 2.0]
+    data_b = [1.0, float("nan"), 2.0]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.less_equal(a, b)
@@ -708,8 +714,8 @@ def test_less_equal_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_equal_with_nan(xp, dtype):
     """NaN == NaN 为 False (IEEE 754)"""
-    data_a = [float('nan'), 1.0]
-    data_b = [float('nan'), 1.0]
+    data_a = [float("nan"), 1.0]
+    data_b = [float("nan"), 1.0]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.equal(a, b)
@@ -720,8 +726,8 @@ def test_equal_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_not_equal_with_nan(xp, dtype):
     """NaN != NaN 为 True (IEEE 754)"""
-    data_a = [float('nan'), 1.0]
-    data_b = [float('nan'), 1.0]
+    data_a = [float("nan"), 1.0]
+    data_b = [float("nan"), 1.0]
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.not_equal(a, b)
@@ -731,7 +737,7 @@ def test_not_equal_with_nan(xp, dtype):
 @testing.numpy_asnumpy_array_equal()
 def test_greater_scalar_with_nan(xp, dtype):
     """NaN > scalar 应返回 False"""
-    data = [float('nan'), 1.0, 3.0]
+    data = [float("nan"), 1.0, 3.0]
     a = _create_array(xp, data, dtype)
     return xp.greater(a, 2.0)
 

@@ -14,31 +14,30 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/math/arithmetic_operations.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
-#include <asnumpy/utils/acl_resource.hpp>
-#include <asnumpy/utils/acl_executor.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 #include <aclnnop/aclnn_add.h>
 #include <aclnnop/aclnn_cast.h>
-#include <aclnnop/aclnn_sub.h>
-#include <aclnnop/aclnn_mul.h>
 #include <aclnnop/aclnn_div.h>
-#include <aclnnop/aclnn_floor_divide.h>
-#include <aclnnop/aclnn_reciprocal.h>
-#include <aclnnop/aclnn_neg.h>
-#include <aclnnop/aclnn_log.h>
 #include <aclnnop/aclnn_exp.h>
 #include <aclnnop/aclnn_floor.h>
-#include <aclnnop/aclnn_trunc.h>
+#include <aclnnop/aclnn_floor_divide.h>
+#include <aclnnop/aclnn_fmod_tensor.h>
+#include <aclnnop/aclnn_log.h>
+#include <aclnnop/aclnn_mul.h>
+#include <aclnnop/aclnn_neg.h>
 #include <aclnnop/aclnn_pow.h>
 #include <aclnnop/aclnn_pow_tensor_tensor.h>
-#include <aclnnop/aclnn_fmod_tensor.h>
+#include <aclnnop/aclnn_reciprocal.h>
 #include <aclnnop/aclnn_remainder.h>
+#include <aclnnop/aclnn_sub.h>
+#include <aclnnop/aclnn_trunc.h>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -50,7 +49,8 @@ namespace asnumpy {
  * @brief Element-wise addition using aclnnAdd.
  */
 NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnAdd start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnAdd start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
 
     auto out_shape = GetBroadcastShape(x1, x2);
@@ -64,10 +64,8 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnAddGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error =
+        aclnnAddGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAddGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -90,39 +88,34 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 NPUArray Reciprocal(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
     return EXECUTE_UNARY_OP(
-        x,
-        out_dtype,
+        x, out_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnReciprocalGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnReciprocal(workspace, workspaceSize, executor, nullptr);
         },
-        "Reciprocal",
-        "aclnnReciprocal"
-    );
+        "Reciprocal", "aclnnReciprocal");
 }
 
 /**
  * @brief Positive operator: copy or cast input array.
  */
 NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnCast start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
+    LOG_DEBUG("aclnnCast start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize,
+              AclDtypeName(x.aclDtype));
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
 
     if (out_dtype.is(x.dtype)) {
         LOG_INFO("aclnnCast completed");
-        return NPUArray(x);  // 深拷贝
+        return NPUArray(x); // 深拷贝
     }
 
     auto out = NPUArray(x.shape, out_dtype);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnCastGetWorkspaceSize(
-        x.tensorPtr, out.aclDtype, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error = aclnnCastGetWorkspaceSize(x.tensorPtr, out.aclDtype, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnCastGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -143,17 +136,14 @@ NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
     auto out_dtype = dtype.value_or(x.dtype);
     return EXECUTE_UNARY_OP(
-        x,
-        out_dtype,
+        x, out_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnNegGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnNeg(workspace, workspaceSize, executor, nullptr);
         },
-        "Negative",
-        "aclnnNeg"
-    );
+        "Negative", "aclnnNeg");
 }
 
 /**
@@ -162,18 +152,14 @@ NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
 NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     auto out_dtype = dtype.value_or(x1.dtype);
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMulGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnMul(workspace, workspaceSize, executor, nullptr);
         },
-        "Multiply",
-        "aclnnMul"
-    );
+        "Multiply", "aclnnMul");
 }
 
 /**
@@ -182,18 +168,14 @@ NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
 NPUArray Divide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     auto out_dtype = dtype.value_or(x1.dtype);
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnDivGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnDiv(workspace, workspaceSize, executor, nullptr);
         },
-        "Divide",
-        "aclnnDiv"
-    );
+        "Divide", "aclnnDiv");
 }
 
 /**
@@ -207,7 +189,8 @@ NPUArray TrueDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
  * @brief Element-wise subtraction using aclnnSub.
  */
 NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnSub start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnSub start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out_dtype = dtype.value_or(x1.dtype);
@@ -223,10 +206,8 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
     // 3. 获取 workspace
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnSubGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error =
+        aclnnSubGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSubGetWorkspaceSize");
 
     // 4. 分配 workspace
@@ -251,7 +232,8 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
  * @brief Element-wise floor division using aclnnFloorDivide.
  */
 NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnFloorDivide start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnFloorDivide start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     // 1. 广播输出形状
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out_dtype = dtype.value_or(x1.dtype);
@@ -260,10 +242,7 @@ NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::d
     // 2. 获取 workspace
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnFloorDivideGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error = aclnnFloorDivideGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnFloorDivideGetWorkspaceSize");
 
     // 3. 分配 workspace
@@ -287,18 +266,14 @@ NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::d
 NPUArray Power(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     py::dtype out_dtype = dtype.value_or(x1.dtype);
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnPowTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnPowTensorTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "Power",
-        "aclnnPowTensorTensor"
-    );
+        "Power", "aclnnPowTensorTensor");
 }
 
 /**
@@ -317,17 +292,16 @@ NPUArray Power(const py::object& x1, const NPUArray& x2, std::optional<py::dtype
                                  std::string(e.what()));
     }
 
-    LOG_DEBUG("aclnnPowScalarTensor start: scalar={}, x2_shape={}, aclDtype={}", value, detail::FormatShape(x2.shape), AclDtypeName(x2.aclDtype));
+    LOG_DEBUG("aclnnPowScalarTensor start: scalar={}, x2_shape={}, aclDtype={}", value, detail::FormatShape(x2.shape),
+              AclDtypeName(x2.aclDtype));
 
     aclScalar* x1_scalar = CreateScalar(value, ACL_FLOAT);
     auto out = NPUArray(x2.shape, ACL_DOUBLE);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnPowScalarTensorGetWorkspaceSize(
-        x1_scalar, x2.tensorPtr, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error =
+        aclnnPowScalarTensorGetWorkspaceSize(x1_scalar, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnPowScalarTensorGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -359,17 +333,16 @@ NPUArray Power(const NPUArray& x1, const py::object& x2, std::optional<py::dtype
                                  std::string(e.what()));
     }
 
-    LOG_DEBUG("aclnnPowTensorScalar start: x1_shape={}, scalar={}, aclDtype={}", detail::FormatShape(x1.shape), value, AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnPowTensorScalar start: x1_shape={}, scalar={}, aclDtype={}", detail::FormatShape(x1.shape), value,
+              AclDtypeName(x1.aclDtype));
 
     aclScalar* x2_scalar = CreateScalar(value, ACL_FLOAT);
     auto out = NPUArray(x1.shape, ACL_DOUBLE);
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnPowTensorScalarGetWorkspaceSize(
-        x1.tensorPtr, x2_scalar, out.tensorPtr,
-        &workspaceSize, &executor
-    );
+    auto error =
+        aclnnPowTensorScalarGetWorkspaceSize(x1.tensorPtr, x2_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnPowTensorScalarGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -395,18 +368,14 @@ NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
         throw std::runtime_error("[arithmetic_operations.cpp](FloatPower) dtype must be float or double");
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnPowTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnPowTensorTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "FloatPower",
-        "aclnnPowTensorTensor"
-    );
+        "FloatPower", "aclnnPowTensorTensor");
 }
 
 /**
@@ -418,18 +387,14 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         throw std::runtime_error("[arithmetic_operations.cpp](Fmod) dtype must be float or double");
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnFmodTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnFmodTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "Fmod",
-        "aclnnFmodTensor"
-    );
+        "Fmod", "aclnnFmodTensor");
 }
 
 /**
@@ -441,18 +406,14 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
         throw std::runtime_error("[arithmetic_operations.cpp](Mod) dtype must be float or double");
     }
     return EXECUTE_BINARY_OP(
-        x1,
-        x2,
-        out_dtype,
+        x1, x2, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnRemainderTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnRemainderTensorTensor(workspace, workspaceSize, executor, nullptr);
         },
-        "Mod",
-        "aclnnRemainderTensorTensor"
-    );
+        "Mod", "aclnnRemainderTensorTensor");
 }
 
 /**
@@ -463,11 +424,12 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
         throw std::runtime_error("[arithmetic_operations.cpp](Modf) input must be float or double");
     }
 
-    auto int_part  = NPUArray(x.shape, x.aclDtype);
+    auto int_part = NPUArray(x.shape, x.aclDtype);
     auto frac_part = NPUArray(x.shape, x.aclDtype);
 
     // === Floor ===
-    LOG_DEBUG("aclnnFloor start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype));
+    LOG_DEBUG("aclnnFloor start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape),
+              x.tensorSize, AclDtypeName(x.aclDtype));
     uint64_t floor_ws = 0;
     aclOpExecutor* floor_exec = nullptr;
     auto error = aclnnFloorGetWorkspaceSize(x.tensorPtr, int_part.tensorPtr, &floor_ws, &floor_exec);
@@ -483,7 +445,8 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
     LOG_INFO("aclnnFloor completed");
 
     // === Sub (frac = x - int_part) ===
-    LOG_DEBUG("aclnnSub start: x_shape={}, int_part_shape={}, aclDtype={}", detail::FormatShape(x.shape), detail::FormatShape(int_part.shape), AclDtypeName(x.aclDtype));
+    LOG_DEBUG("aclnnSub start: x_shape={}, int_part_shape={}, aclDtype={}", detail::FormatShape(x.shape),
+              detail::FormatShape(int_part.shape), AclDtypeName(x.aclDtype));
     uint64_t sub_ws = 0;
     aclOpExecutor* sub_exec = nullptr;
     int32_t one = 1;
@@ -520,7 +483,8 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
  * @brief Element-wise divmod using aclnnDivMod (mode=2) + Multiply/Subtract.
  */
 std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnDivMod start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnDivMod start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     // 1. 确定输出 dtype（默认和 x1 一致）
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
 
@@ -532,10 +496,8 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
 
     uint64_t ws_size = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnDivModGetWorkspaceSize(
-        x1.tensorPtr, x2.tensorPtr, /*mode=*/2,
-        quotient.tensorPtr, &ws_size, &executor
-    );
+    auto error =
+        aclnnDivModGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, /*mode=*/2, quotient.tensorPtr, &ws_size, &executor);
     ACLNN_CHECK(error, "aclnnDivModGetWorkspaceSize");
 
     AclWorkspace ws(ws_size);
@@ -555,4 +517,4 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     return {quotient, remainder};
 }
 
-}
+} // namespace asnumpy

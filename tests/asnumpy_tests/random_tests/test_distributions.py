@@ -39,7 +39,6 @@ import numpy
 import pytest
 
 import asnumpy as ap
-from asnumpy import testing
 
 
 # ========== 辅助函数 ==========
@@ -60,6 +59,7 @@ def _assert_shape_dtype(result, expected_shape, expected_dtype):
 # ==========================================================================
 # 1. 输出 shape / dtype 测试
 # ==========================================================================
+
 
 @pytest.mark.parametrize(
     "func, kwargs, expected_dtype",
@@ -105,6 +105,7 @@ def test_distribution_shape_dtype_vector_size(func, kwargs, expected_dtype):
 # 2. seed 可复现性测试
 # ==========================================================================
 
+
 @pytest.mark.xfail(
     reason="[FIXABLE] random seed API not exposed, backend seed handling inconsistent",
     strict=True,
@@ -122,6 +123,7 @@ def test_random_seed_reproducibility_placeholder():
 # 3. size=0 边界测试
 # ==========================================================================
 
+
 def test_uniform_empty_size():
     """空数组: uniform 的 size=0"""
     result = ap.random.uniform(0.0, 1.0, 0)
@@ -137,6 +139,7 @@ def test_normal_empty_size_2d():
 # ==========================================================================
 # 4. 非法参数测试
 # ==========================================================================
+
 
 @pytest.mark.parametrize("a", [0.0, -1.0])
 def test_pareto_invalid_a(a):
@@ -204,6 +207,7 @@ def test_lognormal_invalid_sigma(sigma):
 # ==========================================================================
 # 5. 特殊边界行为
 # ==========================================================================
+
 
 def test_binomial_zero_trials_returns_zeros():
     """特殊边界: binomial(n=0) 应返回全 0 数组"""

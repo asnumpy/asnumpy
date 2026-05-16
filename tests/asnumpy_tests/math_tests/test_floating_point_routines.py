@@ -21,8 +21,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -120,7 +120,10 @@ def test_float_routines_float16_xfail(xp, dtype):
     return xp.isinf(a)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] isnan/isinf on int dtypes may be unsupported or return wrong types", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] isnan/isinf on int dtypes may be unsupported or return wrong types",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32])
 def test_float_checks_int_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)

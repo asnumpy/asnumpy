@@ -45,6 +45,7 @@ dependencies = [
 dev = [
     "ruff>=0.15.0",
     "mypy>=1.19.0",
+    "pre-commit>=4.0.0",
 ]
 test = [
     "pytest>=9.0.0",
@@ -120,7 +121,12 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # function call in default argument (common in NumPy API)
+    "B017",   # pytest.raises(Exception) is intentional for NPU operator error diversity
+    "UP038",  # isinstance(X, Y) with | syntax not available on Python 3.10
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.ruff.lint.isort]
 

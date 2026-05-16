@@ -15,9 +15,9 @@
  ******************************************************************************/
 
 #include <asnumpy/cann/driver.hpp>
+#include <acl/acl.h>
 #include <algorithm>
 #include <pybind11/pybind11.h>
-#include <acl/acl.h>
 
 void bind_cann(pybind11::module_& cann) {
     cann.doc() = "cann module of asnumpy";

@@ -34,9 +34,8 @@
 
 import numpy
 import pytest
+
 import asnumpy
-from asnumpy import testing
-import pytest
 from asnumpy import testing
 
 
@@ -53,6 +52,7 @@ def _create_array(xp, data, dtype):
 # ==========================================================================
 # 1. dot 点积测试
 # ==========================================================================
+
 
 # ---------- 1.1 基础功能: 1D 向量点积 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
@@ -114,9 +114,9 @@ def test_dot_fp64_precision(xp, dtype):
 def test_dot_nonsquare(xp, dtype):
     """非方阵: (2,3) × (3,4) → (2,4)"""
     a = _create_array(xp, [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype)
-    b = _create_array(xp, [[1.0, 2.0, 3.0, 4.0],
-                            [5.0, 6.0, 7.0, 8.0],
-                            [9.0, 10.0, 11.0, 12.0]], dtype)
+    b = _create_array(
+        xp, [[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0]], dtype
+    )
     return xp.dot(a, b)
 
 
@@ -142,6 +142,7 @@ def test_dot_empty(xp, dtype):
 # ==========================================================================
 # 2. inner 内积测试
 # ==========================================================================
+
 
 # ---------- 2.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
@@ -201,6 +202,7 @@ def test_inner_empty(xp, dtype):
 # 3. outer 外积测试
 # ==========================================================================
 
+
 # ---------- 3.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
@@ -258,6 +260,7 @@ def test_outer_empty(xp, dtype):
 # ==========================================================================
 # 4. vdot 向量点积测试
 # ==========================================================================
+
 
 # ---------- 4.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
@@ -317,6 +320,7 @@ def test_vdot_empty(xp, dtype):
 # 5. matmul 矩阵乘法测试
 # ==========================================================================
 
+
 # ---------- 5.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
@@ -367,14 +371,18 @@ def test_matmul_nonsquare(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_matmul_broadcast(xp, dtype):
     """广播: 批量矩阵乘法 (2,2,3) × (2,3,2)"""
-    data_a = numpy.array([
-        [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
-        [[7.0, 8.0, 9.0], [10.0, 11.0, 12.0]],
-    ]).astype(dtype)
-    data_b = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
-    ]).astype(dtype)
+    data_a = numpy.array(
+        [
+            [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+            [[7.0, 8.0, 9.0], [10.0, 11.0, 12.0]],
+        ]
+    ).astype(dtype)
+    data_b = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
+        ]
+    ).astype(dtype)
     a = _create_array(xp, data_a, dtype)
     b = _create_array(xp, data_b, dtype)
     return xp.matmul(a, b)
@@ -393,6 +401,7 @@ def test_matmul_empty(xp, dtype):
 # ==========================================================================
 # 6. matrix_power 矩阵幂测试
 # ==========================================================================
+
 
 # ---------- 6.1 基础功能: 正幂 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])

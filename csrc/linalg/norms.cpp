@@ -14,19 +14,18 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/linalg/norms.hpp>
-#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <aclnnop/aclnn_norm.h>
-#include <aclnnop/aclnn_exp.h>
-#include <aclnnop/aclnn_slogdet.h>
-#include <aclnnop/aclnn_mul.h>
 #include <aclnnop/aclnn_cast.h>
+#include <aclnnop/aclnn_exp.h>
+#include <aclnnop/aclnn_mul.h>
+#include <aclnnop/aclnn_norm.h>
+#include <aclnnop/aclnn_slogdet.h>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -38,12 +37,12 @@ namespace {
 
 // Helper: cast NPUArray to target dtype
 NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) {
-    LOG_DEBUG("aclnnCast start: input_shape={}, aclDtype={}, targetDtype={}", detail::FormatShape(input.shape), AclDtypeName(input.aclDtype), AclDtypeName(targetDtype));
+    LOG_DEBUG("aclnnCast start: input_shape={}, aclDtype={}, targetDtype={}", detail::FormatShape(input.shape),
+              AclDtypeName(input.aclDtype), AclDtypeName(targetDtype));
     auto result = NPUArray(input.shape, targetDtype);
     uint64_t wsSize = 0;
     aclOpExecutor* exec = nullptr;
-    auto err = aclnnCastGetWorkspaceSize(input.tensorPtr, targetDtype, result.tensorPtr,
-        &wsSize, &exec);
+    auto err = aclnnCastGetWorkspaceSize(input.tensorPtr, targetDtype, result.tensorPtr, &wsSize, &exec);
     ACLNN_CHECK(err, "aclnnCastGetWorkspaceSize");
     AclWorkspace ws(wsSize);
     err = aclnnCast(ws.get(), wsSize, exec, nullptr);
@@ -57,15 +56,15 @@ NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) {
 } // anonymous namespace
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
-    LOG_DEBUG("aclnnNorm start: input_shape={}, aclDtype={}, ord={}, axis={}, keepdims={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), ord, detail::FormatShape(axis), keepdims);
+    LOG_DEBUG("aclnnNorm start: input_shape={}, aclDtype={}, ord={}, axis={}, keepdims={}",
+              detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), ord, detail::FormatShape(axis), keepdims);
     auto shape = a.shape;
     if (keepdims) {
-        for (int i=0; i<axis.size(); i++) {
+        for (int i = 0; i < axis.size(); i++) {
             shape[axis[i]] = 1;
         }
-    }
-    else {
-        for (int i=0; i<axis.size(); i++) {
+    } else {
+        for (int i = 0; i < axis.size(); i++) {
             shape.erase(shape.begin() + axis[i]);
         }
     }
@@ -74,8 +73,8 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
     auto result = NPUArray(shape, ACL_FLOAT);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar, axis_array, keepdims, result.tensorPtr, 
-        &workspaceSize, &executor);
+    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar, axis_array, keepdims, result.tensorPtr,
+                                           &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnNormGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnNorm(workspace.get(), workspaceSize, executor, nullptr);
@@ -87,7 +86,8 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
 }
 
 NPUArray Linalg_Det(const NPUArray& a) {
-    LOG_DEBUG("aclnnSlogdet start: input_shape={}, aclDtype={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnSlogdet start: input_shape={}, aclDtype={}", detail::FormatShape(a.shape),
+              AclDtypeName(a.aclDtype));
     std::vector<int64_t> shape = a.shape;
     shape.erase(shape.end() - 2, shape.end());
 
@@ -98,8 +98,8 @@ NPUArray Linalg_Det(const NPUArray& a) {
     auto logdet = NPUArray(shape, ACL_DOUBLE);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, sign.tensorPtr, logdet.tensorPtr,
-        &workspaceSize, &executor);
+    auto error =
+        aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, sign.tensorPtr, logdet.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSlogdetGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnSlogdet(workspace.get(), workspaceSize, executor, nullptr);
@@ -108,17 +108,14 @@ NPUArray Linalg_Det(const NPUArray& a) {
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
     auto absDet = EXECUTE_UNARY_OP(
-        logdet,
-        NPUArray::GetPyDtype(ACL_DOUBLE),
+        logdet, NPUArray::GetPyDtype(ACL_DOUBLE),
         [](aclTensor* in, aclTensor* out, uint64_t* ws, aclOpExecutor** exec) {
             return aclnnExpGetWorkspaceSize(in, out, ws, exec);
         },
         [](void* ws, uint64_t wsSize, aclOpExecutor* exec, void* stream) {
             return aclnnExp(ws, wsSize, exec, nullptr);
         },
-        "Linalg_Det_Exp",
-        "aclnnExp"
-    );
+        "Linalg_Det_Exp", "aclnnExp");
 
     auto detDouble = EXECUTE_BINARY_OP(
         sign, absDet, NPUArray::GetPyDtype(ACL_DOUBLE),
@@ -128,9 +125,7 @@ NPUArray Linalg_Det(const NPUArray& a) {
         [](void* ws, uint64_t wsSize, aclOpExecutor* exec, void* stream) {
             return aclnnMul(ws, wsSize, exec, nullptr);
         },
-        "Linalg_Det_Mul",
-        "aclnnMul"
-    );
+        "Linalg_Det_Mul", "aclnnMul");
 
     // Cast result back to input dtype
     LOG_INFO("aclnnSlogdet completed");
@@ -138,7 +133,8 @@ NPUArray Linalg_Det(const NPUArray& a) {
 }
 
 std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a) {
-    LOG_DEBUG("aclnnSlogdet start: input_shape={}, aclDtype={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype));
+    LOG_DEBUG("aclnnSlogdet start: input_shape={}, aclDtype={}", detail::FormatShape(a.shape),
+              AclDtypeName(a.aclDtype));
     auto shape = a.shape;
     shape.erase(shape.end() - 2, shape.end());
 
@@ -149,8 +145,8 @@ std::pair<NPUArray, NPUArray> Linalg_Slogdet(const NPUArray& a) {
     auto logout = NPUArray(shape, ACL_DOUBLE);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, signout.tensorPtr, logout.tensorPtr,
-        &workspaceSize, &executor);
+    auto error =
+        aclnnSlogdetGetWorkspaceSize(aDouble.tensorPtr, signout.tensorPtr, logout.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSlogdetGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnSlogdet(workspace.get(), workspaceSize, executor, nullptr);

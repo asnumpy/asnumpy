@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include "asnumpy/utils/acl_resource.hpp"
-#include "asnumpy/utils/npu_array.hpp"
-#include "asnumpy/utils/status_handler.hpp"
 #include <aclnn/aclnn_base.h>
 #include <fmt/format.h>
 #include <functional>
@@ -26,6 +23,9 @@
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
+#include "asnumpy/utils/acl_resource.hpp"
+#include "asnumpy/utils/npu_array.hpp"
+#include "asnumpy/utils/status_handler.hpp"
 
 namespace asnumpy {
 
@@ -35,7 +35,8 @@ namespace detail {
 inline std::string FormatShape(const std::vector<int64_t>& shape) {
     std::string result;
     for (size_t i = 0; i < shape.size(); ++i) {
-        if (i > 0) result += 'x';
+        if (i > 0)
+            result += 'x';
         result += std::to_string(shape[i]);
     }
     return result.empty() ? "()" : result;
@@ -62,21 +63,14 @@ inline std::string FormatShape(const std::vector<int64_t>& shape) {
  * @param src_func Source function name (auto-captured via EXECUTE_UNARY_OP macro)
  * @return NPUArray Output array
  */
-template<typename GetWorkspaceSizeFunc, typename ExecuteFunc>
-NPUArray ExecuteUnaryOp(
-    const NPUArray& input,
-    std::optional<py::dtype> dtype,
-    GetWorkspaceSizeFunc&& get_workspace_size_func,
-    ExecuteFunc&& execute_func,
-    const std::string& op_name,
-    const std::string& aclnn_api,
-    const char* src_file,
-    const char* src_func
-) {
-    spdlog::debug("[{}]({}) {} start: input_shape={}, tensorSize={}, aclDtype={}",
-                  detail::LogBasename(src_file), src_func, aclnn_api,
-                  detail::FormatShape(input.shape),
-                  input.tensorSize, AclDtypeName(input.aclDtype));
+template <typename GetWorkspaceSizeFunc, typename ExecuteFunc>
+NPUArray ExecuteUnaryOp(const NPUArray& input, std::optional<py::dtype> dtype,
+                        GetWorkspaceSizeFunc&& get_workspace_size_func, ExecuteFunc&& execute_func,
+                        const std::string& op_name, const std::string& aclnn_api, const char* src_file,
+                        const char* src_func) {
+    spdlog::debug("[{}]({}) {} start: input_shape={}, tensorSize={}, aclDtype={}", detail::LogBasename(src_file),
+                  src_func, aclnn_api, detail::FormatShape(input.shape), input.tensorSize,
+                  AclDtypeName(input.aclDtype));
 
     // Determine output type and shape
     auto out = NPUArray(input.shape, dtype.value());
@@ -84,25 +78,21 @@ NPUArray ExecuteUnaryOp(
     // Get workspace size and executor
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = std::invoke(get_workspace_size_func,
-                             input.tensorPtr, out.tensorPtr,
-                             &workspaceSize, &executor);
+    auto error = std::invoke(get_workspace_size_func, input.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     CheckAclnnStatus(error, src_file, src_func, aclnn_api + "GetWorkspaceSize");
 
     // RAII management of workspace
     AclWorkspace workspace(workspaceSize);
 
     // Execute operation
-    error = std::invoke(execute_func, workspace.get(), workspaceSize,
-                       executor, nullptr);
+    error = std::invoke(execute_func, workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, src_file, src_func, aclnn_api);
 
     // Synchronize device
     error = aclrtSynchronizeDevice();
     CheckAclRuntimeStatus(error, src_file, src_func, aclnn_api + ": aclrtSynchronizeDevice");
 
-    spdlog::info("[{}]({}) {} completed",
-                 detail::LogBasename(src_file), src_func, aclnn_api);
+    spdlog::info("[{}]({}) {} completed", detail::LogBasename(src_file), src_func, aclnn_api);
 
     // All resources automatically freed by RAII
     return out;
@@ -128,22 +118,13 @@ NPUArray ExecuteUnaryOp(
  * @param src_func Source function name (auto-captured via EXECUTE_BINARY_OP macro)
  * @return NPUArray Output array
  */
-template<typename GetWorkspaceSizeFunc, typename ExecuteFunc>
-NPUArray ExecuteBinaryOp(
-    const NPUArray& x1,
-    const NPUArray& x2,
-    std::optional<py::dtype> dtype,
-    GetWorkspaceSizeFunc&& get_workspace_size_func,
-    ExecuteFunc&& execute_func,
-    const std::string& op_name,
-    const std::string& aclnn_api,
-    const char* src_file,
-    const char* src_func
-) {
-    spdlog::debug("[{}]({}) {} start: x1_shape={}, x2_shape={}, aclDtype={}",
-                  detail::LogBasename(src_file), src_func, aclnn_api,
-                  detail::FormatShape(x1.shape),
-                  detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+template <typename GetWorkspaceSizeFunc, typename ExecuteFunc>
+NPUArray ExecuteBinaryOp(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype,
+                         GetWorkspaceSizeFunc&& get_workspace_size_func, ExecuteFunc&& execute_func,
+                         const std::string& op_name, const std::string& aclnn_api, const char* src_file,
+                         const char* src_func) {
+    spdlog::debug("[{}]({}) {} start: x1_shape={}, x2_shape={}, aclDtype={}", detail::LogBasename(src_file), src_func,
+                  aclnn_api, detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
 
     // Determine output shape and type
     auto out_shape = GetBroadcastShape(x1, x2);
@@ -152,25 +133,22 @@ NPUArray ExecuteBinaryOp(
     // Get workspace size and executor
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = std::invoke(get_workspace_size_func,
-                             x1.tensorPtr, x2.tensorPtr, out.tensorPtr,
-                             &workspaceSize, &executor);
+    auto error =
+        std::invoke(get_workspace_size_func, x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     CheckAclnnStatus(error, src_file, src_func, aclnn_api + "GetWorkspaceSize");
 
     // RAII management of workspace
     AclWorkspace workspace(workspaceSize);
 
     // Execute operation
-    error = std::invoke(execute_func, workspace.get(), workspaceSize,
-                       executor, nullptr);
+    error = std::invoke(execute_func, workspace.get(), workspaceSize, executor, nullptr);
     CheckAclnnStatus(error, src_file, src_func, aclnn_api);
 
     // Synchronize device
     error = aclrtSynchronizeDevice();
     CheckAclRuntimeStatus(error, src_file, src_func, aclnn_api + ": aclrtSynchronizeDevice");
 
-    spdlog::info("[{}]({}) {} completed",
-                 detail::LogBasename(src_file), src_func, aclnn_api);
+    spdlog::info("[{}]({}) {} completed", detail::LogBasename(src_file), src_func, aclnn_api);
 
     // All resources automatically freed by RAII
     return out;
@@ -179,8 +157,8 @@ NPUArray ExecuteBinaryOp(
 } // namespace asnumpy
 
 // Wrapper macros - automatically capture source location at call site
-#define EXECUTE_UNARY_OP(input, dtype, get_ws, exec, name, aclnn_api) \
+#define EXECUTE_UNARY_OP(input, dtype, get_ws, exec, name, aclnn_api)                                                  \
     ::asnumpy::ExecuteUnaryOp(input, dtype, get_ws, exec, name, aclnn_api, __FILE__, __func__)
 
-#define EXECUTE_BINARY_OP(x1, x2, dtype, get_ws, exec, name, aclnn_api) \
+#define EXECUTE_BINARY_OP(x1, x2, dtype, get_ws, exec, name, aclnn_api)                                                \
     ::asnumpy::ExecuteBinaryOp(x1, x2, dtype, get_ws, exec, name, aclnn_api, __FILE__, __func__)

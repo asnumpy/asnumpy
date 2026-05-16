@@ -24,7 +24,7 @@ namespace dtypes {
 
 // 自定义 bfloat16 实现（移除 Eigen 依赖）
 class bfloat16 {
-private:
+  private:
     uint16_t rep_;
     struct ConstructFromRepTag {};
     constexpr bfloat16(uint16_t rep, ConstructFromRepTag) : rep_(rep) {}
@@ -42,7 +42,7 @@ private:
         return bit_cast<float>(u);
     }
 
-public:
+  public:
     static constexpr int kBits = 16;
     static constexpr int kExponentBias = 127;
     static constexpr int kMantissaBits = 7;
@@ -54,9 +54,7 @@ public:
 
     constexpr uint16_t rep() const { return rep_; }
 
-    static constexpr bfloat16 FromRep(uint16_t rep) {
-        return bfloat16(rep, ConstructFromRepTag{});
-    }
+    static constexpr bfloat16 FromRep(uint16_t rep) { return bfloat16(rep, ConstructFromRepTag{}); }
 
     explicit operator float() const { return decode_to_float(rep_); }
     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
@@ -84,7 +82,8 @@ public:
     bool operator!=(const bfloat16& other) const { return !(*this == other); }
     bool operator<(const bfloat16& other) const {
         float a = static_cast<float>(*this), b = static_cast<float>(other);
-        if (std::isnan(a) || std::isnan(b)) return false;
+        if (std::isnan(a) || std::isnan(b))
+            return false;
         return a < b;
     }
     bool operator<=(const bfloat16& other) const { return *this < other || *this == other; }
@@ -95,6 +94,5 @@ public:
     static constexpr aclDataType getACLenum() { return ACL_BF16; }
 };
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

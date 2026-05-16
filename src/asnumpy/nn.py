@@ -15,8 +15,8 @@
 # *****************************************************************************
 
 from ._core.nn import softmax as _softmax
-from .utils import ndarray, _convert_dtype
 from ._types import ArrayLike, DTypeLike
+from .utils import _convert_dtype, ndarray
 
 
 def softmax(x: ArrayLike, axis: int = -1, dtype: DTypeLike = None) -> ndarray:

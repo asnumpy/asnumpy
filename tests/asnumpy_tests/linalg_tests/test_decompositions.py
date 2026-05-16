@@ -29,6 +29,7 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
 
 
@@ -90,6 +91,7 @@ def _assert_qr_factorization(data, mode="reduced", rtol=1e-5, atol=1e-5):
 # 1. QR 分解测试 (QR Decomposition)
 # ==========================================================================
 
+
 # ---------- 1.1 基础功能: reduced 模式 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_reduced_square(dtype):
@@ -131,18 +133,14 @@ def test_qr_r_mode(xp, dtype):
 @testing.for_dtypes([numpy.float32])
 def test_qr_fp32_precision(dtype):
     """FP32 精度: QR 分解结果应与 NumPy 一致"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0],
-                        [7.0, 8.0, 9.1]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.1]], dtype=dtype)
     _assert_qr_allclose(data)
 
 
 @testing.for_dtypes([numpy.float64])
 def test_qr_fp64_precision(dtype):
     """FP64 精度: QR 分解结果应与 NumPy 一致 (高精度)"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0],
-                        [7.0, 8.0, 9.1]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.1]], dtype=dtype)
     _assert_qr_allclose(data, rtol=1e-10, atol=1e-10)
 
 
@@ -150,34 +148,28 @@ def test_qr_fp64_precision(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_tall_matrix(dtype):
     """非方阵: 高矩阵 (m > n)"""
-    data = numpy.array([[1.0, 2.0],
-                        [3.0, 4.0],
-                        [5.0, 6.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], dtype=dtype)
     _assert_qr_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_wide_matrix(dtype):
     """非方阵: 宽矩阵 (m < n)"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=dtype)
     _assert_qr_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_tall_complete(dtype):
     """非方阵: 高矩阵 complete 模式"""
-    data = numpy.array([[1.0, 2.0],
-                        [3.0, 4.0],
-                        [5.0, 6.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], dtype=dtype)
     _assert_qr_allclose(data, mode="complete")
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_wide_complete(dtype):
     """非方阵: 宽矩阵 complete 模式"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=dtype)
     _assert_qr_allclose(data, mode="complete")
 
 
@@ -185,27 +177,21 @@ def test_qr_wide_complete(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_singular_matrix(dtype):
     """奇异矩阵: 秩亏矩阵的 QR 分解"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 8.0, 12.0],
-                        [7.0, 14.0, 21.0]], dtype=dtype)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 8.0, 12.0], [7.0, 14.0, 21.0]], dtype=dtype)
     _assert_qr_factorization(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_zero_matrix(dtype):
     """奇异矩阵: 全零矩阵的 QR 分解"""
-    data = numpy.array([[0.0, 0.0],
-                        [0.0, 0.0],
-                        [0.0, 0.0]], dtype=dtype)
+    data = numpy.array([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], dtype=dtype)
     _assert_qr_factorization(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_rank_deficient(dtype):
     """奇异矩阵: 部分线性相关行"""
-    data = numpy.array([[1.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0],
-                        [0.0, 0.0, 1.0]], dtype=dtype)
+    data = numpy.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], dtype=dtype)
     _assert_qr_factorization(data)
 
 
@@ -213,25 +199,31 @@ def test_qr_rank_deficient(dtype):
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_batch_matrices(dtype):
     """广播: 批量矩阵 (batch QR)"""
-    data = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0]],
-        [[5.0, 6.0], [7.0, 8.0]],
-    ]).astype(dtype)
+    data = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0]],
+            [[5.0, 6.0], [7.0, 8.0]],
+        ]
+    ).astype(dtype)
     _assert_qr_allclose(data)
 
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_qr_batch_tall(dtype):
     """广播: 批量高矩阵"""
-    data = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
-    ]).astype(dtype)
+    data = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
+        ]
+    ).astype(dtype)
     _assert_qr_allclose(data)
 
 
 # ---------- 1.8 空矩阵输入 ----------
-@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(
+    reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True
+)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_qr_empty_matrix(xp, dtype):

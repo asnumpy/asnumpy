@@ -14,10 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/random/distributions.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <asnumpy/random/distributions.hpp>
 
 using namespace asnumpy;
 

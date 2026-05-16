@@ -24,8 +24,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -72,7 +72,9 @@ def test_sinc_float16_mapping_xfail(xp, dtype):
     return xp.sinc(a)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] aclnnSinc does not support INT32 output, auto-cast needed", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnSinc does not support INT32 output, auto-cast needed", strict=True
+)
 @testing.for_dtypes([numpy.int32])
 def test_sinc_int_output_xfail(xp, dtype):
     """

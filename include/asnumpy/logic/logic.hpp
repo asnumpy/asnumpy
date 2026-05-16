@@ -16,15 +16,15 @@
 
 #pragma once
 
+#include <utility>
 #include "../utils/npu_array.hpp"
 #include "../utils/npu_scalar.hpp"
-#include <utility>
 
-namespace asnumpy{
+namespace asnumpy {
 
 /**
  * @brief Reduce array by logical AND operation over all elements.
- * 
+ *
  * Equivalent to numpy.all(x), returns True if all elements are True.
  *
  * @param x NPUArray, input array (boolean type: ACL_BOOL)
@@ -34,7 +34,7 @@ NPUArray All(const NPUArray& x);
 
 /**
  * @brief Reduce array by logical AND operation over specified dimensions.
- * 
+ *
  * Equivalent to numpy.all(x, axis=dim, keepdims=keepdims).
  *
  * @param x NPUArray, input array (boolean type: ACL_BOOL)
@@ -46,7 +46,7 @@ NPUArray All(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims);
 
 /**
  * @brief Reduce array by logical OR operation over all elements.
- * 
+ *
  * Equivalent to numpy.any(x), returns True if any element is True.
  *
  * @param x NPUArray, input array (boolean type: ACL_BOOL)
@@ -56,7 +56,7 @@ NPUArray Any(const NPUArray& x);
 
 /**
  * @brief Reduce array by logical OR operation over specified dimensions.
- * 
+ *
  * Equivalent to numpy.any(x, axis=dim, keepdims=keepdims).
  *
  * @param x NPUArray, input array (boolean type: ACL_BOOL)
@@ -77,10 +77,10 @@ NPUArray LogicalXor(const NPUArray& x, const NPUArray& y);
 
 /**
  * @brief Perform element-wise greater-than comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 > x2. Uses aclnnGtTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -91,10 +91,10 @@ NPUArray greater(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype
 
 /**
  * @brief Perform element-wise greater-than comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 with the scalar value and returns a boolean array
  * indicating where x1 > scalar. Uses aclnnGtScalar internally.
- * 
+ *
  * @param x1 Input array.
  * @param scalar Scalar value to compare against.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -105,10 +105,10 @@ NPUArray greater(const NPUArray& x1, const py::object& scalar, std::optional<py:
 
 /**
  * @brief Perform element-wise greater-than-or-equal comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 >= x2. Uses aclnnGeTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -119,10 +119,10 @@ NPUArray greater_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py:
 
 /**
  * @brief Perform element-wise greater-than-or-equal comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 with the scalar value and returns a boolean array
  * indicating where x1 >= scalar. Uses aclnnGeScalar internally.
- * 
+ *
  * @param x1 Input array.
  * @param scalar Scalar value to compare against.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -133,10 +133,10 @@ NPUArray greater_equal(const NPUArray& x1, const py::object& scalar, std::option
 
 /**
  * @brief Perform element-wise less-than comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 < x2. Uses aclnnLtTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -147,10 +147,10 @@ NPUArray less(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
 
 /**
  * @brief Perform element-wise less-than comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 with the scalar value and returns a boolean array
  * indicating where x1 < scalar. Uses aclnnLtScalar internally.
- * 
+ *
  * @param x1 Input array.
  * @param scalar Scalar value to compare against.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -161,10 +161,10 @@ NPUArray less(const NPUArray& x1, const py::object& scalar, std::optional<py::dt
 
 /**
  * @brief Perform element-wise less-than-or-equal comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 <= x2. Uses aclnnLeTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -175,10 +175,10 @@ NPUArray less_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
 
 /**
  * @brief Perform element-wise less-than-or-equal comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 with the scalar value and returns a boolean array
  * indicating where x1 <= scalar. Uses aclnnLeScalar internally.
- * 
+ *
  * @param x1 Input array.
  * @param scalar Scalar value to compare against.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -189,10 +189,10 @@ NPUArray less_equal(const NPUArray& x1, const py::object& scalar, std::optional<
 
 /**
  * @brief Perform element-wise equality comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 == x2. Uses aclnnEqTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -203,10 +203,10 @@ NPUArray equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> 
 
 /**
  * @brief Perform element-wise equality comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 == x2. Uses aclnnEqScalar internally.
- * 
+ *
  * @param x1 First input array.
  * @param scalar Scalar value to compare with.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -217,10 +217,10 @@ NPUArray equal(const NPUArray& x1, const py::object& scalar, std::optional<py::d
 
 /**
  * @brief Perform element-wise not-equal comparison between two arrays.
- * 
+ *
  * Compares each element of x1 and x2 and returns a boolean array
  * indicating where x1 != x2. Uses aclnnNeTensor internally.
- * 
+ *
  * @param x1 First input array.
  * @param x2 Second input array.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -231,10 +231,10 @@ NPUArray not_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
 
 /**
  * @brief Perform element-wise not-equal comparison between an array and a scalar.
- * 
+ *
  * Compares each element of x1 with a scalar value and returns a boolean array
  * indicating where x1 != scalar. Uses aclnnNeScalar internally.
- * 
+ *
  * @param x1 Input array.
  * @param scalar Scalar value to compare with.
  * @param dtype (optional) Target numpy dtype for the output array (default: np.bool_).
@@ -243,4 +243,4 @@ NPUArray not_equal(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
  */
 NPUArray not_equal(const NPUArray& x1, const py::object& scalar, std::optional<py::dtype> dtype = std::nullopt);
 
-}
+} // namespace asnumpy

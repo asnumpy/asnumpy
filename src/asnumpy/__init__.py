@@ -15,14 +15,25 @@
 # *****************************************************************************
 
 import importlib
+import os
 import sys
 from typing import TYPE_CHECKING
-import os
+
 import numpy as np
 from loguru import logger
+
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:
+    from . import linalg, random
+    from ._types import (
+        ArrayLike,
+        AxisLike,
+        AxisOptional,
+        DTypeLike,
+        ScalarLike,
+        ShapeLike,
+    )
     from .array import (
         empty,
         empty_like,
@@ -36,11 +47,8 @@ if TYPE_CHECKING:
         zeros,
         zeros_like,
     )
-
-    from . import linalg
-
-    from .linalg.direct import dot, einsum, inner, matmul, outer, vdot, _direct_all_
-
+    from .io import load, save, savez, savez_compressed
+    from .linalg.direct import _direct_all_, dot, einsum, inner, matmul, outer, vdot
     from .logic import (
         all,
         any,
@@ -59,13 +67,11 @@ if TYPE_CHECKING:
         logical_xor,
         not_equal,
     )
-
     from .math import (
         absolute,
         add,
         amax,
         amin,
-        around,
         arccos,
         arccosh,
         arcsin,
@@ -73,6 +79,7 @@ if TYPE_CHECKING:
         arctan,
         arctan2,
         arctanh,
+        around,
         ceil,
         clip,
         copysign,
@@ -90,22 +97,22 @@ if TYPE_CHECKING:
         expm1,
         fabs,
         fix,
+        float_power,
         floor,
         floor_divide,
         fmax,
         fmin,
         fmod,
-        float_power,
-        gelu,
         gcd,
+        gelu,
         heaviside,
         hypot,
         lcm,
         ldexp,
         log,
-        log10,
         log1p,
         log2,
+        log10,
         logaddexp,
         logaddexp2,
         max,
@@ -122,8 +129,8 @@ if TYPE_CHECKING:
         nanprod,
         nansum,
         negative,
-        power,
         positive,
+        power,
         prod,
         rad2deg,
         radians,
@@ -147,70 +154,155 @@ if TYPE_CHECKING:
         true_divide,
         trunc,
     )
-
-    from . import random
-
-    from .sorting import sort
-
-    from .statistics import mean
-    
-    from .utils import broadcast_shape, ndarray
-
-    from ._types import (
-        ArrayLike,
-        DTypeLike,
-        ShapeLike,
-        AxisLike,
-        AxisOptional,
-        ScalarLike,
-    )
     from .nn import softmax
-
-    from .io import save, savez, savez_compressed, load
+    from .sorting import sort
+    from .statistics import mean
+    from .utils import broadcast_shape, ndarray
 
 
 # Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
 _NUMPY_DTYPE_NAMES = {
-    "float16", "float32", "float64",
-    "int8", "int16", "int32", "int64",
-    "uint8", "uint16", "uint32", "uint64",
-    "complex64", "complex128",
+    "float16",
+    "float32",
+    "float64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "complex64",
+    "complex128",
     "bool_",
 }
 
 _LAZY_MAPPING = {
     # .array
-    "empty": ".array", "empty_like": ".array", "eye": ".array", "full": ".array",
-    "full_like": ".array", "identity": ".array", "linspace": ".array", "ones": ".array",
-    "ones_like": ".array", "zeros": ".array", "zeros_like": ".array",
+    "empty": ".array",
+    "empty_like": ".array",
+    "eye": ".array",
+    "full": ".array",
+    "full_like": ".array",
+    "identity": ".array",
+    "linspace": ".array",
+    "ones": ".array",
+    "ones_like": ".array",
+    "zeros": ".array",
+    "zeros_like": ".array",
     # .linalg
     "linalg": ".linalg",
     # .linalg.direct
-    "dot": ".linalg.direct", "einsum": ".linalg.direct", "inner": ".linalg.direct",
-    "matmul": ".linalg.direct", "outer": ".linalg.direct", "vdot": ".linalg.direct",
+    "dot": ".linalg.direct",
+    "einsum": ".linalg.direct",
+    "inner": ".linalg.direct",
+    "matmul": ".linalg.direct",
+    "outer": ".linalg.direct",
+    "vdot": ".linalg.direct",
     # .logic
-    "all": ".logic", "any": ".logic", "equal": ".logic", "greater": ".logic",
-    "greater_equal": ".logic", "isfinite": ".logic", "isinf": ".logic", "isneginf": ".logic",
-    "isposinf": ".logic", "less": ".logic", "less_equal": ".logic", "logical_and": ".logic",
-    "logical_not": ".logic", "logical_or": ".logic", "logical_xor": ".logic", "not_equal": ".logic",
+    "all": ".logic",
+    "any": ".logic",
+    "equal": ".logic",
+    "greater": ".logic",
+    "greater_equal": ".logic",
+    "isfinite": ".logic",
+    "isinf": ".logic",
+    "isneginf": ".logic",
+    "isposinf": ".logic",
+    "less": ".logic",
+    "less_equal": ".logic",
+    "logical_and": ".logic",
+    "logical_not": ".logic",
+    "logical_or": ".logic",
+    "logical_xor": ".logic",
+    "not_equal": ".logic",
     # .math
-    "absolute": ".math", "add": ".math", "amax": ".math", "amin": ".math", "around": ".math",
-    "arccos": ".math", "arccosh": ".math", "arcsin": ".math", "arcsinh": ".math",
-    "arctan": ".math", "arctan2": ".math", "arctanh": ".math", "ceil": ".math", "clip": ".math",
-    "copysign": ".math", "cos": ".math", "cosh": ".math", "cross": ".math", "cumprod": ".math",
-    "cumsum": ".math", "deg2rad": ".math", "degrees": ".math", "divide": ".math", "divmod": ".math",
-    "exp": ".math", "exp2": ".math", "expm1": ".math", "fabs": ".math", "fix": ".math", "floor": ".math",
-    "floor_divide": ".math", "fmax": ".math", "fmin": ".math", "fmod": ".math", "float_power": ".math",
-    "gelu": ".math", "gcd": ".math", "heaviside": ".math", "hypot": ".math", "lcm": ".math",
-    "ldexp": ".math", "log": ".math", "log10": ".math", "log1p": ".math", "log2": ".math",
-    "logaddexp": ".math", "logaddexp2": ".math", "max": ".math", "maximum": ".math", "min": ".math",
-    "minimum": ".math", "mod": ".math", "modf": ".math", "multiply": ".math", "nan_to_num": ".math",
-    "nancumprod": ".math", "nancumsum": ".math", "nanmax": ".math", "nanprod": ".math", "nansum": ".math",
-    "negative": ".math", "power": ".math", "positive": ".math", "prod": ".math", "rad2deg": ".math",
-    "radians": ".math", "real": ".math", "reciprocal": ".math", "relu": ".math", "remainder": ".math",
-    "rint": ".math", "round_": ".math", "sign": ".math", "signbit": ".math", "sin": ".math",
-    "sinc": ".math", "sinh": ".math", "sqrt": ".math", "square": ".math", "subtract": ".math",
-    "sum": ".math", "tan": ".math", "tanh": ".math", "true_divide": ".math", "trunc": ".math",
+    "absolute": ".math",
+    "add": ".math",
+    "amax": ".math",
+    "amin": ".math",
+    "around": ".math",
+    "arccos": ".math",
+    "arccosh": ".math",
+    "arcsin": ".math",
+    "arcsinh": ".math",
+    "arctan": ".math",
+    "arctan2": ".math",
+    "arctanh": ".math",
+    "ceil": ".math",
+    "clip": ".math",
+    "copysign": ".math",
+    "cos": ".math",
+    "cosh": ".math",
+    "cross": ".math",
+    "cumprod": ".math",
+    "cumsum": ".math",
+    "deg2rad": ".math",
+    "degrees": ".math",
+    "divide": ".math",
+    "divmod": ".math",
+    "exp": ".math",
+    "exp2": ".math",
+    "expm1": ".math",
+    "fabs": ".math",
+    "fix": ".math",
+    "floor": ".math",
+    "floor_divide": ".math",
+    "fmax": ".math",
+    "fmin": ".math",
+    "fmod": ".math",
+    "float_power": ".math",
+    "gelu": ".math",
+    "gcd": ".math",
+    "heaviside": ".math",
+    "hypot": ".math",
+    "lcm": ".math",
+    "ldexp": ".math",
+    "log": ".math",
+    "log10": ".math",
+    "log1p": ".math",
+    "log2": ".math",
+    "logaddexp": ".math",
+    "logaddexp2": ".math",
+    "max": ".math",
+    "maximum": ".math",
+    "min": ".math",
+    "minimum": ".math",
+    "mod": ".math",
+    "modf": ".math",
+    "multiply": ".math",
+    "nan_to_num": ".math",
+    "nancumprod": ".math",
+    "nancumsum": ".math",
+    "nanmax": ".math",
+    "nanprod": ".math",
+    "nansum": ".math",
+    "negative": ".math",
+    "power": ".math",
+    "positive": ".math",
+    "prod": ".math",
+    "rad2deg": ".math",
+    "radians": ".math",
+    "real": ".math",
+    "reciprocal": ".math",
+    "relu": ".math",
+    "remainder": ".math",
+    "rint": ".math",
+    "round_": ".math",
+    "sign": ".math",
+    "signbit": ".math",
+    "sin": ".math",
+    "sinc": ".math",
+    "sinh": ".math",
+    "sqrt": ".math",
+    "square": ".math",
+    "subtract": ".math",
+    "sum": ".math",
+    "tan": ".math",
+    "tanh": ".math",
+    "true_divide": ".math",
+    "trunc": ".math",
     # .random
     "random": ".random",
     # .sorting
@@ -220,17 +312,29 @@ _LAZY_MAPPING = {
     # .nn
     "softmax": ".nn",
     # .io
-    "save": ".io", "savez": ".io", "savez_compressed": ".io", "load": ".io",
+    "save": ".io",
+    "savez": ".io",
+    "savez_compressed": ".io",
+    "load": ".io",
     # ._types
-    "ArrayLike": "._types", "DTypeLike": "._types", "ShapeLike": "._types",
-    "AxisLike": "._types", "AxisOptional": "._types", "ScalarLike": "._types",
+    "ArrayLike": "._types",
+    "DTypeLike": "._types",
+    "ShapeLike": "._types",
+    "AxisLike": "._types",
+    "AxisOptional": "._types",
+    "ScalarLike": "._types",
     # .utils
-    "broadcast_shape": ".utils", "ndarray": ".utils",
+    "broadcast_shape": ".utils",
+    "ndarray": ".utils",
 }
 
 
 _EAGER_EXPORTS = [
-    "finalize", "init", "reset_device", "reset_device_force", "set_device",
+    "finalize",
+    "init",
+    "reset_device",
+    "reset_device_force",
+    "set_device",
 ]
 
 __all__ = _EAGER_EXPORTS + list(_LAZY_MAPPING.keys())
@@ -239,6 +343,7 @@ __all__ = _EAGER_EXPORTS + list(_LAZY_MAPPING.keys())
 # Get version from package metadata
 try:
     from importlib.metadata import version
+
     __version__ = version("asnumpy")
 except Exception:
     __version__ = "0.2.0"
@@ -263,7 +368,6 @@ def __dir__():
     return __all__ + ["__version__"] + list(_NUMPY_DTYPE_NAMES)
 
 
-
 logger.disable("asnumpy")
 
 
@@ -275,13 +379,16 @@ def enable_logging(level="INFO", log_dir=None):
     """
     # Enable logging for the current module
     logger.enable("asnumpy")
-    logger.remove() # Remove Loguru's default handler
+    logger.remove()  # Remove Loguru's default handler
 
     # Add safe console output (use sys.__stderr__ to avoid closed stream errors during atexit)
-    logger.add(sys.__stderr__, level=level,
-               format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
-                      "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-               catch=True)
+    logger.add(
+        sys.__stderr__,
+        level=level,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
+        "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        catch=True,
+    )
 
     # Write to file only if log_dir is provided by the user
     if log_dir:

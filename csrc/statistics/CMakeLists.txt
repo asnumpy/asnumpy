@@ -18,4 +18,3 @@ add_library(statistics OBJECT averages_and_variances.cpp)
 
 target_include_directories(statistics PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(statistics PUBLIC fmt::fmt ascend_sdk pybind11::pybind11)
-

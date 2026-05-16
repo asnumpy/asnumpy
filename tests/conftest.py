@@ -23,6 +23,7 @@
 """
 
 import logging
+
 import numpy
 import pytest
 
@@ -31,14 +32,14 @@ logger = logging.getLogger(__name__)
 
 def pytest_configure(config):
     """pytest配置钩子函数
-    
+
     在测试开始前进行必要的配置。
     """
     # 设置NumPy的弱类型提升规则（如果NumPy版本支持）
     try:
         # NumPy 1.20+ 支持弱类型提升
-        if hasattr(numpy, '_set_promotion_state'):
-            numpy._set_promotion_state('weak')
+        if hasattr(numpy, "_set_promotion_state"):
+            numpy._set_promotion_state("weak")
     except Exception as e:
         # 忽略设置失败，不影响测试运行
         logger.debug("Failed to set numpy promotion state: %s", e)
@@ -46,29 +47,20 @@ def pytest_configure(config):
 
 def pytest_addoption(parser):
     """添加pytest命令行选项
-    
+
     Args:
         parser: pytest的命令行参数解析器
     """
+    parser.addoption("--multi-npu", action="store_true", default=False, help="运行多NPU测试")
     parser.addoption(
-        "--multi-npu",
-        action="store_true",
-        default=False,
-        help="运行多NPU测试"
-    )
-    parser.addoption(
-        "--npu-id",
-        action="store",
-        default=0,
-        type=int,
-        help="指定使用的NPU设备ID（默认: 0）"
+        "--npu-id", action="store", default=0, type=int, help="指定使用的NPU设备ID（默认: 0）"
     )
 
 
 @pytest.fixture(scope="session")
 def multi_npu(request):
     """多NPU测试fixture
-    
+
     如果命令行指定了--multi-npu选项，返回True，否则返回False。
     """
     return request.config.getoption("--multi-npu")
@@ -77,7 +69,7 @@ def multi_npu(request):
 @pytest.fixture(scope="session")
 def npu_id(request):
     """NPU设备ID fixture
-    
+
     返回命令行指定的NPU设备ID，默认为0。
     """
     return request.config.getoption("--npu-id")
@@ -85,4 +77,3 @@ def npu_id(request):
 
 # 启用pytester插件（用于测试测试工具本身）
 pytest_plugins = ["pytester"]
-

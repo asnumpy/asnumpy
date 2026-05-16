@@ -14,53 +14,50 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/random/distributions.hpp>
-#include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <aclnnop/aclnn_normal_out.h>
-#include <aclnnop/aclnn_normal.h>
-#include <aclnnop/aclnn_uniform.h>
-#include <aclnnop/aclnn_rsub.h>
-#include <aclnnop/aclnn_pow.h>
-#include <aclnnop/aclnn_reciprocal.h>
+#include <aclnnop/aclnn_abs.h>
+#include <aclnnop/aclnn_add.h>
+#include <aclnnop/aclnn_bernoulli.h>
+#include <aclnnop/aclnn_cast.h>
+#include <aclnnop/aclnn_div.h>
+#include <aclnnop/aclnn_exp.h>
+#include <aclnnop/aclnn_floor.h>
+#include <aclnnop/aclnn_foreach_add_scalar.h>
+#include <aclnnop/aclnn_foreach_div_scalar.h>
+#include <aclnnop/aclnn_foreach_mul_scalar.h>
+#include <aclnnop/aclnn_foreach_sub_scalar.h>
 #include <aclnnop/aclnn_log.h>
 #include <aclnnop/aclnn_mul.h>
+#include <aclnnop/aclnn_multinomial.h>
+#include <aclnnop/aclnn_normal.h>
+#include <aclnnop/aclnn_normal_out.h>
+#include <aclnnop/aclnn_pow.h>
+#include <aclnnop/aclnn_reciprocal.h>
+#include <aclnnop/aclnn_reduce_sum.h>
+#include <aclnnop/aclnn_rsub.h>
+#include <aclnnop/aclnn_sign.h>
 #include <aclnnop/aclnn_sqrt.h>
 #include <aclnnop/aclnn_sub.h>
 #include <aclnnop/aclnn_tan.h>
-#include <aclnnop/aclnn_bernoulli.h>
-#include <aclnnop/aclnn_reduce_sum.h>
-#include <aclnnop/aclnn_floor.h>
-#include <aclnnop/aclnn_cast.h>
-#include <aclnnop/aclnn_foreach_sub_scalar.h>
-#include <aclnnop/aclnn_foreach_mul_scalar.h>
-#include <aclnnop/aclnn_foreach_mul_scalar.h>
-#include <aclnnop/aclnn_foreach_div_scalar.h>
-#include <aclnnop/aclnn_abs.h>
-#include <aclnnop/aclnn_foreach_add_scalar.h>
-#include <aclnnop/aclnn_foreach_mul_scalar.h>
-#include <aclnnop/aclnn_exp.h> 
-#include <aclnnop/aclnn_sign.h>
-#include <aclnnop/aclnn_multinomial.h>
-#include <aclnnop/aclnn_div.h>
-#include <aclnnop/aclnn_add.h>
+#include <aclnnop/aclnn_uniform.h>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <pybind11/attr.h>
-#include <stdexcept>
 #include <random>
+#include <stdexcept>
 
 namespace asnumpy {
 
 NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
-    if (a <= 0) throw std::invalid_argument(fmt::format(
-        "[distributions.cpp]({}) invalid parameter: a={} <= 0", __func__, a));
+    if (a <= 0)
+        throw std::invalid_argument(fmt::format("[distributions.cpp]({}) invalid parameter: a={} <= 0", __func__, a));
 
     auto uni_temp = NPUArray(size, ACL_FLOAT);
     std::random_device rd;
@@ -71,8 +68,8 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
     LOG_DEBUG("aclnnInplaceUniform start: shape={}", detail::FormatShape(size));
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset,
-        &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize,
+                                                     &uni_executor);
     ACLNN_CHECK(error, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uni_workspace(uni_workspaceSize);
     error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
@@ -89,8 +86,8 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
     LOG_DEBUG("aclnnRsubs start: shape={}", detail::FormatShape(size));
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, rsubs_temp.tensorPtr,
-        &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, rsubs_temp.tensorPtr, &rsubs_workspaceSize,
+                                       &rsubs_executor);
     ACLNN_CHECK(error, "aclnnRsubsGetWorkspaceSize");
     AclWorkspace rsubs_workspace(rsubs_workspaceSize);
     error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
@@ -105,8 +102,8 @@ NPUArray Generator_Pareto(float a, const std::vector<int64_t>& size) {
     uint64_t exp_workspaceSize = 0;
     aclOpExecutor* exp_executor;
     LOG_DEBUG("aclnnPowTensorScalar start: shape={}, a={}", detail::FormatShape(size), a);
-    error = aclnnPowTensorScalarGetWorkspaceSize(rsubs_temp.tensorPtr, exponent, result.tensorPtr,
-        &exp_workspaceSize, &exp_executor);
+    error = aclnnPowTensorScalarGetWorkspaceSize(rsubs_temp.tensorPtr, exponent, result.tensorPtr, &exp_workspaceSize,
+                                                 &exp_executor);
     ACLNN_CHECK(error, "aclnnPowTensorScalarGetWorkspaceSize");
     AclWorkspace exp_workspace(exp_workspaceSize);
     error = aclnnPowTensorScalar(exp_workspace.get(), exp_workspaceSize, exp_executor, nullptr);
@@ -151,8 +148,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
     LOG_DEBUG("aclnnInplaceUniform start: shape={}", detail::FormatShape(size));
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset,
-        &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize,
+                                                     &uni_executor);
     ACLNN_CHECK(error, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uni_workspace(uni_workspaceSize);
     error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
@@ -169,8 +166,8 @@ NPUArray Generator_Rayleigh(float scale, const std::vector<int64_t>& size) {
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
     LOG_DEBUG("aclnnRsubs start: shape={}", detail::FormatShape(size));
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, result.tensorPtr,
-        &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other, alpha, result.tensorPtr, &rsubs_workspaceSize,
+                                       &rsubs_executor);
     ACLNN_CHECK(error, "aclnnRsubsGetWorkspaceSize");
     AclWorkspace rsubs_workspace(rsubs_workspaceSize);
     error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
@@ -242,8 +239,8 @@ NPUArray Generator_Normal(float loc, float scale, const std::vector<int64_t>& si
     int64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr,
-        &workspaceSize, &executor);
+    auto error =
+        aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnNormalFloatFloatGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnNormalFloatFloat(workspace.get(), workspaceSize, executor, nullptr);
@@ -264,8 +261,8 @@ NPUArray Generator_Uniform(double low, double high, const std::vector<int64_t>& 
     uint64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, low, high, seed, offset,
-        &workspaceSize, &executor);
+    auto error =
+        aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, low, high, seed, offset, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnInplaceUniform(workspace.get(), workspaceSize, executor, nullptr);
@@ -288,8 +285,8 @@ NPUArray Generator_Standard_normal(const std::vector<int64_t>& size) {
     int64_t offset = 0;
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr,
-        &workspaceSize, &executor);
+    auto error =
+        aclnnNormalFloatFloatGetWorkspaceSize(loc, scale, seed, offset, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnNormalFloatFloatGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
     error = aclnnNormalFloatFloat(workspace.get(), workspaceSize, executor, nullptr);
@@ -310,8 +307,8 @@ NPUArray Generator_Standard_cauchy(const std::vector<int64_t>& size) {
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
     LOG_DEBUG("aclnnInplaceUniform start: shape={}", detail::FormatShape(size));
-    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, 0.0, 1.0, seed, offset,
-        &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(result.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize,
+                                                     &uni_executor);
     ACLNN_CHECK(error, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uni_workspace(uni_workspaceSize);
     error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
@@ -374,8 +371,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     uint64_t uni_workspaceSize = 0;
     aclOpExecutor* uni_executor;
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, a={}", detail::FormatShape(size), a);
-    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset,
-        &uni_workspaceSize, &uni_executor);
+    auto error = aclnnInplaceUniformGetWorkspaceSize(uni_temp.tensorPtr, 0.0, 1.0, seed, offset, &uni_workspaceSize,
+                                                     &uni_executor);
     ACLNN_CHECK(error, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uni_workspace(uni_workspaceSize);
     error = aclnnInplaceUniform(uni_workspace.get(), uni_workspaceSize, uni_executor, nullptr);
@@ -392,8 +389,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     uint64_t rsubs_workspaceSize1 = 0;
     aclOpExecutor* rsubs_executor1;
     LOG_DEBUG("aclnnRsubs start: shape={}", detail::FormatShape(size));
-    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other1, alpha, rsubs_temp.tensorPtr,
-        &rsubs_workspaceSize1, &rsubs_executor1);
+    error = aclnnRsubsGetWorkspaceSize(uni_temp.tensorPtr, other1, alpha, rsubs_temp.tensorPtr, &rsubs_workspaceSize1,
+                                       &rsubs_executor1);
     ACLNN_CHECK(error, "aclnnRsubsGetWorkspaceSize");
     AclWorkspace rsubs_workspace1(rsubs_workspaceSize1);
     error = aclnnRsubs(rsubs_workspace1.get(), rsubs_workspaceSize1, rsubs_executor1, nullptr);
@@ -420,8 +417,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     uint64_t rsubs_workspaceSize = 0;
     aclOpExecutor* rsubs_executor;
     LOG_DEBUG("aclnnRsubs start: shape={}", detail::FormatShape(size));
-    error = aclnnRsubsGetWorkspaceSize(rsubs_temp.tensorPtr, other2, alpha, result.tensorPtr,
-        &rsubs_workspaceSize, &rsubs_executor);
+    error = aclnnRsubsGetWorkspaceSize(rsubs_temp.tensorPtr, other2, alpha, result.tensorPtr, &rsubs_workspaceSize,
+                                       &rsubs_executor);
     ACLNN_CHECK(error, "aclnnRsubsGetWorkspaceSize");
     AclWorkspace rsubs_workspace(rsubs_workspaceSize);
     error = aclnnRsubs(rsubs_workspace.get(), rsubs_workspaceSize, rsubs_executor, nullptr);
@@ -435,7 +432,8 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
     uint64_t exp_workspaceSize = 0;
     aclOpExecutor* exp_executor;
     LOG_DEBUG("aclnnPowTensorScalar start: shape={}, a={}", detail::FormatShape(size), a);
-    error = aclnnPowTensorScalarGetWorkspaceSize(result.tensorPtr, exponent, result.tensorPtr, &exp_workspaceSize, &exp_executor);
+    error = aclnnPowTensorScalarGetWorkspaceSize(result.tensorPtr, exponent, result.tensorPtr, &exp_workspaceSize,
+                                                 &exp_executor);
     ACLNN_CHECK(error, "aclnnPowTensorScalarGetWorkspaceSize");
     AclWorkspace exp_workspace(exp_workspaceSize);
     error = aclnnPowTensorScalar(exp_workspace.get(), exp_workspaceSize, exp_executor, nullptr);
@@ -448,18 +446,19 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
 
 NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     // 1. 参数校验
-    if (n < 0) throw std::invalid_argument(fmt::format(
-        "[distributions.cpp]({}) invalid parameter: n={} < 0", __func__, n));
-    if (p < 0.0f || p > 1.0f) throw std::invalid_argument(fmt::format(
-        "[distributions.cpp]({}) invalid parameter: p={} not in [0,1]", __func__, p));
+    if (n < 0)
+        throw std::invalid_argument(fmt::format("[distributions.cpp]({}) invalid parameter: n={} < 0", __func__, n));
+    if (p < 0.0f || p > 1.0f)
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: p={} not in [0,1]", __func__, p));
     if (n == 0) {
         NPUArray result(size, ACL_INT32);
         void* data_ptr = nullptr;
         auto ret = aclGetRawTensorAddr(result.tensorPtr, &data_ptr);
         ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
         if (!data_ptr) {
-            throw std::runtime_error(fmt::format(
-                "[distributions.cpp]({}) aclGetRawTensorAddr returned null data_ptr", __func__));
+            throw std::runtime_error(
+                fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null data_ptr", __func__));
         }
         // 用0初始化整个输出张量
         size_t total_elems = std::accumulate(size.begin(), size.end(), int64_t{1}, std::multiplies<int64_t>());
@@ -479,8 +478,8 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     auto ret = aclGetRawTensorAddr(prob_tensor.tensorPtr, &prob_data_ptr);
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!prob_data_ptr) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null prob_data_ptr", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null prob_data_ptr", __func__));
     }
     ret = aclrtMemcpy(prob_data_ptr, sizeof(float), &p, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -491,15 +490,13 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     aclrtStream stream = nullptr;
     ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
-    if (!stream) throw std::runtime_error(fmt::format(
-        "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+    if (!stream)
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
 
     // 5. 生成伯努利张量
     LOG_DEBUG("aclnnBernoulliTensor start: shape={}, n={}, p={}", detail::FormatShape(size), n, p);
-    ret = aclnnBernoulliTensorGetWorkspaceSize(
-        bernoulli_tensor.tensorPtr, prob_tensor.tensorPtr, 42, 0,
-        bernoulli_tensor.tensorPtr, &bernoulli_ws, &bernoulli_exec
-    );
+    ret = aclnnBernoulliTensorGetWorkspaceSize(bernoulli_tensor.tensorPtr, prob_tensor.tensorPtr, 42, 0,
+                                               bernoulli_tensor.tensorPtr, &bernoulli_ws, &bernoulli_exec);
     ACLNN_CHECK(ret, "aclnnBernoulliTensorGetWorkspaceSize");
     AclWorkspace bernoulli(bernoulli_ws);
     ret = aclnnBernoulliTensor(bernoulli.get(), bernoulli_ws, bernoulli_exec, stream);
@@ -512,27 +509,23 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     NPUArray result(size, ACL_INT32);
     uint64_t sum_ws = 0;
     aclOpExecutor* sum_exec = nullptr;
-    std::vector<int64_t> reduce_axis = {0};  // 沿第0维求和
+    std::vector<int64_t> reduce_axis = {0}; // 沿第0维求和
 
     // 6.1 创建aclIntArray类型的归约轴（适配接口要求）
     aclIntArray* dims_array = aclCreateIntArray(reduce_axis.data(), reduce_axis.size());
     if (dims_array == nullptr) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclCreateIntArray returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclCreateIntArray returned null", __func__));
     }
 
     // 6.2 调用修正后的归约求和接口（按文档参数顺序）
     LOG_DEBUG("aclnnReduceSum start: shape={}", detail::FormatShape(size));
-    ret = aclnnReduceSumGetWorkspaceSize(
-        bernoulli_tensor.tensorPtr,  // 输入张量
-        dims_array,                  // 归约轴（aclIntArray类型）
-        false,                       // 是否保留归约轴
-        ACL_INT32,                   // 输出数据类型（匹配result的类型）
-        result.tensorPtr,            // 输出张量
-        &sum_ws,
-        &sum_exec
-    );
+    ret = aclnnReduceSumGetWorkspaceSize(bernoulli_tensor.tensorPtr, // 输入张量
+                                         dims_array,                 // 归约轴（aclIntArray类型）
+                                         false,                      // 是否保留归约轴
+                                         ACL_INT32,                  // 输出数据类型（匹配result的类型）
+                                         result.tensorPtr,           // 输出张量
+                                         &sum_ws, &sum_exec);
     ACLNN_CHECK(ret, "aclnnReduceSumGetWorkspaceSize");
 
     // 6.3 分配求和工作空间并执行
@@ -543,19 +536,18 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
     // 7. 释放所有资源
-    aclDestroyIntArray(dims_array);  // 销毁归约轴数组
+    aclDestroyIntArray(dims_array); // 销毁归约轴数组
     aclrtDestroyStream(stream);
 
     LOG_INFO("aclnnReduceSum completed");
     return result;
 }
 
-
 NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     // 1. 参数校验
     if (scale <= 0.0f) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
     // 2. 构造均匀分布张量 U
@@ -567,8 +559,7 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     double low = 0.0;
@@ -578,10 +569,7 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
 
     // 均匀分布 in-place 填充 U
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, scale={}", detail::FormatShape(size), scale);
-    ret = aclnnInplaceUniformGetWorkspaceSize(
-        u_tensor.tensorPtr, low, high, seed, offset,
-        &uniform_ws, &uniform_exec
-    );
+    ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uniform(uniform_ws);
     ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
@@ -597,8 +585,8 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!one_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
     }
     float one_val = 1.0f;
     ret = aclrtMemcpy(one_data, sizeof(float), &one_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -612,14 +600,11 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     aclScalar* alpha_scalar = aclCreateScalar(&one_val, ACL_FLOAT); // alpha = 1
 
     LOG_DEBUG("aclnnSub start: shape={}", detail::FormatShape(size));
-    ret = aclnnSubGetWorkspaceSize(
-        one_tensor.tensorPtr,     // self
-        u_tensor.tensorPtr,       // other
-        alpha_scalar,             // alpha
-        one_minus_u.tensorPtr,    // out
-        &sub_ws,
-        &sub_exec
-    );
+    ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr,  // self
+                                   u_tensor.tensorPtr,    // other
+                                   alpha_scalar,          // alpha
+                                   one_minus_u.tensorPtr, // out
+                                   &sub_ws, &sub_exec);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws(sub_ws);
     ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
@@ -650,8 +635,8 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!scale_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
     }
     float neg_scale = -scale;
     ret = aclrtMemcpy(scale_data, sizeof(float), &neg_scale, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -676,12 +661,11 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     return result;
 }
 
-
 NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     // 1. 参数校验
     if (p <= 0.0f || p >= 1.0f) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: p={} not in (0,1)", __func__, p));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: p={} not in (0,1)", __func__, p));
     }
 
     // 2. 构造均匀分布张量 U
@@ -693,8 +677,7 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     double low = 0.0;
@@ -703,10 +686,7 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
 
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, p={}", detail::FormatShape(size), p);
-    ret = aclnnInplaceUniformGetWorkspaceSize(
-        u_tensor.tensorPtr, low, high, seed, offset,
-        &uniform_ws, &uniform_exec
-    );
+    ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uniform(uniform_ws);
     ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
@@ -722,8 +702,8 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!one_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
     }
     float one_val = 1.0f;
     ret = aclrtMemcpy(one_data, sizeof(float), &one_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -736,14 +716,11 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     aclScalar* alpha_scalar = aclCreateScalar(&one_val, ACL_FLOAT);
 
     LOG_DEBUG("aclnnSub start: shape={}", detail::FormatShape(size));
-    ret = aclnnSubGetWorkspaceSize(
-        one_tensor.tensorPtr,   // self
-        u_tensor.tensorPtr,     // other
-        alpha_scalar,           // alpha
-        one_minus_u.tensorPtr,  // out
-        &sub_ws,
-        &sub_exec
-    );
+    ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr,  // self
+                                   u_tensor.tensorPtr,    // other
+                                   alpha_scalar,          // alpha
+                                   one_minus_u.tensorPtr, // out
+                                   &sub_ws, &sub_exec);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws(sub_ws);
     ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
@@ -775,8 +752,8 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!denom_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null denom_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null denom_data", __func__));
     }
     float denom_val = std::log(1.0f - p);
     ret = aclrtMemcpy(denom_data, sizeof(float), &denom_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -786,8 +763,8 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     uint64_t div_ws = 0;
     aclOpExecutor* div_exec = nullptr;
     LOG_DEBUG("aclnnDiv start: shape={}, p={}", detail::FormatShape(size), p);
-    ret = aclnnDivGetWorkspaceSize(log_tensor.tensorPtr, denom_tensor.tensorPtr, div_tensor.tensorPtr,
-        &div_ws, &div_exec);
+    ret = aclnnDivGetWorkspaceSize(log_tensor.tensorPtr, denom_tensor.tensorPtr, div_tensor.tensorPtr, &div_ws,
+                                   &div_exec);
     ACLNN_CHECK(ret, "aclnnDivGetWorkspaceSize");
     AclWorkspace divws(div_ws);
     ret = aclnnDiv(divws.get(), div_ws, div_exec, stream);
@@ -817,8 +794,8 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!one_data2) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data2", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data2", __func__));
     }
     float one_val2 = 1.0f;
     ret = aclrtMemcpy(one_data2, sizeof(float), &one_val2, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -830,14 +807,11 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     aclScalar* alpha_one = aclCreateScalar(&one_val2, ACL_FLOAT);
 
     LOG_DEBUG("aclnnAdd start: shape={}", detail::FormatShape(size));
-    ret = aclnnAddGetWorkspaceSize(
-        floor_tensor.tensorPtr,  // self
-        one_tensor2.tensorPtr,   // other
-        alpha_one,               // alpha
-        result.tensorPtr,        // out
-        &add_ws,
-        &add_exec
-    );
+    ret = aclnnAddGetWorkspaceSize(floor_tensor.tensorPtr, // self
+                                   one_tensor2.tensorPtr,  // other
+                                   alpha_one,              // alpha
+                                   result.tensorPtr,       // out
+                                   &add_ws, &add_exec);
     ACLNN_CHECK(ret, "aclnnAddGetWorkspaceSize");
     AclWorkspace addws(add_ws);
     ret = aclnnAdd(addws.get(), add_ws, add_exec, stream);
@@ -853,12 +827,11 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     return result;
 }
 
-
 NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     // 1. 参数校验
     if (scale <= 0.0) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
     // 2. 准备随机流与 U 张量
@@ -870,8 +843,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     double low = 0.0;
@@ -880,10 +852,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
 
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnInplaceUniformGetWorkspaceSize(
-        u_tensor.tensorPtr, low, high, seed, offset,
-        &uniform_ws, &uniform_exec
-    );
+    ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uniform(uniform_ws);
     ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
@@ -921,8 +890,8 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!neg_one_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null neg_one_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null neg_one_data", __func__));
     }
     ret = aclrtMemcpy(neg_one_data, sizeof(float), &neg_one_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -931,8 +900,8 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t mul_ws1 = 0;
     aclOpExecutor* mul_exec1 = nullptr;
     LOG_DEBUG("aclnnMul start: shape={}", detail::FormatShape(size));
-    ret = aclnnMulGetWorkspaceSize(neg_one_tensor.tensorPtr, log_u.tensorPtr, neg_log_u.tensorPtr,
-        &mul_ws1, &mul_exec1);
+    ret =
+        aclnnMulGetWorkspaceSize(neg_one_tensor.tensorPtr, log_u.tensorPtr, neg_log_u.tensorPtr, &mul_ws1, &mul_exec1);
     ACLNN_CHECK(ret, "aclnnMulGetWorkspaceSize");
     AclWorkspace mulws1(mul_ws1);
     ret = aclnnMul(mulws1.get(), mul_ws1, mul_exec1, stream);
@@ -963,8 +932,8 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!scale_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
     }
     ret = aclrtMemcpy(scale_data, sizeof(float), &scale_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -973,8 +942,8 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t mul_ws2 = 0;
     aclOpExecutor* mul_exec2 = nullptr;
     LOG_DEBUG("aclnnMul start: shape={}, scale={}", detail::FormatShape(size), scale);
-    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_neg_log_u.tensorPtr, scaled.tensorPtr,
-        &mul_ws2, &mul_exec2);
+    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_neg_log_u.tensorPtr, scaled.tensorPtr, &mul_ws2,
+                                   &mul_exec2);
     ACLNN_CHECK(ret, "aclnnMulGetWorkspaceSize");
     AclWorkspace mulws2(mul_ws2);
     ret = aclnnMul(mulws2.get(), mul_ws2, mul_exec2, stream);
@@ -992,8 +961,8 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!loc_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
     }
     ret = aclrtMemcpy(loc_data, sizeof(float), &loc_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -1005,19 +974,15 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     aclScalar* alpha_scalar = aclCreateScalar(&alpha_val, ACL_FLOAT);
     if (alpha_scalar == nullptr) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclCreateScalar returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclCreateScalar returned null", __func__));
     }
 
     LOG_DEBUG("aclnnSub start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnSubGetWorkspaceSize(
-        loc_tensor.tensorPtr,    // self (scalar)
-        scaled.tensorPtr,        // other (tensor)
-        alpha_scalar,            // alpha
-        result.tensorPtr,        // out
-        &sub_ws,
-        &sub_exec
-    );
+    ret = aclnnSubGetWorkspaceSize(loc_tensor.tensorPtr, // self (scalar)
+                                   scaled.tensorPtr,     // other (tensor)
+                                   alpha_scalar,         // alpha
+                                   result.tensorPtr,     // out
+                                   &sub_ws, &sub_exec);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws(sub_ws);
     ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
@@ -1033,12 +998,11 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     return result;
 }
 
-
 NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     // 1. 参数校验
     if (scale <= 0.0) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
     // 2. 准备 stream 与 U 张量（Uniform in [-0.5, 0.5)）
@@ -1050,8 +1014,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     double low = -0.5;
@@ -1060,10 +1023,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
 
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnInplaceUniformGetWorkspaceSize(
-        u_tensor.tensorPtr, low, high, seed, offset,
-        &uniform_ws, &uniform_exec
-    );
+    ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uniform(uniform_ws);
     ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
@@ -1095,8 +1055,8 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!two_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null two_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null two_data", __func__));
     }
     ret = aclrtMemcpy(two_data, sizeof(float), &two_val_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -1105,8 +1065,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t mul_ws1 = 0;
     aclOpExecutor* mul_exec1 = nullptr;
     LOG_DEBUG("aclnnMul start: shape={}", detail::FormatShape(size));
-    ret = aclnnMulGetWorkspaceSize(two_tensor.tensorPtr, abs_u.tensorPtr, two_mul_abs.tensorPtr,
-        &mul_ws1, &mul_exec1);
+    ret = aclnnMulGetWorkspaceSize(two_tensor.tensorPtr, abs_u.tensorPtr, two_mul_abs.tensorPtr, &mul_ws1, &mul_exec1);
     ACLNN_CHECK(ret, "aclnnMulGetWorkspaceSize");
     AclWorkspace mulws1(mul_ws1);
     ret = aclnnMul(mulws1.get(), mul_ws1, mul_exec1, stream);
@@ -1123,8 +1082,8 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!one_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
     }
     ret = aclrtMemcpy(one_data, sizeof(float), &one_val_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -1137,12 +1096,11 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     aclScalar* alpha_scalar = aclCreateScalar(&alpha_val_f, ACL_FLOAT);
     if (alpha_scalar == nullptr) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclCreateScalar returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclCreateScalar returned null", __func__));
     }
     LOG_DEBUG("aclnnSub start: shape={}", detail::FormatShape(size));
     ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr, two_mul_abs.tensorPtr, alpha_scalar, t_tensor.tensorPtr,
-        &sub_ws1, &sub_exec1);
+                                   &sub_ws1, &sub_exec1);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws1(sub_ws1);
     ret = aclnnSub(subws1.get(), sub_ws1, sub_exec1, stream);
@@ -1188,8 +1146,8 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     if (!scale_data) {
         aclDestroyScalar(alpha_scalar);
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
     }
     ret = aclrtMemcpy(scale_data, sizeof(float), &scale_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -1198,8 +1156,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t mul_ws2 = 0;
     aclOpExecutor* mul_exec2 = nullptr;
     LOG_DEBUG("aclnnMul start: shape={}, scale={}", detail::FormatShape(size), scale);
-    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_t.tensorPtr, scaled.tensorPtr,
-        &mul_ws2, &mul_exec2);
+    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_t.tensorPtr, scaled.tensorPtr, &mul_ws2, &mul_exec2);
     ACLNN_CHECK(ret, "aclnnMulGetWorkspaceSize");
     AclWorkspace mulws2(mul_ws2);
     ret = aclnnMul(mulws2.get(), mul_ws2, mul_exec2, stream);
@@ -1231,8 +1188,8 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     if (!loc_data) {
         aclDestroyScalar(alpha_scalar);
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
     }
     ret = aclrtMemcpy(loc_data, sizeof(float), &loc_f, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
@@ -1242,8 +1199,8 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     aclOpExecutor* sub_exec2 = nullptr;
 
     LOG_DEBUG("aclnnSub start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnSubGetWorkspaceSize(loc_tensor.tensorPtr, tmp.tensorPtr, alpha_scalar, result.tensorPtr,
-        &sub_ws2, &sub_exec2);
+    ret = aclnnSubGetWorkspaceSize(loc_tensor.tensorPtr, tmp.tensorPtr, alpha_scalar, result.tensorPtr, &sub_ws2,
+                                   &sub_exec2);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws2(sub_ws2);
     ret = aclnnSub(subws2.get(), sub_ws2, sub_exec2, stream);
@@ -1259,12 +1216,11 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     return result;
 }
 
-
 NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     // 1. 参数检查
     if (scale <= 0.0) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
     // 2. 创建均匀分布张量 U ~ Uniform(0,1)
@@ -1276,8 +1232,7 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     double low = 0.0;
@@ -1286,10 +1241,7 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t offset = 0;
 
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnInplaceUniformGetWorkspaceSize(
-        u_tensor.tensorPtr, low, high, seed, offset,
-        &uniform_ws, &uniform_exec
-    );
+    ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
     AclWorkspace uniform(uniform_ws);
     ret = aclnnInplaceUniform(uniform.get(), uniform_ws, uniform_exec, stream);
@@ -1305,8 +1257,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!one_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null one_data", __func__));
     }
     float one_val = 1.0f;
     ret = aclrtMemcpy(one_data, sizeof(float), &one_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -1318,10 +1270,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
 
     aclScalar* alpha_scalar = aclCreateScalar(&one_val, ACL_FLOAT); // alpha = 1
     LOG_DEBUG("aclnnSub start: shape={}", detail::FormatShape(size));
-    ret = aclnnSubGetWorkspaceSize(
-        one_tensor.tensorPtr, u_tensor.tensorPtr, alpha_scalar,
-        one_minus_u.tensorPtr, &sub_ws, &sub_exec
-    );
+    ret = aclnnSubGetWorkspaceSize(one_tensor.tensorPtr, u_tensor.tensorPtr, alpha_scalar, one_minus_u.tensorPtr,
+                                   &sub_ws, &sub_exec);
     ACLNN_CHECK(ret, "aclnnSubGetWorkspaceSize");
     AclWorkspace subws(sub_ws);
     ret = aclnnSub(subws.get(), sub_ws, sub_exec, stream);
@@ -1366,8 +1316,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!scale_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null scale_data", __func__));
     }
     float scale_val = static_cast<float>(scale);
     ret = aclrtMemcpy(scale_data, sizeof(float), &scale_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -1377,7 +1327,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     uint64_t mul_ws = 0;
     aclOpExecutor* mul_exec = nullptr;
     LOG_DEBUG("aclnnMul start: shape={}, scale={}", detail::FormatShape(size), scale);
-    ret = aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_ratio.tensorPtr, scaled_log.tensorPtr, &mul_ws, &mul_exec);
+    ret =
+        aclnnMulGetWorkspaceSize(scale_tensor.tensorPtr, log_ratio.tensorPtr, scaled_log.tensorPtr, &mul_ws, &mul_exec);
     ACLNN_CHECK(ret, "aclnnMulGetWorkspaceSize");
     AclWorkspace mulws(mul_ws);
     ret = aclnnMul(mulws.get(), mul_ws, mul_exec, stream);
@@ -1393,8 +1344,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclGetRawTensorAddr");
     if (!loc_data) {
         aclrtDestroyStream(stream);
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
+        throw std::runtime_error(
+            fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null loc_data", __func__));
     }
     float loc_val = static_cast<float>(loc);
     ret = aclrtMemcpy(loc_data, sizeof(float), &loc_val, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -1405,8 +1356,8 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     aclOpExecutor* add_exec = nullptr;
     aclScalar* alpha_add = aclCreateScalar(&one_val, ACL_FLOAT); // alpha = 1
     LOG_DEBUG("aclnnAdd start: shape={}, loc={}, scale={}", detail::FormatShape(size), loc, scale);
-    ret = aclnnAddGetWorkspaceSize(loc_tensor.tensorPtr, scaled_log.tensorPtr, alpha_add, result.tensorPtr,
-        &add_ws, &add_exec);
+    ret = aclnnAddGetWorkspaceSize(loc_tensor.tensorPtr, scaled_log.tensorPtr, alpha_add, result.tensorPtr, &add_ws,
+                                   &add_exec);
     ACLNN_CHECK(ret, "aclnnAddGetWorkspaceSize");
     AclWorkspace addws(add_ws);
     ret = aclnnAdd(addws.get(), add_ws, add_exec, stream);
@@ -1422,12 +1373,11 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     return result;
 }
 
-
 NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     // 1. 参数校验
     if (sigma <= 0.0f) {
-        throw std::invalid_argument(fmt::format(
-            "[distributions.cpp]({}) invalid parameter: sigma={} <= 0", __func__, sigma));
+        throw std::invalid_argument(
+            fmt::format("[distributions.cpp]({}) invalid parameter: sigma={} <= 0", __func__, sigma));
     }
 
     // 2. 创建正态样本张量 Z (will be filled in-place)
@@ -1444,8 +1394,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     auto ret = aclrtCreateStream(&stream);
     ACL_RT_CHECK(ret, "aclrtCreateStream");
     if (!stream) {
-        throw std::runtime_error(fmt::format(
-            "[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
+        throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
     // 3. 调用 aclnnInplaceNormal 生成 N(mean, sigma) 到 z_tensor
@@ -1455,15 +1404,8 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     float sigma_f = static_cast<float>(sigma);
 
     LOG_DEBUG("aclnnInplaceNormal start: shape={}, mean={}, sigma={}", detail::FormatShape(size), mean, sigma);
-    ret = aclnnInplaceNormalGetWorkspaceSize(
-        z_tensor.tensorPtr,
-        mean_f,
-        sigma_f,
-        seed,
-        offset,
-        &normal_ws,
-        &normal_exec
-    );
+    ret =
+        aclnnInplaceNormalGetWorkspaceSize(z_tensor.tensorPtr, mean_f, sigma_f, seed, offset, &normal_ws, &normal_exec);
     ACLNN_CHECK(ret, "aclnnInplaceNormalGetWorkspaceSize");
     AclWorkspace normal(normal_ws);
     ret = aclnnInplaceNormal(normal.get(), normal_ws, normal_exec, stream);
@@ -1566,4 +1508,4 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     return result;
 }*/
 
-}
+} // namespace asnumpy

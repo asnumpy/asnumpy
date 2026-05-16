@@ -29,7 +29,6 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
 
 # ========== 辅助函数 ==========
@@ -49,8 +48,9 @@ def _to_numpy(value):
     return value
 
 
-def _assert_mean_allclose(data, axis=None, keepdims=False, dtype=None,
-                          rtol=1e-5, atol=1e-5, equal_nan=False):
+def _assert_mean_allclose(
+    data, axis=None, keepdims=False, dtype=None, rtol=1e-5, atol=1e-5, equal_nan=False
+):
     """辅助函数：比较 numpy 和 asnumpy 的 mean 结果"""
     import asnumpy as ap
 
@@ -82,6 +82,7 @@ def _assert_mean_dtype(data, axis=None, keepdims=False, dtype=None):
 # 1. 均值函数测试 (Mean)
 # ============================================================================
 
+
 # ---------- 1.1 基础功能: axis ----------
 def test_mean_basic_global_float32():
     """测试 mean: 全局均值"""
@@ -89,7 +90,9 @@ def test_mean_basic_global_float32():
     _assert_mean_allclose(data)
 
 
-@pytest.mark.xfail(reason="[FIXABLE] mean returns float64 scalar for float32 global reduction", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] mean returns float64 scalar for float32 global reduction", strict=True
+)
 def test_mean_basic_global_float32_dtype():
     """测试 mean: 全局均值返回 dtype 与 NumPy 一致"""
     data = numpy.array([1.0, 2.0, 3.0, 4.0], dtype=numpy.float32)
@@ -98,59 +101,51 @@ def test_mean_basic_global_float32_dtype():
 
 def test_mean_axis0():
     """测试 mean: axis=0"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=0)
 
 
 def test_mean_axis0_dtype():
     """测试 mean: axis=0 返回 dtype 与 NumPy 一致"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_dtype(data, axis=0)
 
 
 def test_mean_axis1():
     """测试 mean: axis=1"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=1)
 
 
 def test_mean_negative_axis():
     """测试 mean: 负 axis"""
-    data = numpy.array([[[1.0, 2.0], [3.0, 4.0]],
-                        [[5.0, 6.0], [7.0, 8.0]]], dtype=numpy.float32)
+    data = numpy.array([[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=-1)
 
 
 # ---------- 1.2 keepdims 参数 ----------
 def test_mean_keepdims_axis0():
     """测试 mean: axis=0 且 keepdims=True"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=0, keepdims=True)
 
 
 def test_mean_keepdims_axis1():
     """测试 mean: axis=1 且 keepdims=True"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=1, keepdims=True)
 
 
 def test_mean_keepdims_axis_none():
     """测试 mean: axis=None 且 keepdims=True"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, keepdims=True)
 
 
 # ---------- 1.3 dtype 参数 ----------
 def test_mean_dtype_axis0_float64():
     """测试 mean: axis=0 且 dtype=float64"""
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=0, dtype=numpy.float64)
 
 
@@ -197,15 +192,13 @@ def test_mean_nan_global():
 
 def test_mean_nan_axis0():
     """测试 mean: axis=0 按切片传播 NaN"""
-    data = numpy.array([[1.0, numpy.nan, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, numpy.nan, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=0, equal_nan=True)
 
 
 def test_mean_nan_axis1_keepdims():
     """测试 mean: axis=1 且 keepdims=True 时传播 NaN"""
-    data = numpy.array([[1.0, numpy.nan, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, numpy.nan, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     _assert_mean_allclose(data, axis=1, keepdims=True, equal_nan=True)
 
 
@@ -214,8 +207,7 @@ def test_mean_invalid_axis_positive():
     """测试 mean: 正向越界 axis 应抛出异常"""
     import asnumpy as ap
 
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     a = ap.ndarray.from_numpy(data)
     with pytest.raises(Exception):
         ap.mean(a, axis=2)
@@ -225,8 +217,7 @@ def test_mean_invalid_axis_negative():
     """测试 mean: 负向越界 axis 应抛出异常"""
     import asnumpy as ap
 
-    data = numpy.array([[1.0, 2.0, 3.0],
-                        [4.0, 5.0, 6.0]], dtype=numpy.float32)
+    data = numpy.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=numpy.float32)
     a = ap.ndarray.from_numpy(data)
     with pytest.raises(Exception):
         ap.mean(a, axis=-3)

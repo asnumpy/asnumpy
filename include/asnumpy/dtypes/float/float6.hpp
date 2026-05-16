@@ -24,7 +24,7 @@ namespace asnumpy {
 namespace dtypes {
 
 class float6_e2m3fn {
-private:
+  private:
     uint8_t rep_;
     struct ConstructFromRepTag {};
     constexpr float6_e2m3fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
@@ -41,34 +41,41 @@ private:
             return static_cast<uint8_t>((sign << 5) | 0b0'11'111);
         }
         if (exp == 0 && frac == 0) {
-            return static_cast<uint8_t>(sign << 5);  // ±0
+            return static_cast<uint8_t>(sign << 5); // ±0
         }
 
         int e_unbiased;
         float mant;
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
-        constexpr int bias = 1;  // E2M3 bias
+        constexpr int bias = 1; // E2M3 bias
         // 正规阈值：2^0 = 1
         if (exp == 0 || e_unbiased < 0) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
-            int m = rne_to_int(static_cast<double>(mag) * 8.0);  // 3-bit mantissa
-            if (m <= 0) return static_cast<uint8_t>(sign << 5);
-            if (m > 7) m = 7;
+            int m = rne_to_int(static_cast<double>(mag) * 8.0); // 3-bit mantissa
+            if (m <= 0)
+                return static_cast<uint8_t>(sign << 5);
+            if (m > 7)
+                m = 7;
             return static_cast<uint8_t>((sign << 5) | static_cast<uint8_t>(m));
         }
 
         int e = e_unbiased;
         int m = rne_to_int(static_cast<double>(mant - 1.0f) * 8.0);
-        if (m >= 8) { m = 0; ++e; }
+        if (m >= 8) {
+            m = 0;
+            ++e;
+        }
 
-        if (e > 2) {  // 最大指数 0b11 -> e_unbiased=2
+        if (e > 2) { // 最大指数 0b11 -> e_unbiased=2
             return static_cast<uint8_t>((sign << 5) | 0b0'11'111);
         }
         if (e < 0) {
             int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + 3)));
-            if (sub <= 0) return static_cast<uint8_t>(sign << 5);
-            if (sub > 7) sub = 7;
+            if (sub <= 0)
+                return static_cast<uint8_t>(sign << 5);
+            if (sub > 7)
+                sub = 7;
             return static_cast<uint8_t>((sign << 5) | static_cast<uint8_t>(sub));
         }
 
@@ -78,12 +85,12 @@ private:
 
     static float decode_to_float(uint8_t bits) {
         uint8_t sign = (bits >> 5) & 0x1u;
-        uint8_t exp = (bits >> 3) & 0x3u;  // 2-bit exponent
-        uint8_t mant = bits & 0x7u;         // 3-bit mantissa
+        uint8_t exp = (bits >> 3) & 0x3u; // 2-bit exponent
+        uint8_t mant = bits & 0x7u;       // 3-bit mantissa
         constexpr int bias = 1;
 
         if (exp == 0) {
-            float v = static_cast<float>(mant) * (1.0f / 8.0f);  // 次正规
+            float v = static_cast<float>(mant) * (1.0f / 8.0f); // 次正规
             return sign ? -v : v;
         }
         float base = 1.0f + static_cast<float>(mant) * (1.0f / 8.0f);
@@ -92,7 +99,7 @@ private:
         return sign ? -v : v;
     }
 
-public:
+  public:
     static constexpr int kBits = 6;
     static constexpr int kExponentBias = 1;
     static constexpr int kMantissaBits = 3;
@@ -105,9 +112,7 @@ public:
 
     constexpr uint8_t rep() const { return rep_; }
 
-    static constexpr float6_e2m3fn FromRep(uint8_t rep) {
-        return float6_e2m3fn(rep, ConstructFromRepTag{});
-    }
+    static constexpr float6_e2m3fn FromRep(uint8_t rep) { return float6_e2m3fn(rep, ConstructFromRepTag{}); }
 
     explicit operator float() const { return decode_to_float(rep_); }
     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
@@ -135,7 +140,8 @@ public:
     bool operator!=(const float6_e2m3fn& other) const { return !(*this == other); }
     bool operator<(const float6_e2m3fn& other) const {
         float a = static_cast<float>(*this), b = static_cast<float>(other);
-        if (std::isnan(a) || std::isnan(b)) return false;
+        if (std::isnan(a) || std::isnan(b))
+            return false;
         return a < b;
     }
     bool operator<=(const float6_e2m3fn& other) const { return *this < other || *this == other; }
@@ -147,7 +153,7 @@ public:
 };
 
 class float6_e3m2fn {
-private:
+  private:
     uint8_t rep_;
     struct ConstructFromRepTag {};
     constexpr float6_e3m2fn(uint8_t rep, ConstructFromRepTag) : rep_(rep) {}
@@ -169,27 +175,34 @@ private:
         float mant;
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
-        constexpr int bias = 3;  // E3M2 bias
+        constexpr int bias = 3; // E3M2 bias
         // 正规阈值：2^-2 = 0.25
         if (exp == 0 || e_unbiased < -2) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
-            int m = rne_to_int(static_cast<double>(mag) * 4.0);  // 2-bit mantissa
-            if (m <= 0) return static_cast<uint8_t>(sign << 5);
-            if (m > 3) m = 3;
+            int m = rne_to_int(static_cast<double>(mag) * 4.0); // 2-bit mantissa
+            if (m <= 0)
+                return static_cast<uint8_t>(sign << 5);
+            if (m > 3)
+                m = 3;
             return static_cast<uint8_t>((sign << 5) | static_cast<uint8_t>(m));
         }
 
         int e = e_unbiased;
         int m = rne_to_int(static_cast<double>(mant - 1.0f) * 4.0);
-        if (m >= 4) { m = 0; ++e; }
+        if (m >= 4) {
+            m = 0;
+            ++e;
+        }
 
-        if (e > 4) {  // 最大指数 0b111 -> e_unbiased=4
+        if (e > 4) { // 最大指数 0b111 -> e_unbiased=4
             return static_cast<uint8_t>((sign << 5) | 0b0'111'11);
         }
         if (e < -2) {
             int sub = rne_to_int(static_cast<double>(std::ldexp(mant, e + 2)));
-            if (sub <= 0) return static_cast<uint8_t>(sign << 5);
-            if (sub > 3) sub = 3;
+            if (sub <= 0)
+                return static_cast<uint8_t>(sign << 5);
+            if (sub > 3)
+                sub = 3;
             return static_cast<uint8_t>((sign << 5) | static_cast<uint8_t>(sub));
         }
 
@@ -199,13 +212,13 @@ private:
 
     static float decode_to_float(uint8_t bits) {
         uint8_t sign = (bits >> 5) & 0x1u;
-        uint8_t exp = (bits >> 2) & 0x7u;  // 3-bit exponent
-        uint8_t mant = bits & 0x3u;         // 2-bit mantissa
+        uint8_t exp = (bits >> 2) & 0x7u; // 3-bit exponent
+        uint8_t mant = bits & 0x3u;       // 2-bit mantissa
         constexpr int bias = 3;
         return mx_decode_sign_exp_mant(sign, exp, mant, bias, 0.25f);
     }
 
-public:
+  public:
     static constexpr int kBits = 6;
     static constexpr int kExponentBias = 3;
     static constexpr int kMantissaBits = 2;
@@ -218,9 +231,7 @@ public:
 
     constexpr uint8_t rep() const { return rep_; }
 
-    static constexpr float6_e3m2fn FromRep(uint8_t rep) {
-        return float6_e3m2fn(rep, ConstructFromRepTag{});
-    }
+    static constexpr float6_e3m2fn FromRep(uint8_t rep) { return float6_e3m2fn(rep, ConstructFromRepTag{}); }
 
     explicit operator float() const { return decode_to_float(rep_); }
     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
@@ -248,7 +259,8 @@ public:
     bool operator!=(const float6_e3m2fn& other) const { return !(*this == other); }
     bool operator<(const float6_e3m2fn& other) const {
         float a = static_cast<float>(*this), b = static_cast<float>(other);
-        if (std::isnan(a) || std::isnan(b)) return false;
+        if (std::isnan(a) || std::isnan(b))
+            return false;
         return a < b;
     }
     bool operator<=(const float6_e3m2fn& other) const { return *this < other || *this == other; }
@@ -259,6 +271,5 @@ public:
     static constexpr aclDataType getACLenum() { return ACL_FLOAT6_E3M2; }
 };
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

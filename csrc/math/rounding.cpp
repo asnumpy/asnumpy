@@ -14,18 +14,17 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/math/rounding.hpp>
-#include <asnumpy/utils/npu_array.hpp>
-#include <asnumpy/utils/acl_resource.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
+#include <aclnnop/aclnn_ceil.h>
+#include <aclnnop/aclnn_floor.h>
 #include <aclnnop/aclnn_round.h>
 #include <aclnnop/aclnn_trunc.h>
-#include <aclnnop/aclnn_floor.h>
-#include <aclnnop/aclnn_ceil.h>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -34,7 +33,8 @@
 namespace asnumpy {
 
 NPUArray Around(const NPUArray& x, int decimals, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnRoundDecimals start: input_shape={}, tensorSize={}, aclDtype={}, decimals={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), decimals);
+    LOG_DEBUG("aclnnRoundDecimals start: input_shape={}, tensorSize={}, aclDtype={}, decimals={}",
+              detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), decimals);
     auto shape = x.shape;
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
@@ -53,9 +53,7 @@ NPUArray Around(const NPUArray& x, int decimals, std::optional<py::dtype> dtype)
 
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnRoundDecimalsGetWorkspaceSize(
-        x.tensorPtr, decimals, out.tensorPtr, &workspaceSize, &executor
-    );
+    auto error = aclnnRoundDecimalsGetWorkspaceSize(x.tensorPtr, decimals, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnRoundDecimalsGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -75,14 +73,13 @@ NPUArray Around(const NPUArray& x, int decimals, std::optional<py::dtype> dtype)
     return out;
 }
 
-
 NPUArray Round_(const NPUArray& x, int decimals, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnRoundDecimals start: input_shape={}, tensorSize={}, aclDtype={}, decimals={}", detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), decimals);
+    LOG_DEBUG("aclnnRoundDecimals start: input_shape={}, tensorSize={}, aclDtype={}, decimals={}",
+              detail::FormatShape(x.shape), x.tensorSize, AclDtypeName(x.aclDtype), decimals);
     auto result = Around(x, decimals, dtype);
     LOG_INFO("aclnnRoundDecimals completed");
     return result;
 }
-
 
 NPUArray Rint(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype py_dtype = x.dtype;
@@ -95,19 +92,15 @@ NPUArray Rint(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
     return EXECUTE_UNARY_OP(
-        x,
-        out_py_dtype,
+        x, out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnRoundGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnRound(workspace, workspaceSize, executor, nullptr);
         },
-        "Rint",
-        "aclnnRound"
-    );
+        "Rint", "aclnnRound");
 }
-
 
 NPUArray Fix(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype py_dtype = x.dtype;
@@ -120,19 +113,15 @@ NPUArray Fix(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
     return EXECUTE_UNARY_OP(
-        x,
-        out_py_dtype,
+        x, out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnTruncGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnTrunc(workspace, workspaceSize, executor, nullptr);
         },
-        "Fix",
-        "aclnnTrunc"
-    );
+        "Fix", "aclnnTrunc");
 }
-
 
 NPUArray Floor(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype py_dtype = x.dtype;
@@ -145,19 +134,15 @@ NPUArray Floor(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
     return EXECUTE_UNARY_OP(
-        x,
-        out_py_dtype,
+        x, out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnFloorGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnFloor(workspace, workspaceSize, executor, nullptr);
         },
-        "Floor",
-        "aclnnFloor"
-    );
+        "Floor", "aclnnFloor");
 }
-
 
 NPUArray Ceil(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
@@ -171,19 +156,15 @@ NPUArray Ceil(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
     return EXECUTE_UNARY_OP(
-        x,
-        out_py_dtype,
+        x, out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnCeilGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnCeil(workspace, workspaceSize, executor, nullptr);
         },
-        "Ceil",
-        "aclnnCeil"
-    );
+        "Ceil", "aclnnCeil");
 }
-
 
 NPUArray Trunc(const NPUArray& x, std::optional<py::dtype> dtype) {
     // 初始化结果数组（形状和数据类型与输入一致）
@@ -197,17 +178,14 @@ NPUArray Trunc(const NPUArray& x, std::optional<py::dtype> dtype) {
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
     return EXECUTE_UNARY_OP(
-        x,
-        out_py_dtype,
+        x, out_py_dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnTruncGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnTrunc(workspace, workspaceSize, executor, nullptr);
         },
-        "Trunc",
-        "aclnnTrunc"
-    );
+        "Trunc", "aclnnTrunc");
 }
 
-}
+} // namespace asnumpy

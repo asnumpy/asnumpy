@@ -22,7 +22,7 @@
 
 #include <utility>
 
-namespace asnumpy{
+namespace asnumpy {
 
 /**
  * @brief Round elements of the array to the given number of decimals.
@@ -88,9 +88,9 @@ NPUArray Floor(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt)
 
 /**
  * @brief Compute the ceiling of each element in the input array.
- * 
+ *
  * Equivalent to numpy.ceil(x), returns the smallest integer greater than or equal to each element.
- * 
+ *
  * @param x NPUArray, input array (floating-point type)
  * @return NPUArray Element-wise ceiling values of x
  */
@@ -98,12 +98,12 @@ NPUArray Ceil(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
 /**
  * @brief Compute element-wise ceiling of the input.
- * 
+ *
  * Equivalent to numpy.ceil(x), returns the smallest integer greater than or equal to each element.
- * 
+ *
  * @param x NPUArray, input array (floating-point type)
  * @return NPUArray Element-wise ceiling values of x
  */
 NPUArray Trunc(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
-}
+} // namespace asnumpy

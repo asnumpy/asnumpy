@@ -29,6 +29,7 @@
 
 import numpy
 import pytest
+
 import asnumpy
 from asnumpy import testing
 
@@ -47,6 +48,7 @@ def _create_array(xp, data, dtype):
 # 1. 矩阵求逆测试 (Matrix Inverse)
 # ==========================================================================
 
+
 # ---------- 1.1 基础功能 ----------
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
@@ -61,9 +63,7 @@ def test_inv_2x2(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_3x3(xp, dtype):
     """3x3 矩阵求逆"""
-    data = [[1.0, 2.0, 3.0],
-            [0.0, 1.0, 4.0],
-            [5.0, 6.0, 0.0]]
+    data = [[1.0, 2.0, 3.0], [0.0, 1.0, 4.0], [5.0, 6.0, 0.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
@@ -72,10 +72,7 @@ def test_inv_3x3(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_4x4(xp, dtype):
     """4x4 矩阵求逆"""
-    data = [[2.0, 1.0, 0.0, 0.0],
-            [1.0, 2.0, 1.0, 0.0],
-            [0.0, 1.0, 2.0, 1.0],
-            [0.0, 0.0, 1.0, 2.0]]
+    data = [[2.0, 1.0, 0.0, 0.0], [1.0, 2.0, 1.0, 0.0], [0.0, 1.0, 2.0, 1.0], [0.0, 0.0, 1.0, 2.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
@@ -110,9 +107,7 @@ def test_inv_fp64_precision(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_identity(xp, dtype):
     """单位阵: 逆 = 自身"""
-    data = [[1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]]
+    data = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
@@ -121,30 +116,28 @@ def test_inv_identity(xp, dtype):
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_diagonal(xp, dtype):
     """对角阵: 逆 = 对角元素倒数"""
-    data = [[2.0, 0.0, 0.0],
-            [0.0, 4.0, 0.0],
-            [0.0, 0.0, 5.0]]
+    data = [[2.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 5.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
 
 # ---------- 1.4 奇异矩阵边界 ----------
-@pytest.mark.xfail(reason="[FIXABLE] inv() does not detect singular matrices — silently returns wrong result instead of raising LinAlgError", strict=True)
+@pytest.mark.xfail(
+    reason="[FIXABLE] inv() does not detect singular matrices — silently returns wrong result instead of raising LinAlgError",
+    strict=True,
+)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_singular(xp, dtype):
     """奇异矩阵: 行线性相关，应抛出异常（当前静默返回错误结果）"""
-    data = [[1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]]
+    data = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
 
 def test_inv_zero_matrix():
     """奇异矩阵: 全零矩阵，应抛出异常"""
-    data = [[0.0, 0.0],
-            [0.0, 0.0]]
+    data = [[0.0, 0.0], [0.0, 0.0]]
     a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=numpy.float32))
     with pytest.raises((RuntimeError, ValueError, Exception)):
         asnumpy.linalg.inv(a)
@@ -155,10 +148,12 @@ def test_inv_zero_matrix():
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_batch_matrices(xp, dtype):
     """广播: 批量矩阵求逆"""
-    data = numpy.array([
-        [[1.0, 2.0], [3.0, 4.0]],
-        [[2.0, 0.0], [0.0, 3.0]],
-    ]).astype(dtype)
+    data = numpy.array(
+        [
+            [[1.0, 2.0], [3.0, 4.0]],
+            [[2.0, 0.0], [0.0, 3.0]],
+        ]
+    ).astype(dtype)
     a = _create_array(xp, data, dtype)
     return xp.linalg.inv(a)
 
@@ -179,8 +174,7 @@ def test_inv_batch_3x3(xp, dtype):
 # ---------- 1.6 非方阵输入 ----------
 def test_inv_nonsquare():
     """非方阵: 应抛出异常"""
-    data = [[1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0]]
+    data = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
     a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=numpy.float32))
     with pytest.raises((RuntimeError, ValueError, Exception)):
         asnumpy.linalg.inv(a)

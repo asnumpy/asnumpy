@@ -29,7 +29,9 @@
 """
 
 import io
+
 import numpy
+
 from asnumpy import testing
 
 
@@ -46,13 +48,13 @@ def _create_array(xp, data, dtype):
 # 1. 单数组保存/加载测试
 # ==========================================================================
 
+
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_save_load_roundtrip_file_object(dtype):
     """测试 save/load 往返一致性: 文件对象"""
     import asnumpy as ap
 
-    data = numpy.array([[1.5, -2.0, 3.25],
-                        [4.5, 0.0, -6.75]], dtype=dtype)
+    data = numpy.array([[1.5, -2.0, 3.25], [4.5, 0.0, -6.75]], dtype=dtype)
 
     buffer = io.BytesIO()
     ap.save(buffer, ap.ndarray.from_numpy(data))
@@ -80,6 +82,7 @@ def test_load_npy_returns_npu_array(dtype):
 # ==========================================================================
 # 2. NPUArray 自动转换测试
 # ==========================================================================
+
 
 @testing.for_dtypes([numpy.float32, numpy.int64])
 def test_save_auto_converts_npu_array(dtype):
@@ -117,6 +120,7 @@ def test_savez_auto_converts_npu_array(dtype):
 # ==========================================================================
 # 3. .npz 归档与压缩格式兼容性测试
 # ==========================================================================
+
 
 @testing.for_dtypes([numpy.float32, numpy.float64])
 def test_load_npz_roundtrip_returns_lazy_npu_arrays(dtype):

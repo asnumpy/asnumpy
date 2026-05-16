@@ -15,21 +15,22 @@
 # *****************************************************************************
 
 import operator
-from typing import Sequence, Union, overload
-from loguru import logger
+from collections.abc import Sequence
+from typing import overload
+
 import numpy as np
-from ._core import ndarray as _ndarray
+from loguru import logger
+
 from ._core import broadcast_shape as _broadcast_shape
+from ._core import ndarray as _ndarray
 
 
 class ndarray(_ndarray):
     @overload
-    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None:
-        ...
+    def __init__(self, shape: Sequence[int], dtype: np.dtype) -> None: ...
 
     @overload
-    def __init__(self, other: _ndarray) -> None:
-        ...
+    def __init__(self, other: _ndarray) -> None: ...
 
     def __init__(self, shape_or_array, dtype: np.dtype = None):
         if isinstance(shape_or_array, _ndarray):
@@ -37,16 +38,10 @@ class ndarray(_ndarray):
         elif isinstance(shape_or_array, (Sequence, int)):
             if dtype is None:
                 raise ValueError("dtype must be specified when initializing with shape")
-            shape = (
-                shape_or_array
-                if isinstance(shape_or_array, Sequence)
-                else (shape_or_array,)
-            )
+            shape = shape_or_array if isinstance(shape_or_array, Sequence) else (shape_or_array,)
             super().__init__(shape, np.dtype(dtype))
         else:
-            raise TypeError(
-                f"Unsupported type for initialization: {type(shape_or_array)}"
-            )
+            raise TypeError(f"Unsupported type for initialization: {type(shape_or_array)}")
 
     def __repr__(self) -> str:
         return f"ndarray(shape={self.shape}, dtype={self.dtype})"
@@ -109,15 +104,16 @@ def _convert_dtype(dtype):
 
 
 @logger.catch(reraise=True)
-def _convert_size(size: Union[int, Sequence[int]]) -> Sequence[int]:
+def _convert_size(size: int | Sequence[int]) -> Sequence[int]:
     """Convert size from int to tuple"""
     logger.debug(f"Converting size {size}")
     if isinstance(size, int):
         return (size,)
     return size
 
+
 @logger.catch(reraise=True)
-def _normalize_shape(shape: Union[int, Sequence[int]]) -> list[int]:
+def _normalize_shape(shape: int | Sequence[int]) -> list[int]:
     """Normalize a shape argument to a list and reject negative dimensions."""
     logger.debug(f"Normalizing shape {shape}")
 
@@ -130,4 +126,3 @@ def _normalize_shape(shape: Union[int, Sequence[int]]) -> list[int]:
         raise ValueError("negative dimensions are not allowed")
 
     return normalized
-

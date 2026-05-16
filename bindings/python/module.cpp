@@ -37,11 +37,10 @@ void bind_version(pybind11::module_& version);
 namespace asnumpy {
 void bind_statistics(pybind11::module_& statistics);
 void bind_nn(pybind11::module_& nn);
-}
+} // namespace asnumpy
 
 // Global storage for CannError exception class (used by translator)
 static pybind11::object g_cann_error_cls;
-
 
 PYBIND11_MODULE(_core, module) {
     module.doc() = "*** AsNumpy Core ***";
@@ -52,7 +51,8 @@ PYBIND11_MODULE(_core, module) {
     // Register exception translators
     pybind11::register_exception_translator([](std::exception_ptr p) {
         try {
-            if (p) std::rethrow_exception(p);
+            if (p)
+                std::rethrow_exception(p);
         } catch (const std::invalid_argument& e) {
             PyErr_SetString(PyExc_ValueError, e.what());
         } catch (const std::out_of_range& e) {
@@ -84,7 +84,6 @@ PYBIND11_MODULE(_core, module) {
     auto testing = module.def_submodule("testing");
     // auto utils = module.def_submodule("utils");
     auto version = module.def_submodule("version");
-
 
     bind_array(array);
     bind_cann(cann);

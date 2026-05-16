@@ -43,4 +43,4 @@ double Min(const NPUArray& a);
 NPUArray Nanmin(const NPUArray& a, int64_t axis, bool keepdims);
 double Nanmin(const NPUArray& a);
 
-}
+} // namespace asnumpy

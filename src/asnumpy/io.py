@@ -27,6 +27,7 @@ Implements:
 """
 
 import numpy as _np
+
 from ._core import ndarray as NPUArray
 
 

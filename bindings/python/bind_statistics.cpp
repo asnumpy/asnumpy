@@ -14,10 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/statistics/averages_and_variances.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <asnumpy/statistics/averages_and_variances.hpp>
 
 namespace py = pybind11;
 
@@ -25,11 +25,10 @@ namespace asnumpy {
 
 void bind_statistics(py::module_& statistics) {
     statistics.doc() = "statistics module of asnumpy";
-    statistics.def("mean", py::overload_cast<const NPUArray&, int64_t, bool, std::optional<py::dtype>>(&Mean), 
-            py::arg("a"), py::arg("axis"), py::arg("keepdims"), py::arg("dtype") = py::none());
-    statistics.def("mean", py::overload_cast<const NPUArray&, std::optional<py::dtype>>(&Mean),
-            py::arg("a"), py::arg("dtype") = py::none());
+    statistics.def("mean", py::overload_cast<const NPUArray&, int64_t, bool, std::optional<py::dtype>>(&Mean),
+                   py::arg("a"), py::arg("axis"), py::arg("keepdims"), py::arg("dtype") = py::none());
+    statistics.def("mean", py::overload_cast<const NPUArray&, std::optional<py::dtype>>(&Mean), py::arg("a"),
+                   py::arg("dtype") = py::none());
 }
 
-}
-
+} // namespace asnumpy

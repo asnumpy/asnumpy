@@ -49,4 +49,4 @@ NPUArray Heaviside(const NPUArray& x1, const NPUArray& x2);
 NPUArray Relu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
 
 NPUArray Gelu(const NPUArray& x, std::optional<py::dtype> dtype = std::nullopt);
-}
+} // namespace asnumpy

@@ -18,13 +18,13 @@
 
 #include <algorithm>
 #if defined(__has_include)
-#  if __has_include(<bit>)
-#    include <bit>
-#  endif
+#if __has_include(<bit>)
+#include <bit>
 #endif
+#endif
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <cmath>
 #include <limits>
 #include <type_traits>
 
@@ -32,8 +32,7 @@ namespace asnumpy {
 namespace dtypes {
 
 // 安全 bit_cast（兼容 C++17；优先使用 std::bit_cast）
-template <class To, class From>
-inline To bit_cast(const From& src) noexcept {
+template <class To, class From> inline To bit_cast(const From& src) noexcept {
     static_assert(sizeof(To) == sizeof(From), "bit_cast size mismatch");
     static_assert(std::is_trivially_copyable_v<From>, "bit_cast From must be trivially copyable");
     static_assert(std::is_trivially_copyable_v<To>, "bit_cast To must be trivially copyable");
@@ -52,13 +51,13 @@ inline To bit_cast(const From& src) noexcept {
 inline int rne_to_int(double x) {
     double f = std::floor(x);
     double frac = x - f;
-    if (frac > 0.5) return static_cast<int>(f) + 1;
-    if (frac < 0.5) return static_cast<int>(f);
+    if (frac > 0.5)
+        return static_cast<int>(f) + 1;
+    if (frac < 0.5)
+        return static_cast<int>(f);
     // ties to even
-    return (static_cast<long long>(f) & 1LL) ? static_cast<int>(f) + 1
-                                             : static_cast<int>(f);
+    return (static_cast<long long>(f) & 1LL) ? static_cast<int>(f) + 1 : static_cast<int>(f);
 }
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

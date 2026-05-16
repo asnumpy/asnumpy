@@ -14,9 +14,10 @@
 # limitations under the License.
 # *****************************************************************************
 
-from typing import Union, Sequence, TypeVar
-import numpy as np
+from collections.abc import Sequence
+from typing import TypeVar, Union
 
+import numpy as np
 
 ArrayLike = Union[
     "ndarray",  # NPUArray

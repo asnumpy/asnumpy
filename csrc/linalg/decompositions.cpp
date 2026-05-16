@@ -14,11 +14,10 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/linalg/decompositions.hpp>
-#include <asnumpy/utils/status_handler.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -31,7 +30,8 @@
 using namespace asnumpy;
 
 py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
-    LOG_DEBUG("aclnnLinalgQr start: input_shape={}, aclDtype={}, mode={}", detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), mode);
+    LOG_DEBUG("aclnnLinalgQr start: input_shape={}, aclDtype={}, mode={}", detail::FormatShape(a.shape),
+              AclDtypeName(a.aclDtype), mode);
     int size = a.shape.size();
     int64_t m = a.shape[size - 2];
     int64_t n = a.shape.back();
@@ -42,13 +42,11 @@ py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
     if (mode == "complete") {
         num = 1;
         shapeR = a.shape;
-    }
-    else if (mode == "r") {
+    } else if (mode == "r") {
         num = 2;
         shapeR = a.shape;
         shapeR[size - 2] = k;
-    }
-    else {
+    } else {
         // reduced (default)
         num = 0;
         shapeR = a.shape;
@@ -65,11 +63,10 @@ py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
         // r mode: only return R, create empty Q tensor directly (shape [0])
         int64_t emptyShape = 0;
         int64_t emptyStride = 1;
-        aclTensor* emptyQ = aclCreateTensor(&emptyShape, 1, a.aclDtype,
-            &emptyStride, 0, ACL_FORMAT_ND, &emptyShape, 1, nullptr);
+        aclTensor* emptyQ =
+            aclCreateTensor(&emptyShape, 1, a.aclDtype, &emptyStride, 0, ACL_FORMAT_ND, &emptyShape, 1, nullptr);
 
-        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, emptyQ, resultR.tensorPtr,
-            &workspaceSize, &executor);
+        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, emptyQ, resultR.tensorPtr, &workspaceSize, &executor);
         ACLNN_CHECK(error, "aclnnLinalgQrGetWorkspaceSize");
 
         AclWorkspace workspace(workspaceSize);
@@ -81,21 +78,19 @@ py::object Linalg_Qr(const NPUArray& a, const std::string& mode) {
         aclDestroyTensor(emptyQ);
         LOG_INFO("aclnnLinalgQr completed");
         return py::cast(std::move(resultR));
-    }
-    else {
+    } else {
         // complete / reduced: return (Q, R)
         std::vector<int64_t> shapeQ = a.shape;
         if (mode == "complete") {
             shapeQ.back() = m;
-        }
-        else {
+        } else {
             shapeQ.back() = k;
         }
 
         auto resultQ = NPUArray(shapeQ, a.aclDtype);
 
-        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr,
-            &workspaceSize, &executor);
+        error = aclnnLinalgQrGetWorkspaceSize(a.tensorPtr, num, resultQ.tensorPtr, resultR.tensorPtr, &workspaceSize,
+                                              &executor);
         ACLNN_CHECK(error, "aclnnLinalgQrGetWorkspaceSize");
 
         AclWorkspace workspace(workspaceSize);

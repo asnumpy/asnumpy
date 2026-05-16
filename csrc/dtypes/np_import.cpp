@@ -14,12 +14,11 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #define ASNUMPY_IMPORT_NUMPY
 #include <asnumpy/dtypes/np_import.hpp>
 
-namespace asnumpy{
-namespace dtypes{
+namespace asnumpy {
+namespace dtypes {
 
 void ImportNumpy() {
     if (!PyArray_API) {
@@ -27,5 +26,5 @@ void ImportNumpy() {
     }
 }
 
-}  // namespace dtypes
-}  // namespace asnumpy
+} // namespace dtypes
+} // namespace asnumpy

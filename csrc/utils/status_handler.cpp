@@ -14,12 +14,11 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/utils/status_handler.hpp>
-#include <spdlog/spdlog.h>
-#include <fmt/format.h>
-#include <stdexcept>
 #include <cstring>
+#include <fmt/format.h>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 namespace asnumpy {
 
@@ -27,7 +26,8 @@ namespace {
 
 // Extract basename from full path: "/path/to/file.cpp" -> "file.cpp"
 const char* basename(const char* path) {
-    if (!path) return "unknown";
+    if (!path)
+        return "unknown";
     const char* last_slash = std::strrchr(path, '/');
     return last_slash ? last_slash + 1 : path;
 }
@@ -54,8 +54,7 @@ void CheckAclRuntimeStatus(aclError status, const char* file, const char* func, 
 void CheckAclnnStatus(aclnnStatus status, const char* file, const char* func, const std::string& api_name) {
     if (status != ACL_SUCCESS) {
         auto detail = get_error_detail();
-        auto error_msg = fmt::format("[{}]({}) {} error = {}{}",
-                                     basename(file), func, api_name, status, detail);
+        auto error_msg = fmt::format("[{}]({}) {} error = {}{}", basename(file), func, api_name, status, detail);
         spdlog::error(error_msg);
         throw std::runtime_error(error_msg);
     }
@@ -64,8 +63,7 @@ void CheckAclnnStatus(aclnnStatus status, const char* file, const char* func, co
 void CheckAclRuntimeStatus(aclError status, const char* file, const char* func, const std::string& api_name) {
     if (status != ACL_SUCCESS) {
         auto detail = get_error_detail();
-        auto error_msg = fmt::format("[{}]({}) {} error = {}{}",
-                                     basename(file), func, api_name, status, detail);
+        auto error_msg = fmt::format("[{}]({}) {} error = {}{}", basename(file), func, api_name, status, detail);
         spdlog::error(error_msg);
         throw std::runtime_error(error_msg);
     }

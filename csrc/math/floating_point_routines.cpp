@@ -14,12 +14,11 @@
  * limitations under the License.
  *****************************************************************************/
 
-
 #include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/math/floating_point_routines.hpp>
 #include <asnumpy/math/miscellaneous.hpp>
-#include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
@@ -36,17 +35,14 @@ namespace asnumpy {
 NPUArray Signbit(const NPUArray& x) {
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
     return EXECUTE_UNARY_OP(
-        x,
-        dtype,
+        x, dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSignbitGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSignbit(workspace, workspaceSize, executor, nullptr);
         },
-        "Signbit",
-        "aclnnSignbit"
-    );
+        "Signbit", "aclnnSignbit");
 }
 
 NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2) {
@@ -61,6 +57,6 @@ NPUArray Copysign(const NPUArray& x1, const NPUArray& x2) {
     NPUArray temp2 = Sign(x2);
     NPUArray result = Multiply(temp1, temp2);
     return result;
-}    
-
 }
+
+} // namespace asnumpy

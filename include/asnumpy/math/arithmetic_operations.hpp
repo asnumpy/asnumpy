@@ -290,6 +290,7 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
  * @return std::pair<NPUArray, NPUArray> Pair (quotient, remainder).
  * @throws std::runtime_error If inputs are not broadcastable, dtype unsupported, or ACL op fails.
  */
-std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype = std::nullopt);
+std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2,
+                                     std::optional<py::dtype> dtype = std::nullopt);
 
-}
+} // namespace asnumpy
