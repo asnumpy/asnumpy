@@ -105,7 +105,7 @@ def test_absolute(xp, dtype):
 # ========== 4. 广播与特殊 Dtype 限制 (XFAIL) ==========
 
 
-@pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
+@pytest.mark.xfail(reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True)
 @testing.for_dtypes([numpy.float16])
 @testing.numpy_asnumpy_allclose()
 def test_arithmetic_float16_xfail(xp, dtype):
@@ -123,7 +123,7 @@ def test_arithmetic_int_mismatch_xfail(xp, dtype):
     return xp.add(a, b)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnRemainder does not support BOOL type")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnRemainder does not support BOOL, auto-cast needed", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_remainder_bool_xfail(xp, dtype):

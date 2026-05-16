@@ -354,7 +354,7 @@ def test_softmax_2d_dtypes(xp, dtype):
 # 6. 空数组 / 边界情况测试 (Edge Cases)
 # ==========================================================================
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_softmax_empty(xp):
     """测试 softmax: 空数组"""

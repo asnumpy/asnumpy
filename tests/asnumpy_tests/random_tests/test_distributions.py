@@ -106,7 +106,7 @@ def test_distribution_shape_dtype_vector_size(func, kwargs, expected_dtype):
 # ==========================================================================
 
 @pytest.mark.xfail(
-    reason="random seed API is not exposed and backend seed handling is inconsistent",
+    reason="[FIXABLE] random seed API not exposed, backend seed handling inconsistent",
     strict=True,
 )
 def test_random_seed_reproducibility_placeholder():

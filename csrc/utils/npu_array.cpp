@@ -354,6 +354,7 @@ int64_t NPUArray::GetShapeSize(const std::vector<int64_t>& shape) {
  * @throws std::runtime_error If input data type is not supported.
  */
 aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
+    if(dtype.is(py::dtype("float16"))) return ACL_FLOAT16;
     if(dtype.is(py::dtype::of<float>())) return ACL_FLOAT;
     if(dtype.is(py::dtype::of<double>())) return ACL_DOUBLE;
     if(dtype.is(py::dtype::of<int8_t>())) return ACL_INT8;

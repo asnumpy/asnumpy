@@ -34,6 +34,9 @@
 
 import numpy
 import pytest
+import asnumpy
+from asnumpy import testing
+import pytest
 from asnumpy import testing
 
 
@@ -452,14 +455,12 @@ def test_matrix_power_fp64_precision(xp, dtype):
 
 
 # ---------- 6.5 奇异矩阵边界 ----------
-@pytest.mark.xfail(reason="Singular matrix has no inverse for negative power", strict=True)
-@testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
-def test_matrix_power_singular_negative(xp, dtype):
-    """奇异矩阵边界: 负幂应对奇异矩阵失败"""
+def test_matrix_power_singular_negative():
+    """奇异矩阵边界: 负幂应对奇异矩阵抛出异常"""
     data = [[1.0, 2.0], [2.0, 4.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.matrix_power(a, -1)
+    a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=numpy.float32))
+    with pytest.raises((RuntimeError, ValueError, Exception)):
+        asnumpy.linalg.matrix_power(a, -1)
 
 
 # ---------- 6.6 空矩阵输入 ----------

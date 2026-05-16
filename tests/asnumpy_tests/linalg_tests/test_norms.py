@@ -386,7 +386,7 @@ def test_det_batch_3x3(xp, dtype):
 
 
 # ---------- 2.6 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_det_empty_matrix(xp, dtype):
@@ -519,7 +519,7 @@ def test_slogdet_batch_3x3(dtype):
 
 
 # ---------- 3.6 空矩阵输入 ----------
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
+@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-5)
 def test_slogdet_empty_matrix(xp, dtype):

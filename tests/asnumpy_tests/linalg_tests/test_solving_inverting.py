@@ -29,6 +29,7 @@
 
 import numpy
 import pytest
+import asnumpy
 from asnumpy import testing
 
 
@@ -128,11 +129,11 @@ def test_inv_diagonal(xp, dtype):
 
 
 # ---------- 1.4 奇异矩阵边界 ----------
-@pytest.mark.xfail(reason="Singular matrix has no inverse", strict=True)
+@pytest.mark.xfail(reason="[FIXABLE] inv() does not detect singular matrices — silently returns wrong result instead of raising LinAlgError", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
 def test_inv_singular(xp, dtype):
-    """奇异矩阵: 行线性相关，应失败"""
+    """奇异矩阵: 行线性相关，应抛出异常（当前静默返回错误结果）"""
     data = [[1.0, 2.0, 3.0],
             [4.0, 5.0, 6.0],
             [7.0, 8.0, 9.0]]
@@ -140,15 +141,13 @@ def test_inv_singular(xp, dtype):
     return xp.linalg.inv(a)
 
 
-@pytest.mark.xfail(reason="Singular matrix has no inverse", strict=True)
-@testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
-def test_inv_zero_matrix(xp, dtype):
-    """奇异矩阵: 全零矩阵，应失败"""
+def test_inv_zero_matrix():
+    """奇异矩阵: 全零矩阵，应抛出异常"""
     data = [[0.0, 0.0],
             [0.0, 0.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.inv(a)
+    a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=numpy.float32))
+    with pytest.raises((RuntimeError, ValueError, Exception)):
+        asnumpy.linalg.inv(a)
 
 
 # ---------- 1.5 广播行为 ----------
@@ -178,15 +177,13 @@ def test_inv_batch_3x3(xp, dtype):
 
 
 # ---------- 1.6 非方阵输入 ----------
-@pytest.mark.xfail(reason="Non-square matrix has no inverse", strict=True)
-@testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
-def test_inv_nonsquare(xp, dtype):
-    """非方阵: 应失败"""
+def test_inv_nonsquare():
+    """非方阵: 应抛出异常"""
     data = [[1.0, 2.0, 3.0],
             [4.0, 5.0, 6.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.inv(a)
+    a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=numpy.float32))
+    with pytest.raises((RuntimeError, ValueError, Exception)):
+        asnumpy.linalg.inv(a)
 
 
 # ---------- 1.7 空矩阵输入 ----------

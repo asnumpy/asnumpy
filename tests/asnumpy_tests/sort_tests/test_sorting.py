@@ -197,7 +197,7 @@ def test_sort_3d_negative_axis(xp, dtype):
 # ==========================================================================
 
 # ---------- 3.1 stable=True ----------
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
+@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_true(xp, dtype):
@@ -210,7 +210,7 @@ def test_sort_stable_true(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
+@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_false(xp, dtype):
@@ -223,7 +223,7 @@ def test_sort_stable_false(xp, dtype):
     return xp.sort(a, stable=False)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
+@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_duplicates(xp, dtype):
@@ -233,7 +233,7 @@ def test_sort_stable_duplicates(xp, dtype):
     return xp.sort(a, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
+@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_2d(xp, dtype):
@@ -243,7 +243,7 @@ def test_sort_stable_2d(xp, dtype):
     return xp.sort(a, axis=1, stable=True)
 
 
-@pytest.mark.xfail(reason="numpy.sort does not support 'stable' parameter in this NumPy version")
+@pytest.mark.xfail(reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version", strict=True)
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_sort_stable_all_same(xp, dtype):
@@ -355,7 +355,7 @@ def test_sort_reverse_sorted(xp, dtype):
 
 
 # ---------- 5.3 含 NaN 输入 ----------
-@pytest.mark.xfail(reason="CANN sort operator does not support NaN values", strict=True)
+@pytest.mark.xfail(reason="[UPSTREAM] CANN 8.0.RC1: sort does not support NaN", strict=True)
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose()
 def test_sort_with_nan(xp, dtype):

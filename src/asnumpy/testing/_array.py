@@ -138,7 +138,9 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg='', verbose=True, strides_c
 
             if x.size > 0:
                 mask = ~np.isclose(x, y, rtol=rtol, atol=atol, equal_nan=True)
-                msg += f"\nIndices where elements differ: {np.where(mask)}"
+                # Use atleast_1d to avoid DeprecationWarning on 0d arrays
+                indices = np.atleast_1d(mask).nonzero()
+                msg += f"\nIndices where elements differ: {indices}"
             msg += f"\nNumPy:\n{x}\nAsNumPy:\n{y}"
         else:
             msg = "Arrays are not almost equal."

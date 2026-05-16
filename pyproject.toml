@@ -48,6 +48,7 @@ dev = [
 ]
 test = [
     "pytest>=9.0.0",
+    "pytest-cov>=6.0.0",
 ]
 
 [project.urls]
@@ -84,7 +85,20 @@ verbose = true
 testpaths = ["tests"]
 addopts = [
     "--import-mode=importlib",
-    "-v"
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+]
+
+# Coverage configuration (Python layer only; C++ coverage via gcov/lcov post-1.0)
+[tool.coverage.run]
+source = ["src/asnumpy"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
 ]
 
 # Ruff configuration (linter + formatter)

@@ -46,14 +46,14 @@ def test_absolute_basic(xp, dtype):
     return xp.absolute(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnAbs/Fabs does not support float16/uint/complex")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnAbs/Fabs unsupported dtypes (float16/uint/complex)", strict=True)
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_absolute_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1], dtype)
     return xp.absolute(a)
 
 
-@pytest.mark.xfail(reason="Mismatch: AsNumpy returns original type for int, but Numpy returns float for fabs")
+@pytest.mark.xfail(reason="[FIXABLE] dtype mismatch: fabs returns original int type, NumPy returns float", strict=True)
 @testing.for_dtypes([numpy.int8, numpy.int32, numpy.uint8])
 def test_fabs_dtype_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [-1, 2], dtype)
@@ -68,7 +68,7 @@ def test_sign_basic(xp, dtype):
     return xp.sign(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnSign unsupported types (float16, int8/16, uints)")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnSign unsupported types (float16/int8/int16/uints)", strict=True)
 @testing.for_dtypes([numpy.float16, numpy.int8, numpy.int16, numpy.uint8, numpy.uint16])
 def test_sign_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1], dtype)
@@ -85,7 +85,7 @@ def test_square_float64(xp, dtype):
     return xp.square(a)
 
 
-@pytest.mark.xfail(reason="Mismatch: AsNumpy square outputs float32 for integers, Numpy preserves dtype or promotes")
+@pytest.mark.xfail(reason="[FIXABLE] dtype promotion: square outputs float32 for integers, NumPy preserves/promotes", strict=True)
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_square_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
@@ -119,7 +119,7 @@ def test_minimum_basic(xp, dtype):
     return xp.minimum(x1, x2)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnMaximum/Minimum does not support float16/uints/complex")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnMaximum/Minimum unsupported dtypes (float16/uints/complex)", strict=True)
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_max_min_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1], dtype)
@@ -136,7 +136,7 @@ def test_clip_basic(xp, dtype):
     return xp.clip(a, 3, 8)
 
 
-@pytest.mark.xfail(reason="Mismatch: Clip forces non-float32 types to float32")
+@pytest.mark.xfail(reason="[FIXABLE] dtype promotion: clip forces non-float32 types to float32", strict=True)
 @testing.for_dtypes([numpy.int32, numpy.float64])
 def test_clip_dtype_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 5, 10], dtype)

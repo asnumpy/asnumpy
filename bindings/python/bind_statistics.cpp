@@ -27,7 +27,8 @@ void bind_statistics(py::module_& statistics) {
     statistics.doc() = "statistics module of asnumpy";
     statistics.def("mean", py::overload_cast<const NPUArray&, int64_t, bool, std::optional<py::dtype>>(&Mean), 
             py::arg("a"), py::arg("axis"), py::arg("keepdims"), py::arg("dtype") = py::none());
-    statistics.def("mean", py::overload_cast<const NPUArray&>(&Mean), py::arg("a"));
+    statistics.def("mean", py::overload_cast<const NPUArray&, std::optional<py::dtype>>(&Mean),
+            py::arg("a"), py::arg("dtype") = py::none());
 }
 
 }

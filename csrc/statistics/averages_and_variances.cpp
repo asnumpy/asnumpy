@@ -99,6 +99,9 @@ namespace asnumpy {
         if (axis < 0) {
             ax = shape.size() + axis;
         }
+        if (ax < 0 || ax >= static_cast<int64_t>(shape.size())) {
+            throw std::out_of_range("axis out of range");
+        }
         if (keepdims) {
             shape[ax] = 1;
         }
@@ -121,13 +124,14 @@ namespace asnumpy {
         return result;
     }
 
-    double Mean(const NPUArray& a) {
+    double Mean(const NPUArray& a, std::optional<py::dtype> dtype) {
         LOG_DEBUG("aclnnMean start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(a.shape), a.tensorSize, AclDtypeName(a.aclDtype));
         auto temp = FlattenArray(a);
-        
+
         std::vector<int64_t> tmp{1};
         aclIntArray* axis_array = aclCreateIntArray(tmp.data(), tmp.size());
-        auto result = NPUArray({1}, a.aclDtype);
+        auto outDtype = dtype.has_value() ? dtype.value() : a.dtype;
+        auto result = NPUArray({1}, outDtype);
         
         uint64_t workspaceSize = 0;
         aclOpExecutor* executor;

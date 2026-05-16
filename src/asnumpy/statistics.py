@@ -27,5 +27,5 @@ def mean(
     dtype: DTypeLike = None,
 ) -> Union[ndarray, float]:
     if axis is None:
-        return _mean(a)
+        return _mean(a, _convert_dtype(dtype))
     return ndarray(_mean(a, axis, keepdims, _convert_dtype(dtype)))
