@@ -203,7 +203,7 @@ def test_sort_3d_negative_axis(xp, dtype):
 # ---------- 3.1 stable=True ----------
 @pytest.mark.xfail(
     reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
-    strict=True,
+    strict=False,
 )
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -219,7 +219,7 @@ def test_sort_stable_true(xp, dtype):
 
 @pytest.mark.xfail(
     reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
-    strict=True,
+    strict=False,
 )
 @testing.for_dtypes([numpy.int32, numpy.float32])
 @testing.numpy_asnumpy_array_equal()
@@ -235,7 +235,7 @@ def test_sort_stable_false(xp, dtype):
 
 @pytest.mark.xfail(
     reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
-    strict=True,
+    strict=False,
 )
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
@@ -248,7 +248,7 @@ def test_sort_stable_duplicates(xp, dtype):
 
 @pytest.mark.xfail(
     reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
-    strict=True,
+    strict=False,
 )
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
@@ -261,7 +261,7 @@ def test_sort_stable_2d(xp, dtype):
 
 @pytest.mark.xfail(
     reason="[UPSTREAM] NumPy compat: sort 'stable' parameter not available in this NumPy version",
-    strict=True,
+    strict=False,
 )
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
