@@ -36,6 +36,13 @@ repos:
         types_or: [c++, c]
         args: [--style=file]
 
+  # C++: cpplint (style checker)
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.2.0
+    hooks:
+      - id: cpplint
+        types_or: [c++, c]
+
   # General: trailing whitespace, file endings
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
