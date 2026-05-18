@@ -1,0 +1,12 @@
+stages:
+  - lint
+
+cpplint:
+  stage: lint
+  image: python:3.11
+  before_script:
+    - pip install cpplint
+  script:
+    - cpplint --recursive src/ include/ python/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
