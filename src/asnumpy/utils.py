@@ -32,7 +32,7 @@ class ndarray(_ndarray):
     @overload
     def __init__(self, other: _ndarray) -> None: ...
 
-    def __init__(self, shape_or_array, dtype: np.dtype = None):
+    def __init__(self, shape_or_array, dtype=None):
         if isinstance(shape_or_array, _ndarray):
             super().__init__(shape_or_array)
         elif isinstance(shape_or_array, (Sequence, int)):
@@ -51,31 +51,31 @@ class ndarray(_ndarray):
 
     @property
     def shape(self) -> tuple:
-        return super().shape
+        return super().shape  # type: ignore[no-any-return]
 
     @property
     def dtype(self) -> np.dtype:
-        return super().dtype
+        return super().dtype  # type: ignore[no-any-return]
 
     @property
     def acl_dtype(self) -> int:
-        return super().aclDtype
+        return super().aclDtype  # type: ignore[no-any-return]
 
     @property
     def ndim(self) -> int:
-        return super().ndim
+        return super().ndim  # type: ignore[no-any-return]
 
     @property
     def itemsize(self) -> int:
-        return super().itemsize
+        return super().itemsize  # type: ignore[no-any-return]
 
     @property
     def nbytes(self) -> int:
-        return super().nbytes
+        return super().nbytes  # type: ignore[no-any-return]
 
     @property
     def strides(self) -> tuple:
-        return super().strides
+        return super().strides  # type: ignore[no-any-return]
 
     @classmethod
     def from_numpy(cls, host_data: np.ndarray) -> "ndarray":
@@ -89,7 +89,7 @@ class ndarray(_ndarray):
 @logger.catch(reraise=True)
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
     logger.debug(f"Broadcasting shapes {shape_a}, {shape_b}")
-    return _broadcast_shape(shape_a, shape_b)
+    return _broadcast_shape(shape_a, shape_b)  # type: ignore[no-any-return]
 
 
 @logger.catch(reraise=True)

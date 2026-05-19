@@ -119,7 +119,7 @@ def slogdet(a: ArrayLike) -> tuple:
     if np.issubdtype(host.dtype, np.floating) and (
         np.any(np.isnan(host)) or np.any(np.isinf(host))
     ):
-        return np.linalg.slogdet(host)
+        return np.linalg.slogdet(host)  # type: ignore[no-any-return]
     sign, logdet = _slogdet(a)
     return (ndarray(sign), ndarray(logdet))
 

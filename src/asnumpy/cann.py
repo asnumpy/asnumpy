@@ -36,28 +36,28 @@ from ._core.cann import (
 @logger.catch
 def set_device(device_id: int) -> None:
     logger.info(f"Setting device to {device_id}")
-    return _set_device(device_id)
+    _set_device(device_id)
 
 
 @logger.catch
 def reset_device(device_id: int) -> None:
     logger.info(f"Resetting device {device_id}")
-    return _reset_device(device_id)
+    _reset_device(device_id)
 
 
 @logger.catch
 def reset_device_force(device_id: int) -> None:
     logger.info(f"Force resetting device {device_id}")
-    return _reset_device_force(device_id)
+    _reset_device_force(device_id)
 
 
 @logger.catch
 def init() -> None:
     logger.info("Initializing CANN backend")
-    return _init()
+    _init()
 
 
 @logger.catch
 def finalize() -> None:
     logger.info("Finalizing CANN backend")
-    return _finalize()
+    _finalize()

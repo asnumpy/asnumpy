@@ -14,6 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
+import atexit
 import importlib
 import os
 import sys
@@ -22,6 +23,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from loguru import logger
 
+from ._version import __version__
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:
@@ -340,15 +342,6 @@ _EAGER_EXPORTS = [
 __all__ = _EAGER_EXPORTS + list(_LAZY_MAPPING.keys())
 
 
-# Get version from package metadata
-try:
-    from importlib.metadata import version
-
-    __version__ = version("asnumpy")
-except Exception:
-    __version__ = "0.2.0"
-
-
 def __getattr__(name):
     if name in _LAZY_MAPPING:
         module_path = _LAZY_MAPPING[name]
@@ -400,9 +393,6 @@ def enable_logging(level="INFO", log_dir=None):
 
 if os.getenv("ASNUMPY_DEBUG", "0") == "1":
     enable_logging(level="DEBUG", log_dir=os.getenv("ASNUMPY_LOG_DIR", None))
-
-
-import atexit
 
 
 @atexit.register

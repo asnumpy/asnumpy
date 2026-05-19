@@ -14,30 +14,35 @@
 # limitations under the License.
 # *****************************************************************************
 
+from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import TypeVar, Union
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 
-ArrayLike = Union[
-    "ndarray",  # NPUArray
-    np.ndarray,
-    int,
-    float,
-    complex,
-    bool,
-    Sequence,
-]
+if TYPE_CHECKING:
+    from .utils import ndarray  # noqa: F401
 
-DTypeLike = Union[np.dtype, str, type, None]
+ArrayLike = (
+    ndarray  # NPUArray
+    | np.ndarray
+    | int
+    | float
+    | complex
+    | bool
+    | Sequence
+)
 
-ShapeLike = Union[int, Sequence[int]]
+DTypeLike = np.dtype | str | type | None
 
-AxisLike = Union[int, Sequence[int], None]
+ShapeLike = int | Sequence[int]
 
-AxisOptional = Union[int, Sequence[int], None]
+AxisLike = int | Sequence[int] | None
 
-ScalarLike = Union[int, float, complex, bool]
+AxisOptional = int | Sequence[int] | None
+
+ScalarLike = int | float | complex | bool
 
 T = TypeVar("T")
 

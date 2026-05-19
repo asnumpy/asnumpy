@@ -15,7 +15,7 @@
 # *****************************************************************************
 
 cmake_minimum_required(VERSION 3.22...3.30)
-project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
+project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
 # CMake policies
 if(POLICY CMP0135)

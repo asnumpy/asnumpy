@@ -419,7 +419,7 @@ def mod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 
 def modf(x: ArrayLike) -> tuple:
     frac, inte = _modf(x)
-    return [ndarray(frac), ndarray(inte)]
+    return (ndarray(frac), ndarray(inte))
 
 
 def remainder(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -429,7 +429,7 @@ def remainder(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 def divmod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> tuple:
     res1, res2 = _divmod(x1, x2)
     _type = _convert_dtype(dtype)
-    return [ndarray(res1, _type), ndarray(res2, _type)]
+    return (ndarray(res1, _type), ndarray(res2, _type))
 
 
 def power(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -444,7 +444,7 @@ def prod(
     dtype: DTypeLike = None,
 ) -> ndarray | float:
     if axis is None:
-        return _prod(a)
+        return _prod(a)  # type: ignore[no-any-return]
     return ndarray(_prod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
@@ -455,7 +455,7 @@ def sum(
     dtype: DTypeLike = None,
 ) -> ndarray | float:
     if axis is None:
-        return _sum(a)
+        return _sum(a)  # type: ignore[no-any-return]
     return ndarray(_sum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
@@ -466,7 +466,7 @@ def nanprod(
     dtype: DTypeLike = None,
 ) -> ndarray | float:
     if axis is None:
-        return _nanprod(a)
+        return _nanprod(a)  # type: ignore[no-any-return]
     return ndarray(_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
@@ -477,7 +477,7 @@ def nansum(
     dtype: DTypeLike = None,
 ) -> ndarray | float:
     if axis is None:
-        return _nansum(a)
+        return _nansum(a)  # type: ignore[no-any-return]
     return ndarray(_nansum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
@@ -550,7 +550,7 @@ def signbit(x: ArrayLike) -> ndarray:
     # Detect -0.0 via numpy and patch the result.
     import numpy as np
 
-    np_x = x.to_numpy()
+    np_x = x.to_numpy()  # type: ignore[union-attr]
     neg_zero_mask = np.signbit(np_x) & (np_x == 0)
     if neg_zero_mask.any():
         np_result = result.to_numpy().astype(np.bool_)
@@ -661,29 +661,29 @@ def fmin(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 
 def max(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
-        return _max(a)
+        return _max(a)  # type: ignore[no-any-return]
     return ndarray(_max(a, axis, keepdims))
 
 
 def amax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
-        return _amax(a)
+        return _amax(a)  # type: ignore[no-any-return]
     return ndarray(_amax(a, axis, keepdims))
 
 
 def nanmax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
-        return _nanmax(a)
+        return _nanmax(a)  # type: ignore[no-any-return]
     return ndarray(_nanmax(a, axis, keepdims))
 
 
 def min(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
-        return _min(a)
+        return _min(a)  # type: ignore[no-any-return]
     return ndarray(_min(a, axis, keepdims))
 
 
 def amin(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
-        return _amin(a)
+        return _amin(a)  # type: ignore[no-any-return]
     return ndarray(_amin(a, axis, keepdims))
