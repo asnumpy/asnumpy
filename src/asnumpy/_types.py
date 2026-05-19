@@ -17,22 +17,22 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, Union
 
 import numpy as np
 
 if TYPE_CHECKING:
     from .utils import ndarray  # noqa: F401
 
-ArrayLike = (
-    ndarray  # NPUArray
-    | np.ndarray
-    | int
-    | float
-    | complex
-    | bool
-    | Sequence
-)
+ArrayLike = Union[  # noqa: UP007
+    "ndarray",  # NPUArray — string forward ref to avoid circular import
+    np.ndarray,
+    int,
+    float,
+    complex,
+    bool,
+    Sequence,
+]
 
 DTypeLike = np.dtype | str | type | None
 
