@@ -138,6 +138,7 @@ Full test environment, controlled variables, and reproduction instructions: [ben
 
 Contributions are welcome. Small fixes can be submitted directly as pull requests. For larger features, please open an issue first to discuss the design.
 
+<!-- test branch for pre-receive hook verification -->
 See the [Developer Guide](docs/developer_guide.md) for build instructions, coding conventions, and how to add new operators.
 
 ## Resources
