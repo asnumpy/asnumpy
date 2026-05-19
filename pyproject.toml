@@ -19,12 +19,14 @@ requires = [
   "scikit-build-core>=0.11.6",
   "pybind11>=3.0.0",
   "numpy>=1.26",
+  "setuptools-scm>=8",
+  "towncrier>=24",
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "asnumpy"
-version = "0.2.0"
+dynamic = ["version"]
 description = "A NumPy-like library accelerated by Ascend NPU"
 readme = "README.md"
 authors = [{ name = "神里绫华的狗", email = "wuzhenqing@stu.hit.edu.cn" }]
@@ -80,6 +82,23 @@ make-fallback = true
 [tool.scikit-build.editable]
 mode = "redirect"
 verbose = true
+
+# scikit-build-core metadata configuration
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["src/asnumpy/_version.py"]
+
+# setuptools-scm configuration (version from git tags)
+[tool.setuptools_scm]
+write_to = "src/asnumpy/_version.py"
+tag_regex = '^v?(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+
+# towncrier configuration (fragment-based CHANGELOG management)
+[tool.towncrier]
+directory = "changes"
+filename = "CHANGELOG.md"
+package = "asnumpy"
+package_dir = "src"
 
 # pytest configuration
 [tool.pytest.ini_options]

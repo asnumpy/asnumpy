@@ -28,8 +28,7 @@ pybind11_add_module(_core
     bind_statistics.cpp
     bind_nn.cpp
     bind_testing.cpp
-    bind_utils.cpp
-    bind_version.cpp)
+    bind_utils.cpp)
 
 target_include_directories(_core
     PUBLIC
