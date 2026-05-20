@@ -18,6 +18,7 @@ cmake_minimum_required(VERSION 3.22...3.30)
 project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
 
 # CMake policies
+# temporary test comment
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
