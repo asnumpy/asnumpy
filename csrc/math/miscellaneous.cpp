@@ -291,24 +291,24 @@ NPUArray Square(const NPUArray& x) {
     aclScalar* scalar = aclCreateScalar(&two, ACL_FLOAT);
     ;
 
-    // 获取 workspace 大小
+        // get workspace size
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnPowTensorScalarGetWorkspaceSize(x.tensorPtr, scalar, result.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnPowTensorScalarGetWorkspaceSize");
 
-    // 分配 workspace
+        // allocate workspace
     AclWorkspace workspace(workspaceSize);
 
-    // 执行计算
+    // execute computation
     error = aclnnPowTensorScalar(workspace.get(), workspaceSize, executor, nullptr);
     ACLNN_CHECK(error, "aclnnPowTensorScalar");
 
-    // 同步
+    // synchronize
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
-    // 释放资源
+        // release resources
     aclDestroyScalar(scalar);
 
     LOG_INFO("aclnnPowTensorScalar completed");
@@ -321,8 +321,8 @@ DEFINE_UNARY_OP(Sign, aclnnSignGetWorkspaceSize, aclnnSign)
 DEFINE_BINARY_OP(Heaviside, aclnnHeavisideGetWorkspaceSize, aclnnHeaviside)
 
 NPUArray Fabs(const NPUArray& x) {
-    // absolute 处理所有数据类型（包括复数等） fabs只处理float和int，
-    // 但aclnnAbs不支持复数，所以这里默认fabs=absolute
+        // abs handles all dtypes (including complex); fabs only handles float and int,
+        // but aclnnAbs does not support complex, so fabs defaults to absolute
     return asnumpy::Absolute(x);
 }
 

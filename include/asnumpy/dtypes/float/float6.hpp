@@ -35,9 +35,9 @@ class float6_e2m3fn {
         uint32_t exp = (u >> 23) & 0xFFu;
         uint32_t frac = u & 0x7FFFFFu;
 
-        // MX 格式：无 Inf/NaN，有限值范围
+        // MX format: no Inf/NaN, finite range
         if (exp == 0xFFu) {
-            // NaN/Inf -> 最大有限值
+            // NaN/Inf -> max finite value
             return static_cast<uint8_t>((sign << 5) | 0b0'11'111);
         }
         if (exp == 0 && frac == 0) {
@@ -49,7 +49,7 @@ class float6_e2m3fn {
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
         constexpr int bias = 1; // E2M3 bias
-        // 正规阈值：2^0 = 1
+        // normal threshold: 2^0 = 1
         if (exp == 0 || e_unbiased < 0) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
             int m = rne_to_int(static_cast<double>(mag) * 8.0); // 3-bit mantissa
@@ -67,7 +67,7 @@ class float6_e2m3fn {
             ++e;
         }
 
-        if (e > 2) { // 最大指数 0b11 -> e_unbiased=2
+        if (e > 2) { // max exponent 0b11 -> e_unbiased=2
             return static_cast<uint8_t>((sign << 5) | 0b0'11'111);
         }
         if (e < 0) {
@@ -90,7 +90,7 @@ class float6_e2m3fn {
         constexpr int bias = 1;
 
         if (exp == 0) {
-            float v = static_cast<float>(mant) * (1.0f / 8.0f); // 次正规
+            float v = static_cast<float>(mant) * (1.0f / 8.0f); // subnormal
             return sign ? -v : v;
         }
         float base = 1.0f + static_cast<float>(mant) * (1.0f / 8.0f);
@@ -148,7 +148,7 @@ class float6_e2m3fn {
     bool operator>(const float6_e2m3fn& other) const { return other < *this; }
     bool operator>=(const float6_e2m3fn& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_FLOAT6_E2M3; }
 };
 
@@ -176,7 +176,7 @@ class float6_e3m2fn {
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
         constexpr int bias = 3; // E3M2 bias
-        // 正规阈值：2^-2 = 0.25
+        // normal threshold: 2^-2 = 0.25
         if (exp == 0 || e_unbiased < -2) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
             int m = rne_to_int(static_cast<double>(mag) * 4.0); // 2-bit mantissa
@@ -194,7 +194,7 @@ class float6_e3m2fn {
             ++e;
         }
 
-        if (e > 4) { // 最大指数 0b111 -> e_unbiased=4
+        if (e > 4) { // max exponent 0b111 -> e_unbiased=4
             return static_cast<uint8_t>((sign << 5) | 0b0'111'11);
         }
         if (e < -2) {
@@ -267,7 +267,7 @@ class float6_e3m2fn {
     bool operator>(const float6_e3m2fn& other) const { return other < *this; }
     bool operator>=(const float6_e3m2fn& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_FLOAT6_E3M2; }
 };
 

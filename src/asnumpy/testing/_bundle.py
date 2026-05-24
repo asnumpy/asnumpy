@@ -14,11 +14,11 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""测试类生成工具
+"""Test class generation utilities.
 
-负责动态生成测试类：
-- make_decorator() - 创建装饰器
-- _generate_case() - 生成具体的测试类
+Responsible for dynamically generating test classes:
+- make_decorator() - create decorators
+- _generate_case() - generate concrete test classes
 """
 
 __all__ = [
@@ -31,24 +31,24 @@ import functools
 
 
 def make_decorator(decorator_func):
-    """创建装饰器的通用工具
+    """General-purpose utility for creating decorators.
 
-    这个函数可以将一个普通函数转换为装饰器。
+    Converts a plain function into a decorator.
 
     Args:
-        decorator_func: 装饰器函数
+        decorator_func: The decorator function.
 
     Returns:
-        装饰器
+        Decorator.
     """
 
     @functools.wraps(decorator_func)
     def wrapper(*args, **kwargs):
-        # 如果直接用作@decorator
+        # Used directly as @decorator
         if len(args) == 1 and callable(args[0]) and not kwargs:
             func = args[0]
             return decorator_func(func)
-        # 如果用作@decorator(...)
+        # Used as @decorator(...)
         else:
 
             def actual_decorator(func):
@@ -60,18 +60,18 @@ def make_decorator(decorator_func):
 
 
 def _generate_case(test_class, params):
-    """生成具体的测试用例类
+    """Generate a concrete test case class.
 
-    根据参数组合，为测试类生成一个具体的测试用例类。
+    Creates a concrete test case class for a given combination of parameters.
 
     Args:
-        test_class: 基础测试类
-        params: 参数字典
+        test_class: Base test class.
+        params: Parameter dict.
 
     Returns:
-        生成的测试类
+        Generated test class.
     """
-    # 生成类名
+    # Build class name
     class_name = test_class.__name__
     for key, value in params.items():
         value_str = str(value)
@@ -79,10 +79,10 @@ def _generate_case(test_class, params):
             value_str = value.__name__
         class_name += f"_{key}_{value_str}"
 
-    # 创建新类的属性字典
+    # Build attribute dict for the new class
     class_dict = {}
 
-    # 复制测试类的所有方法
+    # Copy all methods from the test class
     for attr_name in dir(test_class):
         if attr_name.startswith("_"):
             continue
@@ -90,7 +90,7 @@ def _generate_case(test_class, params):
         if not callable(attr):
             continue
 
-        # 为方法添加参数
+        # Bind parameters into each method
         def make_method(original_method, test_params):
             @functools.wraps(original_method)
             def method(self, *args, **kwargs):
@@ -101,20 +101,20 @@ def _generate_case(test_class, params):
 
         class_dict[attr_name] = make_method(attr, params)
 
-    # 创建新类
+    # Create the new class
     new_class = type(class_name, (test_class,), class_dict)
     return new_class
 
 
 def generate_test_classes(base_class, param_combinations):
-    """为测试类生成多个参数化版本
+    """Generate multiple parameterized versions of a test class.
 
     Args:
-        base_class: 基础测试类
-        param_combinations: 参数组合列表
+        base_class: Base test class.
+        param_combinations: List of parameter combination dicts.
 
     Returns:
-        生成的测试类列表
+        List of generated test classes.
     """
     test_classes = []
 
@@ -126,27 +126,27 @@ def generate_test_classes(base_class, param_combinations):
 
 
 class TestBundle:
-    """测试包装类
+    """Wrapper class for a collection of test classes.
 
-    这个类可以包装多个测试类，方便批量管理。
+    Wraps multiple test classes for convenient batch management.
     """
 
     def __init__(self, test_classes):
-        """初始化测试包装类
+        """Initialize the test bundle.
 
         Args:
-            test_classes: 测试类列表
+            test_classes: List of test classes.
         """
         self.test_classes = test_classes
 
     def run(self, runner):
-        """运行所有测试类
+        """Run all test classes.
 
         Args:
-            runner: 测试运行器
+            runner: Test runner.
 
         Returns:
-            测试结果
+            List of test results.
         """
         results = []
         for test_class in self.test_classes:
@@ -156,10 +156,10 @@ class TestBundle:
         return results
 
     def get_test_count(self):
-        """获取测试数量
+        """Return the total number of test methods.
 
         Returns:
-            测试方法的总数
+            Total count of test methods across all classes.
         """
         count = 0
         for test_class in self.test_classes:

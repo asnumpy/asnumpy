@@ -22,7 +22,7 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 自定义 bfloat16 实现（移除 Eigen 依赖）
+// Custom bfloat16 implementation (removed Eigen dependency)
 class bfloat16 {
   private:
     uint16_t rep_;
@@ -31,13 +31,13 @@ class bfloat16 {
 
     static uint16_t encode_from_float(float f) {
         uint32_t u = bit_cast<uint32_t>(f);
-        // bfloat16: 1符号位 + 8指数位 + 7尾数位
-        // 直接截取 float32 的高16位
+        // bfloat16: 1 sign + 8 exponent + 7 mantissa bits
+        // directly truncate high 16 bits of float32
         return static_cast<uint16_t>(u >> 16);
     }
 
     static float decode_to_float(uint16_t bits) {
-        // 将 bfloat16 位模式扩展到 float32
+        // extend bfloat16 bit pattern to float32
         uint32_t u = static_cast<uint32_t>(bits) << 16;
         return bit_cast<float>(u);
     }
@@ -90,7 +90,7 @@ class bfloat16 {
     bool operator>(const bfloat16& other) const { return other < *this; }
     bool operator>=(const bfloat16& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_BF16; }
 };
 

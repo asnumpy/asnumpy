@@ -31,7 +31,7 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 安全 bit_cast（兼容 C++17；优先使用 std::bit_cast）
+// safe bit_cast (compatible with C++17; prefers std::bit_cast)
 template <class To, class From> inline To bit_cast(const From& src) noexcept {
     static_assert(sizeof(To) == sizeof(From), "bit_cast size mismatch");
     static_assert(std::is_trivially_copyable_v<From>, "bit_cast From must be trivially copyable");

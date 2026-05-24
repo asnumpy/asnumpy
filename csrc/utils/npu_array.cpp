@@ -67,8 +67,8 @@ NPUArray::NPUArray(const std::vector<int64_t>& shape, aclDataType acl_type) {
     this->tensorSize = GetShapeSize(shape);
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
 
-    // 直接使用 ACL 类型，不创建 NumPy dtype
-    // 为了兼容性，创建一个空的 py::dtype 对象
+    // use ACL type directly; do not create NumPy dtype
+    // for compatibility, create an empty py::dtype object
     this->dtype = GetPyDtype(acl_type);
 
     this->devicePtr = nullptr;
@@ -118,7 +118,7 @@ NPUArray::NPUArray(const NPUArray& other) {
         error = aclrtSynchronizeDevice();
         ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     } else {
-        // 零大小数组，创建 tensor 时传递 nullptr 作为数据指针
+        // zero-size array; pass nullptr as data pointer when creating tensor
         this->tensorPtr = aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(),
                                           0, ACL_FORMAT_ND, this->shape.data(), this->shape.size(), nullptr);
     }
@@ -154,7 +154,7 @@ NPUArray::NPUArray(NPUArray&& other) noexcept {
  */
 NPUArray& NPUArray::operator=(const NPUArray& other) {
     if (this != &other) {
-        // 释放旧资源
+        // release old resources
         if (this->tensorPtr) {
             aclDestroyTensor(this->tensorPtr);
             this->tensorPtr = nullptr;
@@ -188,7 +188,7 @@ NPUArray& NPUArray::operator=(const NPUArray& other) {
             error = aclrtSynchronizeDevice();
             ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
         } else {
-            // 零大小数组，创建 tensor 时传递 nullptr 作为数据指针
+            // zero-size array; pass nullptr as data pointer when creating tensor
             this->tensorPtr =
                 aclCreateTensor(this->shape.data(), this->shape.size(), this->aclDtype, this->strides.data(), 0,
                                 ACL_FORMAT_ND, this->shape.data(), this->shape.size(), nullptr);
@@ -208,7 +208,7 @@ NPUArray& NPUArray::operator=(const NPUArray& other) {
  */
 NPUArray& NPUArray::operator=(NPUArray&& other) noexcept {
     if (this != &other) {
-        // 释放旧资源
+        // release old resources
         if (this->tensorPtr) {
             aclDestroyTensor(this->tensorPtr);
             this->tensorPtr = nullptr;
@@ -286,7 +286,7 @@ NPUArray NPUArray::FromNumpy(py::array hostData) {
 py::array NPUArray::ToNumpy() const {
     auto tensorByteSize = this->tensorSize * GetDataTypeSize(this->aclDtype);
 
-    // 创建结果数组
+    // create result array
     py::array result(this->dtype, this->shape);
     py::buffer_info info = result.request();
     if (tensorByteSize == 0)
@@ -299,30 +299,30 @@ py::array NPUArray::ToNumpy() const {
         throw std::runtime_error("[npu_array.cpp](ToNumpy) aclGetRawTensorAddr returned null pointer");
     }
 
-    // 对于特殊类型，需要特殊处理
+    // special types need special handling
     if (this->aclDtype == ACL_FLOAT16 || this->aclDtype == ACL_BF16) {
-        // 对于 float16 和 bf16，我们需要先复制到临时缓冲区，然后转换
+        // for float16 and bf16, copy to temp buffer first, then convert
         std::vector<uint16_t> temp_buffer(this->tensorSize);
         error = aclrtMemcpy(temp_buffer.data(), tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
         ACL_RT_CHECK(error, "aclrtMemcpy");
 
-        // 转换为 float32
+        // convert to float32
         float* result_ptr = static_cast<float*>(info.ptr);
         for (size_t i = 0; i < this->tensorSize; ++i) {
             if (this->aclDtype == ACL_FLOAT16) {
-                // 简单的 float16 到 float32 转换
+                // simple float16 to float32 conversion
                 uint16_t h = temp_buffer[i];
                 uint32_t f = ((h & 0x8000) << 16) | (((h & 0x7c00) + 0x1c000) << 13) | ((h & 0x03ff) << 13);
                 result_ptr[i] = *reinterpret_cast<float*>(&f);
             } else { // ACL_BF16
-                // bfloat16 到 float32 转换
+                // bfloat16 to float32 conversion
                 uint16_t bf = temp_buffer[i];
                 uint32_t f = (bf << 16);
                 result_ptr[i] = *reinterpret_cast<float*>(&f);
             }
         }
     } else {
-        // 对于其他类型，直接复制
+        // for other types, copy directly
         if (info.size * info.itemsize != tensorByteSize)
             throw std::runtime_error("[npu_array.cpp](ToNumpy) Size mismatch between tensor and NumPy array");
         error = aclrtMemcpy(info.ptr, tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
@@ -427,39 +427,39 @@ py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
     case ACL_BOOL:
         return py::dtype::of<bool>();
     case ACL_FLOAT16:
-        return py::dtype::of<float>(); // float16 映射到 float，保持浮点语义
+        return py::dtype::of<float>(); // float16 maps to float, preserving float semantics
     case ACL_BF16:
-        return py::dtype::of<float>(); // bf16 映射到 float，保持浮点语义
+        return py::dtype::of<float>(); // bf16 maps to float, preserving float semantics
     case ACL_INT4:
-        return py::dtype::of<uint8_t>(); // int4 映射到 uint8
+        return py::dtype::of<uint8_t>(); // int4 maps to uint8
     case ACL_UINT1:
-        return py::dtype::of<uint8_t>(); // uint1 映射到 uint8
+        return py::dtype::of<uint8_t>(); // uint1 maps to uint8
     case ACL_COMPLEX64:
         return py::dtype::of<std::complex<float>>();
     case ACL_COMPLEX128:
         return py::dtype::of<std::complex<double>>();
     case ACL_COMPLEX32:
-        return py::dtype::of<std::complex<float>>(); // complex32 映射到 complex64
+        return py::dtype::of<std::complex<float>>(); // complex32 maps to complex64
     case ACL_STRING:
-        return py::dtype::of<char*>(); // 字符串指针
+        return py::dtype::of<char*>(); // string pointer
     case ACL_DT_UNDEFINED:
-        return py::dtype::of<uint8_t>(); // 未定义类型映射到 uint8
+        return py::dtype::of<uint8_t>(); // undefined type maps to uint8
     case ACL_HIFLOAT8:
-        return py::dtype::of<uint8_t>(); // Float8 变体映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float8 variants map to uint8
     case ACL_FLOAT8_E5M2:
-        return py::dtype::of<uint8_t>(); // Float8 E5M2格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float8 E5M2 format maps to uint8
     case ACL_FLOAT8_E4M3FN:
-        return py::dtype::of<uint8_t>(); // Float8 E4M3FN格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float8 E4M3FN format maps to uint8
     case ACL_FLOAT8_E8M0:
-        return py::dtype::of<uint8_t>(); // Float8 E8M0格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float8 E8M0 format maps to uint8
     case ACL_FLOAT6_E3M2:
-        return py::dtype::of<uint8_t>(); // Float6 E3M2格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float6 E3M2 format maps to uint8
     case ACL_FLOAT6_E2M3:
-        return py::dtype::of<uint8_t>(); // Float6 E2M3格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float6 E2M3 format maps to uint8
     case ACL_FLOAT4_E2M1:
-        return py::dtype::of<uint8_t>(); // Float4 E2M1格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float4 E2M1 format maps to uint8
     case ACL_FLOAT4_E1M2:
-        return py::dtype::of<uint8_t>(); // Float4 E1M2格式映射到 uint8
+        return py::dtype::of<uint8_t>(); // Float4 E1M2 format maps to uint8
     default:
         throw std::runtime_error("[npu_array.cpp](GetPyDtype) Unsupported aclDataType for py::dtype conversion.");
     }
@@ -499,13 +499,13 @@ int64_t NPUArray::GetDataTypeSize(aclDataType dataType) {
     case ACL_BOOL:
         return sizeof(bool);
     case ACL_FLOAT16:
-        return sizeof(uint16_t); // 2字节
+        return sizeof(uint16_t); // 2 bytes
     case ACL_BF16:
-        return sizeof(uint16_t); // 2字节
+        return sizeof(uint16_t); // 2 bytes
     case ACL_INT4:
-        return 1; // 4位，但按字节对齐
+        return 1; // 4 bits, byte-aligned
     case ACL_UINT1:
-        return 1; // 1位，但按字节对齐
+        return 1; // 1 bit, byte-aligned
     case ACL_COMPLEX64:
         return sizeof(std::complex<float>);
     case ACL_COMPLEX128:
@@ -513,25 +513,25 @@ int64_t NPUArray::GetDataTypeSize(aclDataType dataType) {
     case ACL_COMPLEX32:
         return sizeof(std::complex<float>); // complex32 maps to complex64
     case ACL_STRING:
-        return sizeof(char*); // 字符串指针
+        return sizeof(char*); // string pointer
     case ACL_DT_UNDEFINED:
-        return 0; // 未定义类型
+        return 0; // undefined type
     case ACL_HIFLOAT8:
-        return 1; // Float8 变体，1字节
+        return 1; // Float8 variant, 1 byte
     case ACL_FLOAT8_E5M2:
-        return 1; // Float8 E5M2格式，1字节
+        return 1; // Float8 E5M2 format, 1 byte
     case ACL_FLOAT8_E4M3FN:
-        return 1; // Float8 E4M3FN格式，1字节
+        return 1; // Float8 E4M3FN format, 1 byte
     case ACL_FLOAT8_E8M0:
-        return 1; // Float8 E8M0格式，1字节
+        return 1; // Float8 E8M0 format, 1 byte
     case ACL_FLOAT6_E3M2:
-        return 1; // Float6 E3M2格式，1字节
+        return 1; // Float6 E3M2 format, 1 byte
     case ACL_FLOAT6_E2M3:
-        return 1; // Float6 E2M3格式，1字节
+        return 1; // Float6 E2M3 format, 1 byte
     case ACL_FLOAT4_E2M1:
-        return 1; // Float4 E2M1格式，1字节
+        return 1; // Float4 E2M1 format, 1 byte
     case ACL_FLOAT4_E1M2:
-        return 1; // Float4 E1M2格式，1字节
+        return 1; // Float4 E1M2 format, 1 byte
     default:
         throw std::runtime_error("[npu_array.cpp](GetDataTypeSize) Unsupported aclDataType for size calculation.");
     }

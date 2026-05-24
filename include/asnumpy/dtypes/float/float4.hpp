@@ -47,7 +47,7 @@ class float4_e2m1fn {
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
         constexpr int bias = 1; // E2M1 bias
-        // 正规阈值：2^0 = 1
+        // normal threshold: 2^0 = 1
         if (exp == 0 || e_unbiased < 0) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
             int m = rne_to_int(static_cast<double>(mag) * 2.0); // 1-bit mantissa
@@ -65,7 +65,7 @@ class float4_e2m1fn {
             ++e;
         }
 
-        if (e > 2) { // 最大指数 0b11 -> e_unbiased=2
+        if (e > 2) { // max exponent 0b11 -> e_unbiased=2
             return static_cast<uint8_t>((sign << 3) | 0b0'11'1);
         }
         if (e < 0) {
@@ -88,7 +88,7 @@ class float4_e2m1fn {
         constexpr int bias = 1;
 
         if (exp == 0) {
-            float v = static_cast<float>(mant) * 0.5f; // 次正规
+            float v = static_cast<float>(mant) * 0.5f; // subnormal
             return sign ? -v : v;
         }
         float base = 1.0f + static_cast<float>(mant) * 0.5f;
@@ -146,7 +146,7 @@ class float4_e2m1fn {
     bool operator>(const float4_e2m1fn& other) const { return other < *this; }
     bool operator>=(const float4_e2m1fn& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_FLOAT4_E2M1; }
 };
 
@@ -162,7 +162,7 @@ class float4_e1m2fn {
         uint32_t exp = (u >> 23) & 0xFFu;
         uint32_t frac = u & 0x7FFFFFu;
 
-        // MX 格式：无 Inf/NaN，饱和到最大有限值
+        // MX format: no Inf/NaN, saturate to max finite
         if (exp == 0xFFu) {
             return static_cast<uint8_t>((sign << 3) | 0b0'1'11);
         }
@@ -175,7 +175,7 @@ class float4_e1m2fn {
         f32_exp_frac_to_unbiased_and_mant(exp, frac, e_unbiased, mant);
 
         constexpr int bias = 0; // E1M2 bias (2^(1-1)-1 = 0)
-        // 正规阈值：2^0 = 1
+        // normal threshold: 2^0 = 1
         if (exp == 0 || e_unbiased < 0) {
             float mag = (exp == 0) ? mant : std::ldexp(mant, e_unbiased);
             int m = rne_to_int(static_cast<double>(mag) * 4.0); // 2-bit mantissa
@@ -193,7 +193,7 @@ class float4_e1m2fn {
             ++e;
         }
 
-        if (e > 1) { // 最大指数 0b1 -> e_unbiased=1
+        if (e > 1) { // max exponent 0b1 -> e_unbiased=1
             return static_cast<uint8_t>((sign << 3) | 0b0'1'11);
         }
         if (e < 0) {
@@ -216,7 +216,7 @@ class float4_e1m2fn {
         constexpr int bias = 0;
 
         if (exp == 0) {
-            float v = static_cast<float>(mant) * (1.0f / 4.0f); // 次正规
+            float v = static_cast<float>(mant) * (1.0f / 4.0f); // subnormal
             return sign ? -v : v;
         }
         float base = 1.0f + static_cast<float>(mant) * 0.25f;
@@ -274,7 +274,7 @@ class float4_e1m2fn {
     bool operator>(const float4_e1m2fn& other) const { return other < *this; }
     bool operator>=(const float4_e1m2fn& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_FLOAT4_E1M2; }
 };
 

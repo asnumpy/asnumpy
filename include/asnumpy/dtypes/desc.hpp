@@ -17,11 +17,11 @@
 // Prevent multiple inclusion
 #pragma once
 
-// 前向声明，避免循环依赖
+// forward declarations to avoid circular dependency
 namespace asnumpy {
 namespace dtypes {
 
-// 前向声明 ACL 浮点类型
+// forward declarations for ACL float types
 class float8_e5m2;
 class float8_e4m3fn;
 class float8_e8m0;
@@ -31,19 +31,19 @@ class float6_e3m2fn;
 class float4_e2m1fn;
 class float4_e1m2fn;
 
-// 前向声明 ACL 整数类型
+// forward declarations for ACL integer types
 class int4;
 class uint1;
 
-// 前向声明 ACLFloatManager 和 ACLIntManager
+// forward declarations for ACLFloatManager and ACLIntManager
 template <typename T> struct ACLFloatManager;
 
 template <typename T> struct ACLIntManager;
 
-// TypeDescriptor 模板声明
+// TypeDescriptor template declaration
 template <typename T, typename Enable = void> struct TypeDescriptor {};
 
-// 具体类型的特化声明（实现在 reg.cpp 中）
+// concrete type specialization declarations (implemented in reg.cpp)
 template <> struct TypeDescriptor<float8_e5m2>;
 
 template <> struct TypeDescriptor<float8_e4m3fn>;

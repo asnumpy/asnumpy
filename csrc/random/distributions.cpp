@@ -445,7 +445,7 @@ NPUArray Generator_Weibull(float a, const std::vector<int64_t>& size) {
 }
 
 NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (n < 0)
         throw std::invalid_argument(fmt::format("[distributions.cpp]({}) invalid parameter: n={} < 0", __func__, n));
     if (p < 0.0f || p > 1.0f)
@@ -460,19 +460,19 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
             throw std::runtime_error(
                 fmt::format("[distributions.cpp]({}) aclGetRawTensorAddr returned null data_ptr", __func__));
         }
-        // 用0初始化整个输出张量
+        // initialize entire output tensor with 0
         size_t total_elems = std::accumulate(size.begin(), size.end(), int64_t{1}, std::multiplies<int64_t>());
         ret = aclrtMemset(data_ptr, total_elems * sizeof(int32_t), 0, total_elems * sizeof(int32_t));
         ACL_RT_CHECK(ret, "aclrtMemset");
         return result;
     }
 
-    // 2. 构造伯努利张量形状
+    // 2. build Bernoulli tensor shape
     std::vector<int64_t> bernoulli_shape = {static_cast<int64_t>(n)};
     bernoulli_shape.insert(bernoulli_shape.end(), size.begin(), size.end());
     NPUArray bernoulli_tensor(bernoulli_shape, ACL_INT32);
 
-    // 3. 构造标量概率张量
+    // 3. build scalar probability tensor
     NPUArray prob_tensor({}, ACL_FLOAT);
     void* prob_data_ptr = nullptr;
     auto ret = aclGetRawTensorAddr(prob_tensor.tensorPtr, &prob_data_ptr);
@@ -484,7 +484,7 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     ret = aclrtMemcpy(prob_data_ptr, sizeof(float), &p, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     ACL_RT_CHECK(ret, "aclrtMemcpy");
 
-    // 4. 声明资源并创建流
+    // 4. declare resources and create stream
     uint64_t bernoulli_ws = 0;
     aclOpExecutor* bernoulli_exec = nullptr;
     aclrtStream stream = nullptr;
@@ -493,7 +493,7 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     if (!stream)
         throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
 
-    // 5. 生成伯努利张量
+    // 5. generate Bernoulli tensor
     LOG_DEBUG("aclnnBernoulliTensor start: shape={}, n={}, p={}", detail::FormatShape(size), n, p);
     ret = aclnnBernoulliTensorGetWorkspaceSize(bernoulli_tensor.tensorPtr, prob_tensor.tensorPtr, 42, 0,
                                                bernoulli_tensor.tensorPtr, &bernoulli_ws, &bernoulli_exec);
@@ -505,38 +505,38 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnBernoulliTensor completed");
 
-    // 6. 归约求和（核心修正部分）
+    // 6. reduce sum (core fix)
     NPUArray result(size, ACL_INT32);
     uint64_t sum_ws = 0;
     aclOpExecutor* sum_exec = nullptr;
-    std::vector<int64_t> reduce_axis = {0}; // 沿第0维求和
+    std::vector<int64_t> reduce_axis = {0}; // reduce along axis 0
 
-    // 6.1 创建aclIntArray类型的归约轴（适配接口要求）
+    // 6.1 create aclIntArray for reduction axis (matching interface requirements)
     aclIntArray* dims_array = aclCreateIntArray(reduce_axis.data(), reduce_axis.size());
     if (dims_array == nullptr) {
         aclrtDestroyStream(stream);
         throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclCreateIntArray returned null", __func__));
     }
 
-    // 6.2 调用修正后的归约求和接口（按文档参数顺序）
+    // 6.2 call corrected ReduceSum interface (parameter order per docs)
     LOG_DEBUG("aclnnReduceSum start: shape={}", detail::FormatShape(size));
-    ret = aclnnReduceSumGetWorkspaceSize(bernoulli_tensor.tensorPtr, // 输入张量
-                                         dims_array,                 // 归约轴（aclIntArray类型）
-                                         false,                      // 是否保留归约轴
-                                         ACL_INT32,                  // 输出数据类型（匹配result的类型）
-                                         result.tensorPtr,           // 输出张量
+    ret = aclnnReduceSumGetWorkspaceSize(bernoulli_tensor.tensorPtr, // input tensor
+                                         dims_array,                 // reduction axis (aclIntArray type)
+                                         false,                      // keep reduced axes
+                                         ACL_INT32,                  // output dtype (matches result type)
+                                         result.tensorPtr,           // output tensor
                                          &sum_ws, &sum_exec);
     ACLNN_CHECK(ret, "aclnnReduceSumGetWorkspaceSize");
 
-    // 6.3 分配求和工作空间并执行
+    // 6.3 allocate reduction workspace and execute
     AclWorkspace sumws(sum_ws);
     ret = aclnnReduceSum(sumws.get(), sum_ws, sum_exec, stream);
     ACLNN_CHECK(ret, "aclnnReduceSum");
     ret = aclrtSynchronizeStream(stream);
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
-    // 7. 释放所有资源
-    aclDestroyIntArray(dims_array); // 销毁归约轴数组
+    // 7. release all resources
+    aclDestroyIntArray(dims_array); // destroy reduction axis array
     aclrtDestroyStream(stream);
 
     LOG_INFO("aclnnReduceSum completed");
@@ -544,13 +544,13 @@ NPUArray Binomial(int n, float p, const std::vector<int64_t>& size) {
 }
 
 NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (scale <= 0.0f) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
-    // 2. 构造均匀分布张量 U
+    // 2. build uniform distribution tensor U
     NPUArray u_tensor(size, ACL_FLOAT);
 
     uint64_t uniform_ws = 0;
@@ -567,7 +567,7 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     uint64_t seed = 12345;
     uint64_t offset = 0;
 
-    // 均匀分布 in-place 填充 U
+    // fill U with uniform distribution in-place
     LOG_DEBUG("aclnnInplaceUniform start: shape={}, scale={}", detail::FormatShape(size), scale);
     ret = aclnnInplaceUniformGetWorkspaceSize(u_tensor.tensorPtr, low, high, seed, offset, &uniform_ws, &uniform_exec);
     ACLNN_CHECK(ret, "aclnnInplaceUniformGetWorkspaceSize");
@@ -578,7 +578,7 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnInplaceUniform completed");
 
-    // 3. 计算 1 - U
+    // 3. compute 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
     void* one_data = nullptr;
     ret = aclGetRawTensorAddr(one_tensor.tensorPtr, &one_data);
@@ -654,7 +654,7 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
     ret = aclrtSynchronizeStream(stream);
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
-    // 6. 清理资源
+    // 6. cleanup resources
     aclrtDestroyStream(stream);
 
     LOG_INFO("aclnnMul completed");
@@ -662,13 +662,13 @@ NPUArray Exponential(float scale, const std::vector<int64_t>& size) {
 }
 
 NPUArray Geometric(float p, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (p <= 0.0f || p >= 1.0f) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: p={} not in (0,1)", __func__, p));
     }
 
-    // 2. 构造均匀分布张量 U
+    // 2. build uniform distribution tensor U
     NPUArray u_tensor(size, ACL_FLOAT);
 
     uint64_t uniform_ws = 0;
@@ -695,7 +695,7 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnInplaceUniform completed");
 
-    // 3. 计算 1 - U
+    // 3. compute 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
     void* one_data = nullptr;
     ret = aclGetRawTensorAddr(one_tensor.tensorPtr, &one_data);
@@ -745,7 +745,7 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnLog completed");
 
-    // 5. 除以 log(1 - p)
+    // 5. divide by log(1 - p)
     NPUArray denom_tensor({}, ACL_FLOAT);
     void* denom_data = nullptr;
     ret = aclGetRawTensorAddr(denom_tensor.tensorPtr, &denom_data);
@@ -820,7 +820,7 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     aclDestroyScalar(alpha_one);
 
-    // 8. 清理
+    // 8. cleanup
     aclrtDestroyStream(stream);
 
     LOG_INFO("aclnnAdd completed");
@@ -828,13 +828,13 @@ NPUArray Geometric(float p, const std::vector<int64_t>& size) {
 }
 
 NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (scale <= 0.0) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
-    // 2. 准备随机流与 U 张量
+    // 2. prepare random stream and U tensor
     NPUArray u_tensor(size, ACL_FLOAT);
 
     uint64_t uniform_ws = 0;
@@ -861,9 +861,9 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnInplaceUniform completed");
 
-    // 步骤说明：
+    // Steps:
     // 3. log_u = log(U)
-    // 4. neg_log_u = - log_u  (即 multiply by -1)
+    // 4. neg_log_u = - log_u  (i.e. multiply by -1)
     // 5. log_neg_log_u = log(neg_log_u)
     // 6. scaled = scale * log_neg_log_u
     // 7. result = loc - scaled
@@ -882,7 +882,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnLog completed");
 
-    // 4. neg_log_u = -1.0 * log_u  (构造 -1 标量张量并用 Mul)
+    // 4. neg_log_u = -1.0 * log_u  (construct -1 scalar tensor and use Mul)
     float neg_one_val = -1.0f;
     NPUArray neg_one_tensor({}, ACL_FLOAT);
     void* neg_one_data = nullptr;
@@ -924,7 +924,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnLog completed");
 
-    // 6. scaled = scale * log_neg_log_u  (构造 scale scalar tensor并用 Mul)
+    // 6. scaled = scale * log_neg_log_u  (construct scale scalar tensor and use Mul)
     float scale_f = static_cast<float>(scale);
     NPUArray scale_tensor({}, ACL_FLOAT);
     void* scale_data = nullptr;
@@ -953,7 +953,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     LOG_INFO("aclnnMul completed");
 
     // 7. result = loc - scaled
-    //    使用 aclnnSub：self = loc_tensor (scalar), other = scaled (tensor), alpha = 1.0
+    //    use aclnnSub: self = loc_tensor (scalar), other = scaled (tensor), alpha = 1.0
     float loc_f = static_cast<float>(loc);
     NPUArray loc_tensor({}, ACL_FLOAT);
     void* loc_data = nullptr;
@@ -990,7 +990,7 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
     ret = aclrtSynchronizeStream(stream);
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
-    // 8. 清理资源
+        // 8. cleanup resources
     aclDestroyScalar(alpha_scalar);
     aclrtDestroyStream(stream);
 
@@ -999,13 +999,13 @@ NPUArray Gumbel(double loc, double scale, const std::vector<int64_t>& size) {
 }
 
 NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (scale <= 0.0) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
-    // 2. 准备 stream 与 U 张量（Uniform in [-0.5, 0.5)）
+    // 2. prepare stream and U tensor (Uniform in [-0.5, 0.5))
     NPUArray u_tensor(size, ACL_FLOAT);
 
     uint64_t uniform_ws = 0;
@@ -1047,7 +1047,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     LOG_INFO("aclnnAbs completed");
 
     // 4. t = 1 - 2 * abs_u
-    // 4.1 构造 scalar 2.0 (as tensor) 并计算 two_mul_abs = 2 * abs_u (Mul)
+    // 4.1 construct scalar 2.0 (as tensor) and compute two_mul_abs = 2 * abs_u (Mul)
     NPUArray two_tensor({}, ACL_FLOAT);
     void* two_data = nullptr;
     float two_val_f = 2.0f;
@@ -1208,7 +1208,7 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
     ret = aclrtSynchronizeStream(stream);
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
-    // 10. 清理并返回
+    // 10. cleanup and return
     aclDestroyScalar(alpha_scalar);
     aclrtDestroyStream(stream);
 
@@ -1217,13 +1217,13 @@ NPUArray Laplace(double loc, double scale, const std::vector<int64_t>& size) {
 }
 
 NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
-    // 1. 参数检查
+    // 1. validate parameters
     if (scale <= 0.0) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: scale={} <= 0", __func__, scale));
     }
 
-    // 2. 创建均匀分布张量 U ~ Uniform(0,1)
+    // 2. create uniform distribution tensor U ~ Uniform(0,1)
     NPUArray u_tensor(size, ACL_FLOAT);
 
     uint64_t uniform_ws = 0;
@@ -1250,7 +1250,7 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnInplaceUniform completed");
 
-    // 3. 计算 1 - U
+    // 3. compute 1 - U
     NPUArray one_tensor({}, ACL_FLOAT);
     void* one_data = nullptr;
     ret = aclGetRawTensorAddr(one_tensor.tensorPtr, &one_data);
@@ -1366,7 +1366,7 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     aclDestroyScalar(alpha_add);
 
-    // 8. 清理资源
+        // 8. cleanup resources
     aclrtDestroyStream(stream);
 
     LOG_INFO("aclnnAdd completed");
@@ -1374,16 +1374,16 @@ NPUArray Logistic(double loc, double scale, const std::vector<int64_t>& size) {
 }
 
 NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (sigma <= 0.0f) {
         throw std::invalid_argument(
             fmt::format("[distributions.cpp]({}) invalid parameter: sigma={} <= 0", __func__, sigma));
     }
 
-    // 2. 创建正态样本张量 Z (will be filled in-place)
+    // 2. create normal sample tensor Z (will be filled in-place)
     NPUArray z_tensor(size, ACL_FLOAT);
 
-    // 资源变量（初始化）
+    // resource variables (initialize)
     uint64_t normal_ws = 0;
     aclOpExecutor* normal_exec = nullptr;
 
@@ -1397,7 +1397,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         throw std::runtime_error(fmt::format("[distributions.cpp]({}) aclrtCreateStream returned null", __func__));
     }
 
-    // 3. 调用 aclnnInplaceNormal 生成 N(mean, sigma) 到 z_tensor
+    // 3. call aclnnInplaceNormal to generate N(mean, sigma) into z_tensor
     int64_t seed = 12345;
     int64_t offset = 0;
     float mean_f = static_cast<float>(mean);
@@ -1414,7 +1414,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
     LOG_INFO("aclnnInplaceNormal completed");
 
-    // 4. 对正态样本做指数变换 result = exp(z_tensor)
+    // 4. apply exponential transform: result = exp(z_tensor)
     NPUArray result(size, ACL_FLOAT);
 
     LOG_DEBUG("aclnnExp start: shape={}, mean={}, sigma={}", detail::FormatShape(size), mean, sigma);
@@ -1426,15 +1426,15 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
     ret = aclrtSynchronizeStream(stream);
     ACL_RT_CHECK(ret, "aclrtSynchronizeStream");
 
-    // 5. 清理 stream 并返回
+    // 5. cleanup stream and return
     aclrtDestroyStream(stream);
     LOG_INFO("aclnnExp completed");
     return result;
 }
 
-//该API设计有问题，暂时去除
+// This API has design issues; temporarily removed
 /**NPUArray Multinomial(int64_t n, const NPUArray& pvals, bool replacement, const std::vector<int64_t>& size, int64_t offset) {
-    // 1. 参数校验
+    // 1. validate parameters
     if (n <= 0) {
         throw std::runtime_error(fmt::format("Multinomial: n={} <= 0", n));
     }
@@ -1442,10 +1442,10 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         throw std::runtime_error("Multinomial: input pvals is null");
     }
 
-    // 2. 创建输出张量
+    // 2. create output tensor
     NPUArray result(size, ACL_INT64);
 
-    // 资源变量初始化
+        // initialize resource variables
     uint64_t ws_size = 0;
     aclOpExecutor* executor = nullptr;
     void* ws_addr = nullptr;
@@ -1456,8 +1456,8 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         throw std::runtime_error(fmt::format("Multinomial: create stream failed, error={}", ret));
     }
 
-    // 3. 获取 workspace
-    int64_t seed = 12345;  // 固定随机种子，必要时可传参
+    // 3. get workspace
+    int64_t seed = 12345;  // fixed random seed; consider accepting as parameter
 
     ret = aclnnMultinomialGetWorkspaceSize(
         pvals.tensorPtr,
@@ -1482,7 +1482,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         }
     }
 
-    // 4. 执行 Multinomial
+    // 4. execute Multinomial
     ret = aclnnMultinomial(ws_addr, ws_size, executor, stream);
     if (ret != ACL_SUCCESS) {
         if (ws_addr) aclrtFree(ws_addr);
@@ -1490,7 +1490,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         throw std::runtime_error(fmt::format("Multinomial: compute failed, error={}", ret));
     }
 
-    // 5. 同步
+    // 5. synchronize
     ret = aclrtSynchronizeStream(stream);
     if (ret != ACL_SUCCESS) {
         if (ws_addr) aclrtFree(ws_addr);
@@ -1498,7 +1498,7 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size) {
         throw std::runtime_error(fmt::format("Multinomial: sync failed, error={}", ret));
     }
 
-    // 6. 释放资源
+    // 6. release resources
     if (ws_addr) {
         aclrtFree(ws_addr);
         ws_addr = nullptr;

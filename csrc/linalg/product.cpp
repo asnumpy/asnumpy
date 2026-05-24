@@ -90,10 +90,10 @@ NPUArray Einsum(const char* subscripts, const std::vector<NPUArray>& operands) {
     LOG_DEBUG("aclnnEinsum start: subscripts={}, x1_shape={}, x2_shape={}, aclDtype={}", subscripts,
               detail::FormatShape(operands[0].shape), detail::FormatShape(operands[1].shape),
               AclDtypeName(operands[0].aclDtype));
-    // aclnnEinsum目前只支持'abcd,abced->abce'，'a,b->ab'(outer)操作，所以就当一共两个操作数来实现:)
+    // aclnnEinsum currently supports only 'abcd,abced->abce' and 'a,b->ab'(outer); implement as two operands
     std::vector<aclTensor*> tmp{operands[0].tensorPtr, operands[1].tensorPtr};
     auto input = aclCreateTensorList(tmp.data(), tmp.size());
-    // einsum输出shape处理
+    // einsum output shape handling
     std::vector<int64_t> shape;
     if (!std::strcmp(subscripts, "a,b->ab")) {
         shape = {operands[0].shape[0], operands[1].shape[0]};
@@ -253,7 +253,7 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
         return out;
     }
 
-    // case 4: higher-dim fallback (这里先抛出异常，具体实现可以后续扩展)
+    // case 4: higher-dim fallback (throw exception for now; implementation deferred)
     throw std::runtime_error("[product.cpp](dot) Higher-dimensional dot is not yet implemented");
 }
 
@@ -414,7 +414,7 @@ NPUArray outer(const NPUArray& a, const NPUArray& b) {
     LOG_DEBUG("aclnnMul start: a_shape={}, b_shape={}, aclDtype={}", detail::FormatShape(a.shape),
               detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
     py::dtype dtype = a.dtype;
-    // Step 1: flatten a -> (m, 1) 有bug，aclnnFlatten无法展开为(m, 1)格式
+    // Step 1: flatten a -> (m, 1) - bug: aclnnFlatten cannot expand to (m, 1) format
     auto a_flat = NPUArray({static_cast<int64_t>(a.tensorSize), 1}, a.aclDtype);
     {
         uint64_t ws = 0;

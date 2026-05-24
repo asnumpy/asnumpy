@@ -26,7 +26,7 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 显式特化所有 ACL 浮点类型的静态成员
+// Explicit specialization of static members for all ACL float types
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e5m2)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e4m3fn)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float8_e8m0)
@@ -36,12 +36,12 @@ EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float6_e3m2fn)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e2m1fn)
 EXPLICIT_INSTANTIATE_ACL_FLOAT_MANAGER(float4_e1m2fn)
 
-// 显式特化所有 ACL 整数类型的静态成员
+// Explicit specialization of static members for all ACL integer types
 EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(int4)
 EXPLICIT_INSTANTIATE_ACL_INT_MANAGER(uint1)
 
-// TypeDescriptor 具体类型的特化实现
-// TypeDescriptor 对 float8_e5m2 的特化
+// TypeDescriptor specializations for concrete types
+// TypeDescriptor specialization for float8_e5m2
 template <> struct TypeDescriptor<float8_e5m2> : ACLFloatManager<float8_e5m2> {
     using T = float8_e5m2;
 
@@ -59,7 +59,7 @@ template <> struct TypeDescriptor<float8_e5m2> : ACLFloatManager<float8_e5m2> {
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float8_e4m3fn 的特化
+// TypeDescriptor specialization for float8_e4m3fn
 template <> struct TypeDescriptor<float8_e4m3fn> : ACLFloatManager<float8_e4m3fn> {
     using T = float8_e4m3fn;
 
@@ -77,7 +77,7 @@ template <> struct TypeDescriptor<float8_e4m3fn> : ACLFloatManager<float8_e4m3fn
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float8_e8m0 的特化
+// TypeDescriptor specialization for float8_e8m0
 template <> struct TypeDescriptor<float8_e8m0> : ACLFloatManager<float8_e8m0> {
     using T = float8_e8m0;
 
@@ -95,7 +95,7 @@ template <> struct TypeDescriptor<float8_e8m0> : ACLFloatManager<float8_e8m0> {
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 bfloat16 的特化
+// TypeDescriptor specialization for bfloat16
 template <> struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
     using T = bfloat16;
 
@@ -113,7 +113,7 @@ template <> struct TypeDescriptor<bfloat16> : ACLFloatManager<bfloat16> {
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float6_e2m3fn 的特化
+// TypeDescriptor specialization for float6_e2m3fn
 template <> struct TypeDescriptor<float6_e2m3fn> : ACLFloatManager<float6_e2m3fn> {
     using T = float6_e2m3fn;
 
@@ -131,7 +131,7 @@ template <> struct TypeDescriptor<float6_e2m3fn> : ACLFloatManager<float6_e2m3fn
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float6_e3m2fn 的特化
+// TypeDescriptor specialization for float6_e3m2fn
 template <> struct TypeDescriptor<float6_e3m2fn> : ACLFloatManager<float6_e3m2fn> {
     using T = float6_e3m2fn;
 
@@ -149,7 +149,7 @@ template <> struct TypeDescriptor<float6_e3m2fn> : ACLFloatManager<float6_e3m2fn
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float4_e2m1fn 的特化
+// TypeDescriptor specialization for float4_e2m1fn
 template <> struct TypeDescriptor<float4_e2m1fn> : ACLFloatManager<float4_e2m1fn> {
     using T = float4_e2m1fn;
 
@@ -167,7 +167,7 @@ template <> struct TypeDescriptor<float4_e2m1fn> : ACLFloatManager<float4_e2m1fn
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 float4_e1m2fn 的特化
+// TypeDescriptor specialization for float4_e1m2fn
 template <> struct TypeDescriptor<float4_e1m2fn> : ACLFloatManager<float4_e1m2fn> {
     using T = float4_e1m2fn;
 
@@ -185,7 +185,7 @@ template <> struct TypeDescriptor<float4_e1m2fn> : ACLFloatManager<float4_e1m2fn
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 int4 的特化
+// TypeDescriptor specialization for int4
 template <> struct TypeDescriptor<int4> : ACLIntManager<int4> {
     using T = int4;
 
@@ -203,7 +203,7 @@ template <> struct TypeDescriptor<int4> : ACLIntManager<int4> {
     static constexpr int kAlignment = alignof(T);
 };
 
-// TypeDescriptor 对 uint1 的特化
+// TypeDescriptor specialization for uint1
 template <> struct TypeDescriptor<uint1> : ACLIntManager<uint1> {
     using T = uint1;
 
@@ -221,12 +221,12 @@ template <> struct TypeDescriptor<uint1> : ACLIntManager<uint1> {
     static constexpr int kAlignment = alignof(T);
 };
 
-// 对外暴露统一初始化与注册入口
+// Public initialization and registration entry point
 void InitAndRegisterDtypes() {
-    // 1) 确保只导入一次 NumPy C API
+    // 1) ensure NumPy C API is imported only once
     ImportNumpy();
 
-    // 2) 直接注册所有 ACL 浮点类型
+    // 2) register all ACL float types
     FloatTypeRegistrar<float8_e5m2>::RegisterDtype();
     FloatTypeRegistrar<float8_e4m3fn>::RegisterDtype();
     FloatTypeRegistrar<float8_e8m0>::RegisterDtype();
@@ -236,12 +236,12 @@ void InitAndRegisterDtypes() {
     FloatTypeRegistrar<float4_e2m1fn>::RegisterDtype();
     FloatTypeRegistrar<float4_e1m2fn>::RegisterDtype();
 
-    // 3) 直接注册所有 ACL 整数类型
+    // 3) register all ACL integer types
     IntTypeRegistrar<int4>::RegisterDtype();
     IntTypeRegistrar<uint1>::RegisterDtype();
 }
 
-// 检查所有类型是否已注册
+// Check whether all types are registered
 bool AreAllACLFloatTypesRegistered() {
     return ACLFloatManager<float8_e5m2>::npy_type != NPY_NOTYPE &&
            ACLFloatManager<float8_e4m3fn>::npy_type != NPY_NOTYPE &&
@@ -252,7 +252,7 @@ bool AreAllACLFloatTypesRegistered() {
            ACLFloatManager<float4_e1m2fn>::npy_type != NPY_NOTYPE;
 }
 
-// 检查所有ACL整数类型是否已注册
+// Check whether all ACL integer types are registered
 bool AreAllACLIntTypesRegistered() {
     return ACLIntManager<int4>::npy_type != NPY_NOTYPE && ACLIntManager<uint1>::npy_type != NPY_NOTYPE;
 }
@@ -284,10 +284,10 @@ PyArray_Descr* RegisteredArrayDescrForAclType(aclDataType acl_type) {
     }
 }
 
-// 获取特定类型的 dtype 类型号
+// Get dtype type number for a specific type
 template <typename T> int GetACLFloatTypeNum() { return ACLFloatManager<T>::npy_type; }
 
-// 获取特定类型的 dtype 描述符
+// Get dtype descriptor for a specific type
 template <typename T> PyArray_Descr* GetACLFloatDescr() {
     if (ACLFloatManager<T>::npy_descr == nullptr) {
         return nullptr;
@@ -296,7 +296,7 @@ template <typename T> PyArray_Descr* GetACLFloatDescr() {
     return ACLFloatManager<T>::npy_descr;
 }
 
-// 创建特定类型的数组
+// Create array of a specific type
 template <typename T>
 PyObject* CreateACLFloatArray(const std::vector<npy_intp>& shape, const std::vector<float>& data = {}) {
     int type_num = GetACLFloatTypeNum<T>();
@@ -305,13 +305,13 @@ PyObject* CreateACLFloatArray(const std::vector<npy_intp>& shape, const std::vec
         return nullptr;
     }
 
-    // 创建数组
+    // create array
     PyObject* array = PyArray_EMPTY(static_cast<int>(shape.size()), const_cast<npy_intp*>(shape.data()), type_num, 0);
     if (array == nullptr) {
         return nullptr;
     }
 
-    // 填充数据
+    // fill data
     if (!data.empty()) {
         T* array_data = static_cast<T*>(PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)));
         for (size_t i = 0;
@@ -324,7 +324,7 @@ PyObject* CreateACLFloatArray(const std::vector<npy_intp>& shape, const std::vec
     return array;
 }
 
-// 从数组获取 float 数据
+// Get float data from array
 template <typename T> std::vector<float> GetACLFloatArrayData(PyObject* array) {
     if (!PyArray_Check(array)) {
         return {};
@@ -348,12 +348,12 @@ template <typename T> std::vector<float> GetACLFloatArrayData(PyObject* array) {
     return result;
 }
 
-// 获取类型对象指针（与 acl_float_reg.hpp 声明一致）
+// Get type object pointer (consistent with acl_float_reg.hpp declaration)
 template <typename T> PyObject* GetACLFloatTypeObject() { return ACLFloatManager<T>::type_ptr; }
 
 template <typename T> PyObject* GetACLIntTypeObject() { return ACLIntManager<T>::type_ptr; }
 
-// 显式实例化，供其它翻译单元链接 GetACL*TypeObject
+// Explicit instantiations for linking GetACL*TypeObject from other translation units
 template PyObject* GetACLFloatTypeObject<float8_e5m2>();
 template PyObject* GetACLFloatTypeObject<float8_e4m3fn>();
 template PyObject* GetACLFloatTypeObject<float8_e8m0>();

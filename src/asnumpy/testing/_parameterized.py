@@ -14,11 +14,11 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""参数化测试工具
+"""Parameterized test utilities.
 
-提供更复杂的参数化测试功能：
-- product() - 生成参数的笛卡尔积
-- _make_class_name() - 为参数化测试生成类名
+Provides advanced parameterized test functionality:
+- product() - generate Cartesian product of parameters
+- _make_class_name() - generate class names for parameterized tests
 """
 
 __all__ = [
@@ -31,15 +31,16 @@ import itertools
 
 
 def product(params_dict):
-    """生成参数字典的笛卡尔积
+    """Generate the Cartesian product of a parameter dictionary.
 
-    将多个参数的可能值组合成笛卡尔积，用于参数化测试。
+    Combines all possible values of multiple parameters into a Cartesian
+    product for use in parameterized tests.
 
     Args:
-        params_dict: 参数字典，键是参数名，值是参数可能的取值列表
+        params_dict: Dict mapping parameter names to lists of possible values.
 
     Returns:
-        生成器，产生参数组合的字典
+        Generator yielding dicts of parameter combinations.
 
     Examples:
         >>> list(product({'a': [1, 2], 'b': [3, 4]}))
@@ -57,19 +58,18 @@ def product(params_dict):
 
 
 def product_dict(*dicts):
-    """将多个字典的笛卡尔积合并
+    """Merge multiple dicts and yield their Cartesian product.
 
     Args:
-        *dicts: 多个参数字典
+        *dicts: Multiple parameter dicts.
 
     Returns:
-        生成器，产生合并后的参数字典
+        Generator yielding merged parameter dicts.
 
     Examples:
         >>> list(product_dict({'a': [1, 2]}, {'b': [3, 4]}))
         [{'a': 1, 'b': 3}, {'a': 1, 'b': 4}, {'a': 2, 'b': 3}, {'a': 2, 'b': 4}]
     """
-    # 合并所有字典
     merged = {}
     for d in dicts:
         merged.update(d)
@@ -78,16 +78,16 @@ def product_dict(*dicts):
 
 
 def _make_class_name(base_name, params):
-    """为参数化测试生成类名
+    """Generate a class name for a parameterized test.
 
-    根据基础类名和参数值，生成一个描述性的测试类名。
+    Builds a descriptive test class name from a base name and parameter values.
 
     Args:
-        base_name: 基础类名
-        params: 参数字典
+        base_name: Base class name.
+        params: Parameter dict.
 
     Returns:
-        生成的类名字符串
+        Generated class name string.
 
     Examples:
         >>> _make_class_name('TestZeros', {'dtype': 'float32', 'order': 'C'})
@@ -98,12 +98,11 @@ def _make_class_name(base_name, params):
 
     parts = [base_name]
     for key, value in params.items():
-        # 将参数值转换为字符串，并清理特殊字符
         value_str = str(value)
-        # 移除类型前缀（如 <class 'numpy.float32'> -> float32）
+        # Strip type prefix (e.g. <class 'numpy.float32'> -> float32)
         if "numpy." in value_str:
             value_str = value_str.split(".")[-1].rstrip("'>")
-        # 替换特殊字符
+        # Replace special characters
         value_str = value_str.replace("<", "").replace(">", "").replace("'", "")
         value_str = value_str.replace(" ", "_").replace(".", "_").replace("-", "_")
 
@@ -113,16 +112,17 @@ def _make_class_name(base_name, params):
 
 
 def parameterize_test_class(base_class, params_dict):
-    """为测试类生成参数化的子类
+    """Generate parameterized subclasses for a test class.
 
-    这个函数根据参数字典，为基础测试类生成多个参数化的子类。
+    Creates multiple parameterized subclasses of a base test class
+    according to the given parameter dict.
 
     Args:
-        base_class: 基础测试类
-        params_dict: 参数字典
+        base_class: Base test class.
+        params_dict: Parameter dict.
 
     Returns:
-        生成的测试类列表
+        List of generated test classes.
 
     Examples:
         class BaseTest:
@@ -137,10 +137,10 @@ def parameterize_test_class(base_class, params_dict):
     classes = []
 
     for params in product(params_dict):
-        # 生成类名
+        # Generate class name
         class_name = _make_class_name(base_class.__name__, params)
 
-        # 创建新类
+        # Create new class
         new_class = type(class_name, (base_class,), {"_params": params})
 
         classes.append(new_class)

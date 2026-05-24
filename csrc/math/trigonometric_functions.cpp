@@ -158,7 +158,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
 
     auto broadcast = GetBroadcastShape(a, b);
 
-    // 步骤1: 计算a的平方 (a²)
+    // step 1: compute a squared (a²)
     NPUArray a_squared(a.shape, a.dtype);
     uint64_t a_sq_workspace_size = 0;
     aclOpExecutor* a_sq_executor = nullptr;
@@ -175,7 +175,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnMul completed");
 
-    // 步骤2: 计算b的平方 (b²)
+    // step 2: compute b squared (b²)
     NPUArray b_squared(b.shape, b.dtype);
     uint64_t b_sq_workspace_size = 0;
     aclOpExecutor* b_sq_executor = nullptr;
@@ -192,7 +192,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnMul completed");
 
-    // 步骤3: 计算平方和 (a² + b²)
+    // step 3: compute sum of squares (a² + b²)
     LOG_DEBUG("aclnnAdd start: a_squared_shape={}, b_squared_shape={}, aclDtype={}",
               detail::FormatShape(a_squared.shape), detail::FormatShape(b_squared.shape), AclDtypeName(a.aclDtype));
     auto dtype = a.aclDtype;
@@ -228,7 +228,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnAdd completed");
 
-    // 步骤4: 计算平方根 (√(a² + b²))
+    // step 4: compute square root (√(a² + b²))
     LOG_DEBUG("aclnnSqrt start: input_shape={}, aclDtype={}", detail::FormatShape(sum_squares.shape),
               AclDtypeName(sum_squares.aclDtype));
     aclDataType aclType = ACL_DOUBLE;
@@ -249,7 +249,7 @@ NPUArray Hypot(const NPUArray& a, const NPUArray& b) {
     error = aclnnSqrt(sqrt_workspace.get(), sqrt_workspace_size, sqrt_executor, nullptr);
     ACLNN_CHECK(error, "aclnnSqrt");
 
-    // 同步设备并释放资源
+    // synchronize device and release resources
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     aclDestroyScalar(alpha_scalar);
@@ -281,7 +281,7 @@ NPUArray Radians(const NPUArray& x) {
     LOG_DEBUG("aclnnForeachMulScalar start: input_shape={}, aclDtype={}", detail::FormatShape(x.shape),
               AclDtypeName(x.aclDtype));
 
-    // 业务参数校验
+    // validate input parameters
     if (x.tensorSize == 0) {
         throw std::invalid_argument(
             fmt::format("[trigonometric_functions.cpp]({}) input tensor has no elements", __func__));
@@ -292,27 +292,27 @@ NPUArray Radians(const NPUArray& x) {
                         __func__, AclDtypeName(x.aclDtype)));
     }
 
-    // 初始化结果张量（与输入同形状同类型）
+    // initialize output tensor (same shape and dtype as input)
     NPUArray result(x.shape, x.aclDtype);
 
-    // 角度转弧度因子：π/180
+    // degrees-to-radians factor: π/180
     NPUArray scalar_factor({}, x.aclDtype);
     const double rad_factor = M_PI / 180.0;
     void* scalar_factor_ptr = nullptr;
 
-    // 资源声明
+    // declare resources
     aclrtStream stream = nullptr;
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
-    aclTensorList* input_list = nullptr;  // 输入张量列表
-    aclTensorList* output_list = nullptr; // 输出张量列表
+    aclTensorList* input_list = nullptr;  // input tensor list
+    aclTensorList* output_list = nullptr; // output tensor list
 
     try {
-        // 获取标量张量的设备指针
+        // get device pointer of scalar tensor
         auto error = aclGetRawTensorAddr(scalar_factor.tensorPtr, &scalar_factor_ptr);
         ACL_RT_CHECK(error, "aclGetRawTensorAddr");
 
-        // 拷贝转换因子到设备（按数据类型适配）
+        // copy conversion factor to device (adapt by data type)
         if (x.aclDtype == ACL_FLOAT) {
             float factor = static_cast<float>(rad_factor);
             error = aclrtMemcpy(scalar_factor_ptr, sizeof(float), &factor, sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
@@ -333,26 +333,26 @@ NPUArray Radians(const NPUArray& x) {
             ACL_RT_CHECK(error, "aclrtMemcpy");
         }
 
-        // 创建执行流
+        // create execution stream
         error = aclrtCreateStream(&stream);
         ACL_RT_CHECK(error, "aclrtCreateStream");
 
-        // 关键修复：将单个张量包装为张量列表（匹配接口参数要求）
+        // key fix: wrap single tensor as tensor list (matching interface parameter requirements)
         aclTensor* input_tensors[] = {x.tensorPtr};
         input_list = aclCreateTensorList(input_tensors, 1);
 
         aclTensor* output_tensors[] = {result.tensorPtr};
         output_list = aclCreateTensorList(output_tensors, 1);
 
-        // 获取工作空间大小
+        // get workspace size
         error = aclnnForeachMulScalarGetWorkspaceSize(input_list, scalar_factor.tensorPtr, output_list, &workspace_size,
                                                       &executor);
         ACLNN_CHECK(error, "aclnnForeachMulScalarGetWorkspaceSize");
 
-        // 分配工作空间
+        // allocate workspace
         AclWorkspace workspace(workspace_size);
 
-        // 执行标量乘法
+        // execute scalar multiplication
         error = aclnnForeachMulScalar(workspace.get(), workspace_size, executor, stream);
         ACLNN_CHECK(error, "aclnnForeachMulScalar");
 

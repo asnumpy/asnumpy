@@ -33,7 +33,7 @@
 namespace asnumpy {
 
 NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    // 初始化中间结果和最终结果数组
+        // initialize intermediate and final result arrays
     auto out_dtype = x1.dtype;
     auto acl_dtype = x1.aclDtype;
     auto shape = GetBroadcastShape(x1, x2);
@@ -42,7 +42,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     }
     auto out = NPUArray(shape, out_dtype);
 
-    // 步骤1: 计算x1和x2的乘积 (a * b)
+        // step 1: compute product of x1 and x2 (a * b)
     LOG_DEBUG("aclnnMul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
               detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     NPUArray product(shape, out_dtype);
@@ -60,7 +60,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnMul completed");
 
-    // 步骤2: 计算x1和x2的绝对值乘积 (|a * b|)
+        // step 2: compute absolute product of x1 and x2 (|a * b|)
     LOG_DEBUG("aclnnAbs start: input_shape={}, aclDtype={}", detail::FormatShape(product.shape),
               AclDtypeName(product.aclDtype));
     NPUArray abs_product(shape, out_dtype);
@@ -77,10 +77,10 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnAbs completed");
 
-    // 步骤3: 计算x1和x2的最大公约数 (GCD(a, b))
-    NPUArray gcd_result = Gcd(x1, x2); // 复用已实现的Gcd函数
+        // step 3: compute GCD of x1 and x2 (GCD(a, b))
+        NPUArray gcd_result = Gcd(x1, x2); // reuse existing Gcd function
 
-    // 步骤4: 计算LCM = |a*b| / GCD(a,b)
+        // step 4: compute LCM = |a*b| / GCD(a,b)
     return EXECUTE_BINARY_OP(
         abs_product, gcd_result, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -93,7 +93,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 }
 
 NPUArray Gcd(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    // 初始化结果数组（广播输出形状）
+        // initialize output array with broadcast shape
     auto out_dtype = x1.dtype;
     auto shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(shape, out_dtype);

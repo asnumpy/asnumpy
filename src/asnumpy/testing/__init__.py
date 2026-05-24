@@ -16,11 +16,11 @@
 
 
 __all__ = [
-    # 数组断言
+    # Array assertions
     "assert_array_equal",
     "assert_allclose",
     "assert_array_list_equal",
-    # 异常和警告断言
+    # Exception and warning assertions
     "assert_raises",
     "assert_raises_regex",
     "assert_warns",
@@ -28,7 +28,7 @@ __all__ = [
     "assert_equal",
     "assert_string_equal",
     "assert_warns_message",
-    # dtype装饰器
+    # dtype decorators
     "for_dtypes",
     "for_all_dtypes",
     "for_float_dtypes",
@@ -36,44 +36,44 @@ __all__ = [
     "for_signed_dtypes",
     "for_unsigned_dtypes",
     "for_complex_dtypes",
-    # order装饰器
+    # order decorators
     "for_orders",
     "for_cf_orders",
-    # numpy-asnumpy比较装饰器
+    # numpy-asnumpy comparison decorators
     "numpy_asnumpy_array_equal",
     "numpy_asnumpy_allclose",
-    # pytest集成
+    # pytest integration
     "pytest_is_available",
     "parameterize",
     "fixture",
     "skip",
     "skipif",
     "xfail",
-    # 参数化工具
+    # parameterization utilities
     "product",
     "product_dict",
     "parameterize_test_class",
-    # 测试类生成
+    # test class generation
     "make_decorator",
     "generate_test_classes",
     "TestBundle",
-    # 辅助函数
+    # helper functions
     "shaped_arange",
     "shaped_random",
     "shaped_reverse_arange",
     "suppress_warnings",
     "with_seed",
     "generate_test_data",
-    # 测试常量
+    # test constants
     "TEST_SHAPES",
     "TEST_DTYPES",
     "TEST_ORDERS",
 ]
 
-# 数组断言函数
+# Array assertion functions
 from asnumpy.testing._array import assert_allclose, assert_array_equal
 
-# 异常和警告断言
+# Exception and warning assertions
 from asnumpy.testing._assertions import (
     assert_equal,
     assert_no_warnings,
@@ -84,14 +84,14 @@ from asnumpy.testing._assertions import (
     assert_warns_message,
 )
 
-# 测试类生成工具
+# Test class generation utilities
 from asnumpy.testing._bundle import (
     TestBundle,
     generate_test_classes,
     make_decorator,
 )
 
-# 测试辅助函数
+# Test helper functions
 from asnumpy.testing._helper import (
     TEST_DTYPES,
     TEST_ORDERS,
@@ -105,7 +105,7 @@ from asnumpy.testing._helper import (
     with_seed,
 )
 
-# 装饰器 - dtype和order参数化
+# dtype and order parameterization decorators
 from asnumpy.testing._loops import (
     for_all_dtypes,
     for_cf_orders,
@@ -120,7 +120,7 @@ from asnumpy.testing._loops import (
     numpy_asnumpy_array_equal,
 )
 
-# 参数化测试工具
+# Parameterization utilities
 from asnumpy.testing._parameterized import (
     parameterize_test_class,
     product,
@@ -134,7 +134,7 @@ from asnumpy.testing._pytest_impl import (
     xfail,
 )
 
-# pytest集成
+# pytest integration
 from asnumpy.testing._pytest_impl import (
     is_available as pytest_is_available,
 )

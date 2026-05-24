@@ -46,9 +46,9 @@ NPUArray EmptyLike(const NPUArray& prototype, py::dtype dtype) {
     LOG_DEBUG("EmptyLike start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(prototype.shape),
               prototype.tensorSize, AclDtypeName(prototype.aclDtype));
     try {
-        // 若未指定dtype，使用原型数组的dtype
+        // use prototype dtype if none specified
         py::dtype target_dtype = dtype.is_none() ? prototype.dtype() : dtype;
-        // 基于原型的形状和目标dtype创建空数组
+        // create empty array based on prototype shape and target dtype
         auto result = NPUArray(prototype.shape, target_dtype);
         LOG_INFO("EmptyLike completed");
         return result;
