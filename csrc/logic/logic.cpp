@@ -47,20 +47,20 @@
 namespace asnumpy {
 
 /**
- * @brief 为标量比较操作创建 aclScalar 对象
+ * @brief Create aclScalar object for scalar comparison operations
  *
- * 根据输入数组的数据类型和可选的输出数据类型，确定标量的目标数据类型，
- * 然后使用 CreateScalar 函数创建 aclScalar 对象。
+ * Determine the target scalar dtype from the input array dtype and an optional
+ * output dtype, then create an aclScalar using CreateScalar.
  *
- * @param x1 输入数组
- * @param scalar Python 标量对象
- * @param dtype 可选的输出数据类型
- * @return aclScalar* 创建的标量对象
+ * @param x1 Input array
+ * @param scalar Python scalar object
+ * @param dtype Optional output data type
+ * @return aclScalar* Created scalar object
  */
 static aclScalar* CreateScalarForComparison(const NPUArray& x1, const py::object& scalar,
                                             std::optional<py::dtype> dtype) {
 
-    // 确定标量的数据类型：如果提供了dtype则使用dtype，否则使用输入数组的数据类型
+    // determine scalar dtype: use specified dtype if provided, otherwise use input array dtype
     aclDataType scalar_dtype;
     if (dtype.has_value()) {
         scalar_dtype = NPUArray::GetACLDataType(*dtype);
@@ -81,7 +81,7 @@ NPUArray All(const NPUArray& x) {
     aclOpExecutor* executor = nullptr;
     void* workspaceAddr = nullptr;
 
-    // dim=[] (全局 reduce)
+    // dim=[] (global reduction)
     aclIntArray* aclDim = aclCreateIntArray(nullptr, 0);
     if (!aclDim) {
         throw std::runtime_error(fmt::format("[logic.cpp]({}) failed to create empty aclIntArray", __func__));
@@ -127,7 +127,7 @@ NPUArray All(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
     aclOpExecutor* executor = nullptr;
     void* workspaceAddr = nullptr;
 
-    // 构造 dim 数组
+    // build dim array
     aclIntArray* aclDim = aclCreateIntArray(dim.data(), dim.size());
     if (!aclDim) {
         throw std::runtime_error(fmt::format("[logic.cpp]({}) failed to create aclIntArray", __func__));
@@ -159,7 +159,7 @@ NPUArray Any(const NPUArray& x) {
     aclOpExecutor* executor = nullptr;
     void* workspaceAddr = nullptr;
 
-    // dim=[] (全局 reduce)
+    // dim=[] (global reduction)
     aclIntArray* aclDim = aclCreateIntArray(nullptr, 0);
     if (!aclDim) {
         throw std::runtime_error("[logic.cpp](Any) failed to create empty aclIntArray");
@@ -205,7 +205,7 @@ NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
     aclOpExecutor* executor = nullptr;
     void* workspaceAddr = nullptr;
 
-    // 构造 dim 数组
+    // build dim array
     aclIntArray* aclDim = aclCreateIntArray(dim.data(), dim.size());
     if (!aclDim) {
         throw std::runtime_error(fmt::format("[logic.cpp]({}) failed to create aclIntArray", __func__));
@@ -229,7 +229,7 @@ NPUArray Any(const NPUArray& x, const std::vector<int64_t>& dim, bool keepdims) 
 
 /// Check element-wise finiteness of the input array.
 NPUArray IsFinite(const NPUArray& x) {
-    // 输出布尔数组，shape 与输入一致
+    // output boolean array with same shape as input
     py::dtype dtype = NPUArray::GetPyDtype(ACL_BOOL);
     return EXECUTE_UNARY_OP(
         x, dtype,

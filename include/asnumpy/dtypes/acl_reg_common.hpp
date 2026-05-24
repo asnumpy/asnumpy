@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <type_traits>
 
-// NumPy 2.x 兼容：在 2.0 及以上使用 PyArray_DescrProto
+// NumPy 2.x compat: use PyArray_DescrProto in 2.0 and above
 #if NPY_ABI_VERSION < 0x02000000
 #define PyArray_DescrProto PyArray_Descr
 #endif

@@ -26,8 +26,8 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 亚字节整数模板基类
-// 将 N 位整数存储在一个字节（uint8_t）的低 N 位中，高位被忽略
+// Sub-byte integer template base class
+// stores N-bit integer in the low N bits of a byte (uint8_t); high bits ignored
 template <int N, typename UnderlyingTy> class SubByteInt {
   private:
     UnderlyingTy v_;
@@ -36,21 +36,21 @@ template <int N, typename UnderlyingTy> class SubByteInt {
     static constexpr int kUnderlyingBits = std::numeric_limits<UnsignedUnderlyingTy>::digits;
 
     static_assert(std::is_same_v<UnderlyingTy, uint8_t> || std::is_same_v<UnderlyingTy, int8_t>,
-                  "底层类型必须是有符号或无符号 8 位整数");
+                  "underlying type must be signed or unsigned 8-bit integer");
 
-    // 屏蔽高位
+    // mask high bits
     static inline constexpr UnderlyingTy Mask(UnderlyingTy v) {
         return static_cast<UnsignedUnderlyingTy>(static_cast<UnsignedUnderlyingTy>(v) << (kUnderlyingBits - N)) >>
                (kUnderlyingBits - N);
     }
 
-    // 屏蔽高位并对有符号类型进行符号扩展
+        // mask high bits and sign-extend for signed types
     static inline constexpr UnderlyingTy ExtendToFullWidth(UnderlyingTy v) {
         return static_cast<UnderlyingTy>(static_cast<UnderlyingTy>(v) << (kUnderlyingBits - N)) >>
                (kUnderlyingBits - N);
     }
 
-    // 转换为对应的完整宽度 UnderlyingTy 值
+    // convert to full-width UnderlyingTy value
     inline constexpr UnderlyingTy IntValue() const { return ExtendToFullWidth(v_); }
 
   public:
@@ -73,13 +73,13 @@ template <int N, typename UnderlyingTy> class SubByteInt {
         return std::is_signed_v<UnderlyingTy> ? SubByteInt(1) << digits : SubByteInt(0);
     }
 
-    // 类型转换
+    // type conversion
     template <typename T> explicit constexpr operator T() const { return static_cast<T>(IntValue()); }
 
-    // 取负
+    // negation
     constexpr SubByteInt operator-() const { return SubByteInt(-v_); }
 
-    // 算术运算符
+    // arithmetic operators
     constexpr SubByteInt operator+(const SubByteInt& other) const { return SubByteInt(v_ + other.v_); }
     constexpr SubByteInt operator-(const SubByteInt& other) const { return SubByteInt(v_ - other.v_); }
     constexpr SubByteInt operator*(const SubByteInt& other) const { return SubByteInt(v_ * other.v_); }
@@ -98,7 +98,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
         return SubByteInt((IntValue() % denom));
     }
 
-    // 位运算符
+    // bitwise operators
     constexpr SubByteInt operator&(const SubByteInt& other) const { return SubByteInt(v_ & other.v_); }
     constexpr SubByteInt operator|(const SubByteInt& other) const { return SubByteInt(v_ | other.v_); }
     constexpr SubByteInt operator^(const SubByteInt& other) const { return SubByteInt(v_ ^ other.v_); }
@@ -106,7 +106,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
     constexpr SubByteInt operator>>(int amount) const { return SubByteInt(IntValue() >> amount); }
     constexpr SubByteInt operator<<(int amount) const { return SubByteInt(v_ << amount); }
 
-    // 比较运算符
+    // comparison operators
     constexpr bool operator==(const SubByteInt& other) const { return Mask(v_) == Mask(other.v_); }
     constexpr bool operator!=(const SubByteInt& other) const { return Mask(v_) != Mask(other.v_); }
     constexpr bool operator<(const SubByteInt& other) const { return IntValue() < other.IntValue(); }
@@ -114,7 +114,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
     constexpr bool operator<=(const SubByteInt& other) const { return IntValue() <= other.IntValue(); }
     constexpr bool operator>=(const SubByteInt& other) const { return IntValue() >= other.IntValue(); }
 
-    // 与 int64_t 的比较
+    // comparison with int64_t
     constexpr bool operator==(int64_t other) const { return IntValue() == other; }
     constexpr bool operator!=(int64_t other) const { return IntValue() != other; }
     constexpr bool operator<(int64_t other) const { return IntValue() < other; }
@@ -129,7 +129,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
     friend constexpr bool operator<=(int64_t a, const SubByteInt& b) { return a <= b.IntValue(); }
     friend constexpr bool operator>=(int64_t a, const SubByteInt& b) { return a >= b.IntValue(); }
 
-    // 自增/自减
+    // increment / decrement
     constexpr SubByteInt& operator++() {
         v_ = Mask(v_ + 1);
         return *this;
@@ -149,7 +149,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
         return orig;
     }
 
-    // 复合赋值运算符
+    // compound assignment operators
     constexpr SubByteInt& operator+=(const SubByteInt& other) {
         *this = *this + other;
         return *this;
@@ -201,13 +201,13 @@ template <int N, typename UnderlyingTy> class SubByteInt {
         return *this;
     }
 
-    // 流输出
+    // stream output
     friend std::ostream& operator<<(std::ostream& os, const SubByteInt& num) {
         os << static_cast<int16_t>(num);
         return os;
     }
 
-    // 转字符串
+    // to string
     std::string ToString() const {
         std::ostringstream os;
         os << static_cast<int16_t>(*this);
@@ -215,7 +215,7 @@ template <int N, typename UnderlyingTy> class SubByteInt {
     }
 };
 
-// int4: 4位有符号整数，范围 [-8, 7]
+// int4: 4-bit signed integer, range [-8, 7]
 class int4 : public SubByteInt<4, int8_t> {
   private:
     using Base = SubByteInt<4, int8_t>;
@@ -223,16 +223,16 @@ class int4 : public SubByteInt<4, int8_t> {
   public:
     using Base::Base;
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_INT4; }
 
-    // 常量
+    // constants
     static constexpr int kBits = 4;
     static constexpr int kMin = -8;
     static constexpr int kMax = 7;
 };
 
-// uint1: 1位无符号整数，范围 [0, 1]
+// uint1: 1-bit unsigned integer, range [0, 1]
 class uint1 : public SubByteInt<1, uint8_t> {
   private:
     using Base = SubByteInt<1, uint8_t>;
@@ -240,10 +240,10 @@ class uint1 : public SubByteInt<1, uint8_t> {
   public:
     using Base::Base;
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_UINT1; }
 
-    // 常量
+    // constants
     static constexpr int kBits = 1;
     static constexpr int kMin = 0;
     static constexpr int kMax = 1;
@@ -252,7 +252,7 @@ class uint1 : public SubByteInt<1, uint8_t> {
 } // namespace dtypes
 } // namespace asnumpy
 
-// std::numeric_limits 特化
+// std::numeric_limits specialization
 namespace std {
 
 template <typename T, bool IsSigned, bool IsModulo, int Digits> struct asnumpy_subbyte_numeric_limits_common {

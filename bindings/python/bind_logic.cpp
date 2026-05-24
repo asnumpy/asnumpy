@@ -45,7 +45,7 @@ void bind_logic(py::module_& logic) {
     logic.def("logical_not", &LogicalNot, py::arg("x"));
     logic.def("logical_xor", &LogicalXor, py::arg("x1"), py::arg("x2"));
 
-    // Comparisons (array-array / array-scalar), dtype 可选
+    // Comparisons (array-array / array-scalar), dtype optional
     logic.def("greater", py::overload_cast<const NPUArray&, const NPUArray&, std::optional<py::dtype>>(&greater),
               py::arg("x1"), py::arg("x2"), py::arg("dtype") = py::none());
 

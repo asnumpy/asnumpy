@@ -36,7 +36,7 @@
 
 namespace asnumpy {
 NPUArray Exp(const NPUArray& x) {
-    //因AOL算子限制，不支持64位int之外的int类型
+    // AOL operator limitation: integer types other than int64 are not supported
     auto shape = x.shape;
     aclDataType aclType = x.aclDtype;
     if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64) {
@@ -56,7 +56,7 @@ NPUArray Exp(const NPUArray& x) {
 }
 
 NPUArray Expm1(const NPUArray& x) {
-    //因AOL算子限制，不支持64位int之外的int类型
+    // AOL operator limitation: integer types other than int64 are not supported
     auto shape = x.shape;
     aclDataType aclType = x.aclDtype;
     if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64) {

@@ -14,12 +14,12 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""pytest集成实现
+"""pytest integration implementation
 
-这个文件处理pytest和Asnumpy测试框架的集成：
-- parameterize() - 参数化测试的实现
-- _TestingParameterizeMixin - 参数化测试的混合类
-- is_available() - 检查pytest是否可用
+Handles integration between pytest and the Asnumpy test framework:
+- parameterize() - implementation of parameterized tests
+- _TestingParameterizeMixin - mixin class for parameterized tests
+- is_available() - check whether pytest is available
 """
 
 __all__ = [
@@ -36,10 +36,10 @@ import functools
 
 
 def is_available():
-    """检查pytest是否可用
+    """Check whether pytest is available.
 
     Returns:
-        bool: pytest是否已安装并可用
+        bool: True if pytest is installed and importable.
     """
     try:
         import pytest
@@ -50,34 +50,34 @@ def is_available():
 
 
 class _TestingParameterizeMixin:
-    """参数化测试的混合类
+    """Mixin class for parameterized tests.
 
-    这个类可以被测试类继承，以支持pytest风格的参数化测试。
+    Inherit from this class to support pytest-style parameterized tests.
     """
 
     @classmethod
     def setup_class(cls):
-        """在测试类开始前执行的设置"""
+        """Setup executed before the test class starts."""
         pass
 
     @classmethod
     def teardown_class(cls):
-        """在测试类结束后执行的清理"""
+        """Cleanup executed after the test class finishes."""
         pass
 
 
 def parameterize(*args, **kwargs):
-    """参数化测试装饰器
+    """Parameterized test decorator.
 
-    这个装饰器提供类似pytest.mark.parametrize的功能，
-    但与Asnumpy的测试框架集成。
+    Provides functionality similar to pytest.mark.parametrize,
+    integrated with the Asnumpy test framework.
 
     Args:
-        *args: 参数名和参数值
-        **kwargs: 其他选项
+        *args: Parameter names and values.
+        **kwargs: Additional options.
 
     Returns:
-        装饰器函数
+        Decorator function.
 
     Examples:
         @parameterize('dtype', [numpy.float32, numpy.float64])
@@ -85,7 +85,7 @@ def parameterize(*args, **kwargs):
             ...
     """
     if not is_available():
-        # 如果pytest不可用，使用简单的循环实现
+        # Fall back to a simple loop implementation when pytest is unavailable
         def decorator(func):
             @functools.wraps(func)
             def wrapper(self, *func_args, **func_kwargs):
@@ -102,50 +102,50 @@ def parameterize(*args, **kwargs):
 
         return decorator
 
-    # 如果pytest可用，使用pytest.mark.parametrize
+    # Use pytest.mark.parametrize when pytest is available
     import pytest
 
     return pytest.mark.parametrize(*args, **kwargs)
 
 
 def fixture(*args, **kwargs):
-    """fixture装饰器
+    """Fixture decorator.
 
-    这个装饰器提供类似pytest.fixture的功能。
+    Provides functionality similar to pytest.fixture.
 
     Args:
-        *args: 位置参数
-        **kwargs: 关键字参数
+        *args: Positional arguments.
+        **kwargs: Keyword arguments.
 
     Returns:
-        装饰器函数或fixture对象
+        Decorator function or fixture object.
     """
     if not is_available():
-        # 如果pytest不可用，返回一个简单的装饰器
+        # Return a simple passthrough decorator when pytest is unavailable
         if len(args) == 1 and callable(args[0]):
-            # 直接作为@fixture使用
+            # Used directly as @fixture
             return args[0]
         else:
-            # 作为@fixture(...)使用
+            # Used as @fixture(...)
             def decorator(func):
                 return func
 
             return decorator
 
-    # 如果pytest可用，使用pytest.fixture
+    # Use pytest.fixture when pytest is available
     import pytest
 
     return pytest.fixture(*args, **kwargs)
 
 
 def skip(reason):
-    """跳过测试装饰器
+    """Skip test decorator.
 
     Args:
-        reason: 跳过测试的原因
+        reason: Reason for skipping the test.
 
     Returns:
-        装饰器函数
+        Decorator function.
     """
     if not is_available():
         import unittest
@@ -158,14 +158,14 @@ def skip(reason):
 
 
 def skipif(condition, reason):
-    """条件跳过测试装饰器
+    """Conditional skip test decorator.
 
     Args:
-        condition: 跳过测试的条件
-        reason: 跳过测试的原因
+        condition: Condition under which the test is skipped.
+        reason: Reason for skipping the test.
 
     Returns:
-        装饰器函数
+        Decorator function.
     """
     if not is_available():
         import unittest
@@ -178,14 +178,14 @@ def skipif(condition, reason):
 
 
 def xfail(reason="", strict=False):
-    """预期失败测试装饰器
+    """Expected failure test decorator.
 
     Args:
-        reason: 预期失败的原因
-        strict: 是否严格模式
+        reason: Reason for the expected failure.
+        strict: Whether to use strict mode.
 
     Returns:
-        装饰器函数
+        Decorator function.
     """
     if not is_available():
         import unittest

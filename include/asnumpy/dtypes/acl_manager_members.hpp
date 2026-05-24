@@ -17,10 +17,10 @@
 #pragma once
 
 #define ASNUMPY_ACL_MANAGER_COMMON_MEMBERS                                                                             \
-    static PyObject* type_ptr; /* Python类型对象指针 */                                                                \
-    static int npy_type;       /* NumPy类型ID */                                                                       \
+    static PyObject* type_ptr; /* Python type object pointer */                                                                \
+    static int npy_type;       /* NumPy type ID */                                                                       \
     static PyType_Spec type_spec;                                                                                      \
     static PyType_Slot type_slots[];                                                                                   \
-    static PyArray_ArrFuncs arr_funcs;         /* NumPy数组操作函数 */                                                 \
+    static PyArray_ArrFuncs arr_funcs;         /* NumPy array function table */                                                 \
     static PyArray_DescrProto npy_descr_proto; /* NumPy 2.x */                                                         \
-    static PyArray_Descr* npy_descr;           /* 注册后有效 */
+    static PyArray_Descr* npy_descr;           /* valid after registration */

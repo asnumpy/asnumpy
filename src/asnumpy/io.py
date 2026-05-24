@@ -34,7 +34,7 @@ from ._core import ndarray as NPUArray
 def _to_numpy(x):
     """
     Convert NPUArray to numpy.ndarray if needed.
-    - If input is NPUArray: call x.to_numpy() (已在 C++ 层实现).
+    - If input is NPUArray: call x.to_numpy() (implemented in the C++ layer).
     - If input is already numpy.ndarray: return as-is.
     """
     if isinstance(x, NPUArray):

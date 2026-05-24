@@ -196,7 +196,7 @@ template <typename ValueType> aclScalar* CreateScalar(ValueType value, aclDataTy
         return checkScalar(aclCreateScalar(str_value.data(), ACL_STRING), "aclCreateScalar");
     }
     case ACL_DT_UNDEFINED: {
-        // 对于未定义类型，使用默认值0
+        // use default value 0 for undefined types
         auto converted = static_cast<int32_t>(0);
         return checkScalar(aclCreateScalar(&converted, ACL_INT32), "aclCreateScalar");
     }
@@ -210,7 +210,7 @@ template <typename ValueType> aclScalar* CreateScalar(ValueType value, aclDataTy
 // Explicit instantiations
 // =====================
 
-// 1) CreateScalar(T value) —— 自动类型推导版本
+// 1) CreateScalar(T value) -- auto type deduction version
 template aclScalar* CreateScalar<float>(float);
 template aclScalar* CreateScalar<double>(double);
 template aclScalar* CreateScalar<int32_t>(int32_t);
@@ -223,7 +223,7 @@ template aclScalar* CreateScalar<uint16_t>(uint16_t);
 template aclScalar* CreateScalar<uint8_t>(uint8_t);
 template aclScalar* CreateScalar<bool>(bool);
 
-// 2) CreateScalar(ValueType value, aclDataType dtype) —— 显式 dtype 版本
+// 2) CreateScalar(ValueType value, aclDataType dtype) -- explicit dtype version
 template aclScalar* CreateScalar<float>(float, aclDataType);
 template aclScalar* CreateScalar<double>(double, aclDataType);
 template aclScalar* CreateScalar<int32_t>(int32_t, aclDataType);
@@ -236,7 +236,7 @@ template aclScalar* CreateScalar<uint16_t>(uint16_t, aclDataType);
 template aclScalar* CreateScalar<uint8_t>(uint8_t, aclDataType);
 template aclScalar* CreateScalar<bool>(bool, aclDataType);
 
-// 3) CreateScalar(py::object scalar, aclDataType dtype) —— Python 对象版本
+// 3) CreateScalar(py::object scalar, aclDataType dtype) -- Python object version
 template <typename T> aclScalar* CreateScalarFromPython(const py::object& scalar, aclDataType dtype) {
     try {
         T value = py::cast<T>(scalar);
@@ -247,7 +247,7 @@ template <typename T> aclScalar* CreateScalarFromPython(const py::object& scalar
     }
 }
 
-// 类型映射表
+// type mapping table
 using TypeHandler = std::function<aclScalar*(const py::object&, aclDataType)>;
 static const std::unordered_map<aclDataType, TypeHandler> type_handlers = {
     {ACL_FLOAT, CreateScalarFromPython<float>},     {ACL_DOUBLE, CreateScalarFromPython<double>},

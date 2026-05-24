@@ -14,9 +14,9 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""异常和警告断言
+"""Exception and warning assertions.
 
-提供用于测试异常和警告的断言函数。
+Provides assertion functions for testing exceptions and warnings.
 """
 
 __all__ = [
@@ -35,47 +35,44 @@ from contextlib import contextmanager
 
 
 def assert_raises(exception_class, func=None, *args, **kwargs):
-    """断言函数抛出指定类型的异常
+    """Assert that a function raises the specified exception type.
 
-    可以作为上下文管理器或装饰器使用。
+    Can be used as a context manager or called directly.
 
     Args:
-        exception_class: 期望的异常类型
-        func: 要测试的函数（可选）
-        *args: 传递给func的位置参数
-        **kwargs: 传递给func的关键字参数
+        exception_class: Expected exception type.
+        func: Function under test (optional).
+        *args: Positional arguments passed to func.
+        **kwargs: Keyword arguments passed to func.
 
     Returns:
-        如果作为上下文管理器使用，返回上下文管理器对象
+        Context manager object when used as a context manager.
 
     Raises:
-        AssertionError: 如果没有抛出异常或异常类型不匹配
+        AssertionError: If no exception is raised or the type does not match.
 
     Examples:
-        # 作为上下文管理器
+        # As a context manager
         with assert_raises(ValueError):
             numpy.zeros(-1)
 
-        # 作为函数调用
+        # As a function call
         assert_raises(ValueError, numpy.zeros, -1)
 
-        # 作为装饰器
+        # As a decorator
         @assert_raises(TypeError)
         def test_invalid_type():
             numpy.array('invalid')
     """
     if func is None:
-        # 作为上下文管理器使用
         return _AssertRaisesContext(exception_class)
 
-    # 作为函数调用使用
     try:
         func(*args, **kwargs)
         raise AssertionError(
             f"Expected {exception_class.__name__} to be raised, but no exception was raised"
         )
     except exception_class:
-        # 预期的异常被抛出，测试通过
         return None
     except Exception as e:
         raise AssertionError(
@@ -84,7 +81,7 @@ def assert_raises(exception_class, func=None, *args, **kwargs):
 
 
 class _AssertRaisesContext:
-    """assert_raises 的上下文管理器实现"""
+    """Context manager implementation for assert_raises."""
 
     def __init__(self, exception_class):
         self.exception_class = exception_class
@@ -101,47 +98,44 @@ class _AssertRaisesContext:
             )
 
         if not issubclass(exc_type, self.exception_class):
-            # 抛出了错误的异常类型，让它继续传播
+            # Wrong exception type - let it propagate
             return False
 
-        # 捕获了正确的异常
+        # Correct exception captured
         self.exception = exc_val
         return True
 
 
 def assert_raises_regex(exception_class, regex_pattern, func=None, *args, **kwargs):
-    """断言函数抛出指定异常，且异常消息匹配正则表达式
+    """Assert that a function raises the specified exception with a matching message.
 
     Args:
-        exception_class: 期望的异常类型
-        regex_pattern: 异常消息的正则表达式模式
-        func: 要测试的函数（可选）
-        *args: 传递给func的位置参数
-        **kwargs: 传递给func的关键字参数
+        exception_class: Expected exception type.
+        regex_pattern: Regex pattern the exception message must match.
+        func: Function under test (optional).
+        *args: Positional arguments passed to func.
+        **kwargs: Keyword arguments passed to func.
 
     Returns:
-        如果作为上下文管理器使用，返回上下文管理器对象
+        Context manager object when used as a context manager.
 
     Examples:
-        # 作为上下文管理器
+        # As a context manager
         with assert_raises_regex(ValueError, "invalid.*shape"):
             numpy.zeros(-1)
 
-        # 作为函数调用
+        # As a function call
         assert_raises_regex(ValueError, "negative", numpy.zeros, -1)
     """
     if func is None:
-        # 作为上下文管理器使用
         return _AssertRaisesRegexContext(exception_class, regex_pattern)
 
-    # 作为函数调用使用
     try:
         func(*args, **kwargs)
         raise AssertionError(
             f"Expected {exception_class.__name__} to be raised, but no exception was raised"
         )
     except exception_class as e:
-        # 检查异常消息是否匹配
         if not re.search(regex_pattern, str(e)):
             raise AssertionError(
                 f"Exception message '{e}' does not match pattern '{regex_pattern}'"
@@ -154,7 +148,7 @@ def assert_raises_regex(exception_class, regex_pattern, func=None, *args, **kwar
 
 
 class _AssertRaisesRegexContext:
-    """assert_raises_regex 的上下文管理器实现"""
+    """Context manager implementation for assert_raises_regex."""
 
     def __init__(self, exception_class, regex_pattern):
         self.exception_class = exception_class
@@ -172,62 +166,56 @@ class _AssertRaisesRegexContext:
             )
 
         if not issubclass(exc_type, self.exception_class):
-            # 抛出了错误的异常类型，让它继续传播
+            # Wrong exception type - let it propagate
             return False
 
-        # 检查异常消息是否匹配
         if not re.search(self.regex_pattern, str(exc_val)):
             raise AssertionError(
                 f"Exception message '{exc_val}' does not match pattern '{self.regex_pattern}'"
             )
 
-        # 捕获了正确的异常且消息匹配
         self.exception = exc_val
         return True
 
 
 def assert_warns(warning_class, func=None, *args, **kwargs):
-    """断言函数产生指定类型的警告
+    """Assert that a function emits the specified warning type.
 
     Args:
-        warning_class: 期望的警告类型
-        func: 要测试的函数（可选）
-        *args: 传递给func的位置参数
-        **kwargs: 传递给func的关键字参数
+        warning_class: Expected warning type.
+        func: Function under test (optional).
+        *args: Positional arguments passed to func.
+        **kwargs: Keyword arguments passed to func.
 
     Returns:
-        如果作为上下文管理器使用，返回上下文管理器对象
+        Context manager object when used as a context manager.
 
     Examples:
-        # 作为上下文管理器
+        # As a context manager
         with assert_warns(DeprecationWarning):
             old_function()
 
-        # 作为函数调用
+        # As a function call
         assert_warns(UserWarning, some_function, arg1, arg2)
     """
     if func is None:
-        # 作为上下文管理器使用
         return _AssertWarnsContext(warning_class)
 
-    # 作为函数调用使用
     with warnings.catch_warnings(record=True) as warning_list:
         warnings.simplefilter("always")
         func(*args, **kwargs)
 
-        # 检查是否有匹配的警告
         for w in warning_list:
             if issubclass(w.category, warning_class):
-                return None  # 找到匹配的警告，测试通过
+                return None
 
-        # 没有找到匹配的警告
         raise AssertionError(
             f"Expected {warning_class.__name__} to be raised, but no such warning was issued"
         )
 
 
 class _AssertWarnsContext:
-    """assert_warns 的上下文管理器实现"""
+    """Context manager implementation for assert_warns."""
 
     def __init__(self, warning_class):
         self.warning_class = warning_class
@@ -243,37 +231,34 @@ class _AssertWarnsContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._warnings_manager.__exit__(exc_type, exc_val, exc_tb)
 
-        # 检查是否有匹配的警告
         for w in self.warnings:
             if issubclass(w.category, self.warning_class):
-                return False  # 找到匹配的警告
+                return False
 
-        # 没有找到匹配的警告
         raise AssertionError(
             f"Expected {self.warning_class.__name__} to be raised, but no such warning was issued"
         )
 
 
 def assert_no_warnings(func, *args, **kwargs):
-    """断言函数不产生任何警告
+    """Assert that a function does not emit any warnings.
 
     Args:
-        func: 要测试的函数
-        *args: 传递给func的位置参数
-        **kwargs: 传递给func的关键字参数
+        func: Function under test.
+        *args: Positional arguments passed to func.
+        **kwargs: Keyword arguments passed to func.
 
     Raises:
-        AssertionError: 如果产生了任何警告
+        AssertionError: If any warning is emitted.
 
     Examples:
         assert_no_warnings(some_function, arg1, arg2)
 
-        # 或作为上下文管理器
+        # Or as a context manager
         with assert_no_warnings():
             some_function()
     """
     if callable(func):
-        # 作为函数调用使用
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter("always")
             result = func(*args, **kwargs)
@@ -287,12 +272,11 @@ def assert_no_warnings(func, *args, **kwargs):
 
             return result
     else:
-        # 作为上下文管理器使用
         return _AssertNoWarningsContext()
 
 
 class _AssertNoWarningsContext:
-    """assert_no_warnings 的上下文管理器实现"""
+    """Context manager implementation for assert_no_warnings."""
 
     def __init__(self):
         self._warnings_manager = None
@@ -318,17 +302,17 @@ class _AssertNoWarningsContext:
 
 
 def assert_equal(actual, desired, err_msg=""):
-    """断言两个对象相等
+    """Assert that two objects are equal.
 
-    这是一个通用的相等检查，适用于各种Python对象。
+    General-purpose equality check for any Python objects.
 
     Args:
-        actual: 实际值
-        desired: 期望值
-        err_msg: 自定义错误消息
+        actual: Actual value.
+        desired: Expected value.
+        err_msg: Custom error message.
 
     Raises:
-        AssertionError: 如果两个对象不相等
+        AssertionError: If the two objects are not equal.
 
     Examples:
         assert_equal(result, expected)
@@ -343,19 +327,16 @@ def assert_equal(actual, desired, err_msg=""):
 
 
 def assert_string_equal(actual, desired):
-    """断言两个字符串相等
-
-    提供更友好的字符串比较错误消息。
+    """Assert that two strings are equal with a friendly diff message.
 
     Args:
-        actual: 实际字符串
-        desired: 期望字符串
+        actual: Actual string.
+        desired: Expected string.
 
     Raises:
-        AssertionError: 如果字符串不相等
+        AssertionError: If the strings are not equal.
     """
     if actual != desired:
-        # 找出第一个不同的字符位置
         for i, (a, d) in enumerate(zip(actual, desired, strict=False)):
             if a != d:
                 raise AssertionError(
@@ -365,7 +346,6 @@ def assert_string_equal(actual, desired):
                     f"First difference: {repr(a)} != {repr(d)}"
                 )
 
-        # 长度不同
         raise AssertionError(
             f"Strings have different lengths:\n"
             f"Actual  : {repr(actual)} (length {len(actual)})\n"
@@ -375,13 +355,13 @@ def assert_string_equal(actual, desired):
 
 @contextmanager
 def assert_warns_message(warning_class, message_pattern):
-    """断言产生特定消息的警告
+    """Assert that a specific warning with a matching message is emitted.
 
-    结合了 assert_warns 和消息匹配。
+    Combines assert_warns with message matching.
 
     Args:
-        warning_class: 期望的警告类型
-        message_pattern: 警告消息的正则表达式模式
+        warning_class: Expected warning type.
+        message_pattern: Regex pattern the warning message must match.
 
     Examples:
         with assert_warns_message(DeprecationWarning, "deprecated.*use.*instead"):
@@ -391,12 +371,10 @@ def assert_warns_message(warning_class, message_pattern):
         warnings.simplefilter("always")
         yield
 
-        # 检查是否有匹配的警告
         for w in warning_list:
             if issubclass(w.category, warning_class) and re.search(message_pattern, str(w.message)):
-                return  # 找到匹配的警告
+                return
 
-        # 没有找到匹配的警告
         raise AssertionError(
             f"Expected {warning_class.__name__} with message matching '{message_pattern}', "
             f"but no such warning was issued"

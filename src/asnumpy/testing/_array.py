@@ -14,9 +14,9 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""数组比较函数
+"""Array comparison functions.
 
-提供用于测试的数组比较断言函数。
+Provides array comparison assertion functions for use in tests.
 """
 
 __all__ = ["assert_array_equal", "assert_allclose"]
@@ -25,19 +25,19 @@ import numpy as np
 
 
 def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
-    """断言两个数组完全相等
+    """Assert that two arrays are exactly equal.
 
     Args:
-        x: 第一个数组
-        y: 第二个数组
-        err_msg: 自定义错误消息
-        verbose: 是否显示详细错误信息
-        strides_check: 是否检查strides
+        x: First array.
+        y: Second array.
+        err_msg: Custom error message.
+        verbose: Whether to show detailed error information.
+        strides_check: Whether to check strides.
 
     Raises:
-        AssertionError: 如果数组不相等
+        AssertionError: If the arrays are not equal.
     """
-    # 转换为numpy数组
+    # Convert to numpy arrays
     if not isinstance(x, np.ndarray):
         if hasattr(x, "to_numpy"):
             x = x.to_numpy()
@@ -50,40 +50,39 @@ def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
         else:
             y = np.asarray(y)
 
-    # 检查shape
+    # Check shape
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查dtype
+    # Check dtype
     if x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查strides
+    # Check strides
     if strides_check and x.strides != y.strides:
         msg = f"Strides mismatch: x.strides={x.strides}, y.strides={y.strides}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查值
+    # Check values
     if not np.array_equal(x, y):
         if verbose:
             msg = "Arrays are not equal."
             try:
-                # 尝试计算差异，仅对数值类型有效
+                # Compute difference only for numeric types
                 if x.dtype.kind in "biu f":  # bool, int, uint, float
                     if x.dtype.kind == "b":
-                        # 修复：布尔型使用异或(^)计算差异，避免减法报错
+                        # For bool, use XOR to compute difference (subtraction raises an error)
                         diff = x ^ y
                         msg += f"\nNumber of differing elements: {np.sum(diff)}"
                     else:
                         diff = x - y
                         msg += f"\nMax absolute difference: {np.abs(diff).max()}"
             except Exception:
-                pass  # 如果计算差异失败，忽略，只打印数组内容
+                pass  # Ignore if difference computation fails
 
             if x.size > 0:
-                # 找出差异的索引
                 msg += f"\nIndices where elements differ: {np.where(x != y)}"
             msg += f"\nNumPy:\n{x}\nAsNumPy:\n{y}"
         else:
@@ -92,8 +91,8 @@ def assert_array_equal(x, y, err_msg="", verbose=True, strides_check=False):
 
 
 def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg="", verbose=True, strides_check=False):
-    """断言两个数组在误差范围内相等（用于浮点数比较）"""
-    # 转换为numpy数组
+    """Assert that two arrays are equal within a tolerance (for floating-point comparison)."""
+    # Convert to numpy arrays
     if not isinstance(x, np.ndarray):
         if hasattr(x, "to_numpy"):
             x = x.to_numpy()
@@ -106,22 +105,22 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg="", verbose=True, strides_c
         else:
             y = np.asarray(y)
 
-    # 检查shape
+    # Check shape
     if x.shape != y.shape:
         msg = f"Shape mismatch: x.shape={x.shape}, y.shape={y.shape}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查dtype
+    # Check dtype
     if x.dtype != y.dtype:
         msg = f"Dtype mismatch: x.dtype={x.dtype}, y.dtype={y.dtype}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查strides
+    # Check strides
     if strides_check and x.strides != y.strides:
         msg = f"Strides mismatch: x.strides={x.strides}, y.strides={y.strides}"
         raise AssertionError(f"{err_msg}\n{msg}" if err_msg else msg)
 
-    # 检查值（在误差范围内）
+    # Check values within tolerance
     if not np.allclose(x, y, rtol=rtol, atol=atol, equal_nan=True):
         if verbose:
             msg = "Arrays are not almost equal."
@@ -130,10 +129,10 @@ def assert_allclose(x, y, rtol=1e-7, atol=0, err_msg="", verbose=True, strides_c
                     diff = x - y
                     msg += f"\nMax absolute difference: {np.abs(diff).max()}"
             except TypeError as e:
-                # 类型错误：无法进行算术运算，记录但不中断
+                # Type error: cannot perform arithmetic - log but continue
                 msg += f"\nWarning: Cannot calculate difference - {str(e)}"
             except Exception as e:
-                # 其他意外错误，记录详细信息
+                # Other unexpected errors - log details
                 msg += f"\nWarning: Difference calculation failed - {type(e).__name__}: {str(e)}"
 
             if x.size > 0:

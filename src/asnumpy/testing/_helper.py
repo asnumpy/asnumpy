@@ -14,9 +14,9 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""测试辅助函数
+"""Test helper functions.
 
-提供便捷的测试数据生成和处理工具。
+Provides convenient utilities for generating and handling test data.
 """
 
 __all__ = [
@@ -38,97 +38,89 @@ import numpy
 
 
 def shaped_arange(shape, dtype=numpy.float64, order="C", xp=None, start=0):
-    """生成指定形状的序列数组
+    """Generate a sequential array with the given shape.
 
-    生成从start开始的连续整数序列，然后reshape成指定形状。
-    这在测试中非常有用，因为可以轻松验证数组操作的正确性。
+    Produces a contiguous integer sequence starting from ``start``,
+    then reshapes it to ``shape``. Useful in tests because the values
+    make it easy to verify array operations.
 
     Args:
-        start: 起始值，默认为0。用于生成从指定值开始的序列。
+        start: Starting value (default 0).
     """
     if xp is None:
         xp = numpy
 
-    # 处理shape参数
     if isinstance(shape, int):
         shape = (shape,)
 
-    # 计算总元素数
     size = 1
     for dim in shape:
         size *= dim
 
-    # 生成序列 (从 start 到 start+size)
     if xp is numpy:
         arr = numpy.arange(start, start + size, dtype=dtype)
         return arr.reshape(shape, order=order)
     else:
-        # 对于asnumpy，先用numpy生成再转换
+        # For asnumpy, generate with numpy then convert
         arr = numpy.arange(start, start + size, dtype=dtype)
         arr = arr.reshape(shape, order=order)
         return xp.ndarray.from_numpy(arr)
 
 
 def shaped_random(shape, dtype=numpy.float64, scale=1.0, seed=None, xp=None):
-    """生成指定形状的随机数组
+    """Generate a random array with the given shape.
 
-    生成服从均匀分布的随机数数组。
+    Produces a uniform-distribution random array.
     """
     if xp is None:
         xp = numpy
 
-    # 处理shape参数
     if isinstance(shape, int):
         shape = (shape,)
 
-    # 设置随机种子
     if seed is not None:
         numpy.random.seed(seed)
 
-    # 生成随机数
     if xp is numpy:
         arr = numpy.random.random(shape).astype(dtype)
         return arr * scale
     else:
-        # 对于asnumpy，先用numpy生成再转换
+        # For asnumpy, generate with numpy then convert
         arr = numpy.random.random(shape).astype(dtype)
         arr = arr * scale
         return xp.ndarray.from_numpy(arr)
 
 
 def shaped_reverse_arange(shape, dtype=numpy.float64, order="C", xp=None):
-    """生成指定形状的反向序列数组
+    """Generate a descending-order sequential array with the given shape.
 
-    生成从大到小的序列，然后reshape成指定形状。
-    用于测试降序数据的处理。
+    Produces a descending sequence then reshapes it to ``shape``.
+    Useful for testing operations on reverse-sorted data.
     """
     if xp is None:
         xp = numpy
 
-    # 处理shape参数
     if isinstance(shape, int):
         shape = (shape,)
 
-    # 计算总元素数
     size = 1
     for dim in shape:
         size *= dim
 
-    # 生成反向序列
     if xp is numpy:
         arr = numpy.arange(size - 1, -1, -1, dtype=dtype)
         return arr.reshape(shape, order=order)
     else:
-        # 对于asnumpy，先用numpy生成再转换
+        # For asnumpy, generate with numpy then convert
         arr = numpy.arange(size - 1, -1, -1, dtype=dtype)
         arr = arr.reshape(shape, order=order)
         return xp.ndarray.from_numpy(arr)
 
 
 def assert_array_list_equal(x_list, y_list, err_msg="", verbose=True):
-    """比较两个数组列表是否相等
+    """Assert that two lists of arrays are element-wise equal.
 
-    用于测试返回多个数组的函数。
+    Used for testing functions that return multiple arrays.
     """
     from . import _array
 
@@ -143,14 +135,14 @@ def assert_array_list_equal(x_list, y_list, err_msg="", verbose=True):
 
 
 def suppress_warnings(func):
-    """装饰器：抑制函数执行时的警告
+    """Decorator: suppress warnings during function execution.
 
-    用于测试中临时忽略已知的警告。
+    Use in tests to temporarily silence known warnings.
 
     Examples:
         @suppress_warnings
         def test_something():
-            # 这里的警告会被忽略
+            # warnings here will be suppressed
             pass
     """
     import warnings
@@ -165,31 +157,28 @@ def suppress_warnings(func):
 
 
 def with_seed(seed):
-    """装饰器：使用固定随机种子运行测试
-
-    确保测试的可重现性。
+    """Decorator: run a test with a fixed random seed for reproducibility.
 
     Args:
-        seed: 随机种子
+        seed: Random seed.
 
     Examples:
         @with_seed(42)
         def test_random_function():
             arr = numpy.random.random((3, 3))
-            # 每次运行都会得到相同的随机数
+            # same random values on every run
     """
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # 保存当前随机状态
+            # Save current random state
             old_state = numpy.random.get_state()
             try:
-                # 设置新的随机种子
                 numpy.random.seed(seed)
                 return func(*args, **kwargs)
             finally:
-                # 恢复原来的随机状态
+                # Restore original random state
                 numpy.random.set_state(old_state)
 
         return wrapper
@@ -198,10 +187,10 @@ def with_seed(seed):
 
 
 def generate_test_data(func):
-    """装饰器：为测试函数自动生成测试数据
+    """Decorator: automatically generate test data for a test function.
 
-    根据函数签名自动生成常见的测试用例。
-    这是一个简化的实现，可以根据需要扩展。
+    Generates common test cases based on the function signature.
+    This is a simplified implementation that can be extended as needed.
 
     Examples:
         @generate_test_data
@@ -211,22 +200,21 @@ def generate_test_data(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # 这里可以实现自动生成测试数据的逻辑
-        # 简化版本：直接调用原函数
+        # Simplified: delegate directly to the original function
         return func(*args, **kwargs)
 
     return wrapper
 
 
-# 一些常用的测试常量
+# Common test constants
 TEST_SHAPES = [
-    (),  # 标量
-    (0,),  # 空数组
-    (1,),  # 单元素
-    (5,),  # 一维
-    (2, 3),  # 二维
-    (2, 3, 4),  # 三维
-    (1, 2, 3, 4),  # 四维
+    (),          # scalar
+    (0,),        # empty array
+    (1,),        # single element
+    (5,),        # 1-D
+    (2, 3),      # 2-D
+    (2, 3, 4),   # 3-D
+    (1, 2, 3, 4),# 4-D
 ]
 
 TEST_DTYPES = [

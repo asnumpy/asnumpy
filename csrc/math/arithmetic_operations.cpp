@@ -108,7 +108,7 @@ NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
 
     if (out_dtype.is(x.dtype)) {
         LOG_INFO("aclnnCast completed");
-        return NPUArray(x); // 深拷贝
+        return NPUArray(x); // deep copy
     }
 
     auto out = NPUArray(x.shape, out_dtype);
@@ -191,37 +191,37 @@ NPUArray TrueDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
 NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     LOG_DEBUG("aclnnSub start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
               detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
-    // 1. 广播输出形状
+    // 1. compute broadcast output shape
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out_dtype = dtype.value_or(x1.dtype);
     auto out = NPUArray(out_shape, out_dtype);
 
-    // 2. 创建 alpha = 1 标量
+    // 2. create alpha = 1 scalar
     int32_t one = 1;
     aclScalar* alpha_scalar = aclCreateScalar(&one, ACL_INT32);
     if (!alpha_scalar) {
         throw std::runtime_error("[arithmetic_operations.cpp](Subtract) Failed to create alpha scalar");
     }
 
-    // 3. 获取 workspace
+    // 3. get workspace
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error =
         aclnnSubGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSubGetWorkspaceSize");
 
-    // 4. 分配 workspace
+    // 4. allocate workspace
     AclWorkspace workspace(workspaceSize);
 
-    // 5. 执行算子
+    // 5. execute op
     error = aclnnSub(workspace.get(), workspaceSize, executor, nullptr);
     ACLNN_CHECK(error, "aclnnSub");
 
-    // 6. 同步
+    // 6. synchronize
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
-    // 7. 释放资源
+    // 7. release resources
     aclDestroyScalar(alpha_scalar);
 
     LOG_INFO("aclnnSub completed");
@@ -234,25 +234,25 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
 NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     LOG_DEBUG("aclnnFloorDivide start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
               detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
-    // 1. 广播输出形状
+    // 1. compute broadcast output shape
     auto out_shape = GetBroadcastShape(x1, x2);
     auto out_dtype = dtype.value_or(x1.dtype);
     auto out = NPUArray(out_shape, out_dtype);
 
-    // 2. 获取 workspace
+    // 2. get workspace
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error = aclnnFloorDivideGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnFloorDivideGetWorkspaceSize");
 
-    // 3. 分配 workspace
+    // 3. allocate workspace
     AclWorkspace workspace(workspaceSize);
 
-    // 4. 执行算子
+    // 4. execute op
     error = aclnnFloorDivide(workspace.get(), workspaceSize, executor, nullptr);
     ACLNN_CHECK(error, "aclnnFloorDivide");
 
-    // 5. 同步设备
+    // 5. synchronize device
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
@@ -362,7 +362,7 @@ NPUArray Power(const NPUArray& x1, const py::object& x2, std::optional<py::dtype
  * @brief Element-wise floating-point power using aclnnPowTensorTensor.
  */
 NPUArray FloatPower(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    // 输出必须是浮点，默认 float32
+    // output must be float; default float32
     py::dtype out_dtype = dtype.value_or(py::dtype::of<float>());
     if (!(out_dtype.is(py::dtype::of<float>()) || out_dtype.is(py::dtype::of<double>()))) {
         throw std::runtime_error("[arithmetic_operations.cpp](FloatPower) dtype must be float or double");
@@ -485,13 +485,13 @@ NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dty
 std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
     LOG_DEBUG("aclnnDivMod start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
               detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
-    // 1. 确定输出 dtype（默认和 x1 一致）
+    // 1. determine output dtype (default: same as x1)
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
 
-    // 2. 广播后的输出形状
+    // 2. broadcast output shape
     auto out_shape = GetBroadcastShape(x1, x2);
 
-    // 3. 商 q = floor(x1 / x2) via aclnnDivMod(mode=2)
+    // 3. quotient q = floor(x1 / x2) via aclnnDivMod(mode=2)
     NPUArray quotient(out_shape, out_dtype);
 
     uint64_t ws_size = 0;
@@ -505,11 +505,11 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     error = aclnnDivMod(ws.get(), ws_size, executor, nullptr);
     ACLNN_CHECK(error, "aclnnDivMod");
 
-    // 4. 余数 r = x1 - q * x2
+    // 4. remainder r = x1 - q * x2
     NPUArray qx2 = Multiply(quotient, x2, out_dtype);
     NPUArray remainder = Subtract(x1, qx2, out_dtype);
 
-    // 5. 同步
+    // 5. synchronize
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
 
