@@ -53,7 +53,7 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
               detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
     py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
 
-    auto out_shape = GetBroadcastShape(x1, x2); 
+    auto out_shape = GetBroadcastShape(x1, x2);
     auto out = NPUArray(out_shape, out_dtype);
 
     int32_t one = 1;
