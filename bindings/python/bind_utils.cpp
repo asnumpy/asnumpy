@@ -48,6 +48,9 @@ void bind_utils(pybind11::module_& utils) {
                 byte_strides[i] = self.strides[i] * itemsize;
             }
             return byte_strides;
+        })
+        .def_property_readonly("device_address", [](const NPUArray& self) {
+            return reinterpret_cast<std::uintptr_t>(self.device_address());
         });
     utils.def("broadcast_shape", &GetBroadcastShape, py::arg("a"), py::arg("b"));
 }

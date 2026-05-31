@@ -28,7 +28,9 @@ pybind11_add_module(_core
     bind_statistics.cpp
     bind_nn.cpp
     bind_testing.cpp
-    bind_utils.cpp)
+    bind_utils.cpp
+    bind_version.cpp
+    bind_compiler.cpp)
 
 target_include_directories(_core
     PUBLIC
@@ -57,6 +59,7 @@ target_link_libraries(_core
     sorting
     statistics
     nn
+    compiler
 )
 
 # Install the compiled module
