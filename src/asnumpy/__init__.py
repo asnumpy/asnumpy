@@ -161,6 +161,8 @@ if TYPE_CHECKING:
     from .statistics import mean
     from .utils import broadcast_shape, ndarray
 
+    from .compiler import SourceModule, KernelFunction, PreparedKernel
+
 
 # Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
 _NUMPY_DTYPE_NAMES = {
@@ -328,6 +330,9 @@ _LAZY_MAPPING = {
     # .utils
     "broadcast_shape": ".utils",
     "ndarray": ".utils",
+    # .compiler
+    "compiler": ".compiler",
+    "SourceModule": ".compiler", "KernelFunction": ".compiler", "PreparedKernel": ".compiler",
 }
 
 
