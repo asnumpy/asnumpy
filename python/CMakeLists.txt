@@ -29,7 +29,8 @@ pybind11_add_module(asnumpy_core
     bind_nn.cpp
     bind_testing.cpp
     bind_utils.cpp
-    bind_version.cpp)
+    bind_version.cpp
+    bind_compiler.cpp)
 
 target_include_directories(asnumpy_core
     PUBLIC
@@ -58,6 +59,7 @@ target_link_libraries(asnumpy_core
     sorting
     statistics
     nn
+    compiler
 )
 
 # Install the compiled module

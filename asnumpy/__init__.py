@@ -168,6 +168,8 @@ if TYPE_CHECKING:
 
     from .io import save, savez, savez_compressed, load
 
+    from .compiler import SourceModule, KernelFunction, PreparedKernel
+
 
 # Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
 _NUMPY_DTYPE_NAMES = {
@@ -226,6 +228,9 @@ _LAZY_MAPPING = {
     "AxisLike": "._types", "AxisOptional": "._types", "ScalarLike": "._types",
     # .utils
     "broadcast_shape": ".utils", "ndarray": ".utils",
+    # .compiler
+    "compiler": ".compiler",
+    "SourceModule": ".compiler", "KernelFunction": ".compiler", "PreparedKernel": ".compiler",
 }
 
 

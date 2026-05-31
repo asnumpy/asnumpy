@@ -14,26 +14,6 @@
 # limitations under the License.
 # *****************************************************************************
 
-add_library(asnumpy INTERFACE)
-add_library(ascend_sdk INTERFACE)
-
-target_include_directories(asnumpy INTERFACE ${CMAKE_SOURCE_DIR}/include)
-
-target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/include)
-target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/lib64)
-target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi)
-
-add_subdirectory(array)
-add_subdirectory(cann)
-add_subdirectory(dtypes)
-add_subdirectory(linalg)
-add_subdirectory(random)
-add_subdirectory(math)
-add_subdirectory(logic)
-add_subdirectory(sorting)
-add_subdirectory(statistics)
-add_subdirectory(nn)
-add_subdirectory(utils)
-add_subdirectory(compiler)
-
-target_link_libraries(asnumpy INTERFACE array cann dtypes linalg random math logic sorting statistics nn utils compiler)
+add_library(compiler OBJECT kernel_launcher.cpp)
+target_include_directories(compiler PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(compiler PUBLIC fmt::fmt ascend_sdk pybind11::pybind11)
