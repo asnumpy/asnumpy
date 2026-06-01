@@ -228,7 +228,7 @@ ExecutorCache::Handle ExecutorCache::build_inplace_zero(const NPUArray& array, c
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
     const auto status = aclnnInplaceZeroGetWorkspaceSize(array.tensorPtr, &workspace_size, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(status);
+    ACLNN_CHECK(status, "aclnnInplaceZeroGetWorkspaceSize");
 
     const auto repeatable_status = aclSetAclOpExecutorRepeatable(executor);
     {
@@ -249,7 +249,7 @@ ExecutorCache::Handle ExecutorCache::build_inplace_one(const NPUArray& array, co
     uint64_t workspace_size = 0;
     aclOpExecutor* executor = nullptr;
     const auto status = aclnnInplaceOneGetWorkspaceSize(array.tensorPtr, &workspace_size, &executor);
-    CheckGetWorkspaceSizeAclnnStatus(status);
+    ACLNN_CHECK(status, "aclnnInplaceOneGetWorkspaceSize");
 
     const auto repeatable_status = aclSetAclOpExecutorRepeatable(executor);
     {
@@ -294,7 +294,7 @@ ExecutorCache::Handle ExecutorCache::build_binary_add(
         output.tensorPtr,
         &workspace_size,
         &executor);
-    CheckGetWorkspaceSizeAclnnStatus(status);
+    ACLNN_CHECK(status, "aclnnAddGetWorkspaceSize");
 
     std::vector<std::shared_ptr<void>> retained_args{retained_alpha};
     const auto repeatable_status = aclSetAclOpExecutorRepeatable(executor);
@@ -325,7 +325,7 @@ ExecutorCache::Handle ExecutorCache::build_binary_mul(
         output.tensorPtr,
         &workspace_size,
         &executor);
-    CheckGetWorkspaceSizeAclnnStatus(status);
+    ACLNN_CHECK(status, "aclnnMulGetWorkspaceSize");
 
     const auto repeatable_status = aclSetAclOpExecutorRepeatable(executor);
     {
@@ -370,7 +370,7 @@ ExecutorCache::Handle ExecutorCache::build_reduce_sum(
         output.tensorPtr,
         &workspace_size,
         &executor);
-    CheckGetWorkspaceSizeAclnnStatus(status);
+    ACLNN_CHECK(status, "aclnnReduceSumGetWorkspaceSize");
 
     const auto repeatable_status = aclSetAclOpExecutorRepeatable(executor);
     {

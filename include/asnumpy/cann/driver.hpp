@@ -23,10 +23,10 @@
 namespace asnumpy {
 namespace cann {
 
+void init_logging();
+void shutdown_logging();
 void init();
 void finalize();
 
-aclrtStream get_stream();
-
-}
-}
+} // namespace cann
+} // namespace asnumpy
