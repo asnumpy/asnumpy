@@ -16,23 +16,23 @@
 
 #pragma once
 
+#include <cstdint>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/buffer_info.h>
+#include <fmt/core.h>
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <algorithm>
-#include <cstdint>
-#include <fmt/core.h>
 #include <iostream>
-#include <pybind11/buffer_info.h>
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <stdexcept>
-#include <utility>
 #include <vector>
+#include <utility>
+#include <stdexcept>
+
 
 namespace py = pybind11;
 
 class NPUArray {
-  public:
+public:
     aclTensor* tensorPtr;
     std::vector<int64_t> shape;
     std::vector<int64_t> strides;
@@ -40,10 +40,14 @@ class NPUArray {
     aclDataType aclDtype;
     size_t tensorSize;
 
-  private:
+private:
     void* devicePtr;
+    void build_contiguous_strides();
+    size_t tensor_byte_size() const;
+    void acquire_tensor_descriptor();
+    void release_resources() noexcept;
 
-  public:
+public:
     /**
      * @brief Constructor to create an empty NPUArray from shape and data type
      * @param shape Tensor shape
@@ -61,13 +65,13 @@ class NPUArray {
 
     // Copy constructor - deep copy
     NPUArray(const NPUArray& other);
-
+    
     // Move constructor
     NPUArray(NPUArray&& other) noexcept;
-
+    
     // Copy assignment
     NPUArray& operator=(const NPUArray& other);
-
+    
     // Move assignment
     NPUArray& operator=(NPUArray&& other) noexcept;
 
@@ -77,7 +81,7 @@ class NPUArray {
     /**
      * @brief Create an NPUArray from a NumPy array
      *
-     * This static method creates an NPUArray from a NumPy array
+     * This static method creates an NPUArray from a NumPy array 
      * and copies the data from host memory to NPU device memory.
      *
      * @param host_data Input NumPy array.
@@ -124,6 +128,7 @@ class NPUArray {
      * @return py::dtype Converted py::dtype.
      */
     static py::dtype GetPyDtype(aclDataType acl_type);
+
 
     // -- Not implemented yet --
     /**

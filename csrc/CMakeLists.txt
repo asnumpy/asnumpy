@@ -35,5 +35,6 @@ add_subdirectory(sorting)
 add_subdirectory(statistics)
 add_subdirectory(nn)
 add_subdirectory(utils)
+add_subdirectory(memory)
 
-target_link_libraries(asnumpy INTERFACE array cann dtypes linalg random math logic sorting statistics nn utils)
+target_link_libraries(asnumpy INTERFACE array cann dtypes linalg random math logic sorting statistics nn utils memory)

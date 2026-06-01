@@ -160,6 +160,21 @@ if TYPE_CHECKING:
     from .sorting import sort
     from .statistics import mean
     from .utils import broadcast_shape, ndarray
+    from .memory import (
+        benchmark_allocator,
+        clear_cache,
+        clear_descriptor_cache,
+        clear_executor_cache,
+        descriptor_stats,
+        executor_stats,
+        memory_debug_stats,
+        memory_stats,
+        refresh_memory_pool_config,
+        reset_descriptor_stats,
+        reset_executor_stats,
+        reset_memory_stats,
+        trim_cache,
+    )
 
 
 # Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
@@ -328,6 +343,20 @@ _LAZY_MAPPING = {
     # .utils
     "broadcast_shape": ".utils",
     "ndarray": ".utils",
+    # .memory
+    "benchmark_allocator": ".memory",
+    "clear_cache": ".memory",
+    "clear_descriptor_cache": ".memory",
+    "clear_executor_cache": ".memory",
+    "descriptor_stats": ".memory",
+    "executor_stats": ".memory",
+    "memory_debug_stats": ".memory",
+    "memory_stats": ".memory",
+    "refresh_memory_pool_config": ".memory",
+    "reset_descriptor_stats": ".memory",
+    "reset_executor_stats": ".memory",
+    "reset_memory_stats": ".memory",
+    "trim_cache": ".memory",
 }
 
 

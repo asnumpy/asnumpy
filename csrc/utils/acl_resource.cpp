@@ -15,9 +15,9 @@
  *****************************************************************************/
 
 #include "asnumpy/utils/acl_resource.hpp"
-#include <acl/acl.h>
-#include <spdlog/spdlog.h>
+#include "asnumpy/memory/MemoryPool.hpp"
 #include "asnumpy/utils/status_handler.hpp"
+#include <acl/acl.h>
 
 namespace asnumpy {
 
@@ -27,19 +27,18 @@ namespace asnumpy {
 
 AclWorkspace::AclWorkspace(uint64_t size) : size_(size) {
     if (size_ > 0ULL) {
-        auto error = aclrtMalloc(&ptr_, size_, ACL_MEM_MALLOC_HUGE_FIRST);
-        ACL_RT_CHECK(error, "aclrtMalloc");
-        spdlog::info("AclWorkspace allocated {} bytes", size_);
+        ptr_ = memory::MemoryPool::instance().malloc(size_, memory::PoolDomain::Workspace);
     }
 }
 
 AclWorkspace::~AclWorkspace() {
     if (ptr_) {
-        aclrtFree(ptr_);
+        memory::MemoryPool::instance().free(ptr_, memory::PoolDomain::Workspace);
     }
 }
 
-AclWorkspace::AclWorkspace(AclWorkspace&& other) noexcept : ptr_(other.ptr_), size_(other.size_) {
+AclWorkspace::AclWorkspace(AclWorkspace&& other) noexcept
+    : ptr_(other.ptr_), size_(other.size_) {
     other.ptr_ = nullptr;
     other.size_ = 0;
 }
@@ -48,7 +47,7 @@ AclWorkspace& AclWorkspace::operator=(AclWorkspace&& other) noexcept {
     if (this != &other) {
         // Free current resource
         if (ptr_) {
-            aclrtFree(ptr_);
+            memory::MemoryPool::instance().free(ptr_, memory::PoolDomain::Workspace);
         }
         // Take ownership of other resource
         ptr_ = other.ptr_;
