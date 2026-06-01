@@ -56,13 +56,22 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 # NumPy include
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# ========== fmt (system package only) ==========
-find_package(fmt REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
-message(STATUS "Using system fmt: ${fmt_VERSION}")
+# ========== fmt (system package; also check conda prefix) ==========
+# Prefer CONDA_PREFIX or CMAKE_PREFIX_PATH; fall back to system defaults.
+set(_fmt_hints /usr/lib64/cmake /usr/lib/cmake)
+if(DEFINED ENV{CONDA_PREFIX})
+    list(APPEND _fmt_hints "$ENV{CONDA_PREFIX}/lib/cmake")
+endif()
+find_package(fmt REQUIRED PATHS ${_fmt_hints} NO_DEFAULT_PATH)
+message(STATUS "Using fmt: ${fmt_VERSION}")
 
-# ========== spdlog (system package only) ==========
-find_package(spdlog REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
-message(STATUS "Using system spdlog: ${spdlog_VERSION}")
+# ========== spdlog (system package; also check conda prefix) ==========
+set(_spdlog_hints /usr/lib64/cmake /usr/lib/cmake)
+if(DEFINED ENV{CONDA_PREFIX})
+    list(APPEND _spdlog_hints "$ENV{CONDA_PREFIX}/lib/cmake")
+endif()
+find_package(spdlog REQUIRED PATHS ${_spdlog_hints} NO_DEFAULT_PATH)
+message(STATUS "Using spdlog: ${spdlog_VERSION}")
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
 # ========== Source directories ==========

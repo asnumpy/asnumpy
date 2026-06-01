@@ -17,6 +17,7 @@
 """Test fixtures for compiler module tests."""
 
 import pytest
+from unittest.mock import MagicMock
 
 
 # ==========================================================================
@@ -174,3 +175,60 @@ def fill_const_source() -> str:
 @pytest.fixture
 def multi_kernel_source() -> str:
     return MULTI_KERNEL_SOURCE
+
+
+# ==========================================================================
+# Mock fixtures — simulate asnumpy._core.compiler C extension for unit tests
+# ==========================================================================
+
+@pytest.fixture
+def mock_compiler_lib():
+    """Return a MagicMock that simulates the asnumpy._core.compiler module.
+
+    Provides fake implementations for all binary loading, kernel launching,
+    event, and stream functions.  Each call generates a unique handle.
+    """
+    mock = MagicMock(name="compiler")
+    _handle_counter = [1000]
+
+    def _next_handle():
+        _handle_counter[0] += 1
+        return _handle_counter[0]
+
+    # Binary lifecycle
+    mock.load_binary.return_value = _next_handle()
+    mock.unload_binary.return_value = None
+    mock.get_function.return_value = _next_handle()
+
+    # Kernel launch
+    mock.launch_kernel.return_value = None
+
+    # Events
+    mock.create_event.return_value = _next_handle()
+    mock.destroy_event.return_value = None
+    mock.record_event.return_value = None
+    mock.synchronize_event.return_value = None
+    mock.elapsed_time_between.return_value = 1.5
+
+    # Streams
+    mock.create_stream.return_value = _next_handle()
+    mock.destroy_stream.return_value = None
+    mock.synchronize_stream.return_value = None
+
+    # Error
+    mock.get_last_error.return_value = ""
+
+    return mock
+
+
+@pytest.fixture(autouse=True)
+def _clean_atexit_registry():
+    """Clear SourceModule's atexit registry before and after each test.
+
+    Prevents stale SourceModule instances (from failed tests) from
+    attempting cleanup in subsequent tests.
+    """
+    from asnumpy.compiler.source_module import _atexit_registry
+    _atexit_registry.clear()
+    yield
+    _atexit_registry.clear()

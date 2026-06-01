@@ -52,8 +52,8 @@ class SourceModule:
 ASCENDC_INC=${ASCEND_TOOLKIT_HOME}/aarch64-linux/ascendc/include
 
 bisheng --cce-soc-version=Ascend910B1 --cce-soc-core-type=VecCore \
-        --cce-aicore-lang \
-        --std=c++17 -O2 -fPIC \
+        --cce-aicore-lang --cce-aicore-arch=da-vinci \
+        --std=c++17 -O2 -fPIC -shared \
         -I${ASCENDC_INC} \
         -I${ASCENDC_INC}/basic_api \
         -I${ASCENDC_INC}/highlevel_api \
@@ -63,8 +63,7 @@ bisheng --cce-soc-version=Ascend910B1 --cce-soc-core-type=VecCore \
         kernel.cpp -o kernel.o
 ```
 
-> **注**: `soc_version` 需使用 `Ascend910B1`（或 B2/B3/B4），`Ascend910B` 不被 bisheng 接受。
-> Ascend C 头文件位于 `aarch64-linux/ascendc/include/` 而非 `include/`，kernel 编译不需要 host 侧的 ACL/ACLNN 头文件。
+> **注**: `-shared` 必须保留——Ascend C kernel 引用了 `rtLaunch`/`rtFunctionRegister` 等运行时符号，去掉后 linker 会尝试生成可执行文件（要求 `main`）。`--cce-aicore-arch=da-vinci` 是本次为 CANN 8.2 兼容性新增的，待硬件验证。
 
 **Kernel 加载与启动 API 序列**:
 
@@ -374,13 +373,283 @@ tests/asnumpy_tests/compiler_tests/  # 测试 (新增)
 
 ### `aclrtBinaryLoadFromFile` 需要 CANN 8.5+
 
-`aclrtBinaryLoadFromFile` API 在 CANN 8.2.RC1 中存在，但其 binary loader 期望特定格式的二进制文件（由 opp 构建系统生成），不接受 bisheng 直接编译产出的标准 ELF `.so`/`.o` 文件。
+`aclrtBinaryLoadFromFile` API 在 CANN 8.2.RC1 中存在，但其 binary loader 期望特定格式的二进制文件（由 opp 构建系统生成），不接受 `-shared -fPIC` 产出的标准 ELF `.so` 文件。已调整为产出 `.o` + `--cce-aicore-arch=da-vinci` 方案，待硬件验证。
 
 | CANN 版本 | `aclrtBinaryLoadFromFile` 支持自定义 kernel 二进制 |
 |-----------|---------------------------------------------------|
-| 8.2.RC1 | 不支持（报错: `program can not be null`, error 107000） |
-| 8.5+ | 支持（temp.md 引用的 Kernel Launch API 文档即为 8.5alpha002） |
+| 8.2.RC1 | 待验证（`.o` + `--cce-aicore-arch=da-vinci` 方案） |
+| 8.5+ | 支持（Kernel Launch API 文档即为 8.5alpha002） |
 
-**影响**: 在当前 CANN 8.2.RC1 环境下，`SourceModule` 的编译和缓存功能正常工作，但加载和启动 kernel 需要升级 CANN 到 8.5+。`tests/asnumpy_tests/compiler_tests/` 中依赖 binary loading 的 13 个测试已标记为 `skip`，升级 CANN 后自动激活。
+**影响**: 在当前 CANN 8.2.RC1 环境下，`SourceModule` 的编译和缓存功能正常工作，但加载和启动 kernel 需要升级 CANN 到 8.5+。依赖 binary loading 的测试已标记为 `skip`，升级 CANN 后自动激活（见下方 §9 测试策略）。
 
-**临时验证方式**: 可通过独立测试 bisheng 编译管线（19 个已通过的测试覆盖编译、签名解析、缓存）确认基础设施正确性。
+---
+## 9. 测试策略
+
+### 9.1 测试文件结构
+
+```
+tests/asnumpy_tests/compiler_tests/
+├── __init__.py
+├── conftest.py                      # kernel 源码 fixtures + mock fixtures + skip 标记
+└── test_source_module.py            # 全部测试（52 个），按类组织
+```
+
+### 9.2 测试分层（6 层，按依赖从轻到重）
+
+```
+Layer 0 ─ 签名解析      纯 Python，无需 NPU / 编译器
+Layer 1 ─ 编译          仅需 bisheng 编译器（可独立验证）
+Layer 2 ─ 集成 (mock)   需 bisheng + mock C 扩展（逻辑正确性）
+Layer 2'─ 集成 (real)   需 bisheng + aclrtBinaryLoadFromFile（CANN 8.5+）
+Layer 3 ─ 执行 (mock)   需 mock C 扩展（参数编组 / 启动流程）
+Layer 3'─ 执行 (real)   需 bisheng + NPU + aclrtBinaryLoadFromFile（CANN 8.5+，端到端正确性）
+Layer 4 ─ 缓存          混合（纯 Python + 编译 + mock/real C 扩展）
+Layer 5 ─ 边界情况      混合
+```
+
+**双轨测试设计**：对依赖 CANN 8.5+ binary loading 的测试类，提供两套实现：
+
+| 轨道 | 机制 | 验证什么 | 何时运行 |
+|------|------|---------|---------|
+| **Mock 轨道** | `unittest.mock.patch` 替换 `_get_lib()` | Python 编排逻辑、参数编组、API 调用链 | CANN 8.2 即可运行 |
+| **Real 轨道** | 真实 C 扩展 + NPU | 端到端正确性（与 NumPy 结果对比） | CANN 8.5+ / 硬件修复后 |
+
+| 测试类 | 层 | 数量 | 轨道 | CANN 8.2 状态 |
+|--------|----|------|------|--------------|
+| `TestSignatureParsing` | 0 | 6 | — | ✅ 6 通过 |
+| `TestCompilation` | 1 | 4 | — | ✅ 4 通过 |
+| `TestSourceModuleMock` | 2 | 9 | mock | ✅ 9 通过 |
+| `TestSourceModule` | 2' | 7 | real | ⏸ 7 skip |
+| `TestKernelFunctionMock` | 3 | 7 | mock | ✅ 7 通过 |
+| `TestPreparedKernelMock` | 3 | 4 | mock | ✅ 4 通过 |
+| `TestKernelExecution` | 3' | 4 | real | ⏸ 4 skip |
+| `TestCaching` | 4 | 8 | 混合 | ✅ 8 通过 |
+| `TestEdgeCases` | 5 | 3 | 混合 | ✅ 3 通过 |
+| **合计** | | **52** | | **41 通过 / 11 skip** |
+
+### 9.3 Mock 机制
+
+利用 `_get_lib()` 的**延迟导入**特性，通过 `unittest.mock.patch.object` 将其替换为返回 `MagicMock` 的 lambda：
+
+```python
+from contextlib import contextmanager
+from unittest.mock import MagicMock, patch
+
+@contextmanager
+def _mock_get_lib(module, mock_lib):
+    with patch.object(module, "_get_lib", return_value=mock_lib):
+        yield
+```
+
+**Mock C 扩展行为**（`conftest.py` 中的 `mock_compiler_lib` fixture）：
+
+| 函数 | 模拟行为 |
+|------|---------|
+| `load_binary(path)` | 返回自增 handle (int) |
+| `get_function(bin_handle, name)` | 返回自增 handle (int) |
+| `unload_binary(bin_handle)` | no-op |
+| `launch_kernel(func, block_dim, args, stream)` | no-op |
+| `create_event()` / `create_stream()` | 返回自增 handle |
+| `record_event()` / `synchronize_event()` | no-op |
+| `elapsed_time_between(start, end)` | 返回 1.5 (ms) |
+| `destroy_event()` / `destroy_stream()` | no-op |
+
+**atexit 清理**：`conftest.py` 提供 autouse fixture `_clean_atexit_registry`，在每个测试前后清空 `source_module._atexit_registry`，防止跨测试的残留 SourceModule 实例干扰。
+
+**PreparedKernel 安全清理**：mock 测试结束后 `PreparedKernel.__del__` 可能被 gc 触发并调用真实 C 扩展（导致 segfault），需在退出 mock 上下文前将 `_start_event`/`_end_event`/`_stream` 置为 None。
+
+### 9.4 Skip 标记
+
+```python
+# conftest.py / test_source_module.py 中定义
+
+requires_npu = pytest.mark.skipif(
+    "ASCEND_TOOLKIT_HOME" not in os.environ
+    and "ASCEND_HOME_PATH" not in os.environ,
+    reason="Requires CANN NPU device",
+)
+
+requires_bisheng = pytest.mark.skipif(
+    not Path(".../bisheng").exists()
+    and "ASCEND_TOOLKIT_HOME" not in os.environ,
+    reason="Requires bisheng compiler",
+)
+
+# CANN 8.2 的 aclrtBinaryLoadFromFile 不接受 bisheng 产出的标准 ELF
+# 8.5+ 才完全支持自定义 kernel 二进制加载
+requires_acl_binary_load = pytest.mark.skip(
+    reason="aclrtBinaryLoadFromFile requires CANN 8.5+ for custom kernel binaries"
+)
+```
+
+**Skip 的应用方式**：
+- `TestSourceModule` 和 `TestKernelExecution`（real 轨道）在类级别应用：`pytestmark = [requires_acl_binary_load, ...]`
+- `TestSourceModuleMock` 等 mock 轨道类**不使用** skip 标记，仅需 `@requires_bisheng`（编译需要）
+
+### 9.5 Kernel 源码 Fixtures
+
+`conftest.py` 提供 3 个 kernel 源码 fixture，已验证与 CANN 8.2.RC1 Ascend C API 兼容：
+
+| Fixture | Kernel 函数 | 参数签名 | 用途 |
+|---------|------------|---------|------|
+| `vector_add_source` | `vector_add` | `(float*, float*, float*, int)` | 基本向量加法，SPMD 分块 |
+| `fill_const_source` | `fill_const` | `(float*, float, int)` | 标量赋值，含 `Duplicate` |
+| `multi_kernel_source` | `kernel_one` + `kernel_two` | `(float*, float*, int)` 各 | 多 kernel 单文件，`Add` vs `Mul` |
+
+### 9.6 运行方式
+
+```bash
+# ========= 当前 CANN 8.2 环境 =========
+
+# 全部测试（52 个，41 通过 + 11 skip）
+pytest tests/asnumpy_tests/compiler_tests/ -v
+
+# 仅运行 mock 轨道（排除 real 轨道 skip）
+pytest tests/asnumpy_tests/compiler_tests/ -v \
+    -k "not (acl_binary_load or npu)"
+
+# 分层运行
+pytest tests/asnumpy_tests/compiler_tests/ -v -k "SignatureParsing"       # Layer 0
+pytest tests/asnumpy_tests/compiler_tests/ -v -k "Compilation"            # Layer 1
+pytest tests/asnumpy_tests/compiler_tests/ -v -k "Mock"                   # Layer 2+3 mock
+pytest tests/asnumpy_tests/compiler_tests/ -v -k "Caching"                # Layer 4
+
+# 单个测试
+pytest tests/asnumpy_tests/compiler_tests/test_source_module.py::TestCompilation::test_compiles_without_error -v
+
+# ========= CANN 8.5+ 环境 =========
+# 移除 requires_acl_binary_load 的 skip 后，全部 52 个测试可运行
+# mock 轨道负责逻辑正确性，real 轨道负责端到端 NPU 正确性验证
+```
+
+### 9.7 各测试类详述
+
+#### TestSignatureParsing（6 个，纯 Python）
+
+无需任何外部依赖，测试签名解析引擎：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_parse_simple_kernel` | `vector_add` → 3 个 `float*` + 1 个 `int32` |
+| `test_parse_mixed_args` | `fill_const` → `float*` + `float32` + `int32` |
+| `test_parse_kernel_not_found` | 不存在的 kernel 名 → `ValueError` |
+| `test_parse_no_params` | 无参 kernel → 空列表 |
+| `test_manual_signature_override` | 显式 `signature=["float32*", ...]` → 正确 `ArgSpec` |
+| `test_manual_signature_scalar_types` | `int64`/`float64`/`bool` → 正确 `size_bytes` |
+
+#### TestCompilation（4 个，仅需 bisheng）
+
+验证 bisheng 编译管线：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_compiles_without_error` | 编译成功，产出 `.o` 文件存在 |
+| `test_compiled_o_is_elf` | 读取前 4 字节 = `\x7fELF` |
+| `test_compile_invalid_source_raises` | 非法 C++ → `CompileError` |
+| `test_compile_log_written` | `compile.log` 写入编译输出 |
+
+#### TestSourceModuleMock（9 个，需 bisheng + mock C 扩展）
+
+Mock 轨道。验证 SourceModule 的 Python 编排逻辑——编译→加载→函数查找→签名解析的全链路：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_compilation_and_loading` | 编译→`load_binary`→`get_function` 调用链 |
+| `test_get_function_returns_callable` | `get_function("vector_add")` 返回 `KernelFunction` |
+| `test_get_function_unknown_name_raises` | 未知 kernel → `ValueError` |
+| `test_close_calls_unload` | `close()` 调用 `unload_binary`，二次调用不重复 |
+| `test_context_manager` | `with SourceModule(...)` 退出时调 `close()` |
+| `test_multi_kernel_source` | 多 kernel 全部发现，`get_function` 调用≥2次 |
+| `test_manual_signature` | 手动签名 override 源码解析 |
+| `test_list_functions_empty_for_no_kernel_source` | 无 kernel 源码 → 空列表 |
+| `test_disable_cache_skips_cache` | `disable_cache=True` 仍正常编译和加载 |
+
+#### TestSourceModule（7 个，需 CANN 8.5+）
+
+Real 轨道。当前全部 skip，与 mock 轨道测试项一一对应但使用真实 C 扩展：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_compilation_and_loading` | 编译 → 加载 → `list_functions()` 包含 kernel 名 |
+| `test_get_function_returns_callable` | `get_function("vector_add")` 返回 `KernelFunction` |
+| `test_get_function_unknown_name_raises` | 未知 kernel → `ValueError` |
+| `test_close` | 重复 `close()` 安全 |
+| `test_context_manager` | `with SourceModule(...) as mod:` 用法 |
+| `test_multi_kernel_source` | 单文件多 kernel → 全部出现在 `list_functions()` |
+| `test_manual_signature` | `get_function(name, signature=[...])` 手动签名 |
+
+#### TestKernelFunctionMock（7 个，需 mock C 扩展）
+
+Mock 轨道。验证参数编组逻辑和 launch 调用：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_marshal_pointer_args_packs_device_address` | 指针参数打包为 8 字节 device address |
+| `test_marshal_pointer_arg_raises_for_non_ndarray` | 非 ndarray → `TypeError` |
+| `test_marshal_wrong_arg_count_raises` | 参数数量不匹配 → `TypeError` |
+| `test_marshal_mixed_args` | 指针+标量混合打包（8/4/4 字节） |
+| `test_call_launches_kernel` | `__call__` 触发 `launch_kernel`，参数正确传递 |
+| `test_call_default_grid_is_one` | 不传 grid → block_dim=1 |
+| `test_marshal_scalar_types` | int64(8B)/float64(8B)/bool(1B) 尺寸验证 |
+
+#### TestPreparedKernelMock（4 个，需 mock C 扩展）
+
+Mock 轨道。验证事件管理和性能计时：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_prepare_creates_events_and_stream` | `prepare()` 创建 2 个 event + 1 个 stream |
+| `test_call_records_events_and_measures_elapsed` | 调用时 record start→launch→record end→sync→elapsed |
+| `test_time_property_returns_elapsed` | `pk.time` 返回 `elapsed_time_between` 结果 |
+| `test_del_cleans_up_events_and_stream` | `__del__` 调 `destroy_event`×2 + `destroy_stream` |
+
+#### TestKernelExecution（4 个，需 NPU + CANN 8.5+）
+
+Real 轨道。端到端测试，完整覆盖编译 → 加载 → 启动 → 结果验证：
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_vector_add_correctness` | NPU 结果 vs NumPy 参考，`rtol=1e-4, atol=1e-5` |
+| `test_vector_add_different_sizes` | N = 256 / 1024 / 4096，遍历验证 |
+| `test_scalar_kernel` | `fill_const(c_ap, 3.14, N)`，验证标量参数传递 |
+| `test_default_grid` | 不传 `grid` 参数，默认 1 核执行 |
+
+#### TestCaching（8 个）
+
+| 测试 | 依赖 | 验证点 |
+|------|------|--------|
+| `test_cache_key_deterministic` | 无 | 相同输入 → 相同 SHA256 |
+| `test_cache_key_different_source` | 无 | 不同源码 → 不同 key |
+| `test_cache_key_different_options` | 无 | `-O2` vs `-O3` → 不同 key |
+| `test_cache_key_different_soc` | 无 | 不同 soc_version → 不同 key |
+| `test_get_cache_dir` | 无 | 返回 `~/.asnumpy/cache/` |
+| `test_get_compiler_version` | 无 | bisheng `--version` 返回字符串 |
+| `test_cache_store_and_hit` | bisheng | 编译 → 存储 → 命中 |
+| `test_disable_cache` | bisheng + mock | `disable_cache=True` 仍正常工作 |
+
+#### TestEdgeCases（3 个）
+
+| 测试 | 验证点 |
+|------|--------|
+| `test_empty_source` | 空源码 → `extern "C"` 警告 |
+| `test_source_without_kernels_compiles` | 纯注释源码不抛异常 |
+| `test_source_without_extern_c_warns` | 缺 `extern "C"` → `UserWarning`，bisheng 编译通过 |
+
+### 9.8 CANN 版本升级后的变化
+
+当 CANN 升级到 8.5+ 后，只需修改 `requires_acl_binary_load` 标记：
+
+```python
+# 改前（当前）
+requires_acl_binary_load = pytest.mark.skip(
+    reason="aclrtBinaryLoadFromFile requires CANN 8.5+"
+)
+
+# 改后
+requires_acl_binary_load = pytest.mark.skipif(
+    not Path(".../bisheng").exists(),
+    reason="Requires bisheng compiler"
+)
+```
+
+全部 52 个测试将自动激活——mock 轨道覆盖 Python 逻辑正确性，real 轨道覆盖 NPU 端到端正确性。
