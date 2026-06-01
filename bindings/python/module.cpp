@@ -32,7 +32,6 @@ void bind_random(pybind11::module_& random);
 void bind_sorting(pybind11::module_& sorting);
 void bind_testing(pybind11::module_& testing);
 void bind_utils(pybind11::module_& utils);
-void bind_version(pybind11::module_& version);
 void bind_compiler(pybind11::module_& compiler);
 
 namespace asnumpy {
@@ -100,6 +99,5 @@ PYBIND11_MODULE(_core, module) {
     asnumpy::bind_nn(nn);
     bind_testing(testing);
     bind_utils(module);
-    bind_version(version);
     bind_compiler(compiler);
 }
