@@ -49,8 +49,14 @@ void bind_memory(pybind11::module_& m) {
         result["largest_free_run_bytes"] = pybind11::int_(stats.largest_free_run_bytes);
         result["largest_free_block_bytes"] = pybind11::int_(stats.largest_free_block_bytes);
         result["internal_fragmentation_bytes"] = pybind11::int_(stats.internal_fragmentation_bytes);
+        result["vmm_internal_fragmentation_bytes"] = pybind11::int_(stats.vmm_internal_fragmentation_bytes);
         result["external_fragmentation_bytes"] = pybind11::int_(stats.external_fragmentation_bytes);
         result["hot_retained_empty_runs"] = pybind11::int_(stats.hot_retained_empty_runs);
+        result["stitched_reuse_hits"] = pybind11::int_(stats.stitched_reuse_hits);
+        result["vmm_fallback_allocations"] = pybind11::int_(stats.vmm_fallback_allocations);
+        result["chunk_cache_bytes"] = pybind11::int_(stats.chunk_cache_bytes);
+        result["chunk_cache_count"] = pybind11::int_(stats.chunk_cache_count);
+        result["stitched_segment_count"] = pybind11::int_(stats.stitched_segment_count);
         result["internal_fragmentation_ratio_pct"] = pybind11::float_(stats.internal_fragmentation_ratio_pct);
         result["external_fragmentation_ratio_pct"] = pybind11::float_(stats.external_fragmentation_ratio_pct);
         result["run_utilization_pct"] = pybind11::float_(stats.run_utilization_pct);
@@ -193,6 +199,12 @@ void bind_memory(pybind11::module_& m) {
     m.def("reset_executor_stats", []() {
         asnumpy::utils::ExecutorCache::instance().reset_stats();
     }, "Reset repeatable executor cache counters");
+
+    m.def("shutdown_runtime", []() {
+        asnumpy::utils::ExecutorCache::instance().clear();
+        asnumpy::utils::TensorDescriptorCache::instance().clear();
+        asnumpy::memory::MemoryPool::instance().clear_cache();
+    }, "Clear runtime reuse layers in dependency order: executor -> descriptor -> memory");
 
     m.def("benchmark_allocator", [parse_domain, stats_to_dict](
         size_t size_bytes,

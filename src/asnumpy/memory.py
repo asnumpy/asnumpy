@@ -66,3 +66,8 @@ def clear_executor_cache():
 @logger.catch
 def reset_executor_stats():
     return _core.memory.reset_executor_stats()
+
+
+@logger.catch
+def shutdown_runtime():
+    return _core.memory.shutdown_runtime()
