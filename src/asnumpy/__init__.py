@@ -173,6 +173,7 @@ if TYPE_CHECKING:
         reset_descriptor_stats,
         reset_executor_stats,
         reset_memory_stats,
+        shutdown_runtime,
         trim_cache,
     )
 
@@ -356,6 +357,7 @@ _LAZY_MAPPING = {
     "reset_descriptor_stats": ".memory",
     "reset_executor_stats": ".memory",
     "reset_memory_stats": ".memory",
+    "shutdown_runtime": ".memory",
     "trim_cache": ".memory",
 }
 
@@ -426,6 +428,11 @@ if os.getenv("ASNUMPY_DEBUG", "0") == "1":
 
 @atexit.register
 def reset():
+    try:
+        from ._core import memory as _mem
+        _mem.shutdown_runtime()
+    except Exception:
+        pass
     reset_device(0)
     finalize()
 

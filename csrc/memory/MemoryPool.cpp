@@ -1,12 +1,17 @@
 #include "asnumpy/memory/MemoryPool.hpp"
 
+#include "asnumpy/memory/VirtualMemory.hpp"
+
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <cstdlib>
+#include <iterator>
 #include <limits>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #if defined(_MSC_VER)
@@ -27,6 +32,8 @@ constexpr size_t kSmallRunMaxSlots = 128;
 constexpr size_t kLargeMinSplitSize = 4 * 1024;
 constexpr uint64_t kTensorLargeDirtyDecayEpochs = 4;
 constexpr uint64_t kWorkspaceLargeDirtyDecayEpochs = 1;
+constexpr size_t kDefaultTensorChunkCacheBytes = 256 * 1024 * 1024;
+constexpr size_t kDefaultWorkspaceChunkCacheBytes = 64 * 1024 * 1024;
 
 constexpr std::array<size_t, 20> kSmallSizeClasses = {
     512, 1024, 2048, 4096, 8192, 16384,
@@ -105,6 +112,34 @@ uint64_t uint64_env_or(
 
 } // namespace
 
+struct MemoryPool::PhysicalChunk {
+    std::shared_ptr<VirtualMemoryManager::PhysicalAllocation> allocation;
+    size_t size = 0;
+    PoolDomain domain = PoolDomain::Tensor;
+    uint64_t last_used_epoch = 0;
+    bool mapped = false;
+    bool in_chunk_cache = false;
+};
+
+struct MemoryPool::VirtualReservation {
+    std::shared_ptr<VirtualMemoryManager::Reservation> handle;
+    size_t size = 0;
+};
+
+struct MemoryPool::StitchedSegment {
+    enum class State : uint8_t {
+        Healthy,
+        Quarantined,
+    };
+
+    std::shared_ptr<VirtualReservation> reservation;
+    std::vector<std::shared_ptr<PhysicalChunk>> chunks;
+    size_t chunk_bytes = 0;
+    size_t total_bytes = 0;
+    size_t mapped_chunk_count = 0;
+    State state = State::Healthy;
+};
+
 MemoryPool& MemoryPool::instance() {
     static MemoryPool instance;
     return instance;
@@ -115,7 +150,10 @@ MemoryPool::MemoryPool() {
 }
 
 MemoryPool::~MemoryPool() {
-    clear_cache();
+    try {
+        clear_cache();
+    } catch (...) {
+    }
 }
 
 MemoryPool::DomainState& MemoryPool::domain_state(PoolDomain domain) {
@@ -149,6 +187,8 @@ void MemoryPool::refresh_config_locked() {
         "ASN_POOL_TENSOR_HOT_BIN_MAX_EMPTY_RUNS", "ASN_POOL_HOT_BIN_MAX_EMPTY_RUNS", 1);
     tensor_config_.hot_bin_max_idle_generations = size_t_env_or(
         "ASN_POOL_TENSOR_HOT_BIN_MAX_IDLE_GENS", "ASN_POOL_HOT_BIN_MAX_IDLE_GENS", 1);
+    tensor_config_.stitched_chunk_cache_max_bytes = size_t_env_or(
+        "ASN_POOL_TENSOR_SPOOL_MAX_BYTES", nullptr, kDefaultTensorChunkCacheBytes);
 
     workspace_config_.small_run_target_size = size_t_env_or(
         "ASN_POOL_WORKSPACE_SMALL_RUN_TARGET_SIZE", nullptr, kWorkspaceSmallRunTargetSize);
@@ -161,10 +201,19 @@ void MemoryPool::refresh_config_locked() {
         "ASN_POOL_WORKSPACE_HOT_BIN_MAX_EMPTY_RUNS", "ASN_POOL_HOT_BIN_MAX_EMPTY_RUNS", 1);
     workspace_config_.hot_bin_max_idle_generations = size_t_env_or(
         "ASN_POOL_WORKSPACE_HOT_BIN_MAX_IDLE_GENS", "ASN_POOL_HOT_BIN_MAX_IDLE_GENS", 0);
+    workspace_config_.stitched_chunk_cache_max_bytes = size_t_env_or(
+        "ASN_POOL_WORKSPACE_SPOOL_MAX_BYTES", nullptr, kDefaultWorkspaceChunkCacheBytes);
 }
 
 size_t MemoryPool::round_up(size_t size) const {
     return ((size + kAlignment - 1) / kAlignment) * kAlignment;
+}
+
+size_t MemoryPool::round_up_to_multiple(size_t size, size_t alignment) const {
+    if (alignment == 0) {
+        return size;
+    }
+    return ((size + alignment - 1) / alignment) * alignment;
 }
 
 size_t MemoryPool::size_class_for(size_t size) const {
@@ -276,7 +325,11 @@ void MemoryPool::reset_stats(PoolDomain domain_kind) {
     peak_active_bytes_total_ = current_total_active_bytes_locked();
 }
 
-void* MemoryPool::allocate_small_locked(DomainState& domain, const DomainConfig& config, size_t alloc_size, size_t requested_size) {
+void* MemoryPool::allocate_small_locked(
+    DomainState& domain,
+    const DomainConfig& config,
+    size_t alloc_size,
+    size_t requested_size) {
     (void)config;
     auto& bin = domain.small_bins[alloc_size];
     if (bin.size_class == 0) {
@@ -374,10 +427,302 @@ MemoryPool::Run* MemoryPool::select_fullest_partial_run_locked(Bin& bin) {
     return nullptr;
 }
 
-void* MemoryPool::allocate_large_locked(DomainState& domain, const DomainConfig& config, size_t alloc_size, size_t requested_size) {
-    ++domain.large_epoch;
-    decay_large_blocks_locked(domain, config, false);
+size_t MemoryPool::stitched_chunk_bytes_locked(DomainState& domain) {
+    if (domain.vmm_chunk_bytes != 0) {
+        return domain.vmm_chunk_bytes;
+    }
+    const PoolDomain domain_kind = &domain == &workspace_domain_ ? PoolDomain::Workspace : PoolDomain::Tensor;
+    domain.vmm_chunk_bytes = VirtualMemoryManager::instance().chunk_bytes(domain_kind);
+    return domain.vmm_chunk_bytes;
+}
 
+std::vector<std::shared_ptr<MemoryPool::PhysicalChunk>> MemoryPool::borrow_cached_chunks_locked(
+    DomainState& domain,
+    size_t chunk_count) {
+    std::vector<std::shared_ptr<PhysicalChunk>> chunks;
+    chunks.reserve(chunk_count);
+
+    while (chunk_count > 0 && !domain.cached_physical_chunks.empty()) {
+        auto chunk = std::move(domain.cached_physical_chunks.back());
+        domain.cached_physical_chunks.pop_back();
+        chunk->in_chunk_cache = false;
+        chunk->last_used_epoch = domain.large_epoch;
+        domain.cached_physical_chunk_bytes -= chunk->size;
+        domain.stats.cached_bytes -= chunk->size;
+        chunks.push_back(std::move(chunk));
+        --chunk_count;
+    }
+    return chunks;
+}
+
+void MemoryPool::return_chunks_to_cache_locked(
+    DomainState& domain,
+    std::vector<std::shared_ptr<PhysicalChunk>>&& chunks) {
+    const DomainConfig& config = &domain == &workspace_domain_ ? workspace_config_ : tensor_config_;
+    std::vector<std::shared_ptr<PhysicalChunk>> overflow;
+
+    for (auto& chunk : chunks) {
+        if (chunk == nullptr) {
+            continue;
+        }
+        chunk->mapped = false;
+        chunk->in_chunk_cache = true;
+        chunk->last_used_epoch = domain.large_epoch;
+        if (domain.cached_physical_chunk_bytes + chunk->size <= config.stitched_chunk_cache_max_bytes) {
+            domain.cached_physical_chunk_bytes += chunk->size;
+            domain.stats.cached_bytes += chunk->size;
+            domain.cached_physical_chunks.push_back(std::move(chunk));
+        } else {
+            overflow.push_back(std::move(chunk));
+        }
+    }
+
+    if (!overflow.empty()) {
+        free_physical_chunks_locked(domain, std::move(overflow));
+    }
+}
+
+void MemoryPool::free_physical_chunks_locked(
+    DomainState& domain,
+    std::vector<std::shared_ptr<PhysicalChunk>>&& chunks) {
+    for (auto& chunk : chunks) {
+        if (chunk == nullptr || chunk->allocation == nullptr) {
+            continue;
+        }
+        VirtualMemoryManager::instance().free_physical(chunk->allocation);
+        ++domain.stats.system_frees;
+        domain.stats.system_bytes -= chunk->size;
+    }
+}
+
+MemoryPool::Block* MemoryPool::map_stitched_segment_locked(
+    DomainState& domain,
+    const std::vector<std::shared_ptr<PhysicalChunk>>& chunks,
+    size_t chunk_bytes) {
+    if (chunks.empty()) {
+        throw std::runtime_error("map_stitched_segment_locked requires at least one chunk");
+    }
+
+    auto reservation_handle = VirtualMemoryManager::instance().reserve(chunks.size() * chunk_bytes);
+    size_t mapped_bytes = 0;
+    try {
+        for (size_t index = 0; index < chunks.size(); ++index) {
+            VirtualMemoryManager::instance().map(reservation_handle, index * chunk_bytes, chunks[index]->allocation);
+            chunks[index]->mapped = true;
+            mapped_bytes += chunk_bytes;
+        }
+    } catch (...) {
+        if (mapped_bytes > 0) {
+            (void)VirtualMemoryManager::instance().unmap(reservation_handle, 0, mapped_bytes);
+        }
+        (void)VirtualMemoryManager::instance().release_reservation(reservation_handle);
+        throw;
+    }
+
+    auto reservation = std::make_shared<VirtualReservation>();
+    reservation->handle = reservation_handle;
+    reservation->size = chunks.size() * chunk_bytes;
+
+    auto segment = std::make_shared<StitchedSegment>();
+    segment->reservation = reservation;
+    segment->chunks = chunks;
+    segment->chunk_bytes = chunk_bytes;
+    segment->total_bytes = reservation->size;
+    segment->mapped_chunk_count = segment->chunks.size();
+
+    Block* block = new Block(reservation_handle->base, segment->total_bytes, false);
+    block->is_head = true;
+    block->storage_kind = LargeStorageKind::Stitched;
+    block->stitched_segment = segment;
+    block->chunk_begin = 0;
+    block->chunk_count = segment->chunks.size();
+
+    domain.all_blocks[block->ptr] = block;
+    domain.live_stitched_segments[block->ptr] = segment;
+    ++domain.stats.large_arena_count;
+    return block;
+}
+
+bool MemoryPool::decompose_free_stitched_blocks_for_request_locked(
+    DomainState& domain,
+    size_t required_chunk_count) {
+    if (domain.cached_physical_chunks.size() >= required_chunk_count) {
+        return true;
+    }
+
+    std::vector<Block*> releasable_heads;
+    for (auto& entry : domain.all_blocks) {
+        Block* block = entry.second;
+        if (block->storage_kind == LargeStorageKind::Stitched && is_full_free_head_locked(block)) {
+            releasable_heads.push_back(block);
+        }
+    }
+
+    std::sort(releasable_heads.begin(), releasable_heads.end(), [](const Block* lhs, const Block* rhs) {
+        return lhs->size > rhs->size;
+    });
+
+    for (Block* head : releasable_heads) {
+        if (domain.cached_physical_chunks.size() >= required_chunk_count) {
+            return true;
+        }
+        if (!decompose_stitched_head_locked(domain, head)) {
+            continue;
+        }
+    }
+
+    return domain.cached_physical_chunks.size() >= required_chunk_count;
+}
+
+void MemoryPool::finalize_large_allocation_locked(DomainState& domain, Block* block, size_t requested_size) {
+    block->allocated = true;
+    block->last_used_epoch = domain.large_epoch;
+    block->decay_epoch = 0;
+    block->free_state = LargeBlockState::Active;
+    block->free_list_kind = LargeFreeListKind::None;
+    domain.active_requested_sizes[block->ptr] = requested_size;
+    domain.stats.active_bytes += block->size;
+    domain.stats.active_requested_bytes += requested_size;
+    domain.stats.peak_active_bytes = std::max(domain.stats.peak_active_bytes, domain.stats.active_bytes);
+    update_total_peak_active_locked();
+}
+
+void* MemoryPool::allocate_stitched_large_locked(
+    DomainState& domain,
+    const DomainConfig& config,
+    size_t requested_size) {
+    (void)config;
+    const size_t chunk_bytes = stitched_chunk_bytes_locked(domain);
+    const size_t alloc_size = round_up_to_multiple(round_up(requested_size), chunk_bytes);
+    const size_t chunk_count = alloc_size / chunk_bytes;
+
+    Block* block = nullptr;
+    bool from_cache = false;
+    LargeBlockState source_state = LargeBlockState::Active;
+
+    auto dirty_it = domain.dirty_stitched_blocks.lower_bound(alloc_size);
+    while (dirty_it != domain.dirty_stitched_blocks.end()) {
+        if (!is_quarantined_stitched_block_locked(dirty_it->second)) {
+            block = dirty_it->second;
+            remove_from_large_free_list(domain, block);
+            from_cache = true;
+            source_state = LargeBlockState::Dirty;
+            ++domain.stats.cache_hits;
+            ++domain.stats.large_cache_hits;
+            ++domain.stats.stitched_reuse_hits;
+            domain.stats.cached_bytes -= block->size;
+            break;
+        }
+        ++dirty_it;
+    }
+    if (block == nullptr) {
+        auto retained_it = domain.retained_stitched_blocks.lower_bound(alloc_size);
+        while (retained_it != domain.retained_stitched_blocks.end()) {
+            if (!is_quarantined_stitched_block_locked(retained_it->second)) {
+                block = retained_it->second;
+                remove_from_large_free_list(domain, block);
+                from_cache = true;
+                source_state = LargeBlockState::Retained;
+                ++domain.stats.cache_hits;
+                ++domain.stats.large_cache_hits;
+                ++domain.stats.stitched_reuse_hits;
+                domain.stats.cached_bytes -= block->size;
+                break;
+            }
+            ++retained_it;
+        }
+    }
+
+    if (block == nullptr) {
+        std::vector<std::shared_ptr<PhysicalChunk>> borrowed_chunks = borrow_cached_chunks_locked(domain, chunk_count);
+        if (borrowed_chunks.size() < chunk_count) {
+            (void)decompose_free_stitched_blocks_for_request_locked(domain, chunk_count);
+            auto more_chunks = borrow_cached_chunks_locked(domain, chunk_count - borrowed_chunks.size());
+            borrowed_chunks.insert(
+                borrowed_chunks.end(),
+                std::make_move_iterator(more_chunks.begin()),
+                std::make_move_iterator(more_chunks.end()));
+        }
+
+        std::vector<std::shared_ptr<PhysicalChunk>> new_chunks;
+        new_chunks.reserve(chunk_count > borrowed_chunks.size() ? chunk_count - borrowed_chunks.size() : 0);
+
+        const PoolDomain domain_kind = &domain == &workspace_domain_ ? PoolDomain::Workspace : PoolDomain::Tensor;
+        try {
+            while (borrowed_chunks.size() + new_chunks.size() < chunk_count) {
+                auto allocation = VirtualMemoryManager::instance().allocate_physical(domain_kind, chunk_bytes);
+                auto chunk = std::make_shared<PhysicalChunk>();
+                chunk->allocation = std::move(allocation);
+                chunk->size = chunk_bytes;
+                chunk->domain = domain_kind;
+                chunk->last_used_epoch = domain.large_epoch;
+                new_chunks.push_back(std::move(chunk));
+                ++domain.stats.system_allocations;
+                domain.stats.system_bytes += chunk_bytes;
+            }
+
+            std::vector<std::shared_ptr<PhysicalChunk>> all_chunks;
+            all_chunks.reserve(chunk_count);
+            all_chunks.insert(
+                all_chunks.end(),
+                std::make_move_iterator(borrowed_chunks.begin()),
+                std::make_move_iterator(borrowed_chunks.end()));
+            all_chunks.insert(
+                all_chunks.end(),
+                std::make_move_iterator(new_chunks.begin()),
+                std::make_move_iterator(new_chunks.end()));
+
+            block = map_stitched_segment_locked(domain, all_chunks, chunk_bytes);
+        } catch (...) {
+            if (!borrowed_chunks.empty()) {
+                return_chunks_to_cache_locked(domain, std::move(borrowed_chunks));
+            }
+            if (!new_chunks.empty()) {
+                free_physical_chunks_locked(domain, std::move(new_chunks));
+            }
+            throw;
+        }
+
+        ++domain.stats.cache_misses;
+        ++domain.stats.large_cache_misses;
+    } else {
+        block->last_used_epoch = domain.large_epoch;
+    }
+
+    if (block->size >= alloc_size + chunk_bytes) {
+        const size_t remaining_size = block->size - alloc_size;
+        void* remaining_ptr = static_cast<char*>(block->ptr) + alloc_size;
+
+        Block* remaining = new Block(remaining_ptr, remaining_size, false);
+        remaining->last_used_epoch = domain.large_epoch;
+        remaining->prev = block;
+        remaining->next = block->next;
+        if (remaining->next != nullptr) {
+            remaining->next->prev = remaining;
+        }
+        remaining->storage_kind = LargeStorageKind::Stitched;
+        remaining->stitched_segment = block->stitched_segment;
+        remaining->chunk_begin = block->chunk_begin + chunk_count;
+        remaining->chunk_count = block->chunk_count - chunk_count;
+        block->next = remaining;
+        block->size = alloc_size;
+        block->chunk_count = chunk_count;
+
+        domain.all_blocks[remaining_ptr] = remaining;
+        add_to_large_free_list(domain, config, remaining, from_cache ? source_state : LargeBlockState::Retained);
+        domain.stats.cached_bytes += remaining_size;
+        ++domain.stats.large_split_count;
+    }
+
+    finalize_large_allocation_locked(domain, block, requested_size);
+    return block->ptr;
+}
+
+void* MemoryPool::allocate_legacy_large_locked(
+    DomainState& domain,
+    const DomainConfig& config,
+    size_t alloc_size,
+    size_t requested_size) {
     Block* block = nullptr;
     bool from_cache = false;
     LargeBlockState source_state = LargeBlockState::Active;
@@ -408,8 +753,7 @@ void* MemoryPool::allocate_large_locked(DomainState& domain, const DomainConfig&
         ++domain.stats.cache_misses;
         ++domain.stats.large_cache_misses;
 
-        const size_t system_alloc_size =
-            alloc_size > kDefaultArenaSize ? alloc_size : kDefaultArenaSize;
+        const size_t system_alloc_size = alloc_size > kDefaultArenaSize ? alloc_size : kDefaultArenaSize;
         void* ptr = nullptr;
         auto ret = aclrtMalloc(&ptr, system_alloc_size, ACL_MEM_MALLOC_HUGE_FIRST);
         if (ret != ACL_SUCCESS) {
@@ -418,6 +762,7 @@ void* MemoryPool::allocate_large_locked(DomainState& domain, const DomainConfig&
 
         block = new Block(ptr, system_alloc_size, false);
         block->is_head = true;
+        block->storage_kind = LargeStorageKind::LegacyContiguous;
         block->last_used_epoch = domain.large_epoch;
         domain.all_blocks[ptr] = block;
 
@@ -439,6 +784,7 @@ void* MemoryPool::allocate_large_locked(DomainState& domain, const DomainConfig&
         if (remaining->next != nullptr) {
             remaining->next->prev = remaining;
         }
+        remaining->storage_kind = LargeStorageKind::LegacyContiguous;
         block->next = remaining;
         block->size = alloc_size;
 
@@ -448,14 +794,48 @@ void* MemoryPool::allocate_large_locked(DomainState& domain, const DomainConfig&
         ++domain.stats.large_split_count;
     }
 
-    block->allocated = true;
-    domain.large_block_states.erase(block);
-    domain.active_requested_sizes[block->ptr] = requested_size;
-    domain.stats.active_bytes += block->size;
-    domain.stats.active_requested_bytes += requested_size;
-    domain.stats.peak_active_bytes = std::max(domain.stats.peak_active_bytes, domain.stats.active_bytes);
-    update_total_peak_active_locked();
+    finalize_large_allocation_locked(domain, block, requested_size);
     return block->ptr;
+}
+
+void* MemoryPool::allocate_large_locked(
+    DomainState& domain,
+    const DomainConfig& config,
+    size_t alloc_size,
+    size_t requested_size) {
+    ++domain.large_epoch;
+    decay_large_blocks_locked(domain, config, false);
+
+    const PoolDomain domain_kind = &domain == &workspace_domain_ ? PoolDomain::Workspace : PoolDomain::Tensor;
+    auto& vmm = VirtualMemoryManager::instance();
+    const bool vmm_enabled = vmm.enabled(domain_kind);
+    if (vmm_enabled) {
+        try {
+            return allocate_stitched_large_locked(domain, config, requested_size);
+        } catch (const std::exception& e) {
+            if (vmm.should_report_fallback_once()) {
+                std::fprintf(stderr, "[MemoryPool] VMM stitched allocation failed: %s\n", e.what());
+            }
+            ++domain.stats.vmm_fallback_allocations;
+        } catch (...) {
+            if (vmm.should_report_fallback_once()) {
+                std::fprintf(stderr, "[MemoryPool] VMM stitched allocation failed with unknown exception\n");
+            }
+            ++domain.stats.vmm_fallback_allocations;
+        }
+    } else {
+        if (vmm.should_report_fallback_once()) {
+            const std::string error = vmm.last_error();
+            if (!error.empty()) {
+                std::fprintf(stderr, "[MemoryPool] VMM disabled, falling back to legacy allocator: %s\n", error.c_str());
+            } else {
+                std::fprintf(stderr, "[MemoryPool] VMM disabled, falling back to legacy allocator\n");
+            }
+        }
+        ++domain.stats.vmm_fallback_allocations;
+    }
+
+    return allocate_legacy_large_locked(domain, config, alloc_size, requested_size);
 }
 
 bool MemoryPool::free_in_domain_locked(DomainState& domain, const DomainConfig& config, void* ptr) {
@@ -514,16 +894,53 @@ void MemoryPool::free_small_locked(DomainState& domain, Run* run, size_t slot_in
     domain.stats.cached_bytes += run->slot_size;
 }
 
+bool MemoryPool::can_merge_blocks_locked(const Block* left, const Block* right) const {
+    if (left == nullptr || right == nullptr) {
+        return false;
+    }
+    if (left->storage_kind != right->storage_kind) {
+        return false;
+    }
+    if (static_cast<const char*>(right->ptr) != static_cast<const char*>(left->ptr) + left->size) {
+        return false;
+    }
+
+    if (left->storage_kind == LargeStorageKind::Stitched) {
+        return left->stitched_segment == right->stitched_segment &&
+               left->chunk_begin + left->chunk_count == right->chunk_begin;
+    }
+
+    return true;
+}
+
+bool MemoryPool::is_full_free_head_locked(const Block* block) const {
+    return block != nullptr &&
+           !block->allocated &&
+           block->is_head &&
+           block->prev == nullptr &&
+           block->next == nullptr &&
+           !is_quarantined_stitched_block_locked(block);
+}
+
+bool MemoryPool::is_quarantined_stitched_block_locked(const Block* block) const {
+    return block != nullptr &&
+           block->storage_kind == LargeStorageKind::Stitched &&
+           block->stitched_segment != nullptr &&
+           block->stitched_segment->state == StitchedSegment::State::Quarantined;
+}
+
 void MemoryPool::free_large_locked(DomainState& domain, const DomainConfig& config, Block* block, size_t requested_size) {
     const size_t released_size = block->size;
+    void* original_ptr = block->ptr;
     ++domain.large_epoch;
     block->allocated = false;
     block->last_used_epoch = domain.large_epoch;
+    domain.active_requested_sizes.erase(original_ptr);
+
     Block* merged = try_merge_locked(domain, block);
     merged->last_used_epoch = domain.large_epoch;
     add_to_large_free_list(domain, config, merged, LargeBlockState::Dirty);
 
-    domain.active_requested_sizes.erase(block->ptr);
     domain.stats.active_bytes -= released_size;
     domain.stats.active_requested_bytes -= requested_size;
     domain.stats.cached_bytes += released_size;
@@ -531,7 +948,7 @@ void MemoryPool::free_large_locked(DomainState& domain, const DomainConfig& conf
 }
 
 MemoryPool::Block* MemoryPool::try_merge_locked(DomainState& domain, Block* block) {
-    if (block->next != nullptr && !block->next->allocated) {
+    if (block->next != nullptr && !block->next->allocated && can_merge_blocks_locked(block, block->next)) {
         Block* next_block = block->next;
         remove_from_large_free_list(domain, next_block);
 
@@ -540,13 +957,16 @@ MemoryPool::Block* MemoryPool::try_merge_locked(DomainState& domain, Block* bloc
         if (block->next != nullptr) {
             block->next->prev = block;
         }
+        if (block->storage_kind == LargeStorageKind::Stitched) {
+            block->chunk_count += next_block->chunk_count;
+        }
 
         domain.all_blocks.erase(next_block->ptr);
         delete next_block;
         ++domain.stats.large_merge_count;
     }
 
-    if (block->prev != nullptr && !block->prev->allocated) {
+    if (block->prev != nullptr && !block->prev->allocated && can_merge_blocks_locked(block->prev, block)) {
         Block* prev_block = block->prev;
         remove_from_large_free_list(domain, prev_block);
 
@@ -554,6 +974,9 @@ MemoryPool::Block* MemoryPool::try_merge_locked(DomainState& domain, Block* bloc
         prev_block->next = block->next;
         if (prev_block->next != nullptr) {
             prev_block->next->prev = prev_block;
+        }
+        if (prev_block->storage_kind == LargeStorageKind::Stitched) {
+            prev_block->chunk_count += block->chunk_count;
         }
 
         domain.all_blocks.erase(block->ptr);
@@ -570,17 +993,36 @@ void MemoryPool::add_to_large_free_list(
     const DomainConfig& config,
     Block* block,
     LargeBlockState state) {
-    domain.large_block_states[block] = state;
+    (void)config;
+    block->free_state = state;
     if (state == LargeBlockState::Dirty) {
-        block->free_list_iter = domain.dirty_large_blocks.insert({block->size, block});
         block->decay_epoch = block->last_used_epoch + config.large_dirty_decay_epochs;
-        // Decay buckets track block base pointers and rely on decay_epoch/state
-        // checks for lazy invalidation when a block is reallocated, merged, or released.
-        domain.dirty_large_decay_buckets[block->decay_epoch].push_back(block->ptr);
     } else {
-        block->free_list_iter = domain.retained_large_blocks.insert({block->size, block});
         block->decay_epoch = 0;
     }
+
+    LargeFreeList* free_blocks = nullptr;
+    if (block->storage_kind == LargeStorageKind::Stitched) {
+        if (state == LargeBlockState::Dirty) {
+            free_blocks = &domain.dirty_stitched_blocks;
+            block->free_list_kind = LargeFreeListKind::StitchedDirty;
+            domain.dirty_stitched_decay_buckets[block->decay_epoch].push_back(block->ptr);
+        } else {
+            free_blocks = &domain.retained_stitched_blocks;
+            block->free_list_kind = LargeFreeListKind::StitchedRetained;
+        }
+    } else {
+        if (state == LargeBlockState::Dirty) {
+            free_blocks = &domain.dirty_large_blocks;
+            block->free_list_kind = LargeFreeListKind::LegacyDirty;
+            domain.dirty_large_decay_buckets[block->decay_epoch].push_back(block->ptr);
+        } else {
+            free_blocks = &domain.retained_large_blocks;
+            block->free_list_kind = LargeFreeListKind::LegacyRetained;
+        }
+    }
+
+    block->free_list_iter = free_blocks->insert({block->size, block});
     block->in_free_list = true;
     update_large_block_state_counters(domain, state, block->size, true);
 }
@@ -590,22 +1032,34 @@ void MemoryPool::remove_from_large_free_list(DomainState& domain, Block* block) 
         return;
     }
 
-    const auto state_it = domain.large_block_states.find(block);
-    if (state_it == domain.large_block_states.end()) {
-        block->in_free_list = false;
-        return;
+    LargeFreeList* free_blocks = nullptr;
+    switch (block->free_list_kind) {
+    case LargeFreeListKind::LegacyDirty:
+        free_blocks = &domain.dirty_large_blocks;
+        break;
+    case LargeFreeListKind::LegacyRetained:
+        free_blocks = &domain.retained_large_blocks;
+        break;
+    case LargeFreeListKind::StitchedDirty:
+        free_blocks = &domain.dirty_stitched_blocks;
+        break;
+    case LargeFreeListKind::StitchedRetained:
+        free_blocks = &domain.retained_stitched_blocks;
+        break;
+    case LargeFreeListKind::None:
+        break;
     }
 
-    const LargeBlockState state = state_it->second;
-    auto* free_blocks = state == LargeBlockState::Dirty ? &domain.dirty_large_blocks : &domain.retained_large_blocks;
-    free_blocks->erase(block->free_list_iter);
-    block->free_list_iter = LargeFreeList::iterator{};
-    block->in_free_list = false;
-    if (state == LargeBlockState::Dirty) {
-        block->decay_epoch = 0;
+    if (free_blocks != nullptr) {
+        free_blocks->erase(block->free_list_iter);
+        update_large_block_state_counters(domain, block->free_state, block->size, false);
     }
-    update_large_block_state_counters(domain, state, block->size, false);
-    domain.large_block_states.erase(state_it);
+
+    block->free_list_iter = LargeFreeList::iterator{};
+    block->free_list_kind = LargeFreeListKind::None;
+    block->free_state = LargeBlockState::Active;
+    block->in_free_list = false;
+    block->decay_epoch = 0;
 }
 
 void MemoryPool::release_run_locked(DomainState& domain, Run* run) {
@@ -622,7 +1076,77 @@ void MemoryPool::release_run_locked(DomainState& domain, Run* run) {
     delete run;
 }
 
+bool MemoryPool::decompose_stitched_head_locked(DomainState& domain, Block* block) {
+    if (block == nullptr || block->storage_kind != LargeStorageKind::Stitched || !is_full_free_head_locked(block)) {
+        return false;
+    }
+
+    auto segment = block->stitched_segment;
+    if (segment == nullptr || segment->reservation == nullptr || segment->reservation->handle == nullptr) {
+        return false;
+    }
+
+    remove_from_large_free_list(domain, block);
+    domain.stats.cached_bytes -= block->size;
+
+    const auto unmap_result = VirtualMemoryManager::instance().unmap(segment->reservation->handle, 0, segment->total_bytes);
+    if (unmap_result.status != ACL_SUCCESS) {
+        if (unmap_result.unmapped_chunk_count == 0) {
+            const DomainConfig& config = &domain == &workspace_domain_ ? workspace_config_ : tensor_config_;
+            add_to_large_free_list(domain, config, block, LargeBlockState::Retained);
+            domain.stats.cached_bytes += block->size;
+            return false;
+        }
+        segment->state = StitchedSegment::State::Quarantined;
+        segment->mapped_chunk_count = segment->chunks.size() - unmap_result.unmapped_chunk_count;
+        return false;
+    }
+
+    for (size_t index = 0; index < unmap_result.unmapped_chunk_count && index < segment->chunks.size(); ++index) {
+        if (segment->chunks[index] != nullptr) {
+            segment->chunks[index]->mapped = false;
+        }
+    }
+    segment->mapped_chunk_count = segment->chunks.size() >= unmap_result.unmapped_chunk_count
+        ? (segment->chunks.size() - unmap_result.unmapped_chunk_count)
+        : 0;
+
+    const aclError release_ret = VirtualMemoryManager::instance().release_reservation(segment->reservation->handle);
+    if (release_ret != ACL_SUCCESS) {
+        segment->state = StitchedSegment::State::Quarantined;
+        segment->mapped_chunk_count = 0;
+        return false;
+    }
+
+    for (auto& chunk : segment->chunks) {
+        if (chunk != nullptr) {
+            chunk->mapped = false;
+        }
+    }
+    segment->mapped_chunk_count = 0;
+
+    std::vector<std::shared_ptr<PhysicalChunk>> chunks = std::move(segment->chunks);
+    domain.live_stitched_segments.erase(block->ptr);
+    domain.all_blocks.erase(block->ptr);
+    --domain.stats.large_arena_count;
+    delete block;
+
+    return_chunks_to_cache_locked(domain, std::move(chunks));
+    return true;
+}
+
 void MemoryPool::release_large_head_locked(DomainState& domain, Block* block) {
+    if (block == nullptr) {
+        return;
+    }
+
+    if (block->storage_kind == LargeStorageKind::Stitched) {
+        if (!decompose_stitched_head_locked(domain, block)) {
+            return;
+        }
+        return;
+    }
+
     remove_from_large_free_list(domain, block);
     aclrtFree(block->ptr);
     domain.all_blocks.erase(block->ptr);
@@ -634,46 +1158,86 @@ void MemoryPool::release_large_head_locked(DomainState& domain, Block* block) {
     delete block;
 }
 
+void MemoryPool::release_cached_physical_chunks_locked(DomainState& domain) {
+    std::vector<std::shared_ptr<PhysicalChunk>> chunks;
+    chunks.swap(domain.cached_physical_chunks);
+    if (chunks.empty()) {
+        return;
+    }
+
+    domain.stats.cached_bytes -= domain.cached_physical_chunk_bytes;
+    domain.cached_physical_chunk_bytes = 0;
+    free_physical_chunks_locked(domain, std::move(chunks));
+}
+
 void MemoryPool::decay_large_blocks_locked(DomainState& domain, const DomainConfig& config, bool force_all) {
-    std::vector<Block*> to_retain;
-    if (force_all) {
-        to_retain.reserve(domain.dirty_large_blocks.size());
-        for (const auto& entry : domain.dirty_large_blocks) {
-            to_retain.push_back(entry.second);
-        }
-        domain.dirty_large_decay_buckets.clear();
-    } else {
-        auto bucket_it = domain.dirty_large_decay_buckets.begin();
-        while (bucket_it != domain.dirty_large_decay_buckets.end() &&
-            bucket_it->first <= domain.large_epoch) {
-            const uint64_t decay_epoch = bucket_it->first;
-            auto pending_blocks = std::move(bucket_it->second);
-            bucket_it = domain.dirty_large_decay_buckets.erase(bucket_it);
-
-            for (void* block_ptr : pending_blocks) {
-                auto block_it = domain.all_blocks.find(block_ptr);
-                if (block_it == domain.all_blocks.end()) {
-                    continue;
+    auto decay_one = [&](LargeFreeList& dirty_blocks,
+                         LargeFreeList& retained_blocks,
+                         std::map<uint64_t, std::vector<void*>>& decay_buckets,
+                         LargeStorageKind storage_kind) {
+        std::vector<Block*> to_retain;
+        if (force_all) {
+            to_retain.reserve(dirty_blocks.size());
+            for (const auto& entry : dirty_blocks) {
+                if (!is_quarantined_stitched_block_locked(entry.second)) {
+                    to_retain.push_back(entry.second);
                 }
+            }
+            decay_buckets.clear();
+        } else {
+            auto bucket_it = decay_buckets.begin();
+            while (bucket_it != decay_buckets.end() && bucket_it->first <= domain.large_epoch) {
+                const uint64_t decay_epoch = bucket_it->first;
+                auto pending_blocks = std::move(bucket_it->second);
+                bucket_it = decay_buckets.erase(bucket_it);
 
-                Block* block = block_it->second;
-                if (large_block_state(domain, *block) != LargeBlockState::Dirty) {
-                    continue;
-                }
-                if (block->decay_epoch != decay_epoch) {
-                    continue;
-                }
+                for (void* block_ptr : pending_blocks) {
+                    auto block_it = domain.all_blocks.find(block_ptr);
+                    if (block_it == domain.all_blocks.end()) {
+                        continue;
+                    }
 
-                to_retain.push_back(block);
+                    Block* block = block_it->second;
+                    if (block->storage_kind != storage_kind) {
+                        continue;
+                    }
+                    if (is_quarantined_stitched_block_locked(block)) {
+                        continue;
+                    }
+                    if (large_block_state(*block) != LargeBlockState::Dirty) {
+                        continue;
+                    }
+                    if (block->decay_epoch != decay_epoch) {
+                        continue;
+                    }
+
+                    to_retain.push_back(block);
+                }
             }
         }
-    }
 
-    for (Block* block : to_retain) {
-        remove_from_large_free_list(domain, block);
-        add_to_large_free_list(domain, config, block, LargeBlockState::Retained);
-        ++domain.stats.large_decay_count;
-    }
+        for (Block* block : to_retain) {
+            remove_from_large_free_list(domain, block);
+            block->free_list_kind = LargeFreeListKind::None;
+            block->free_state = LargeBlockState::Active;
+            block->in_free_list = false;
+            block->decay_epoch = 0;
+            if (storage_kind == LargeStorageKind::Stitched) {
+                block->free_list_iter = retained_blocks.insert({block->size, block});
+                block->free_list_kind = LargeFreeListKind::StitchedRetained;
+            } else {
+                block->free_list_iter = retained_blocks.insert({block->size, block});
+                block->free_list_kind = LargeFreeListKind::LegacyRetained;
+            }
+            block->free_state = LargeBlockState::Retained;
+            block->in_free_list = true;
+            update_large_block_state_counters(domain, LargeBlockState::Retained, block->size, true);
+            ++domain.stats.large_decay_count;
+        }
+    };
+
+    decay_one(domain.dirty_large_blocks, domain.retained_large_blocks, domain.dirty_large_decay_buckets, LargeStorageKind::LegacyContiguous);
+    decay_one(domain.dirty_stitched_blocks, domain.retained_stitched_blocks, domain.dirty_stitched_decay_buckets, LargeStorageKind::Stitched);
 }
 
 void MemoryPool::trim_locked(DomainState& domain, const DomainConfig& config, bool release_all_large) {
@@ -717,17 +1281,23 @@ void MemoryPool::trim_locked(DomainState& domain, const DomainConfig& config, bo
     std::vector<Block*> releasable_heads;
     for (auto& entry : domain.all_blocks) {
         Block* block = entry.second;
-        if (!block->allocated && block->is_head && block->next == nullptr) {
-            const LargeBlockState state = large_block_state(domain, *block);
-            if (release_all_large || config.aggressive_trim || state == LargeBlockState::Retained) {
-                releasable_heads.push_back(block);
-            }
+        if (!is_full_free_head_locked(block)) {
+            continue;
+        }
+
+        const LargeBlockState state = large_block_state(*block);
+        if (release_all_large || config.aggressive_trim || state == LargeBlockState::Retained) {
+            releasable_heads.push_back(block);
         }
     }
 
     for (Block* head : releasable_heads) {
         domain.stats.trimmed_bytes += head->size;
         release_large_head_locked(domain, head);
+    }
+
+    if (release_all_large) {
+        release_cached_physical_chunks_locked(domain);
     }
 }
 
@@ -741,9 +1311,13 @@ MemoryPoolStats MemoryPool::snapshot_domain_stats_locked(const DomainState& doma
     snapshot.small_free_bytes = 0;
     snapshot.largest_free_run_bytes = 0;
     snapshot.largest_free_block_bytes = 0;
-    snapshot.dirty_large_block_count = domain.dirty_large_blocks.size();
-    snapshot.retained_large_block_count = domain.retained_large_blocks.size();
+    snapshot.dirty_large_block_count = domain.dirty_large_blocks.size() + domain.dirty_stitched_blocks.size();
+    snapshot.retained_large_block_count = domain.retained_large_blocks.size() + domain.retained_stitched_blocks.size();
     snapshot.hot_retained_empty_runs = 0;
+    snapshot.chunk_cache_bytes = domain.cached_physical_chunk_bytes;
+    snapshot.chunk_cache_count = domain.cached_physical_chunks.size();
+    snapshot.stitched_segment_count = domain.live_stitched_segments.size();
+    snapshot.vmm_internal_fragmentation_bytes = 0;
 
     for (const auto& entry : domain.runs_by_class) {
         for (Run* run : entry.second) {
@@ -769,17 +1343,25 @@ MemoryPoolStats MemoryPool::snapshot_domain_stats_locked(const DomainState& doma
         }
     }
 
-    if (!domain.dirty_large_blocks.empty()) {
-        snapshot.largest_free_block_bytes = std::max(
-            snapshot.largest_free_block_bytes,
-            domain.dirty_large_blocks.rbegin()->first
-        );
-    }
-    if (!domain.retained_large_blocks.empty()) {
-        snapshot.largest_free_block_bytes = std::max(
-            snapshot.largest_free_block_bytes,
-            domain.retained_large_blocks.rbegin()->first
-        );
+    auto update_largest = [&snapshot](const LargeFreeList& free_list) {
+        if (!free_list.empty()) {
+            snapshot.largest_free_block_bytes = std::max(snapshot.largest_free_block_bytes, free_list.rbegin()->first);
+        }
+    };
+    update_largest(domain.dirty_large_blocks);
+    update_largest(domain.retained_large_blocks);
+    update_largest(domain.dirty_stitched_blocks);
+    update_largest(domain.retained_stitched_blocks);
+
+    for (const auto& entry : domain.active_requested_sizes) {
+        auto block_it = domain.all_blocks.find(entry.first);
+        if (block_it == domain.all_blocks.end()) {
+            continue;
+        }
+        const Block* block = block_it->second;
+        if (block->allocated && block->storage_kind == LargeStorageKind::Stitched) {
+            snapshot.vmm_internal_fragmentation_bytes += block->size >= entry.second ? block->size - entry.second : 0;
+        }
     }
 
     snapshot.internal_fragmentation_bytes =
@@ -873,10 +1455,16 @@ void MemoryPool::accumulate_stats(MemoryPoolStats& dst, const MemoryPoolStats& s
     dst.largest_free_run_bytes = std::max(dst.largest_free_run_bytes, src.largest_free_run_bytes);
     dst.largest_free_block_bytes = std::max(dst.largest_free_block_bytes, src.largest_free_block_bytes);
     dst.internal_fragmentation_bytes += src.internal_fragmentation_bytes;
+    dst.vmm_internal_fragmentation_bytes += src.vmm_internal_fragmentation_bytes;
     dst.small_external_fragmentation_bytes += src.small_external_fragmentation_bytes;
     dst.large_external_fragmentation_bytes += src.large_external_fragmentation_bytes;
     dst.external_fragmentation_bytes += src.external_fragmentation_bytes;
     dst.hot_retained_empty_runs += src.hot_retained_empty_runs;
+    dst.stitched_reuse_hits += src.stitched_reuse_hits;
+    dst.vmm_fallback_allocations += src.vmm_fallback_allocations;
+    dst.chunk_cache_bytes += src.chunk_cache_bytes;
+    dst.chunk_cache_count += src.chunk_cache_count;
+    dst.stitched_segment_count += src.stitched_segment_count;
     dst.internal_fragmentation_ratio_pct = dst.active_bytes > 0
         ? (static_cast<double>(dst.internal_fragmentation_bytes) * 100.0) / static_cast<double>(dst.active_bytes)
         : 0.0;
@@ -1235,12 +1823,8 @@ void MemoryPool::update_large_block_state_counters(DomainState& domain, LargeBlo
     }
 }
 
-MemoryPool::LargeBlockState MemoryPool::large_block_state(const DomainState& domain, const Block& block) const {
-    auto it = domain.large_block_states.find(const_cast<Block*>(&block));
-    if (it == domain.large_block_states.end()) {
-        return LargeBlockState::Active;
-    }
-    return it->second;
+MemoryPool::LargeBlockState MemoryPool::large_block_state(const Block& block) const {
+    return block.in_free_list ? block.free_state : LargeBlockState::Active;
 }
 
 size_t MemoryPool::current_total_active_bytes_locked() const {

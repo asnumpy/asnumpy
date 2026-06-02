@@ -1,9 +1,9 @@
 /**
  * Memory pool for CANN device allocations.
  *
- * The pool now separates tensor payloads and operator workspaces into
- * independent domains so their caching and trimming policies can evolve
- * independently without changing Python-level array construction semantics.
+ * The pool separates tensor payloads and operator workspaces into independent
+ * domains. Small allocations keep the existing run/bin/bitmap allocator while
+ * large allocations can use a stitched VMM-backed path inspired by GMLake.
  */
 #pragma once
 
@@ -12,7 +12,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -63,10 +65,16 @@ struct MemoryPoolStats {
     size_t largest_free_run_bytes = 0;
     size_t largest_free_block_bytes = 0;
     size_t internal_fragmentation_bytes = 0;
+    size_t vmm_internal_fragmentation_bytes = 0;
     size_t small_external_fragmentation_bytes = 0;
     size_t large_external_fragmentation_bytes = 0;
     size_t external_fragmentation_bytes = 0;
     size_t hot_retained_empty_runs = 0;
+    size_t stitched_reuse_hits = 0;
+    size_t vmm_fallback_allocations = 0;
+    size_t chunk_cache_bytes = 0;
+    size_t chunk_cache_count = 0;
+    size_t stitched_segment_count = 0;
     double internal_fragmentation_ratio_pct = 0.0;
     double small_external_fragmentation_ratio_pct = 0.0;
     double large_external_fragmentation_ratio_pct = 0.0;
@@ -104,24 +112,16 @@ public:
 private:
     struct Bin;
     struct Run;
+    struct PhysicalChunk;
+    struct VirtualReservation;
+    struct StitchedSegment;
     struct Block;
+
     using LargeFreeList = std::multimap<size_t, Block*>;
 
-    struct Block {
-        void* ptr = nullptr;
-        size_t size = 0;
-        bool allocated = false;
-        bool is_head = false;
-        uint64_t last_used_epoch = 0;
-        uint64_t decay_epoch = 0;
-        Block* prev = nullptr;
-        Block* next = nullptr;
-        LargeFreeList::iterator free_list_iter{};
-        bool in_free_list = false;
-
-        Block() = default;
-        Block(void* block_ptr, size_t block_size, bool in_use)
-            : ptr(block_ptr), size(block_size), allocated(in_use) {}
+    enum class LargeStorageKind {
+        LegacyContiguous,
+        Stitched,
     };
 
     enum class RunState {
@@ -134,6 +134,37 @@ private:
         Active,
         Dirty,
         Retained,
+    };
+
+    enum class LargeFreeListKind {
+        None,
+        LegacyDirty,
+        LegacyRetained,
+        StitchedDirty,
+        StitchedRetained,
+    };
+
+    struct Block {
+        void* ptr = nullptr;
+        size_t size = 0;
+        bool allocated = false;
+        bool is_head = false;
+        uint64_t last_used_epoch = 0;
+        uint64_t decay_epoch = 0;
+        Block* prev = nullptr;
+        Block* next = nullptr;
+        LargeStorageKind storage_kind = LargeStorageKind::LegacyContiguous;
+        LargeBlockState free_state = LargeBlockState::Active;
+        LargeFreeListKind free_list_kind = LargeFreeListKind::None;
+        LargeFreeList::iterator free_list_iter{};
+        bool in_free_list = false;
+        std::shared_ptr<StitchedSegment> stitched_segment;
+        size_t chunk_begin = 0;
+        size_t chunk_count = 0;
+
+        Block() = default;
+        Block(void* block_ptr, size_t block_size, bool in_use)
+            : ptr(block_ptr), size(block_size), allocated(in_use) {}
     };
 
     struct Run {
@@ -171,6 +202,7 @@ private:
         size_t hot_bin_min_allocations = 0;
         size_t hot_bin_max_empty_runs = 0;
         size_t hot_bin_max_idle_generations = 0;
+        size_t stitched_chunk_cache_max_bytes = 0;
     };
 
     struct DomainState {
@@ -181,9 +213,15 @@ private:
         std::map<uintptr_t, Run*> small_runs_by_base;
         LargeFreeList dirty_large_blocks;
         LargeFreeList retained_large_blocks;
+        LargeFreeList dirty_stitched_blocks;
+        LargeFreeList retained_stitched_blocks;
         std::map<uint64_t, std::vector<void*>> dirty_large_decay_buckets;
-        std::unordered_map<Block*, LargeBlockState> large_block_states;
+        std::map<uint64_t, std::vector<void*>> dirty_stitched_decay_buckets;
+        std::vector<std::shared_ptr<PhysicalChunk>> cached_physical_chunks;
+        std::unordered_map<void*, std::shared_ptr<StitchedSegment>> live_stitched_segments;
         uint64_t large_epoch = 0;
+        size_t cached_physical_chunk_bytes = 0;
+        size_t vmm_chunk_bytes = 0;
         MemoryPoolStats stats;
     };
 
@@ -198,11 +236,14 @@ private:
 
     void* allocate_small_locked(DomainState& domain, const DomainConfig& config, size_t alloc_size, size_t requested_size);
     void* allocate_large_locked(DomainState& domain, const DomainConfig& config, size_t alloc_size, size_t requested_size);
+    void* allocate_legacy_large_locked(DomainState& domain, const DomainConfig& config, size_t alloc_size, size_t requested_size);
+    void* allocate_stitched_large_locked(DomainState& domain, const DomainConfig& config, size_t requested_size);
     void free_small_locked(DomainState& domain, Run* run, size_t slot_index, void* ptr, size_t requested_size);
     void free_large_locked(DomainState& domain, const DomainConfig& config, Block* block, size_t requested_size);
     bool free_in_domain_locked(DomainState& domain, const DomainConfig& config, void* ptr);
 
     size_t round_up(size_t size) const;
+    size_t round_up_to_multiple(size_t size, size_t alignment) const;
     size_t size_class_for(size_t size) const;
     Run* allocate_run_locked(DomainState& domain, const DomainConfig& config, size_t slot_size);
     void release_run_locked(DomainState& domain, Run* run);
@@ -233,16 +274,30 @@ private:
     void add_to_large_free_list(DomainState& domain, const DomainConfig& config, Block* block, LargeBlockState state);
     void remove_from_large_free_list(DomainState& domain, Block* block);
     Block* try_merge_locked(DomainState& domain, Block* block);
+    bool can_merge_blocks_locked(const Block* left, const Block* right) const;
+    bool is_full_free_head_locked(const Block* block) const;
+    bool is_quarantined_stitched_block_locked(const Block* block) const;
     void release_large_head_locked(DomainState& domain, Block* block);
+    bool decompose_stitched_head_locked(DomainState& domain, Block* block);
+    void release_cached_physical_chunks_locked(DomainState& domain);
     void update_large_block_state_counters(DomainState& domain, LargeBlockState state, size_t bytes, bool add);
-    LargeBlockState large_block_state(const DomainState& domain, const Block& block) const;
+    LargeBlockState large_block_state(const Block& block) const;
     size_t current_total_active_bytes_locked() const;
     void update_total_peak_active_locked();
+    void finalize_large_allocation_locked(DomainState& domain, Block* block, size_t requested_size);
+    size_t stitched_chunk_bytes_locked(DomainState& domain);
+    std::vector<std::shared_ptr<PhysicalChunk>> borrow_cached_chunks_locked(DomainState& domain, size_t chunk_count);
+    void return_chunks_to_cache_locked(DomainState& domain, std::vector<std::shared_ptr<PhysicalChunk>>&& chunks);
+    void free_physical_chunks_locked(DomainState& domain, std::vector<std::shared_ptr<PhysicalChunk>>&& chunks);
+    Block* map_stitched_segment_locked(DomainState& domain, const std::vector<std::shared_ptr<PhysicalChunk>>& chunks, size_t chunk_bytes);
+    bool decompose_free_stitched_blocks_for_request_locked(DomainState& domain, size_t required_chunk_count);
 
     MemoryPoolStats snapshot_domain_stats_locked(const DomainState& domain) const;
     void reset_domain_stats_locked(DomainState& domain);
     static void accumulate_stats(MemoryPoolStats& dst, const MemoryPoolStats& src);
 
+    // The first stitched implementation intentionally keeps a single allocator
+    // mutex and relies on domain-specific state separation for correctness.
     mutable std::mutex mutex_;
     std::atomic<bool> pool_enabled_{true};
     DomainState tensor_domain_;
