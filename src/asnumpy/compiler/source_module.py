@@ -305,7 +305,7 @@ class SourceModule:
         disable_cache: bool = False,
         keep: bool = False,
         verbose: bool = False,
-        soc_version: str = "Ascend910B1",
+        soc_version: str = "Ascend910B4",
         core_type: str = "VecCore",
         compiler: str | None = None,
     ):
@@ -348,17 +348,24 @@ class SourceModule:
             if not disable_cache and self._build_dir is not None:
                 cache.store_in_cache(self._cache_key, self._build_dir)
 
-        # 4. Load binary
-        self._bin_handle = _get_lib().load_binary(o_path)
+        # 4. Load binary via RTS path (rtDevBinaryRegister with inner ELF).
+        #    The inner ELF is extracted from the .aicore_binary section of the
+        #    bisheng-compiled .o.  We use RT_DEV_BINARY_MAGIC_ELF_AIVEC
+        #    (0x41415246) which matches the VecCore output.
+        from . import _rts_loader
 
-        # 5. Discover kernel symbols
+        aicore_elf = bisheng_compiler.extract_aicore_elf(Path(o_path))
+        self._bin_handle = _rts_loader.register_binary(aicore_elf)
+
+        # 5. Discover kernel symbols and register them
         self._kernel_names = _list_kernel_symbols(o_path)
+        self._functions: dict[str, int] = {}     # name -> bin_handle
         for name in self._kernel_names:
             try:
-                self._functions[name] = _get_lib().get_function(self._bin_handle, name)
+                _rts_loader.register_function(self._bin_handle, name)
             except Exception as e:
                 if verbose:
-                    print(f"[SourceModule] Warning: failed to get function "
+                    print(f"[SourceModule] Warning: failed to register "
                           f"'{name}': {e}")
 
         # 6. Register for atexit cleanup
@@ -379,8 +386,8 @@ class SourceModule:
             Optional explicit signature list (e.g. ``["float32*", "int32"]``).
             If ``None``, the signature is parsed from the source code.
         """
-        if name not in self._functions:
-            available = list(self._functions.keys())
+        if name not in self._kernel_names:
+            available = list(self._kernel_names)
             raise ValueError(
                 f"Kernel '{name}' not found. Available: {available}"
             )
@@ -390,7 +397,7 @@ class SourceModule:
         else:
             arg_specs = _parse_kernel_signature(self.source, name)
 
-        return KernelFunction(name, self._functions[name], arg_specs)
+        return KernelFunction(name, 0, arg_specs, use_rts=True)
 
     def list_functions(self) -> list[str]:
         """Return the list of kernel function names in this module."""
@@ -399,7 +406,8 @@ class SourceModule:
     def close(self) -> None:
         """Release the binary handle. Safe to call multiple times."""
         if not self._closed and self._bin_handle is not None:
-            _get_lib().unload_binary(self._bin_handle)
+            from . import _rts_loader
+            _rts_loader.unregister_binary(self._bin_handle)
             self._bin_handle = None
             self._functions.clear()
             self._closed = True

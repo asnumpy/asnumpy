@@ -41,27 +41,48 @@ def _get_ascend_toolkit_home() -> str:
 
 
 def _get_bisheng_path() -> str:
-    """Return the full path to the bisheng compiler."""
+    """Return the full path to the bisheng compiler.
+
+    Probes multiple known locations to support CANN 7.x through 9.x:
+      - CANN 9.x: ``tools/bisheng_compiler/bin/bisheng``
+      - CANN 9.x (alt): ``tools/ccec_compiler/bin/bisheng``
+      - CANN 7.x / 8.x: ``compiler/ccec_compiler/bin/bisheng``
+    """
     ascend_home = _get_ascend_toolkit_home()
-    bisheng = os.path.join(ascend_home, "compiler", "ccec_compiler", "bin", "bisheng")
-    if not os.path.isfile(bisheng):
-        raise FileNotFoundError(
-            f"bisheng compiler not found at {bisheng}. "
-            f"Set ASCEND_TOOLKIT_HOME environment variable."
-        )
-    return bisheng
+    candidates = [
+        os.path.join(ascend_home, "tools", "bisheng_compiler", "bin", "bisheng"),
+        os.path.join(ascend_home, "tools", "ccec_compiler", "bin", "bisheng"),
+        os.path.join(ascend_home, "compiler", "ccec_compiler", "bin", "bisheng"),
+    ]
+    for bisheng in candidates:
+        if os.path.isfile(bisheng):
+            return bisheng
+    raise FileNotFoundError(
+        f"bisheng compiler not found. Checked:\n"
+        + "\n".join(f"  - {p}" for p in candidates)
+        + f"\nSet ASCEND_TOOLKIT_HOME environment variable."
+    )
 
 
 def _get_ascendc_include_paths() -> list[str]:
-    """Return the list of Ascend C include directories needed for kernel compilation."""
+    """Return the list of Ascend C include directories needed for kernel compilation.
+
+    CANN 9.x adds two ``aarch64-linux/asc/`` paths that supply utility headers
+    (e.g. ``include/utils/std/tuple.h``) referenced by the public Ascend C
+    headers.  These directories are safe to add on CANN 7.x / 8.x as well
+    (they simply won't exist yet).
+    """
     ascend_home = _get_ascend_toolkit_home()
     base = os.path.join(ascend_home, "aarch64-linux", "ascendc", "include")
+    asc_root = os.path.join(ascend_home, "aarch64-linux", "asc")
+    asc_include = os.path.join(asc_root, "include")
     return [
+        asc_root,
+        asc_include,
         base,
         os.path.join(base, "basic_api"),
         os.path.join(base, "highlevel_api"),
         os.path.join(base, "basic_api", "impl"),
-        os.path.join(base, "basic_api", "inner_interface"),
         os.path.join(base, "basic_api", "interface"),
     ]
 
@@ -171,3 +192,42 @@ def compile_kernel(
         )
 
     return o_file
+
+
+def extract_aicore_elf(o_file: Path) -> bytes:
+    """Extract the inner AI Core ELF from a bisheng-compiled .o file.
+
+    Bisheng wraps the device binary inside a ``.aicore_binary`` section of the
+    outer host-side ELF.  This function shells out to ``objcopy`` to dump
+    that section, returning the raw device ELF bytes suitable for registration
+    via ``rtDevBinaryRegister``.
+    """
+    import subprocess
+    import tempfile
+
+    # objcopy --dump-section is the reliable way to extract a section to a file.
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".elf") as tmp:
+        tmp_path = tmp.name
+
+    try:
+        result = subprocess.run(
+            ["objcopy", "--dump-section",
+             f".aicore_binary={tmp_path}", str(o_file)],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise CompileError(
+                f"objcopy failed to extract .aicore_binary section:\n{result.stderr}",
+                stderr=result.stderr,
+            )
+        data = Path(tmp_path).read_bytes()
+        if not data:
+            raise CompileError(
+                ".aicore_binary section is empty — the bisheng output may have "
+                "changed format. Check that --cce-aicore-lang and "
+                "--cce-soc-core-type are set correctly."
+            )
+        return data
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)

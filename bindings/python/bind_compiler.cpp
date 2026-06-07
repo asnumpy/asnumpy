@@ -32,6 +32,20 @@ void bind_compiler(py::module_& compiler) {
                  py::arg("bin_handle"),
                  "Unload a kernel binary.");
 
+    // ---- Binary lifecycle (RTS path for CANN 9.x) ----
+    compiler.def("register_binary", &asnumpy::compiler::register_binary,
+                 py::arg("data"),
+                 "Register a raw kernel binary (inner ELF from .aicore_binary section) "
+                 "via rtDevBinaryRegister. Returns a bin handle.");
+
+    compiler.def("register_function", &asnumpy::compiler::register_function,
+                 py::arg("bin_handle"), py::arg("kernel_name"),
+                 "Register a kernel function by name via rtFunctionRegister.");
+
+    compiler.def("unregister_binary", &asnumpy::compiler::unregister_binary,
+                 py::arg("bin_handle"),
+                 "Unregister a kernel binary via rtDevBinaryUnRegister.");
+
     // ---- Function lookup ----
     compiler.def("get_function", &asnumpy::compiler::get_function,
                  py::arg("bin_handle"), py::arg("kernel_name"),
@@ -41,7 +55,12 @@ void bind_compiler(py::module_& compiler) {
     compiler.def("launch_kernel", &asnumpy::compiler::launch_kernel,
                  py::arg("func_handle"), py::arg("block_dim"),
                  py::arg("packed_args"), py::arg("stream") = 0,
-                 "Launch a kernel on the NPU.");
+                 "Launch a kernel on the NPU (ACL path).");
+
+    compiler.def("launch_kernel_rts", &asnumpy::compiler::launch_kernel_rts,
+                 py::arg("kernel_name"), py::arg("block_dim"),
+                 py::arg("packed_args"), py::arg("stream") = 0,
+                 "Launch a kernel on the NPU (RTS path via rtKernelLaunch).");
 
     // ---- Timing helpers ----
     compiler.def("create_event", &asnumpy::compiler::create_event,

@@ -37,6 +37,12 @@ def _get_lib():
     return cmod
 
 
+def _rts_launch(kernel_name: str, block_dim: int, packed: list[bytes], stream) -> None:
+    """Launch a kernel registered via ``rtDevBinaryRegister``."""
+    from . import _rts_loader
+    _rts_loader.launch_kernel(kernel_name, block_dim, packed, stream or 0)
+
+
 # ---------------------------------------------------------------------------
 # Type mapping
 # ---------------------------------------------------------------------------
@@ -94,10 +100,12 @@ class KernelFunction:
         name: str,
         func_handle: int,
         arg_specs: list[ArgSpec],
+        use_rts: bool = False,
     ):
         self.name = name
         self._func_handle = func_handle
         self._arg_specs = arg_specs
+        self._use_rts = use_rts
 
     def __repr__(self) -> str:
         spec_str = ", ".join(
@@ -136,9 +144,12 @@ class KernelFunction:
             )
 
         packed = self._marshal_args(args)
-        _get_lib().launch_kernel(
-            self._func_handle, block_dim, packed, stream or 0
-        )
+        if self._use_rts:
+            _rts_launch(self.name, block_dim, packed, stream or 0)
+        else:
+            _get_lib().launch_kernel(
+                self._func_handle, block_dim, packed, stream or 0
+            )
 
     def prepare(self) -> "PreparedKernel":
         """Return a :class:`PreparedKernel` that supports timed execution."""
@@ -213,10 +224,14 @@ class PreparedKernel:
         _get_lib().record_event(self._start_event, self._stream)
 
         # Launch
-        _get_lib().launch_kernel(
-            self._func_handle, block_dim, packed,
-            stream or self._stream,
-        )
+        if self._kernel._use_rts:
+            _rts_launch(self._kernel.name, block_dim, packed,
+                        stream or self._stream)
+        else:
+            _get_lib().launch_kernel(
+                self._func_handle, block_dim, packed,
+                stream or self._stream,
+            )
 
         # Record end event
         _get_lib().record_event(self._end_event, self._stream)

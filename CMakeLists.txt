@@ -58,7 +58,7 @@ include_directories(${Python_NumPy_INCLUDE_DIRS})
 
 # ========== fmt (system package; also check conda prefix) ==========
 # Prefer CONDA_PREFIX or CMAKE_PREFIX_PATH; fall back to system defaults.
-set(_fmt_hints /usr/lib64/cmake /usr/lib/cmake)
+set(_fmt_hints /usr/lib64/cmake /usr/lib/cmake /usr/lib/aarch64-linux-gnu/cmake)
 if(DEFINED ENV{CONDA_PREFIX})
     list(APPEND _fmt_hints "$ENV{CONDA_PREFIX}/lib/cmake")
 endif()
@@ -66,7 +66,7 @@ find_package(fmt REQUIRED PATHS ${_fmt_hints} NO_DEFAULT_PATH)
 message(STATUS "Using fmt: ${fmt_VERSION}")
 
 # ========== spdlog (system package; also check conda prefix) ==========
-set(_spdlog_hints /usr/lib64/cmake /usr/lib/cmake)
+set(_spdlog_hints /usr/lib64/cmake /usr/lib/cmake /usr/lib/aarch64-linux-gnu/cmake)
 if(DEFINED ENV{CONDA_PREFIX})
     list(APPEND _spdlog_hints "$ENV{CONDA_PREFIX}/lib/cmake")
 endif()
