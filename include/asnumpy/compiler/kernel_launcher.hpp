@@ -35,17 +35,31 @@ using EventPtr   = std::uintptr_t;
 BinHandle  load_binary(const std::string& file_path);
 void       unload_binary(BinHandle bin_handle);
 
+// ---- Binary lifecycle (RTS path for CANN 9.x) ----
+// register_binary takes raw inner-ELF data (extracted from .aicore_binary
+// section of a bisheng-compiled .o) and registers it via rtDevBinaryRegister.
+BinHandle  register_binary(const py::bytes& data);
+void       register_function(BinHandle bin_handle, const std::string& kernel_name);
+void       unregister_binary(BinHandle bin_handle);
+
 // ---- Function lookup ----
 FuncHandle get_function(BinHandle bin_handle, const std::string& kernel_name);
 
 // ---- Kernel launch ----
+// ACL path: uses aclrtLaunchKernelWithConfig with aclrtArgsHandle.
 // Each element of `packed_args` is a py::bytes holding the raw argument data.
-// For device pointers (__gm__ float* etc), this is a little-endian uint64.
-// For scalars, this is the raw value bytes (e.g. 4 bytes for int32).
 void launch_kernel(FuncHandle func_handle,
                    std::uint32_t block_dim,
                    std::vector<py::bytes> packed_args,
                    StreamPtr stream = 0);
+
+// RTS path: uses rtKernelLaunch with flat args buffer.
+// kernel_name serves as the stub function lookup key registered by
+// register_function().  args are flattened into a contiguous buffer.
+void launch_kernel_rts(const std::string& kernel_name,
+                       std::uint32_t block_dim,
+                       std::vector<py::bytes> packed_args,
+                       StreamPtr stream = 0);
 
 // ---- Timing helpers ----
 EventPtr  create_event();

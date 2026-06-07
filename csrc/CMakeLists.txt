@@ -20,9 +20,9 @@ add_library(ascend_sdk INTERFACE)
 target_include_directories(asnumpy INTERFACE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(asnumpy INTERFACE SPDLOG_FMT_EXTERNAL)
 
-target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/include)
-target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/lib64)
-target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi)
+target_include_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/include ${ASCEND_CANN_PATH}/aarch64-linux/pkg_inc)
+target_link_directories(ascend_sdk INTERFACE ${ASCEND_CANN_PATH}/lib64 ${ASCEND_CANN_PATH}/aarch64-linux/lib64)
+target_link_libraries(ascend_sdk INTERFACE ascendcl nnopbase opapi runtime)
 
 add_subdirectory(array)
 add_subdirectory(cann)

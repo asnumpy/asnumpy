@@ -31,25 +31,22 @@ using namespace AscendC;
 extern "C" __global__ __aicore__ void vector_add(
     __gm__ float* a, __gm__ float* b, __gm__ float* c, int n)
 {
-    TPipe pipe;
-    pipe.Init();
-
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
     int per_block = (n + block_num - 1) / block_num;
     int start = block_idx * per_block;
     int count = (per_block < n - start) ? per_block : (n - start);
 
-    TBuf<TPosition::VECIN> buf_a;
-    TBuf<TPosition::VECIN> buf_b;
+    TPipe pipe;
+    pipe.Init();
+
+    TBuf<TPosition::VECIN> buf_a, buf_b;
     TBuf<TPosition::VECOUT> buf_out;
     pipe.InitBuffer(buf_a, static_cast<uint32_t>(count));
     pipe.InitBuffer(buf_b, static_cast<uint32_t>(count));
     pipe.InitBuffer(buf_out, static_cast<uint32_t>(count));
 
-    GlobalTensor<float> gA;
-    GlobalTensor<float> gB;
-    GlobalTensor<float> gC;
+    GlobalTensor<float> gA, gB, gC;
     gA.SetGlobalBuffer(a + start, static_cast<uint64_t>(count));
     gB.SetGlobalBuffer(b + start, static_cast<uint64_t>(count));
     gC.SetGlobalBuffer(c + start, static_cast<uint64_t>(count));
@@ -76,14 +73,14 @@ using namespace AscendC;
 extern "C" __global__ __aicore__ void fill_const(
     __gm__ float* out, float value, int n)
 {
-    TPipe pipe;
-    pipe.Init();
-
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
     int per_block = (n + block_num - 1) / block_num;
     int start = block_idx * per_block;
     int count = (per_block < n - start) ? per_block : (n - start);
+
+    TPipe pipe;
+    pipe.Init();
 
     TBuf<TPosition::VECIN> buf;
     pipe.InitBuffer(buf, static_cast<uint32_t>(count));
@@ -105,22 +102,21 @@ using namespace AscendC;
 extern "C" __global__ __aicore__ void kernel_one(
     __gm__ float* a, __gm__ float* b, int n)
 {
-    TPipe pipe;
-    pipe.Init();
-
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
     int per_block = (n + block_num - 1) / block_num;
     int start = block_idx * per_block;
     int count = (per_block < n - start) ? per_block : (n - start);
 
+    TPipe pipe;
+    pipe.Init();
+
     TBuf<TPosition::VECIN> buf;
     TBuf<TPosition::VECOUT> buf_out;
     pipe.InitBuffer(buf, static_cast<uint32_t>(count));
     pipe.InitBuffer(buf_out, static_cast<uint32_t>(count));
 
-    GlobalTensor<float> gA;
-    GlobalTensor<float> gB;
+    GlobalTensor<float> gA, gB;
     gA.SetGlobalBuffer(a + start, static_cast<uint64_t>(count));
     gB.SetGlobalBuffer(b + start, static_cast<uint64_t>(count));
 
@@ -134,22 +130,21 @@ extern "C" __global__ __aicore__ void kernel_one(
 extern "C" __global__ __aicore__ void kernel_two(
     __gm__ float* a, __gm__ float* b, int n)
 {
-    TPipe pipe;
-    pipe.Init();
-
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
     int per_block = (n + block_num - 1) / block_num;
     int start = block_idx * per_block;
     int count = (per_block < n - start) ? per_block : (n - start);
 
+    TPipe pipe;
+    pipe.Init();
+
     TBuf<TPosition::VECIN> buf;
     TBuf<TPosition::VECOUT> buf_out;
     pipe.InitBuffer(buf, static_cast<uint32_t>(count));
     pipe.InitBuffer(buf_out, static_cast<uint32_t>(count));
 
-    GlobalTensor<float> gA;
-    GlobalTensor<float> gB;
+    GlobalTensor<float> gA, gB;
     gA.SetGlobalBuffer(a + start, static_cast<uint64_t>(count));
     gB.SetGlobalBuffer(b + start, static_cast<uint64_t>(count));
 
@@ -195,13 +190,19 @@ def mock_compiler_lib():
         _handle_counter[0] += 1
         return _handle_counter[0]
 
-    # Binary lifecycle
+    # Binary lifecycle (ACL path)
     mock.load_binary.return_value = _next_handle()
     mock.unload_binary.return_value = None
     mock.get_function.return_value = _next_handle()
 
+    # Binary lifecycle (RTS path — registered via _rts_loader, not C++)
+    mock.register_binary.return_value = _next_handle()
+    mock.register_function.return_value = None
+    mock.unregister_binary.return_value = None
+
     # Kernel launch
     mock.launch_kernel.return_value = None
+    mock.launch_kernel_rts.return_value = None
 
     # Events
     mock.create_event.return_value = _next_handle()
@@ -217,6 +218,24 @@ def mock_compiler_lib():
 
     # Error
     mock.get_last_error.return_value = ""
+
+    return mock
+
+
+@pytest.fixture
+def mock_rts_loader():
+    """Return a MagicMock that simulates the _rts_loader module."""
+    mock = MagicMock(name="_rts_loader")
+    _handle_counter = [2000]
+
+    def _next_handle():
+        _handle_counter[0] += 1
+        return _handle_counter[0]
+
+    mock.register_binary.return_value = _next_handle()
+    mock.register_function.return_value = None
+    mock.unregister_binary.return_value = None
+    mock.launch_kernel.return_value = None
 
     return mock
 
