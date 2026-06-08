@@ -17,32 +17,11 @@
 """pytest配置文件
 
 这个文件是pytest的入口配置，它告诉pytest如何处理Asnumpy的测试环境：
-- 设置NumPy的弱提升规则
 - 配置多NPU测试环境
 - 启用pytester插件用于测试Asnumpy的测试工具本身
 """
 
-import logging
-
-import numpy
 import pytest
-
-logger = logging.getLogger(__name__)
-
-
-def pytest_configure(config):
-    """pytest配置钩子函数
-
-    在测试开始前进行必要的配置。
-    """
-    # 设置NumPy的弱类型提升规则（如果NumPy版本支持）
-    try:
-        # NumPy 1.20+ 支持弱类型提升
-        if hasattr(numpy, "_set_promotion_state"):
-            numpy._set_promotion_state("weak")
-    except Exception as e:
-        # 忽略设置失败，不影响测试运行
-        logger.debug("Failed to set numpy promotion state: %s", e)
 
 
 def pytest_addoption(parser):
