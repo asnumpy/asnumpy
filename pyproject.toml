@@ -16,9 +16,11 @@
 
 [build-system]
 requires = [
-  "scikit-build-core>=0.11.6",
+  "scikit-build-core>=0.12.1",
   "pybind11>=3.0.0",
-  "numpy>=1.26",
+  "numpy>=2.0",
+  "setuptools-scm==9.2.2",
+  "towncrier>=24",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -37,7 +39,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "numpy>=1.26.0",
+    "numpy>=2.0",
     "loguru>=0.7.0"
 ]
 
