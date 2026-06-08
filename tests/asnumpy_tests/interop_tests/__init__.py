@@ -14,4 +14,4 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""NumPy 2.x 互操作性协议测试包。"""
+"""Tests for NumPy 2.x interoperability protocols."""

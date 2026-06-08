@@ -14,31 +14,29 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""锁定 NumPy 2.x 作为项目基线版本。
-
-这些测试在 CI 中起到哨兵作用：如果环境中安装了 NumPy 1.x，
-版本检查将直接失败，提示开发者/CI 升级依赖。
-"""
+"""Baseline tests locking NumPy 2.x as the required runtime version."""
 
 import numpy as np
 
 
 def test_numpy_major_version_is_two_or_newer():
-    """确认运行环境中的 NumPy 主版本号 >= 2。"""
     major = int(np.__version__.split(".", 1)[0])
-    assert major >= 2, (
-        f"NumPy {np.__version__} 不满足基线要求（需要 >= 2.0）。"
-        f"请升级：pip install 'numpy>=2.0'"
-    )
+    if major < 2:
+        raise AssertionError(
+            f"NumPy {np.__version__} does not meet the baseline requirement (>= 2.0). "
+            f"Upgrade: pip install 'numpy>=2.0'"
+        )
 
 
 def test_numpy_result_type_is_the_dtype_oracle():
-    """确认 np.result_type 可用作 dtype 提升的参考实现（Oracle）。
+    # int32 + float scalar → float64
+    if np.result_type(np.array([1], dtype=np.int32), 1.5) != np.dtype("float64"):
+        raise AssertionError(
+            "np.result_type(int32_array, float_scalar) should be float64"
+        )
 
-    后续任务中 asnumpy 的 dtype promotion 逻辑必须与此行为一致。
-    """
-    # 混合 int32 + float 标量 → float64
-    assert np.result_type(np.array([1], dtype=np.int32), 1.5) == np.dtype("float64")
-
-    # 混合 float32 + float64 标量 → float64（遵循 NumPy 安全提升规则）
-    assert np.result_type(np.array([1], dtype=np.float32), np.float64(1)) == np.dtype("float64")
+    # float32 + float64 scalar → float64 (NumPy safe-casting rule)
+    if np.result_type(np.array([1], dtype=np.float32), np.float64(1)) != np.dtype("float64"):
+        raise AssertionError(
+            "np.result_type(float32_array, float64_scalar) should be float64"
+        )
