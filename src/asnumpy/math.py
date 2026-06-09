@@ -270,79 +270,98 @@ from ._core.math import (
     trunc as _trunc,
 )
 from ._types import ArrayLike, AxisOptional, DTypeLike
+from ._fallback import fallback_to_numpy
 from .utils import _convert_dtype, ndarray
 
 
 # Trigonometric functions
+@fallback_to_numpy
 def sin(x: ArrayLike) -> ndarray:
     return ndarray(_sin(x))
 
 
+@fallback_to_numpy
 def cos(x: ArrayLike) -> ndarray:
     return ndarray(_cos(x))
 
 
+@fallback_to_numpy
 def tan(x: ArrayLike) -> ndarray:
     return ndarray(_tan(x))
 
 
+@fallback_to_numpy
 def arcsin(x: ArrayLike) -> ndarray:
     return ndarray(_arcsin(x))
 
 
+@fallback_to_numpy
 def arccos(x: ArrayLike) -> ndarray:
     return ndarray(_arccos(x))
 
 
+@fallback_to_numpy
 def arctan(x: ArrayLike) -> ndarray:
     return ndarray(_arctan(x))
 
 
+@fallback_to_numpy
 def arctan2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_arctan2(x1, x2))
 
 
+@fallback_to_numpy
 def hypot(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_hypot(x1, x2))
 
 
+@fallback_to_numpy
 def radians(x: ArrayLike) -> ndarray:
     return ndarray(_radians(x))
 
 
+@fallback_to_numpy
 def deg2rad(x: ArrayLike) -> ndarray:
     return ndarray(_radians(x))
 
 
+@fallback_to_numpy
 def degrees(x: ArrayLike) -> ndarray:
     return ndarray(_degrees(x))
 
 
+@fallback_to_numpy
 def rad2deg(x: ArrayLike) -> ndarray:
     return ndarray(_rad2deg(x))
 
 
 # Miscellaneous functions
+@fallback_to_numpy
 def absolute(x: ArrayLike) -> ndarray:
     return ndarray(_absolute(x))
 
 
+@fallback_to_numpy
 def fabs(x: ArrayLike) -> ndarray:
     return ndarray(_fabs(x))
 
 
+@fallback_to_numpy
 def sign(x: ArrayLike) -> ndarray:
     return ndarray(_sign(x))
 
 
+@fallback_to_numpy
 def heaviside(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_heaviside(x1, x2))
 
 
+@fallback_to_numpy
 def clip(a: ArrayLike, a_min: ArrayLike | float, a_max: ArrayLike | float) -> ndarray:
     return ndarray(_clip(a, a_min, a_max))
 
 
+@fallback_to_numpy
 def nan_to_num(
     x: ArrayLike,
     nan: float = 0.0,
@@ -352,91 +371,142 @@ def nan_to_num(
     return ndarray(_nan_to_num(x, nan, posinf, neginf))
 
 
+@fallback_to_numpy
 def sqrt(x: ArrayLike) -> ndarray:
     return ndarray(_sqrt(x))
 
 
+@fallback_to_numpy
 def square(x: ArrayLike) -> ndarray:
     return ndarray(_square(x))
 
 
+@fallback_to_numpy(numpy_func=lambda x: np.maximum(x, 0))
 def relu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_relu(x, _convert_dtype(dtype)))
 
 
+def _numpy_gelu(x):
+    """NumPy GELU approximation for fallback."""
+    return 0.5 * x * (1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * x**3)))
+
+
+@fallback_to_numpy(numpy_func=_numpy_gelu)
 def gelu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_gelu(x, _convert_dtype(dtype)))
 
 
 # Arithmetic operations
+@fallback_to_numpy
 def add(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_add(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def reciprocal(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_reciprocal(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def positive(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_positive(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def negative(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_negative(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def multiply(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_multiply(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def divide(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_divide(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def true_divide(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_true_divide(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def subtract(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_subtract(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def floor_divide(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_floor_divide(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def float_power(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_float_power(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def fmod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fmod(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def mod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_mod(x1, x2, _convert_dtype(dtype)))
 
 
 def modf(x: ArrayLike) -> tuple:
-    frac, inte = _modf(x)
-    return (ndarray(frac), ndarray(inte))
+    try:
+        frac, inte = _modf(x)
+        return (ndarray(frac), ndarray(inte))
+    except Exception:
+        from ._config import get_fallback_state
+
+        if not get_fallback_state().enabled:
+            raise
+        np_x = np.asarray(x.to_numpy() if hasattr(x, "to_numpy") else x)
+        frac, inte = np.modf(np_x)
+        if get_fallback_state().return_device:
+            from ._fallback import _wrap_asnumpy
+
+            return _wrap_asnumpy((frac, inte))
+        return (frac, inte)
 
 
+@fallback_to_numpy
 def remainder(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_remainder(x1, x2, _convert_dtype(dtype)))
 
 
 def divmod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> tuple:
-    res1, res2 = _divmod(x1, x2)
-    _type = _convert_dtype(dtype)
-    return (ndarray(res1, _type), ndarray(res2, _type))
+    try:
+        res1, res2 = _divmod(x1, x2)
+        _type = _convert_dtype(dtype)
+        return (ndarray(res1, _type), ndarray(res2, _type))
+    except Exception:
+        from ._config import get_fallback_state
+
+        if not get_fallback_state().enabled:
+            raise
+        np_x1 = np.asarray(x1.to_numpy() if hasattr(x1, "to_numpy") else x1)
+        np_x2 = np.asarray(x2.to_numpy() if hasattr(x2, "to_numpy") else x2)
+        res1, res2 = np.divmod(np_x1, np_x2)
+        if get_fallback_state().return_device:
+            from ._fallback import _wrap_asnumpy
+
+            return _wrap_asnumpy((res1, res2))
+        return (res1, res2)
 
 
+@fallback_to_numpy
 def power(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_power(x1, x2, _convert_dtype(dtype)))
 
 
 # Sums, products, differences
+@fallback_to_numpy
 def prod(
     a: ArrayLike,
     axis: AxisOptional = None,
@@ -448,6 +518,7 @@ def prod(
     return ndarray(_prod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def sum(
     a: ArrayLike,
     axis: AxisOptional = None,
@@ -459,6 +530,7 @@ def sum(
     return ndarray(_sum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def nanprod(
     a: ArrayLike,
     axis: AxisOptional = None,
@@ -470,6 +542,7 @@ def nanprod(
     return ndarray(_nanprod(a, axis, keepdims, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def nansum(
     a: ArrayLike,
     axis: AxisOptional = None,
@@ -481,69 +554,85 @@ def nansum(
     return ndarray(_nansum(a, axis, keepdims, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def cumprod(a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_cumprod(a, axis, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def cumsum(a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_cumsum(a, axis, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def nancumprod(a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_nancumprod(a, axis, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def nancumsum(a: ArrayLike, axis: AxisOptional = None, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_nancumsum(a, axis, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def cross(a: ArrayLike, b: ArrayLike, axis: AxisOptional = None) -> ndarray:
     return ndarray(_cross(a, b, axis))
 
 
 # Exponents and logarithms
+@fallback_to_numpy
 def exp(x: ArrayLike) -> ndarray:
     return ndarray(_exp(x))
 
 
+@fallback_to_numpy
 def expm1(x: ArrayLike) -> ndarray:
     return ndarray(_expm1(x))
 
 
+@fallback_to_numpy
 def exp2(x: ArrayLike) -> ndarray:
     return ndarray(_exp2(x))
 
 
+@fallback_to_numpy
 def log(x: ArrayLike) -> ndarray:
     return ndarray(_log(x))
 
 
+@fallback_to_numpy
 def log10(x: ArrayLike) -> ndarray:
     return ndarray(_log10(x))
 
 
+@fallback_to_numpy
 def log2(x: ArrayLike) -> ndarray:
     return ndarray(_log2(x))
 
 
+@fallback_to_numpy
 def log1p(x: ArrayLike) -> ndarray:
     return ndarray(_log1p(x))
 
 
+@fallback_to_numpy
 def logaddexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_logaddexp(x1, x2))
 
 
+@fallback_to_numpy
 def logaddexp2(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_logaddexp2(x1, x2))
 
 
 # Handling complex numbers
+@fallback_to_numpy
 def real(x: ArrayLike) -> ndarray:
     return ndarray(_real(x))
 
 
 # Floating point routines
+@fallback_to_numpy
 def signbit(x: ArrayLike) -> ndarray:
     result = ndarray(_signbit(x))
     # CANN's aclnnSignbit does not handle IEEE 754 negative zero (-0.0).
@@ -559,70 +648,86 @@ def signbit(x: ArrayLike) -> ndarray:
     return result
 
 
+@fallback_to_numpy
 def ldexp(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_ldexp(x1, x2))
 
 
+@fallback_to_numpy
 def copysign(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_copysign(x1, x2))
 
 
 # Hyperbolic functions
+@fallback_to_numpy
 def sinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sinh(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def cosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_cosh(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def tanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_tanh(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def arcsinh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arcsinh(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def arccosh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arccosh(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def arctanh(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_arctanh(x, _convert_dtype(dtype)))
 
 
 # Other special functions
+@fallback_to_numpy
 def sinc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_sinc(x, _convert_dtype(dtype)))
 
 
 # Rational routines
+@fallback_to_numpy
 def gcd(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_gcd(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def lcm(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_lcm(x1, x2, _convert_dtype(dtype)))
 
 
 # Rounding
+@fallback_to_numpy
 def around(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_around(x, decimals, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy(numpy_func=np.round)
 def round_(x: ArrayLike, decimals: int = 0, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_round_(x, decimals, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def rint(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_rint(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def fix(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fix(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     converted_dtype = _convert_dtype(dtype)
 
@@ -634,55 +739,66 @@ def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_floor(x, converted_dtype))
 
 
+@fallback_to_numpy
 def ceil(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_ceil(x, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def trunc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_trunc(x, _convert_dtype(dtype)))
 
 
 # Extrema finding
+@fallback_to_numpy
 def maximum(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_maximum(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def minimum(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_minimum(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def fmax(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fmax(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def fmin(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_fmin(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def max(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
         return _max(a)  # type: ignore[no-any-return]
     return ndarray(_max(a, axis, keepdims))
 
 
+@fallback_to_numpy
 def amax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
         return _amax(a)  # type: ignore[no-any-return]
     return ndarray(_amax(a, axis, keepdims))
 
 
+@fallback_to_numpy
 def nanmax(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
         return _nanmax(a)  # type: ignore[no-any-return]
     return ndarray(_nanmax(a, axis, keepdims))
 
 
+@fallback_to_numpy
 def min(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
         return _min(a)  # type: ignore[no-any-return]
     return ndarray(_min(a, axis, keepdims))
 
 
+@fallback_to_numpy
 def amin(a: ArrayLike, axis: AxisOptional = None, keepdims: bool = False) -> ndarray | float:
     if axis is None:
         return _amin(a)  # type: ignore[no-any-return]

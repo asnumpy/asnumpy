@@ -14,10 +14,25 @@
 # limitations under the License.
 # *****************************************************************************
 
+import numpy as np
+
 from ._core.nn import softmax as _softmax
 from ._types import ArrayLike, DTypeLike
+from ._fallback import fallback_to_numpy
 from .utils import _convert_dtype, ndarray
 
 
+def _numpy_softmax(x, axis=-1, dtype=None):
+    """NumPy softmax implementation for fallback."""
+    x_max = np.max(x, axis=axis, keepdims=True)
+    e = np.exp(x - x_max)
+    s = np.sum(e, axis=axis, keepdims=True)
+    result = e / s
+    if dtype is not None:
+        result = result.astype(dtype)
+    return result
+
+
+@fallback_to_numpy(numpy_func=_numpy_softmax)
 def softmax(x: ArrayLike, axis: int = -1, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_softmax(x, axis, _convert_dtype(dtype)))

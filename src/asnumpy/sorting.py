@@ -17,8 +17,10 @@
 
 from ._core.sorting import sort as _sort
 from ._types import ArrayLike
+from ._fallback import fallback_to_numpy
 from .utils import ndarray
 
 
+@fallback_to_numpy
 def sort(a: ArrayLike, axis: int | None = -1, stable: bool = False) -> ndarray:
     return ndarray(_sort(a, axis, stable))

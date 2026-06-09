@@ -17,9 +17,11 @@
 
 from ._core.statistics import mean as _mean
 from ._types import ArrayLike, AxisLike, DTypeLike
+from ._fallback import fallback_to_numpy
 from .utils import _convert_dtype, ndarray
 
 
+@fallback_to_numpy
 def mean(
     a: ArrayLike,
     axis: AxisLike = None,
