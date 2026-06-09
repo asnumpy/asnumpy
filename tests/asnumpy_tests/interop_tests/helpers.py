@@ -29,7 +29,7 @@ def to_numpy(value):
 
 def assert_numpy_equal(actual, expected):
     actual_np = to_numpy(actual)
-    expected_np = np.asarray(expected)
+    expected_np = to_numpy(expected)
     if actual_np.shape != expected_np.shape:
         raise AssertionError(
             f"shape mismatch: {actual_np.shape} != {expected_np.shape}"
@@ -43,7 +43,7 @@ def assert_numpy_equal(actual, expected):
 
 def assert_numpy_allclose(actual, expected, *, rtol=1e-6, atol=1e-6):
     actual_np = to_numpy(actual)
-    expected_np = np.asarray(expected)
+    expected_np = to_numpy(expected)
     if actual_np.shape != expected_np.shape:
         raise AssertionError(
             f"shape mismatch: {actual_np.shape} != {expected_np.shape}"
