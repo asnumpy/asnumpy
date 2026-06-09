@@ -219,6 +219,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# setuptools-scm
+_version.py
+
 # AI
 .claude/
 .cursor/

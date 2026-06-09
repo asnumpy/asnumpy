@@ -57,11 +57,11 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
 # ========== fmt (system package only) ==========
-find_package(fmt REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
+find_package(fmt REQUIRED)
 message(STATUS "Using system fmt: ${fmt_VERSION}")
 
 # ========== spdlog (system package only) ==========
-find_package(spdlog REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake NO_DEFAULT_PATH)
+find_package(spdlog REQUIRED)
 message(STATUS "Using system spdlog: ${spdlog_VERSION}")
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
