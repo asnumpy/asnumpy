@@ -63,72 +63,89 @@ from ._core.logic import (
     not_equal as _not_equal,
 )
 from ._types import ArrayLike, AxisLike, DTypeLike
+from ._fallback import fallback_to_numpy
 from .utils import _convert_dtype, ndarray
 
 
+@fallback_to_numpy
 def all(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:
     if axis is None:
         return ndarray(_all(x))
     return ndarray(_all(x, axis, keepdims))
 
 
+@fallback_to_numpy
 def any(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:
     if axis is None:
         return ndarray(_any(x))
     return ndarray(_any(x, axis, keepdims))
 
 
+@fallback_to_numpy
 def isfinite(x: ArrayLike) -> ndarray:
     return ndarray(_isfinite(x))
 
 
+@fallback_to_numpy
 def isinf(x: ArrayLike) -> ndarray:
     return ndarray(_isinf(x))
 
 
+@fallback_to_numpy
 def isneginf(x: ArrayLike) -> ndarray:
     return ndarray(_isneginf(x))
 
 
+@fallback_to_numpy
 def isposinf(x: ArrayLike) -> ndarray:
     return ndarray(_isposinf(x))
 
 
+@fallback_to_numpy
 def logical_and(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_logical_and(x1, x2))
 
 
+@fallback_to_numpy
 def logical_or(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_logical_or(x1, x2))
 
 
+@fallback_to_numpy
 def logical_not(x: ArrayLike) -> ndarray:
     return ndarray(_logical_not(x))
 
 
+@fallback_to_numpy
 def logical_xor(x1: ArrayLike, x2: ArrayLike) -> ndarray:
     return ndarray(_logical_xor(x1, x2))
 
 
+@fallback_to_numpy
 def greater(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_greater(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def greater_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_greater_equal(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def less(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_less(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def less_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_less_equal(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_equal(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def not_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_not_equal(x1, x2, _convert_dtype(dtype)))

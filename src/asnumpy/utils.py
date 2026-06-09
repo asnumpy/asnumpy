@@ -23,6 +23,7 @@ from loguru import logger
 
 from ._core import broadcast_shape as _broadcast_shape
 from ._core import ndarray as _ndarray
+from ._types import ArrayLike
 
 
 class ndarray(_ndarray):
@@ -126,3 +127,24 @@ def _normalize_shape(shape: int | Sequence[int]) -> list[int]:
         raise ValueError("negative dimensions are not allowed")
 
     return normalized
+
+
+def as_host_array(a: ArrayLike) -> np.ndarray:
+    """Convert any array-like to a host numpy array.
+
+    If the argument is an NPUArray (has ``to_numpy()``), copy its data to host.
+    Otherwise convert via ``np.asarray()``.
+    """
+    if hasattr(a, "to_numpy"):
+        return a.to_numpy()
+    return np.asarray(a)
+
+
+def to_asnumpy_array(value) -> ndarray:
+    """Wrap a numpy array or scalar into an asnumpy ndarray.
+
+    Returns the value unchanged if it is already an asnumpy ndarray.
+    """
+    if isinstance(value, ndarray):
+        return value
+    return ndarray.from_numpy(np.asarray(value))
