@@ -325,6 +325,10 @@ _LAZY_MAPPING = {
     "AxisLike": "._types",
     "AxisOptional": "._types",
     "ScalarLike": "._types",
+    # ._conversion
+    "array": "._conversion",
+    "asarray": "._conversion",
+    "asnumpy": "._conversion",
     # .utils
     "broadcast_shape": ".utils",
     "ndarray": ".utils",

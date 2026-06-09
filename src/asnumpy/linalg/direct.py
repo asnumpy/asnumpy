@@ -16,6 +16,7 @@
 
 import numpy as np
 
+from .._conversion import asarray, asnumpy
 from .._core import (
     dot as _dot,
 )
@@ -29,48 +30,32 @@ from .._types import ArrayLike
 from ..utils import ndarray
 
 
-def _as_host_array(a: ArrayLike) -> np.ndarray:
-    if hasattr(a, "to_numpy"):
-        return a.to_numpy()
-    return np.asarray(a)
-
-
-def _to_asnumpy_array(value) -> ndarray:
-    if isinstance(value, ndarray):
-        return value
-    return ndarray.from_numpy(np.asarray(value))
-
-
 def _requires_fp64_fallback(*arrays: ArrayLike) -> bool:
-    return any(np.asarray(_as_host_array(arr)).dtype == np.float64 for arr in arrays)
+    return any(asnumpy(arr).dtype == np.float64 for arr in arrays)
 
 
 def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
     if _requires_fp64_fallback(a, b):
-        return _to_asnumpy_array(np.dot(_as_host_array(a), _as_host_array(b)))
+        return asarray(np.dot(asnumpy(a), asnumpy(b)))
     return ndarray(_dot(a, b))
 
 
 def inner(a: ArrayLike, b: ArrayLike) -> ndarray:
-    na = _as_host_array(a)
-    nb = _as_host_array(b)
-    return ndarray.from_numpy(np.asarray(np.inner(na, nb)))
+    return asarray(np.inner(asnumpy(a), asnumpy(b)))
 
 
 def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
-    na = _as_host_array(a)
-    nb = _as_host_array(b)
-    return ndarray.from_numpy(np.asarray(np.outer(na, nb)))
+    return asarray(np.outer(asnumpy(a), asnumpy(b)))
 
 
 def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
     if _requires_fp64_fallback(a, b):
-        return _to_asnumpy_array(np.vdot(_as_host_array(a), _as_host_array(b)))
+        return asarray(np.vdot(asnumpy(a), asnumpy(b)))
     return ndarray(_vdot(a, b))
 
 
 def matmul(x1: ArrayLike, x2: ArrayLike) -> ndarray:
-    return _to_asnumpy_array(np.matmul(_as_host_array(x1), _as_host_array(x2)))
+    return asarray(np.matmul(asnumpy(x1), asnumpy(x2)))
 
 
 def einsum(subscripts: str, *operands: ArrayLike) -> ndarray:

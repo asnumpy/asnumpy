@@ -28,18 +28,8 @@ Implements:
 
 import numpy as _np
 
+from ._conversion import asnumpy as _to_numpy
 from ._core import ndarray as NPUArray
-
-
-def _to_numpy(x):
-    """
-    Convert NPUArray to numpy.ndarray if needed.
-    - If input is NPUArray: call x.to_numpy() (implemented in the C++ layer).
-    - If input is already numpy.ndarray: return as-is.
-    """
-    if isinstance(x, NPUArray):
-        return x.to_numpy()
-    return x
 
 
 def save(file, arr, allow_pickle=False):

@@ -17,6 +17,7 @@
 
 import numpy as np
 
+from .._conversion import asarray, asnumpy
 from .._core.linalg import (
     det as _det,
 )
@@ -34,18 +35,6 @@ from .._core.linalg import (
 )
 from .._types import ArrayLike, AxisLike
 from ..utils import ndarray
-
-
-def _as_host_array(a: ArrayLike) -> np.ndarray:
-    if hasattr(a, "to_numpy"):
-        return a.to_numpy()
-    return np.asarray(a)
-
-
-def _to_asnumpy_array(value) -> ndarray:
-    if isinstance(value, ndarray):
-        return value
-    return ndarray.from_numpy(np.asarray(value))
 
 
 def _normalize_norm_axis(axis: AxisLike, ndim: int):
@@ -73,12 +62,12 @@ def _normalize_norm_axis(axis: AxisLike, ndim: int):
 
 
 def matrix_power(a: ArrayLike, n: int) -> ndarray:
-    host = _as_host_array(a)
+    host = asnumpy(a)
     if n < 0:
         sign, logdet = np.linalg.slogdet(host)
         if np.any(sign == 0):
             raise RuntimeError("Singular matrix has no inverse for negative power")
-    return _to_asnumpy_array(np.linalg.matrix_power(host, n))
+    return asarray(np.linalg.matrix_power(host, n))
 
 
 def qr(a: ArrayLike, mode: str = "reduced") -> ndarray | tuple:
@@ -95,7 +84,7 @@ def norm(
     axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
-    host = _as_host_array(a)
+    host = asnumpy(a)
     normalized_axis = _normalize_norm_axis(axis, host.ndim)
 
     try:
@@ -105,7 +94,7 @@ def norm(
             return ndarray(_norm(a, 2.0, (), keepdims))
         raise
 
-    return _to_asnumpy_array(result)
+    return asarray(result)
 
 
 def det(a: ArrayLike) -> ndarray:
@@ -115,7 +104,7 @@ def det(a: ArrayLike) -> ndarray:
 def slogdet(a: ArrayLike) -> tuple:
     # CANN's double-precision slogdet may produce different results from NumPy
     # for inputs containing nan/inf. Fall back to NumPy for such cases.
-    host = a.to_numpy() if hasattr(a, "to_numpy") else np.asarray(a)
+    host = asnumpy(a)
     if np.issubdtype(host.dtype, np.floating) and (
         np.any(np.isnan(host)) or np.any(np.isinf(host))
     ):
