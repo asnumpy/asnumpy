@@ -29,14 +29,17 @@ class FallbackState:
     warn_on_copy: bool = True
 
 
-_fallback_state: contextvars.ContextVar[FallbackState] = contextvars.ContextVar(
+_fallback_state: contextvars.ContextVar[FallbackState | None] = contextvars.ContextVar(
     "asnumpy_fallback_state",
-    default=FallbackState(),
+    default=None,
 )
 
 
 def get_fallback_state() -> FallbackState:
-    return _fallback_state.get()
+    state = _fallback_state.get()
+    if state is None:
+        return FallbackState()
+    return state
 
 
 def auto_fallback(*, enable: bool, return_device: bool = True, warn_on_copy: bool = True) -> None:

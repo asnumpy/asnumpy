@@ -32,7 +32,6 @@ from .._core.linalg import (
 from .._core.linalg import (
     slogdet as _slogdet,
 )
-from .._config import get_fallback_state, warn_copy
 from .._fallback import fallback_to_numpy
 from .._types import ArrayLike, AxisLike
 from ..utils import as_host_array, ndarray

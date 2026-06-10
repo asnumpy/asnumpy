@@ -17,15 +17,15 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
 from ._config import get_fallback_state, warn_copy
-from .utils import as_host_array, to_asnumpy_array
+from .utils import as_host_array, ndarray, to_asnumpy_array
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    pass
 
 
 def fallback_to_numpy(func=None, *, numpy_func=None):
@@ -99,6 +99,14 @@ def _to_host(v):
     if hasattr(v, "to_numpy"):
         return v.to_numpy()
     return v
+
+
+@overload
+def _wrap_asnumpy(value: np.ndarray) -> ndarray: ...
+
+
+@overload
+def _wrap_asnumpy(value: tuple[np.ndarray, ...]) -> tuple[ndarray, ...]: ...
 
 
 def _wrap_asnumpy(value):

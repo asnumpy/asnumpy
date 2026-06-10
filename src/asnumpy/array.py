@@ -49,8 +49,8 @@ from ._core.array import (
 from ._core.array import (
     zeros_like as _zeros_like,
 )
-from ._types import ArrayLike, DTypeLike, ScalarLike, ShapeLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike, DTypeLike, ScalarLike, ShapeLike
 from .utils import _convert_dtype, _normalize_shape, ndarray
 
 

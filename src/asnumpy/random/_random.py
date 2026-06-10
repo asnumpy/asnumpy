@@ -58,8 +58,8 @@ from .._core.random import (
 from .._core.random import (
     weibull as _weibull,
 )
-from .._types import ShapeLike
 from .._fallback import fallback_to_numpy
+from .._types import ShapeLike
 from ..utils import _convert_size, ndarray
 
 

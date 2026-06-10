@@ -16,8 +16,8 @@
 
 
 from ._core.statistics import mean as _mean
-from ._types import ArrayLike, AxisLike, DTypeLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike, AxisLike, DTypeLike
 from .utils import _convert_dtype, ndarray
 
 

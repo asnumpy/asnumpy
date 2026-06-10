@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from loguru import logger
 
-from ._version import __version__
 from ._config import auto_fallback, get_fallback_state, numpy_fallback, warn_copy
+from ._version import __version__
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:

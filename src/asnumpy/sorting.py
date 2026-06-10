@@ -16,8 +16,8 @@
 
 
 from ._core.sorting import sort as _sort
-from ._types import ArrayLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike
 from .utils import ndarray
 
 

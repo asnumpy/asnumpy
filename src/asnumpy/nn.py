@@ -17,8 +17,8 @@
 import numpy as np
 
 from ._core.nn import softmax as _softmax
-from ._types import ArrayLike, DTypeLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike, DTypeLike
 from .utils import _convert_dtype, ndarray
 
 

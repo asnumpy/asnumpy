@@ -31,7 +31,6 @@ def _reset_fallback_state():
 
 
 class TestDecoratorCatchesAndPropagates:
-
     @staticmethod
     def test_catches_exception_and_dispatches_to_numpy():
         @fallback_to_numpy(numpy_func=np.sin)
@@ -63,7 +62,6 @@ class TestDecoratorCatchesAndPropagates:
 
 
 class TestReturnDevice:
-
     @staticmethod
     def test_false_returns_raw_numpy_array():
         @fallback_to_numpy(numpy_func=np.sin)
@@ -87,7 +85,6 @@ class TestReturnDevice:
 
 
 class TestWarnCopy:
-
     @staticmethod
     def test_true_emits_runtime_warning():
         @fallback_to_numpy(numpy_func=np.sin)
@@ -113,7 +110,6 @@ class TestWarnCopy:
 
 
 class TestScalarKwargsPassthrough:
-
     @staticmethod
     def test_axis_and_keepdims_forwarded():
         @fallback_to_numpy(numpy_func=np.sum)
@@ -151,7 +147,6 @@ class TestScalarKwargsPassthrough:
 
 
 class TestCustomNumpyFunc:
-
     @staticmethod
     def test_lambda_function():
         @fallback_to_numpy(numpy_func=lambda x: np.maximum(x, 0))
@@ -174,7 +169,6 @@ class TestCustomNumpyFunc:
 
 
 class TestContextManagerWithDecorator:
-
     @staticmethod
     def test_context_enables_fallback_for_failing_function():
         @fallback_to_numpy(numpy_func=np.sin)
@@ -200,11 +194,10 @@ class TestContextManagerWithDecorator:
         assert ap.get_fallback_state().enabled is False
 
 
-_FKW = dict(enable=True, return_device=False, warn_on_copy=False)
+_FKW = {"enable": True, "return_device": False, "warn_on_copy": False}
 
 
 class TestMathOperatorsWired:
-
     @staticmethod
     def test_sin_fallback_when_npu_fails():
         with mock.patch("asnumpy.math._sin", side_effect=RuntimeError("NPU fail")):
@@ -244,7 +237,6 @@ class TestMathOperatorsWired:
 
 
 class TestLogicOperatorsWired:
-
     @staticmethod
     def test_logical_and_fallback():
         with mock.patch("asnumpy.logic._logical_and", side_effect=RuntimeError("NPU fail")):
@@ -261,7 +253,6 @@ class TestLogicOperatorsWired:
 
 
 class TestArrayCreationWired:
-
     @staticmethod
     def test_zeros_fallback_when_npu_fails():
         with mock.patch("asnumpy.array._zeros", side_effect=RuntimeError("NPU fail")):
@@ -278,7 +269,6 @@ class TestArrayCreationWired:
 
 
 class TestLinalgOperatorsWired:
-
     @staticmethod
     def test_det_fallback_when_npu_fails():
         from asnumpy import linalg
@@ -299,7 +289,6 @@ class TestLinalgOperatorsWired:
 
 
 class TestRandomOperatorsWired:
-
     @staticmethod
     def test_uniform_fallback_when_npu_fails():
         with mock.patch("asnumpy.random._random._uniform", side_effect=RuntimeError("NPU fail")):
@@ -318,7 +307,6 @@ class TestRandomOperatorsWired:
 
 
 class TestTupleReturnOperatorsWired:
-
     @staticmethod
     def test_modf_fallback_when_npu_fails():
         with mock.patch("asnumpy.math._modf", side_effect=RuntimeError("NPU fail")):
@@ -339,7 +327,6 @@ class TestTupleReturnOperatorsWired:
 
 
 class TestSortingStatisticsWired:
-
     @staticmethod
     def test_sort_fallback_when_npu_fails():
         with mock.patch("asnumpy.sorting._sort", side_effect=RuntimeError("NPU fail")):
@@ -356,7 +343,6 @@ class TestSortingStatisticsWired:
 
 
 class TestNnOperatorsWired:
-
     @staticmethod
     def test_softmax_fallback_when_npu_fails():
         with mock.patch("asnumpy.nn._softmax", side_effect=RuntimeError("NPU fail")):
@@ -369,7 +355,6 @@ class TestNnOperatorsWired:
 
 
 class TestDisabledFallbackTransparent:
-
     @staticmethod
     def test_sin_with_disabled_fallback_raises_on_npu_failure():
         ap.auto_fallback(enable=False)

@@ -62,8 +62,8 @@ from ._core.logic import (
 from ._core.logic import (
     not_equal as _not_equal,
 )
-from ._types import ArrayLike, AxisLike, DTypeLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike, AxisLike, DTypeLike
 from .utils import _convert_dtype, ndarray
 
 

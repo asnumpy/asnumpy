@@ -269,8 +269,8 @@ from ._core.math import (
 from ._core.math import (
     trunc as _trunc,
 )
-from ._types import ArrayLike, AxisOptional, DTypeLike
 from ._fallback import fallback_to_numpy
+from ._types import ArrayLike, AxisOptional, DTypeLike
 from .utils import _convert_dtype, ndarray
 
 
