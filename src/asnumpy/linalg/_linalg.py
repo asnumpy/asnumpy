@@ -32,20 +32,10 @@ from .._core.linalg import (
 from .._core.linalg import (
     slogdet as _slogdet,
 )
+from .._config import get_fallback_state, warn_copy
+from .._fallback import fallback_to_numpy
 from .._types import ArrayLike, AxisLike
-from ..utils import ndarray
-
-
-def _as_host_array(a: ArrayLike) -> np.ndarray:
-    if hasattr(a, "to_numpy"):
-        return a.to_numpy()
-    return np.asarray(a)
-
-
-def _to_asnumpy_array(value) -> ndarray:
-    if isinstance(value, ndarray):
-        return value
-    return ndarray.from_numpy(np.asarray(value))
+from ..utils import as_host_array, ndarray
 
 
 def _normalize_norm_axis(axis: AxisLike, ndim: int):
@@ -73,14 +63,15 @@ def _normalize_norm_axis(axis: AxisLike, ndim: int):
 
 
 def matrix_power(a: ArrayLike, n: int) -> ndarray:
-    host = _as_host_array(a)
+    host = as_host_array(a)
     if n < 0:
         sign, logdet = np.linalg.slogdet(host)
         if np.any(sign == 0):
             raise RuntimeError("Singular matrix has no inverse for negative power")
-    return _to_asnumpy_array(np.linalg.matrix_power(host, n))
+    return ndarray.from_numpy(np.asarray(np.linalg.matrix_power(host, n)))
 
 
+@fallback_to_numpy(numpy_func=np.linalg.qr)
 def qr(a: ArrayLike, mode: str = "reduced") -> ndarray | tuple:
     result = _qr(a, mode)
     if isinstance(result, tuple):
@@ -95,7 +86,7 @@ def norm(
     axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
-    host = _as_host_array(a)
+    host = as_host_array(a)
     normalized_axis = _normalize_norm_axis(axis, host.ndim)
 
     try:
@@ -105,17 +96,19 @@ def norm(
             return ndarray(_norm(a, 2.0, (), keepdims))
         raise
 
-    return _to_asnumpy_array(result)
+    return ndarray.from_numpy(np.asarray(result))
 
 
+@fallback_to_numpy(numpy_func=np.linalg.det)
 def det(a: ArrayLike) -> ndarray:
     return ndarray(_det(a))
 
 
+@fallback_to_numpy(numpy_func=np.linalg.slogdet)
 def slogdet(a: ArrayLike) -> tuple:
     # CANN's double-precision slogdet may produce different results from NumPy
     # for inputs containing nan/inf. Fall back to NumPy for such cases.
-    host = a.to_numpy() if hasattr(a, "to_numpy") else np.asarray(a)
+    host = as_host_array(a)
     if np.issubdtype(host.dtype, np.floating) and (
         np.any(np.isnan(host)) or np.any(np.isinf(host))
     ):
@@ -124,5 +117,6 @@ def slogdet(a: ArrayLike) -> tuple:
     return (ndarray(sign), ndarray(logdet))
 
 
+@fallback_to_numpy(numpy_func=np.linalg.inv)
 def inv(a: ArrayLike) -> ndarray:
     return ndarray(_inv(a))

@@ -14,6 +14,8 @@
 # limitations under the License.
 # *****************************************************************************
 
+import numpy as np
+
 from .._core.random import (
     binomial as _binomial,
 )
@@ -57,60 +59,75 @@ from .._core.random import (
     weibull as _weibull,
 )
 from .._types import ShapeLike
+from .._fallback import fallback_to_numpy
 from ..utils import _convert_size, ndarray
 
 
+@fallback_to_numpy(numpy_func=np.random.pareto)
 def pareto(a: float, size: ShapeLike) -> ndarray:
     return ndarray(_pareto(a, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.rayleigh)
 def rayleigh(scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_rayleigh(scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.normal)
 def normal(loc: float, scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_normal(loc, scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.uniform)
 def uniform(low: float, high: float, size: ShapeLike) -> ndarray:
     return ndarray(_uniform(low, high, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.standard_normal)
 def standard_normal(size: ShapeLike) -> ndarray:
     return ndarray(_standard_normal(_convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.standard_cauchy)
 def standard_cauchy(size: ShapeLike) -> ndarray:
     return ndarray(_standard_cauchy(_convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.weibull)
 def weibull(a: float, size: ShapeLike) -> ndarray:
     return ndarray(_weibull(a, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.binomial)
 def binomial(n: int, p: float, size: ShapeLike) -> ndarray:
     return ndarray(_binomial(n, p, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.exponential)
 def exponential(scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_exponential(scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.geometric)
 def geometric(p: float, size: ShapeLike) -> ndarray:
     return ndarray(_geometric(p, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.gumbel)
 def gumbel(loc: float, scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_gumbel(loc, scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.laplace)
 def laplace(loc: float, scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_laplace(loc, scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.logistic)
 def logistic(loc: float, scale: float, size: ShapeLike) -> ndarray:
     return ndarray(_logistic(loc, scale, _convert_size(size)))
 
 
+@fallback_to_numpy(numpy_func=np.random.lognormal)
 def lognormal(mean: float, sigma: float, size: ShapeLike) -> ndarray:
     return ndarray(_lognormal(mean, sigma, _convert_size(size)))
