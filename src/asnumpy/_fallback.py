@@ -102,11 +102,13 @@ def _to_host(v):
 
 
 @overload
-def _wrap_asnumpy(value: np.ndarray) -> ndarray: ...
+def _wrap_asnumpy(value: np.ndarray) -> ndarray: 
+    ...
 
 
 @overload
-def _wrap_asnumpy(value: tuple[np.ndarray, ...]) -> tuple[ndarray, ...]: ...
+def _wrap_asnumpy(value: tuple[np.ndarray, ...]) -> tuple[ndarray, ...]: 
+    ...
 
 
 def _wrap_asnumpy(value):
