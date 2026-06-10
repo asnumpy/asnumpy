@@ -56,12 +56,38 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 # NumPy include
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# ========== fmt (system package only) ==========
-find_package(fmt REQUIRED)
+# ========== Detect multiarch library path for system apt packages ==========
+if(NOT DEFINED CMAKE_LIBRARY_ARCHITECTURE OR CMAKE_LIBRARY_ARCHITECTURE STREQUAL "")
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -print-multiarch
+    OUTPUT_VARIABLE _asnumpy_multiarch
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+else()
+  set(_asnumpy_multiarch "${CMAKE_LIBRARY_ARCHITECTURE}")
+endif()
+
+# System cmake config search paths (apt packages), covering multiarch and legacy layouts.
+# NO_DEFAULT_PATH avoids picking up conda/pip packages that conflict with system spdlog.
+set(_asnumpy_system_cmake_paths
+  /usr/lib/${_asnumpy_multiarch}/cmake
+  /usr/lib64/cmake
+  /usr/lib/cmake
+)
+
+# ========== fmt (system apt package only) ==========
+find_package(fmt REQUIRED
+  PATHS ${_asnumpy_system_cmake_paths}
+  NO_DEFAULT_PATH
+)
 message(STATUS "Using system fmt: ${fmt_VERSION}")
 
-# ========== spdlog (system package only) ==========
-find_package(spdlog REQUIRED)
+# ========== spdlog (system apt package only) ==========
+find_package(spdlog REQUIRED
+  PATHS ${_asnumpy_system_cmake_paths}
+  NO_DEFAULT_PATH
+)
 message(STATUS "Using system spdlog: ${spdlog_VERSION}")
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
