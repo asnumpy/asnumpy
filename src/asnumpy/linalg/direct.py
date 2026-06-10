@@ -30,8 +30,14 @@ from .._types import ArrayLike
 from ..utils import as_host_array, ndarray
 
 
+def _requires_fp64_fallback(*arrays: ArrayLike) -> bool:
+    return any(np.asarray(_as_host_array(arr)).dtype == np.float64 for arr in arrays)
+
+
 @fallback_to_numpy
 def dot(a: ArrayLike, b: ArrayLike) -> ndarray:
+    if _requires_fp64_fallback(a, b):
+        return _to_asnumpy_array(np.dot(as_host_array(a), as_host_array(b)))
     return ndarray(_dot(a, b))
 
 
@@ -49,6 +55,8 @@ def outer(a: ArrayLike, b: ArrayLike) -> ndarray:
 
 @fallback_to_numpy
 def vdot(a: ArrayLike, b: ArrayLike) -> ndarray:
+    if _requires_fp64_fallback(a, b):
+        return _to_asnumpy_array(np.vdot(as_host_array(a), as_host_array(b)))
     return ndarray(_vdot(a, b))
 
 
