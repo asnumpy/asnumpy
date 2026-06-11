@@ -54,6 +54,10 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
 # ========== fmt ==========
+# Prefer conda-installed fmt over system to ensure version compatibility with spdlog
+if(DEFINED ENV{CONDA_PREFIX})
+    list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+endif()
 find_package(fmt REQUIRED)
 message(STATUS "Using fmt: ${fmt_VERSION}")
 
