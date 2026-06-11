@@ -14,246 +14,145 @@
 # limitations under the License.
 # *****************************************************************************
 
-"""SourceModule -- JIT-compile and launch Ascend C kernels from Python source strings.
+"""SourceModule — JIT-compile Ascend C kernel source and expose callable functions.
 
-Analogous to ``pycuda.compiler.SourceModule``.
+Analogous to ``pycuda.compiler.SourceModule``.  ~150 lines.
+
+Pipeline:
+  source → bisheng → .o → objcopy (.aicore_binary) → rtDevBinaryRegister
+         → rtFunctionRegister → ready to launch
 """
 
-import atexit
+import os
 import re
 import subprocess
 import tempfile
 import warnings
 from pathlib import Path
 
-from . import bisheng_compiler, cache
-from .kernel_function import ArgSpec, KernelFunction
-
-
-def _get_lib():
-    """Lazy import of the C extension module (asnumpy._core.compiler).
-
-    The module-level import is deferred so that pure-Python code paths
-    (e.g. signature parsing, compilation) can be tested without a built
-    C extension.
-    """
-    from .._core import compiler as cmod
-    return cmod
+from . import _rt
+from .kernel_function import KernelFunction
 
 # ---------------------------------------------------------------------------
-# Regex patterns for signature parsing
+# bisheng compiler helpers
 # ---------------------------------------------------------------------------
 
-_SIGNATURE_RE = re.compile(
-    r'extern\s+"C"\s+__global__\s+__aicore__\s+void\s+'
-    r'(\w+)\s*\(([^)]*)\)'
+_ASCEND_HOME = os.environ.get(
+    "ASCEND_TOOLKIT_HOME",
+    os.environ.get("ASCEND_HOME_PATH", "/usr/local/Ascend/ascend-toolkit/latest"),
 )
 
-_PTR_PARAM_RE = re.compile(
-    r'__gm__\s+(const\s+)?(\w+)\s*\*\s*(?:__restrict__\s+)?(\w+)'
-)
+_BISHENG_CANDIDATES = [
+    os.path.join(_ASCEND_HOME, "tools", "bisheng_compiler", "bin", "bisheng"),
+    os.path.join(_ASCEND_HOME, "tools", "ccec_compiler", "bin", "bisheng"),
+    os.path.join(_ASCEND_HOME, "compiler", "ccec_compiler", "bin", "bisheng"),
+]
 
-_SCALAR_PARAM_RE = re.compile(
-    r'\b(int|int32_t|int64_t|long\s+long|float|double|bool|half|short)\s+(\w+)'
-)
-
-_C_TYPE_MAP: dict[str, tuple[str, int]] = {
-    "int": ("int32", 4), "int32_t": ("int32", 4),
-    "int64_t": ("int64", 8), "long long": ("int64", 8),
-    "float": ("float32", 4),
-    "double": ("float64", 8),
-    "bool": ("bool", 1),
-    "half": ("float16", 2),
-    "short": ("int16", 2),
-    # convenience aliases
-    "int32": ("int32", 4),
-    "int64": ("int64", 8),
-    "float32": ("float32", 4),
-    "float64": ("float64", 8),
-}
-
-# ---------------------------------------------------------------------------
-# atexit cleanup registry
-# ---------------------------------------------------------------------------
-
-_atexit_registry: list["SourceModule"] = []
+_ASCENDC_INCLUDE = os.path.join(_ASCEND_HOME, "aarch64-linux", "ascendc", "include")
+_ASC_INCLUDE = os.path.join(_ASCEND_HOME, "aarch64-linux", "asc", "include")
 
 
-@atexit.register
-def _cleanup_all_sources() -> None:
-    """Release all binary handles before CANN finalize.
-
-    Registered via atexit; since SourceModule instances are created after
-    asnumpy/__init__.py's own atexit callback (which calls aclFinalize),
-    this callback runs FIRST (LIFO order), unloading binaries while CANN
-    is still alive.
-    """
-    for mod in _atexit_registry:
-        try:
-            mod.close()
-        except Exception:
-            pass
+def _find_bisheng() -> str:
+    """Find the bisheng compiler binary."""
+    for p in _BISHENG_CANDIDATES:
+        if os.path.isfile(p):
+            return p
+    raise FileNotFoundError(
+        "bisheng compiler not found. Checked:\n"
+        + "\n".join(f"  - {p}" for p in _BISHENG_CANDIDATES)
+        + f"\nSet ASCEND_TOOLKIT_HOME environment variable."
+    )
 
 
-# ---------------------------------------------------------------------------
-# Signature parsing
-# ---------------------------------------------------------------------------
+def _compile(source: str, options: list[str] | None,
+             arch: str, core_type: str) -> Path:
+    """Compile Ascend C source via bisheng, return path to kernel.o."""
+    bisheng = _find_bisheng()
+    build_dir = Path(tempfile.mkdtemp(prefix="asnumpy_"))
+    src_file = build_dir / "kernel.cpp"
+    src_file.write_text(source, encoding="utf-8")
 
-def _parse_kernel_signature(source: str, kernel_name: str) -> list[ArgSpec]:
-    """Parse the parameter list of a specific kernel function from source code.
+    include_dirs = [
+        _ASCENDC_INCLUDE,
+        os.path.join(_ASCENDC_INCLUDE, "basic_api"),
+        os.path.join(_ASCENDC_INCLUDE, "highlevel_api"),
+        os.path.join(_ASCENDC_INCLUDE, "basic_api", "impl"),
+        os.path.join(_ASCENDC_INCLUDE, "basic_api", "interface"),
+    ]
+    # CANN 9.x: additional aarch64-linux/asc paths for utility headers
+    # (e.g., include/utils/std/tuple.h)
+    asc_root = os.path.join(_ASCEND_HOME, "aarch64-linux", "asc")
+    if os.path.isdir(asc_root):
+        include_dirs.append(asc_root)
+        include_dirs.append(os.path.join(asc_root, "include"))
 
-    Parameters
-    ----------
-    source:
-        Ascend C kernel source string.
-    kernel_name:
-        The kernel function name to look for.
+    cmd = [bisheng]
+    if options:
+        cmd.extend(options)
+    cmd += [
+        f"--cce-soc-version={arch}",
+        f"--cce-soc-core-type={core_type}",
+        "--cce-aicore-lang",
+        "--cce-aicore-arch=da-vinci",
+        "--std=c++17", "-O2", "-fPIC", "-shared",
+    ]
+    for inc in include_dirs:
+        cmd.append(f"-I{inc}")
+    cmd += [str(src_file), "-o", str(build_dir / "kernel.o")]
 
-    Returns
-    -------
-    list of ArgSpec
-        Parsed parameter specifications.
-
-    Raises
-    ------
-    ValueError
-        If the kernel is not found or parameter parsing fails.
-    """
-    for match in _SIGNATURE_RE.finditer(source):
-        if match.group(1) == kernel_name:
-            params_str = match.group(2).strip()
-            if not params_str:
-                return []
-            specs = []
-            for param in params_str.split(","):
-                param = param.strip()
-                if not param:
-                    continue
-
-                # Try pointer parameter first (__gm__ float* name)
-                ptr_match = _PTR_PARAM_RE.match(param)
-                if ptr_match:
-                    type_name = ptr_match.group(2)
-                    param_name = ptr_match.group(3)
-                    specs.append(ArgSpec(
-                        name=param_name,
-                        arg_type=f"{type_name}*",
-                        is_pointer=True,
-                        size_bytes=8,
-                    ))
-                    continue
-
-                # Try scalar parameter
-                scalar_match = _SCALAR_PARAM_RE.match(param)
-                if scalar_match:
-                    c_type = scalar_match.group(1)
-                    param_name = scalar_match.group(2)
-                    type_info = _C_TYPE_MAP.get(c_type, ("int32", 4))
-                    specs.append(ArgSpec(
-                        name=param_name,
-                        arg_type=type_info[0],
-                        is_pointer=False,
-                        size_bytes=type_info[1],
-                    ))
-                    continue
-
-                raise ValueError(
-                    f"Cannot parse kernel parameter: '{param}' "
-                    f"in kernel '{kernel_name}'"
-                )
-            return specs
-
-    raise ValueError(f"Kernel '{kernel_name}' not found in source")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"bisheng compilation failed (exit {result.returncode}):\n"
+            f"{result.stderr}"
+        )
+    o_file = build_dir / "kernel.o"
+    if not o_file.exists():
+        raise RuntimeError("bisheng succeeded but kernel.o was not produced")
+    return o_file
 
 
-def _manual_signature_to_arg_specs(signature: list[str]) -> list[ArgSpec]:
-    """Convert a user-provided signature list to ArgSpec objects.
-
-    Signature entries look like ``"float32*"`` (pointer) or ``"int32"`` (scalar).
-    """
-    specs = []
-    for i, entry in enumerate(signature):
-        entry = entry.strip()
-        if entry.endswith("*"):
-            type_name = entry[:-1]
-            specs.append(ArgSpec(
-                name=f"arg{i}",
-                arg_type=entry,
-                is_pointer=True,
-                size_bytes=8,
-            ))
-        else:
-            type_info = _C_TYPE_MAP.get(entry, (entry, 4))
-            specs.append(ArgSpec(
-                name=f"arg{i}",
-                arg_type=type_info[0],
-                is_pointer=False,
-                size_bytes=type_info[1],
-            ))
-    return specs
-
-
-# ---------------------------------------------------------------------------
-# Kernel symbol listing
-# ---------------------------------------------------------------------------
-
-def _list_kernel_symbols(o_file: str) -> list[str]:
-    """Extract kernel function names from a compiled .o file.
-
-    Uses ``objdump -t`` to parse the symbol table and find global text symbols
-    (``extern "C"`` kernel entry points).
-    """
+def _extract_elf(o_file: Path) -> bytes:
+    """Extract .aicore_binary section (inner AI Core ELF) from bisheng .o."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".elf") as tmp:
+        tmp_path = tmp.name
     try:
         result = subprocess.run(
-            ["objdump", "-t", o_file],
-            capture_output=True, text=True, check=True,
+            ["objcopy", "--dump-section", f".aicore_binary={tmp_path}",
+             str(o_file)],
+            capture_output=True, text=True,
         )
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # Fallback: try nm
-        try:
-            result = subprocess.run(
-                ["nm", o_file],
-                capture_output=True, text=True, check=True,
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"objcopy failed to extract .aicore_binary:\n{result.stderr}"
             )
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return []
-
-    symbols = []
-    for line in result.stdout.splitlines():
-        parts = line.split()
-        # objdump format: address flags section ... name
-        # nm format:      address type name
-        if len(parts) >= 3:
-            # objdump: "g" flag and ".text" section indicates global text symbol
-            if len(parts) >= 5 and parts[1] == "g" and parts[3] == ".text":
-                name = parts[-1]
-            # nm: "T" or "t" type indicates text (code) symbol
-            elif parts[1] in ("T", "t") and len(parts) == 3:
-                name = parts[-1]
-            else:
-                continue
-            if name and not name.startswith(".") and not name.startswith("_"):
-                symbols.append(name)
-    return list(set(symbols))  # deduplicate
+        data = Path(tmp_path).read_bytes()
+        if not data:
+            raise RuntimeError(".aicore_binary section is empty")
+        return data
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
-# Source pre-check
+# Symbol listing
 # ---------------------------------------------------------------------------
 
-def _check_extern_c(source: str) -> None:
-    """Warn if the source does not contain ``extern "C"``."""
-    if 'extern "C"' not in source:
-        warnings.warn(
-            "Kernel source does not contain 'extern \"C\"'. "
-            "Kernel functions may not be found by aclrtBinaryGetFunction.",
-            stacklevel=3,
-        )
+_KERNEL_RE = re.compile(
+    r'extern\s+"C"\s+__global__\s+__aicore__\s+void\s+'
+    r'(\w+)\s*\([^)]*\)'
+)
+
+
+def _find_kernels(source: str) -> list[str]:
+    """Find kernel function names in Ascend C source."""
+    return [m.group(1) for m in _KERNEL_RE.finditer(source)]
 
 
 # ---------------------------------------------------------------------------
 # SourceModule
 # ---------------------------------------------------------------------------
+
 
 class SourceModule:
     """JIT-compile an Ascend C kernel source string and expose callable functions.
@@ -266,31 +165,17 @@ class SourceModule:
         Ascend C kernel source code.
     options:
         Additional bisheng compiler options (e.g. ``["-O3"]``).
-    include_dirs:
-        User-specified additional include directories.
-    cache_dir:
-        Cache directory path. Defaults to ``~/.asnumpy/cache/``.
-    disable_cache:
-        If ``True``, skip caching and always recompile.
-    keep:
-        If ``True``, keep intermediate build artifacts.
-    verbose:
-        If ``True``, print compilation commands and progress.
-    soc_version:
-        Target SoC version (e.g. ``"Ascend910B1"``).
+    arch:
+        Target SoC version (default ``"Ascend910B4"``).
     core_type:
-        AI Core type (``"VecCore"``, ``"CubeCore"``, or ``"AICore"``).
-    compiler:
-        Path to bisheng compiler. ``None`` to auto-detect from ``ASCEND_TOOLKIT_HOME``.
+        AI Core type (default ``"VecCore"``).
 
     Examples
     --------
     >>> mod = SourceModule('''
-    ...     #include "kernel_operator.h"
-    ...     using namespace AscendC;
     ...     extern "C" __global__ __aicore__ void my_add(
     ...         __gm__ float* a, __gm__ float* b, __gm__ float* c, int n)
-    ...     { /* ... */ }
+    ...     { /* Ascend C kernel body */ }
     ... ''')
     >>> kernel = mod.get_function("my_add")
     >>> kernel(a_npu, b_npu, c_npu, 1024, grid=(8,))
@@ -300,148 +185,56 @@ class SourceModule:
         self,
         source: str,
         options: list[str] | None = None,
-        include_dirs: list[str] | None = None,
-        cache_dir: str | None = None,
-        disable_cache: bool = False,
-        keep: bool = False,
-        verbose: bool = False,
-        soc_version: str = "Ascend910B4",
+        arch: str = "Ascend910B4",
         core_type: str = "VecCore",
-        compiler: str | None = None,
     ):
         self.source = source
-        self._options = options or []
-        self._include_dirs = include_dirs
-        self._keep = keep
-        self._verbose = verbose
-        self._soc_version = soc_version
-        self._core_type = core_type
-
         self._bin_handle: int | None = None
-        self._functions: dict[str, int] = {}     # name -> func_handle
-        self._kernel_names: list[str] = []
-        self._closed = False
-        self._build_dir: Path | None = None
+        self._kernels: list[str] = []
 
-        # 1. Check for extern "C"
-        _check_extern_c(source)
+        # 1. Pre-check
+        if 'extern "C"' not in source:
+            warnings.warn(
+                "Kernel source does not contain 'extern \"C\"'. "
+                "Kernels may not be discoverable.",
+                stacklevel=2,
+            )
 
-        # 2. Compute cache key
-        compiler_ver = cache.get_compiler_version()
-        self._cache_key = cache.compute_cache_key(
-            source, self._options, soc_version, compiler_ver, include_dirs
-        )
+        # 2. Compile
+        o_path = _compile(source, options, arch, core_type)
 
-        # 3. Compile (or load from cache)
-        o_path: str | None = None
+        # 3. Extract inner AI Core ELF from .aicore_binary section
+        elf_data = _extract_elf(o_path)
 
-        if not disable_cache:
-            cached = cache.cache_hit(self._cache_key)
-            if cached is not None:
-                o_path = str(cached)
-                if verbose:
-                    print(f"[SourceModule] Cache hit: {cached}")
+        # 4. Register binary via RTS
+        self._bin_handle = _rt.register_binary(elf_data)
 
-        if o_path is None:
-            o_path = self._compile()
+        # 5. Discover and register kernel functions
+        self._kernels = _find_kernels(source)
+        for name in self._kernels:
+            _rt.register_function(self._bin_handle, name)
 
-            if not disable_cache and self._build_dir is not None:
-                cache.store_in_cache(self._cache_key, self._build_dir)
-
-        # 4. Load binary via RTS path (rtDevBinaryRegister with inner ELF).
-        #    The inner ELF is extracted from the .aicore_binary section of the
-        #    bisheng-compiled .o.  We use RT_DEV_BINARY_MAGIC_ELF_AIVEC
-        #    (0x41415246) which matches the VecCore output.
-        from . import _rts_loader
-
-        aicore_elf = bisheng_compiler.extract_aicore_elf(Path(o_path))
-        self._bin_handle = _rts_loader.register_binary(aicore_elf)
-
-        # 5. Discover kernel symbols and register them
-        self._kernel_names = _list_kernel_symbols(o_path)
-        self._functions: dict[str, int] = {}     # name -> bin_handle
-        for name in self._kernel_names:
-            try:
-                _rts_loader.register_function(self._bin_handle, name)
-            except Exception as e:
-                if verbose:
-                    print(f"[SourceModule] Warning: failed to register "
-                          f"'{name}': {e}")
-
-        # 6. Register for atexit cleanup
-        _atexit_registry.append(self)
-
-    # -- public API ----------------------------------------------------------
-
-    def get_function(
-        self, name: str, signature: list[str] | None = None
-    ) -> KernelFunction:
-        """Get a callable :class:`KernelFunction` for the named kernel.
+    def get_function(self, name: str,
+                     signature: list[str] | None = None) -> KernelFunction:
+        """Return a callable :class:`KernelFunction` for the named kernel.
 
         Parameters
         ----------
         name:
             Kernel function name.
         signature:
-            Optional explicit signature list (e.g. ``["float32*", "int32"]``).
-            If ``None``, the signature is parsed from the source code.
+            Optional explicit type signature, e.g. ``["float32*", "int32"]``.
         """
-        if name not in self._kernel_names:
-            available = list(self._kernel_names)
+        if name not in self._kernels:
             raise ValueError(
-                f"Kernel '{name}' not found. Available: {available}"
+                f"Kernel '{name}' not found. "
+                f"Available: {list(self._kernels)}"
             )
+        return KernelFunction(name, signature, bin_handle=self._bin_handle)
 
-        if signature is not None:
-            arg_specs = _manual_signature_to_arg_specs(signature)
-        else:
-            arg_specs = _parse_kernel_signature(self.source, name)
-
-        return KernelFunction(name, 0, arg_specs, use_rts=True)
-
-    def list_functions(self) -> list[str]:
-        """Return the list of kernel function names in this module."""
-        return list(self._kernel_names)
-
-    def close(self) -> None:
-        """Release the binary handle. Safe to call multiple times."""
-        if not self._closed and self._bin_handle is not None:
-            from . import _rts_loader
-            _rts_loader.unregister_binary(self._bin_handle)
-            self._bin_handle = None
-            self._functions.clear()
-            self._closed = True
-
-    def __del__(self) -> None:
-        self.close()
-
-    def __enter__(self) -> "SourceModule":
-        return self
-
-    def __exit__(self, *args: object) -> None:
-        self.close()
-
-    # -- internal ------------------------------------------------------------
-
-    def _compile(self) -> str:
-        """Compile source via bisheng, return path to .o file."""
-        if self._keep:
-            build_dir = Path(tempfile.mkdtemp(prefix="asnumpy_src_"))
-        else:
-            build_dir = Path(tempfile.mkdtemp(prefix="asnumpy_compile_"))
-
-        self._build_dir = build_dir
-
-        # Write source to build dir for cache storage
-        (build_dir / "source.cpp").write_text(self.source, encoding="utf-8")
-
-        o_file = bisheng_compiler.compile_kernel(
-            self.source,
-            build_dir,
-            options=self._options,
-            include_dirs=self._include_dirs,
-            soc_version=self._soc_version,
-            core_type=self._core_type,
-            verbose=self._verbose,
-        )
-        return str(o_file)
+    def __del__(self):
+        if self._bin_handle is not None:
+            try:
+                _rt.unregister_binary(self._bin_handle)
+            except Exception:
+                pass

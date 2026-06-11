@@ -226,3 +226,13 @@ __marimo__/
 .trellis/
 AGENTS.md
 CLAUDE.md
+
+# scikit-build-core
+_skbuild/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Temporary design / planning documents
+source_module_design.md
