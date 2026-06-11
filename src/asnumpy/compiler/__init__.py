@@ -15,6 +15,6 @@
 # *****************************************************************************
 
 from .source_module import SourceModule
-from .kernel_function import KernelFunction, PreparedKernel
+from .kernel_function import KernelFunction
 
-__all__ = ["SourceModule", "KernelFunction", "PreparedKernel"]
+__all__ = ["SourceModule", "KernelFunction"]

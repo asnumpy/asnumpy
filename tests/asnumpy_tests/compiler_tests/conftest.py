@@ -16,12 +16,44 @@
 
 """Test fixtures for compiler module tests."""
 
+import os
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 # ==========================================================================
-# Kernel source fixtures (verified against CANN 8.2.RC1 Ascend C API)
+# Skip markers
+# ==========================================================================
+
+def _bisheng_available() -> bool:
+    """Return True if the bisheng compiler can be located."""
+    from asnumpy.compiler.source_module import _find_bisheng
+    try:
+        _find_bisheng()
+        return True
+    except Exception:
+        return False
+
+
+requires_bisheng = pytest.mark.skipif(
+    not _bisheng_available(),
+    reason="Requires bisheng compiler",
+)
+
+requires_npu = requires_bisheng  # same env check for now
+
+# CANN 9.1 + Ascend 910B4: bisheng generates code that causes AI Core
+# "Illegal instruction" (errCode=0x10) for arithmetic ops (Add, Mul, etc).
+# Only DataCopy and Duplicate work correctly.
+requires_kernel_exec = pytest.mark.skip(
+    reason="Bisheng compiler on 910B4 generates illegal AI Core instructions "
+    "for arithmetic ops. DataCopy and Duplicate work correctly. "
+    "TODO: retest with fixed bisheng compiler."
+)
+
+
+# ==========================================================================
+# Kernel source fixtures (verified against CANN 8.2+ Ascend C API)
 # ==========================================================================
 
 VECTOR_ADD_SOURCE = r"""
@@ -173,81 +205,41 @@ def multi_kernel_source() -> str:
 
 
 # ==========================================================================
-# Mock fixtures — simulate asnumpy._core.compiler C extension for unit tests
+# Mock fixtures for _rt module
 # ==========================================================================
 
 @pytest.fixture
-def mock_compiler_lib():
-    """Return a MagicMock that simulates the asnumpy._core.compiler module.
-
-    Provides fake implementations for all binary loading, kernel launching,
-    event, and stream functions.  Each call generates a unique handle.
-    """
-    mock = MagicMock(name="compiler")
+def mock_rt():
+    """Return a MagicMock that patches asnumpy.compiler._rt."""
+    mock = MagicMock(name="_rt")
     _handle_counter = [1000]
 
     def _next_handle():
         _handle_counter[0] += 1
         return _handle_counter[0]
 
-    # Binary lifecycle (ACL path)
-    mock.load_binary.return_value = _next_handle()
-    mock.unload_binary.return_value = None
-    mock.get_function.return_value = _next_handle()
-
-    # Binary lifecycle (RTS path — registered via _rts_loader, not C++)
     mock.register_binary.return_value = _next_handle()
     mock.register_function.return_value = None
     mock.unregister_binary.return_value = None
-
-    # Kernel launch
     mock.launch_kernel.return_value = None
-    mock.launch_kernel_rts.return_value = None
-
-    # Events
-    mock.create_event.return_value = _next_handle()
-    mock.destroy_event.return_value = None
-    mock.record_event.return_value = None
-    mock.synchronize_event.return_value = None
-    mock.elapsed_time_between.return_value = 1.5
-
-    # Streams
-    mock.create_stream.return_value = _next_handle()
-    mock.destroy_stream.return_value = None
-    mock.synchronize_stream.return_value = None
-
-    # Error
-    mock.get_last_error.return_value = ""
-
     return mock
 
 
 @pytest.fixture
-def mock_rts_loader():
-    """Return a MagicMock that simulates the _rts_loader module."""
-    mock = MagicMock(name="_rts_loader")
-    _handle_counter = [2000]
+def mock_rt_context():
+    """Context manager to patch _rt module.
 
-    def _next_handle():
-        _handle_counter[0] += 1
-        return _handle_counter[0]
-
-    mock.register_binary.return_value = _next_handle()
-    mock.register_function.return_value = None
-    mock.unregister_binary.return_value = None
-    mock.launch_kernel.return_value = None
-
-    return mock
-
-
-@pytest.fixture(autouse=True)
-def _clean_atexit_registry():
-    """Clear SourceModule's atexit registry before and after each test.
-
-    Prevents stale SourceModule instances (from failed tests) from
-    attempting cleanup in subsequent tests.
+    Usage:
+        with _rt_patch(mock_rt):
+            mod = SourceModule(source)
     """
-    from asnumpy.compiler.source_module import _atexit_registry
-    _atexit_registry.clear()
-    yield
-    _atexit_registry.clear()
+    def _patch():
+        return patch.multiple(
+            "asnumpy.compiler.source_module._rt",
+            register_binary=MagicMock(return_value=1001),
+            register_function=MagicMock(return_value=None),
+            unregister_binary=MagicMock(return_value=None),
+            launch_kernel=MagicMock(return_value=None),
+        )
+
+    return _patch
