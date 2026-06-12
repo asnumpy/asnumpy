@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, overload
 import numpy as np
 
 from ._config import get_fallback_state, warn_copy
-from .utils import as_host_array, ndarray, to_asnumpy_array
+from .utils import ndarray, to_asnumpy_array
 
 if TYPE_CHECKING:
     pass
@@ -32,9 +32,11 @@ def fallback_to_numpy(func=None, *, numpy_func=None):
     """Decorator that automatically falls back to NumPy when an NPU operator fails.
 
     Wraps a function that calls a C++ ``_core`` operator.  If the wrapped function
-    raises an exception and fallback is enabled (see :func:`asnumpy.auto_fallback`),
-    the decorator converts inputs to host NumPy arrays, calls the equivalent
-    ``numpy.<funcname>`` function, and optionally copies the result back to the NPU.
+    raises a ``RuntimeError`` (NPU/CANN operator failure or ``NotImplementedError``)
+    and fallback is enabled (see :func:`asnumpy.auto_fallback`), the decorator
+    converts inputs to host NumPy arrays, calls the equivalent ``numpy.<funcname>``
+    function, and optionally copies the result back to the NPU.  Other exception
+    types (``TypeError``, ``ValueError``, …) propagate unchanged.
 
     Parameters
     ----------
@@ -63,18 +65,24 @@ def fallback_to_numpy(func=None, *, numpy_func=None):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception:
+        except RuntimeError:
+            # NPU/CANN operator failures surface as RuntimeError (CannError is a
+            # subclass) and "not implemented" as NotImplementedError (also a
+            # RuntimeError subclass).  Narrow on purpose: TypeError/ValueError/
+            # IndexError are genuine bugs or bad inputs and must not be silently
+            # masked by a CPU fallback.
             state = get_fallback_state()
             if not state.enabled:
                 raise
 
             np_func = _numpy_func or getattr(np, func.__name__)
 
-            # Positional args are always array-like — convert through
-            # as_host_array to handle both NPUArrays and raw lists/tuples.
-            np_args = [as_host_array(a) for a in args]
-            # Keyword args may be scalars (axis, keepdims, dtype, …) —
-            # only convert NPUArrays, pass everything else through.
+            # Only NPUArrays need copying to host; everything else (scalars,
+            # axis ints, einsum subscript strings, raw lists) is passed through
+            # untouched — NumPy accepts these natively.  Coercing them with
+            # np.asarray would, e.g., turn an einsum subscript string into a
+            # 0-d array that np.einsum rejects.
+            np_args = [_to_host(a) for a in args]
             np_kwargs = {k: _to_host(v) for k, v in kwargs.items()}
 
             warn_copy(f"falling back to numpy.{func.__name__}")
@@ -102,13 +110,11 @@ def _to_host(v):
 
 
 @overload
-def _wrap_asnumpy(value: np.ndarray) -> ndarray: 
-    ...
+def _wrap_asnumpy(value: np.ndarray) -> ndarray: ...
 
 
 @overload
-def _wrap_asnumpy(value: tuple[np.ndarray, ...]) -> tuple[ndarray, ...]: 
-    ...
+def _wrap_asnumpy(value: tuple[np.ndarray, ...]) -> tuple[ndarray, ...]: ...
 
 
 def _wrap_asnumpy(value):

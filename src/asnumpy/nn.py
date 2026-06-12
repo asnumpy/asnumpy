@@ -24,6 +24,7 @@ from .utils import _convert_dtype, ndarray
 
 def _numpy_softmax(x, axis=-1, dtype=None):
     """NumPy softmax implementation for fallback."""
+    x = np.asarray(x)
     x_max = np.max(x, axis=axis, keepdims=True)
     e = np.exp(x - x_max)
     s = np.sum(e, axis=axis, keepdims=True)

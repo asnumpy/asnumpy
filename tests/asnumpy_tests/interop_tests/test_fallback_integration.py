@@ -287,6 +287,44 @@ class TestLinalgOperatorsWired:
             result = linalg.inv([[1.0, 2.0], [3.0, 4.0]])
             np.testing.assert_allclose(result, np.linalg.inv([[1.0, 2.0], [3.0, 4.0]]))
 
+    @staticmethod
+    def test_qr_tuple_fallback_when_npu_fails():
+        # qr returns a (Q, R) tuple; the fallback must dispatch to np.linalg.qr
+        # and unpack both elements correctly.
+        from asnumpy import linalg
+
+        a = [[1.0, 2.0], [3.0, 4.0]]
+        with mock.patch("asnumpy.linalg._linalg._qr", side_effect=RuntimeError("NPU fail")):
+            ap.auto_fallback(**_FKW)
+            q, r = linalg.qr(a)
+            expected_q, expected_r = np.linalg.qr(a)
+            np.testing.assert_allclose(q, expected_q)
+            np.testing.assert_allclose(r, expected_r)
+
+    @staticmethod
+    def test_slogdet_tuple_fallback_when_npu_fails():
+        from asnumpy import linalg
+
+        a = [[1.0, 2.0], [3.0, 4.0]]
+        with mock.patch("asnumpy.linalg._linalg._slogdet", side_effect=RuntimeError("NPU fail")):
+            ap.auto_fallback(**_FKW)
+            sign, logdet = linalg.slogdet(a)
+            expected_sign, expected_logdet = np.linalg.slogdet(a)
+            np.testing.assert_allclose(sign, expected_sign)
+            np.testing.assert_allclose(logdet, expected_logdet)
+
+    @staticmethod
+    def test_einsum_fallback_preserves_subscript_string():
+        # Regression: the einsum subscripts is a positional str argument; the
+        # fallback must forward it untouched.  Coercing it via np.asarray turns
+        # it into a 0-d array that np.einsum rejects.
+        a = [[1.0, 2.0], [3.0, 4.0]]
+        b = [[5.0, 6.0], [7.0, 8.0]]
+        with mock.patch("asnumpy.linalg.direct._einsum", side_effect=RuntimeError("NPU fail")):
+            ap.auto_fallback(**_FKW)
+            result = ap.einsum("ij,jk->ik", a, b)
+            np.testing.assert_allclose(result, np.einsum("ij,jk->ik", a, b))
+
 
 class TestRandomOperatorsWired:
     @staticmethod

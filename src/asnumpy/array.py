@@ -55,77 +55,66 @@ from .utils import _convert_dtype, _normalize_shape, ndarray
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def zeros(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating zeros array shape={shape}, dtype={dtype}")
     return ndarray(_zeros(_normalize_shape(shape), _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def zeros_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating zeros_like array other={other}, dtype={dtype}")
     return ndarray(_zeros_like(other, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def full(shape: ShapeLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating full array shape={shape}, value={value}, dtype={dtype}")
     return ndarray(_full(_normalize_shape(shape), value, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def full_like(other: ArrayLike, value: ScalarLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating full_like array other={other}, value={value}, dtype={dtype}")
     return ndarray(_full_like(other, value, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def empty(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating empty array shape={shape}, dtype={dtype}")
     return ndarray(_empty(_normalize_shape(shape), _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def empty_like(prototype: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating empty_like array prototype={prototype}, dtype={dtype}")
     return ndarray(_empty_like(prototype, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def eye(n: int, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating eye array n={n}, dtype={dtype}")
     return ndarray(_eye(n, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def ones(shape: ShapeLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating ones array shape={shape}, dtype={dtype}")
     return ndarray(_ones(_normalize_shape(shape), _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def ones_like(other: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating ones_like array other={other}, dtype={dtype}")
     return ndarray(_ones_like(other, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def identity(n: int, dtype: DTypeLike = None) -> ndarray:
     logger.debug(f"Creating identity array n={n}, dtype={dtype}")
     return ndarray(_identity(n, _convert_dtype(dtype)))
 
 
 @fallback_to_numpy
-@logger.catch(reraise=True)
 def linspace(
     start: ScalarLike,
     end: ScalarLike,

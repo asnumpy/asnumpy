@@ -388,6 +388,7 @@ def relu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 
 def _numpy_gelu(x):
     """NumPy GELU approximation for fallback."""
+    x = np.asarray(x)
     return 0.5 * x * (1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * x**3)))
 
 
@@ -457,22 +458,10 @@ def mod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_mod(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def modf(x: ArrayLike) -> tuple:
-    try:
-        frac, inte = _modf(x)
-        return (ndarray(frac), ndarray(inte))
-    except Exception:
-        from ._config import get_fallback_state
-
-        if not get_fallback_state().enabled:
-            raise
-        np_x = np.asarray(x.to_numpy() if hasattr(x, "to_numpy") else x)
-        frac, inte = np.modf(np_x)
-        if get_fallback_state().return_device:
-            from ._fallback import _wrap_asnumpy
-
-            return _wrap_asnumpy((frac, inte))
-        return (frac, inte)
+    frac, inte = _modf(x)
+    return (ndarray(frac), ndarray(inte))
 
 
 @fallback_to_numpy
@@ -480,24 +469,11 @@ def remainder(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_remainder(x1, x2, _convert_dtype(dtype)))
 
 
+@fallback_to_numpy
 def divmod(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> tuple:
-    try:
-        res1, res2 = _divmod(x1, x2)
-        _type = _convert_dtype(dtype)
-        return (ndarray(res1, _type), ndarray(res2, _type))
-    except Exception:
-        from ._config import get_fallback_state
-
-        if not get_fallback_state().enabled:
-            raise
-        np_x1 = np.asarray(x1.to_numpy() if hasattr(x1, "to_numpy") else x1)
-        np_x2 = np.asarray(x2.to_numpy() if hasattr(x2, "to_numpy") else x2)
-        res1, res2 = np.divmod(np_x1, np_x2)
-        if get_fallback_state().return_device:
-            from ._fallback import _wrap_asnumpy
-
-            return _wrap_asnumpy((res1, res2))
-        return (res1, res2)
+    res1, res2 = _divmod(x1, x2)
+    _type = _convert_dtype(dtype)
+    return (ndarray(res1, _type), ndarray(res2, _type))
 
 
 @fallback_to_numpy
