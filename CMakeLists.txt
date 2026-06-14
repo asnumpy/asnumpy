@@ -28,6 +28,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# FetchContent module (for fmt, spdlog, etc.)
+include(FetchContent)
+
 # ========== pybind11 (from pip, scikit-build-core auto-configures CMAKE_PREFIX_PATH) ==========
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
@@ -53,17 +56,13 @@ link_directories(${ASCEND_CANN_PATH}/lib64)
 # NumPy include
 include_directories(${Python_NumPy_INCLUDE_DIRS})
 
-# ========== fmt ==========
-# Prefer conda-installed fmt over system to ensure version compatibility with spdlog
-if(DEFINED ENV{CONDA_PREFIX})
-    list(PREPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
-endif()
-find_package(fmt REQUIRED)
-message(STATUS "Using fmt: ${fmt_VERSION}")
+# ========== fmt (system package only) ==========
+find_package(fmt REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake /usr/lib/aarch64-linux-gnu/cmake NO_DEFAULT_PATH)
+message(STATUS "Using system fmt: ${fmt_VERSION}")
 
-# ========== spdlog ==========
-find_package(spdlog REQUIRED)
-message(STATUS "Using spdlog: ${spdlog_VERSION}")
+# ========== spdlog (system package only) ==========
+find_package(spdlog REQUIRED PATHS /usr/lib64/cmake /usr/lib/cmake /usr/lib/aarch64-linux-gnu/cmake NO_DEFAULT_PATH)
+message(STATUS "Using system spdlog: ${spdlog_VERSION}")
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
 # ========== Source directories ==========
