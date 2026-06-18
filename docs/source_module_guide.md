@@ -24,42 +24,81 @@
 
 ## 快速开始
 
-### 第一个内核：数据拷贝
+### 第一个内核：向量加法
 
 ```python
 import numpy as np
 import asnumpy as ap
 from asnumpy.compiler import SourceModule
 
-# 1. 编写 Ascend C 内核源码
+# 1. 编写 Ascend C 内核源码（遵循官方 CANN 模式）
 kernel_src = r"""
 #include "kernel_operator.h"
 using namespace AscendC;
 
-extern "C" __global__ __aicore__ void data_copy(
-    __gm__ float* src, __gm__ float* dst, int n)
+extern "C" __global__ __aicore__ void vector_add(
+    __gm__ float* a, __gm__ float* b, __gm__ float* c, int totalLength)
 {
+    TPipe pipe;
+
+    // UB tiling: 每个 tile 256 个 float（1024 字节）
+    constexpr int TILE_ELEMS = 256;
+    constexpr int PIPELINE_DEPTH = 2;
+
+    // 双缓冲队列（CopyIn → Compute → CopyOut 流水线）
+    TQue<QuePosition::VECIN, PIPELINE_DEPTH> inQueueA, inQueueB;
+    TQue<QuePosition::VECOUT, PIPELINE_DEPTH> outQueueC;
+    uint32_t tileBytes = TILE_ELEMS * sizeof(float);
+    pipe.InitBuffer(inQueueA, PIPELINE_DEPTH, tileBytes);
+    pipe.InitBuffer(inQueueB, PIPELINE_DEPTH, tileBytes);
+    pipe.InitBuffer(outQueueC, PIPELINE_DEPTH, tileBytes);
+
+    // SPMD: 计算当前 AI Core 负责的数据范围
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
-    int per_block = (n + block_num - 1) / block_num;
+    int per_block = (totalLength + block_num - 1) / block_num;
     int start = block_idx * per_block;
-    int count = (per_block < n - start) ? per_block : (n - start);
+    int count = (per_block < totalLength - start)
+        ? per_block : (totalLength - start);
 
-    TPipe pipe;
-    pipe.Init();
+    GlobalTensor<float> gA, gB, gC;
+    gA.SetGlobalBuffer(a + start, static_cast<uint64_t>(count));
+    gB.SetGlobalBuffer(b + start, static_cast<uint64_t>(count));
+    gC.SetGlobalBuffer(c + start, static_cast<uint64_t>(count));
 
-    GlobalTensor<float> gSrc, gDst;
-    gSrc.SetGlobalBuffer(src + start, static_cast<uint64_t>(count));
-    gDst.SetGlobalBuffer(dst + start, static_cast<uint64_t>(count));
+    DataCopyExtParams copyParams;
+    copyParams.blockCount = 1;
+    copyParams.srcStride = 0;
+    copyParams.dstStride = 0;
+    DataCopyPadExtParams<float> padParams{false, 0, 0, 0};
 
-    TBuf<AscendC::TPosition::VECIN> buf;
-    pipe.InitBuffer(buf, static_cast<uint32_t>(count));
-    LocalTensor<float> local = buf.AllocTensor<float>();
+    int tileNum = count / TILE_ELEMS;
+    int tailElems = count - tileNum * TILE_ELEMS;
 
-    DataCopy(local, gSrc, count);
-    DataCopy(gDst, local, count);
-
-    buf.FreeTensor(local);
+    for (int i = 0; i < tileNum; ++i) {
+        int offset = i * TILE_ELEMS;
+        // CopyIn
+        LocalTensor<float> localA = inQueueA.AllocTensor<float>();
+        LocalTensor<float> localB = inQueueB.AllocTensor<float>();
+        copyParams.blockLen = TILE_ELEMS * sizeof(float);
+        DataCopyPad(localA, gA[offset], copyParams, padParams);
+        DataCopyPad(localB, gB[offset], copyParams, padParams);
+        inQueueA.EnQue(localA);
+        inQueueB.EnQue(localB);
+        // Compute
+        localA = inQueueA.DeQue<float>();
+        localB = inQueueB.DeQue<float>();
+        LocalTensor<float> localC = outQueueC.AllocTensor<float>();
+        Add(localC, localA, localB, TILE_ELEMS);
+        outQueueC.EnQue(localC);
+        inQueueA.FreeTensor(localA);
+        inQueueB.FreeTensor(localB);
+        // CopyOut
+        localC = outQueueC.DeQue<float>();
+        DataCopyPad(gC[offset], localC, copyParams);
+        outQueueC.FreeTensor(localC);
+    }
+    // 处理尾部元素（此处省略，完整代码见 examples/11_custom_kernel.py）
 }
 """
 
@@ -67,24 +106,26 @@ extern "C" __global__ __aicore__ void data_copy(
 mod = SourceModule(kernel_src, options=["-O3"])
 
 # 3. 获取内核函数（显式签名）
-kernel = mod.get_function("data_copy",
-    signature=["float32*", "float32*", "int32"])
+kernel = mod.get_function("vector_add",
+    signature=["float32*", "float32*", "float32*", "int32"])
 
 # 4. 准备数据
 N = 1024
-src_ap = ap.ndarray.from_numpy(np.random.randn(N).astype(np.float32))
-dst_ap = ap.empty((N,), dtype=ap.float32)
+a_ap = ap.ndarray.from_numpy(np.random.randn(N).astype(np.float32))
+b_ap = ap.ndarray.from_numpy(np.random.randn(N).astype(np.float32))
+c_ap = ap.empty((N,), dtype=ap.float32)
 
 # 5. 在 NPU 上启动内核（8 个 AI Core 并行）
-kernel(src_ap, dst_ap, N, grid=(8,))
+kernel(a_ap, b_ap, c_ap, N, grid=(8,))
 
 # 6. 取回结果
-result = dst_ap.to_numpy()
+result = c_ap.to_numpy()
 ```
 
 ### 完整示例
 
-运行 `python examples/11_custom_kernel.py` 查看完整可执行示例。
+- `examples/11_add_kernel.py` — 向量加法内核（最简入门）
+- `examples/12_custom_kernel.py` — 多内核示例（vector_mul + scalar_mul，演示模板复用）
 
 ---
 
@@ -167,41 +208,65 @@ class KernelFunction:
 
 ## 内核编写指南
 
-### 基本范式：CopyIn → Compute → CopyOut
+### 基本范式：分块 + 双缓冲 CopyIn → Compute → CopyOut
+
+在 910B4 上编写 Ascend C 内核必须遵循以下模式（参考 ``ops-math`` 官方 add 算子）：
 
 ```cpp
 extern "C" __global__ __aicore__ void my_kernel(
-    __gm__ float* input, __gm__ float* output, int n)
+    __gm__ float* input, __gm__ float* output, int totalLength)
 {
-    // 1. 计算当前 AI Core 负责的数据范围
+    TPipe pipe;
+
+    // 1. UB 分块（tiling）：按 UB 容量切分数据
+    constexpr int TILE_ELEMS = 256;   // 每个 tile 的元素数
+    constexpr int PIPELINE_DEPTH = 2; // 双缓冲深度
+
+    // 2. 双缓冲队列（硬件流水线：DMA 与计算重叠）
+    TQue<QuePosition::VECIN, PIPELINE_DEPTH> inQueue;
+    TQue<QuePosition::VECOUT, PIPELINE_DEPTH> outQueue;
+    pipe.InitBuffer(inQueue, PIPELINE_DEPTH, TILE_ELEMS * sizeof(float));
+    pipe.InitBuffer(outQueue, PIPELINE_DEPTH, TILE_ELEMS * sizeof(float));
+
+    // 3. SPMD 数据分片
     int block_idx = GetBlockIdx();
     int block_num = GetBlockNum();
-    int per_block = (n + block_num - 1) / block_num;
+    int per_block = (totalLength + block_num - 1) / block_num;
     int start = block_idx * per_block;
-    int count = (per_block < n - start) ? per_block : (n - start);
+    int count = (per_block < totalLength - start) ? per_block : (totalLength - start);
 
-    // 2. 初始化流水线和缓冲区
-    TPipe pipe; pipe.Init();
-    TBuf<AscendC::TPosition::VECIN> buf_in;
-    TBuf<AscendC::TPosition::VECOUT> buf_out;
-    pipe.InitBuffer(buf_in, count);
-    pipe.InitBuffer(buf_out, count);
-
-    // 3. 绑定全局内存
     GlobalTensor<float> gIn, gOut;
-    gIn.SetGlobalBuffer(input + start, count);
-    gOut.SetGlobalBuffer(output + start, count);
+    gIn.SetGlobalBuffer(input + start, static_cast<uint64_t>(count));
+    gOut.SetGlobalBuffer(output + start, static_cast<uint64_t>(count));
 
-    // 4. CopyIn: 全局 → 局部
-    LocalTensor<float> local = buf_in.AllocTensor<float>();
-    DataCopy(local, gIn, count);
+    // 4. 使用 DataCopyPad + 显式参数（**不可用 plain DataCopy**）
+    DataCopyExtParams copyParams;
+    copyParams.blockCount = 1;
+    copyParams.srcStride = 0;
+    copyParams.dstStride = 0;
+    DataCopyPadExtParams<float> padParams{false, 0, 0, 0};
 
-    // 5. 计算（在此使用 Ascend C 算子）
-    // ...
-
-    // 6. CopyOut: 局部 → 全局
-    DataCopy(gOut, local, count);
-    buf_out.FreeTensor(local);
+    // 5. 主循环：CopyIn → Compute → CopyOut
+    int tileNum = count / TILE_ELEMS;
+    for (int i = 0; i < tileNum; ++i) {
+        int offset = i * TILE_ELEMS;
+        // CopyIn
+        auto localIn = inQueue.AllocTensor<float>();
+        copyParams.blockLen = TILE_ELEMS * sizeof(float);
+        DataCopyPad(localIn, gIn[offset], copyParams, padParams);
+        inQueue.EnQue(localIn);
+        // Compute
+        localIn = inQueue.DeQue<float>();
+        auto localOut = outQueue.AllocTensor<float>();
+        // ... Ascend C 算子 (Add, Mul 等) ...
+        outQueue.EnQue(localOut);
+        inQueue.FreeTensor(localIn);
+        // CopyOut
+        localOut = outQueue.DeQue<float>();
+        DataCopyPad(gOut[offset], localOut, copyParams);
+        outQueue.FreeTensor(localOut);
+    }
+    // 6. 尾部处理（tailElems > 0 时，同上三阶段）
 }
 ```
 
@@ -224,6 +289,9 @@ extern "C" __global__ __aicore__ void my_kernel(
 2. **无 `threadIdx`**：Ascend C 使用 SPMD 模型，核内使用向量指令，不存在 CUDA 的线程概念。`grid` 参数映射到 AI Core 数量。
 3. **`__gm__` 指针**：所有全局内存指针必须加 `__gm__` 修饰符。
 4. **`TPipe` 初始化**：每个内核必须初始化 `TPipe` 并管理其缓冲区生命周期。
+5. **❌ 禁止 `TBuf` + `DataCopy`（910B4）**：在 Ascend 910B4 上，使用 plain ``TBuf`` 和 ``DataCopy`` 进行全局→局部 DMA 会产生**错误数据**。必须使用 ``TQue`` 双缓冲 + ``DataCopyPad`` + ``DataCopyExtParams`` 模式（参见上方代码模板和官方 ``ops-math`` 示例）。
+6. **UB 分块（tiling）必须**：不能一次性加载全部数据到 UB，必须按 tile 分块处理（UB 通常 192KB，每个 tile 建议 ≤ 1024 个 float32 元素）。
+7. **`InitBuffer` 参数为字节数**：``pipe.InitBuffer(buf, byteSize)`` 的第二个参数是**字节数**（不是元素数）。对于 ``float32``，应传入 ``count * 4``。
 
 ---
 
@@ -296,14 +364,16 @@ src/asnumpy/compiler/
 
 ## 已知限制
 
-### CANN 9.1 + Ascend 910B4
+### Ascend 910B4 DMA 约束
 
-在 CANN 9.1.0 + Ascend 910B4 环境下，bisheng 编译器生成的 AI Core 指令与硬件不兼容：
+在 CANN 9.1.0 + Ascend 910B4 环境下，经系统性测试（对比 ``ops-math`` 官方算子库），确认以下内核编写约束：
 
-- 编译、加载、启动 API 调用均正常工作
-- ❌ 内核执行后产生错误的数值结果（所有 Ascend C 算子均受影响：DataCopy、Duplicate、Add、Mul 等）
+- ``DataCopy``（plain）全局→局部 DMA 在运行时 copy count 不满足最小向量宽度（< 8 个 float32 / 32 字节）时产生错误数据
+- ``TBuf`` 单缓冲模式下该问题尤为明显；``TQue`` 双缓冲 + ``DataCopyPad`` + ``DataCopyExtParams`` 模式完全正常
+- ``Duplicate`` / ``DataCopy`` 局部→全局方向一切正常
+- 根因是 910B4 向量引擎 32 字节对齐 DMA 与 bisheng 编译器对该模式的代码生成存在边界情况
 
-根因是 bisheng 编译器目标架构与 910B4 硬件 ISA 不完全匹配，待 CANN 后续版本修复。此问题已通过测试套件中的 `requires_kernel_exec` 标记记录。
+**结论**：内核必须使用官方 CANN 推荐的 ``TQue`` 双缓冲 + ``DataCopyPad`` + UB tiling 模式，不可使用简化的 ``TBuf`` + ``DataCopy``。
 
 ### 其他限制
 

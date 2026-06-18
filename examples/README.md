@@ -9,6 +9,13 @@
 | [03_multiply](03_multiply.py) |  用asnumpy.multiply和numpy.multiply分别对输入数组 x1 和 x2 执行逐元素乘法运算并对比结果，并计算它们的运行时间  |
 | [04_all](04_all.py) |  用asnumpy.all和numpy.all分别对输入数组 x 执行对输入数组执行逻辑与归约操作，判断所有元素是否均为 True并对比结果，并计算它们的运行时间  |
 | [05_divide](05_divide.py) |  用asnumpy.divide和numpy.divide分别对输入数组 x1 和 x2 执行逐元素除法并对比结果，并计算它们的运行时间  |
+| [06_vdot](06_vdot.py) |  用asnumpy.vdot和numpy.vdot分别计算两个向量的点积并对比结果，并计算它们的运行时间  |
+| [07_full](07_full.py) |  用asnumpy.full和numpy.full分别创建填充指定值的数组并对比结果，并计算它们的运行时间  |
+| [08_linspace](08_linspace.py) |  用asnumpy.linspace和numpy.linspace分别创建等间距数组并对比结果，并计算它们的运行时间  |
+| [09_mean](09_mean.py) |  用asnumpy.mean和numpy.mean分别计算数组均值并对比结果，并计算它们的运行时间  |
+| [10_sort](10_sort.py) |  用asnumpy.sort和numpy.sort分别对数组排序并对比结果，并计算它们的运行时间  |
+| [11_add_kernel](11_add_kernel.py) |  **Ascend C JIT 编译**：使用 SourceModule 编译自定义向量加法内核，在 NPU 上直接启动执行  |
+| [12_custom_kernel](12_custom_kernel.py) |  **Ascend C JIT 多内核**：单次编译包含 vector_mul + scalar_mul 两个内核，演示模板复用  |
 
 ## 下一步预期实现样例
 | 函数名 | 预期功能描述 |
