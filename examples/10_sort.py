@@ -21,7 +21,7 @@ import asnumpy as ap
 import numpy as np
 from loguru import logger
 
-from utils import calculate_stable_metric
+from grpmgr_workspaces.asnumpy.examples.utils import calculate_stable_metric
 
 
 def create_arrays(shape: tuple[int, ...], dtype: np.dtype):

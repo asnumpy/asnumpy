@@ -71,10 +71,10 @@ __all__ = [
 ]
 
 # Array assertion functions
-from asnumpy.testing._array import assert_allclose, assert_array_equal
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._array import assert_allclose, assert_array_equal
 
 # Exception and warning assertions
-from asnumpy.testing._assertions import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._assertions import (
     assert_equal,
     assert_no_warnings,
     assert_raises,
@@ -85,14 +85,14 @@ from asnumpy.testing._assertions import (
 )
 
 # Test class generation utilities
-from asnumpy.testing._bundle import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._bundle import (
     TestBundle,
     generate_test_classes,
     make_decorator,
 )
 
 # Test helper functions
-from asnumpy.testing._helper import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._helper import (
     TEST_DTYPES,
     TEST_ORDERS,
     TEST_SHAPES,
@@ -106,7 +106,7 @@ from asnumpy.testing._helper import (
 )
 
 # dtype and order parameterization decorators
-from asnumpy.testing._loops import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._loops import (
     for_all_dtypes,
     for_cf_orders,
     for_complex_dtypes,
@@ -121,12 +121,12 @@ from asnumpy.testing._loops import (
 )
 
 # Parameterization utilities
-from asnumpy.testing._parameterized import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._parameterized import (
     parameterize_test_class,
     product,
     product_dict,
 )
-from asnumpy.testing._pytest_impl import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._pytest_impl import (
     fixture,
     parameterize,
     skip,
@@ -135,6 +135,6 @@ from asnumpy.testing._pytest_impl import (
 )
 
 # pytest integration
-from asnumpy.testing._pytest_impl import (
+from grpmgr_workspaces.asnumpy.src.asnumpy.testing._pytest_impl import (
     is_available as pytest_is_available,
 )

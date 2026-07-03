@@ -21,7 +21,7 @@ import asnumpy as ap
 import numpy as np
 from loguru import logger
 
-from utils import calculate_stable_metric
+from grpmgr_workspaces.asnumpy.examples.utils import calculate_stable_metric
 
 
 def bench_full(full_func, shape: tuple[int, ...], fill_value: float,

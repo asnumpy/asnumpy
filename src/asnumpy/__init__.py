@@ -27,7 +27,7 @@ from ._version import __version__
 from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:
-    from . import linalg, random
+    from .....asnumpy.src.asnumpy import linalg, random
     from ._types import (
         ArrayLike,
         AxisLike,

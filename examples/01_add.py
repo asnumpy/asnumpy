@@ -21,7 +21,7 @@ import asnumpy as ap
 import numpy as np
 from loguru import logger
 
-from utils import calculate_stable_metric, create_arrays
+from grpmgr_workspaces.asnumpy.examples.utils import calculate_stable_metric, create_arrays
 
 
 def bench_add(add_func, m1, m2, warmup: int, iterations: int, is_npu: bool = False) -> list:
