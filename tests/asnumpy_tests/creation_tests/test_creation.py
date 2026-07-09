@@ -29,16 +29,17 @@
 """
 
 import numpy
+
 from asnumpy import testing
 
-
 # ========== zeros_like 测试 ==========
+
 
 @testing.for_all_dtypes()
 @testing.numpy_asnumpy_array_equal()
 def test_zeros_like(xp, dtype):
     """测试zeros_like - 基本功能
-    
+
     API差异：asnumpy需要显式传递dtype参数
     """
     a = testing.shaped_arange((2, 3), dtype=dtype, xp=xp)
@@ -71,16 +72,23 @@ def test_zeros_like_scalar_shape(xp, dtype):
 
 # ========== ones_like 测试 ==========
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    numpy.uint8,
-    numpy.bool_
-])
+
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        numpy.uint8,
+        numpy.bool_,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_ones_like(xp, dtype):
     """测试ones_like - 基本功能
-    
+
     只测试ones支持的dtype
     API差异：asnumpy需要显式传递dtype参数
     """
@@ -88,10 +96,14 @@ def test_ones_like(xp, dtype):
     return xp.ones_like(a, dtype=dtype)
 
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int32, numpy.int64,
-])
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int32,
+        numpy.int64,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_ones_like_large(xp, dtype):
     """测试ones_like - 较大数组"""
@@ -101,11 +113,12 @@ def test_ones_like_large(xp, dtype):
 
 # ========== empty_like 测试 ==========
 
+
 @testing.for_float_dtypes()
 @testing.numpy_asnumpy_array_equal()
 def test_empty_like(xp, dtype):
     """测试empty_like - 基本功能
-    
+
     注意：empty返回未初始化内存，使用zeros_like代替以便比较
     API差异：asnumpy需要显式传递dtype参数
     """
@@ -125,16 +138,22 @@ def test_empty_like_shape(xp, dtype):
 # ========== eye 测试 ==========
 # API限制：eye 不支持 float64（CANN: DT_DOUBLE not implemented）
 
-@testing.for_dtypes([
-    numpy.float32,  # float64 不支持
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    numpy.uint8,  # uint16 也不支持！
-    numpy.bool_
-])
+
+@testing.for_dtypes(
+    [
+        numpy.float32,  # float64 不支持
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        numpy.uint8,  # uint16 也不支持！
+        numpy.bool_,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_eye_square(xp, dtype):
     """测试eye - 方阵（n=5）
-    
+
     API限制：排除 float64 和 uint16（CANN 限制）
     """
     return xp.eye(5, dtype=dtype)
@@ -164,16 +183,22 @@ def test_eye_n1(xp, dtype):
 # ========== identity 测试 ==========
 # API限制：identity 不支持 float64（CANN: DT_DOUBLE not implemented）
 
-@testing.for_dtypes([
-    numpy.float32,  # float64 不支持
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    numpy.uint8,  # uint16 也不支持！
-    numpy.bool_
-])
+
+@testing.for_dtypes(
+    [
+        numpy.float32,  # float64 不支持
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        numpy.uint8,  # uint16 也不支持！
+        numpy.bool_,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_identity(xp, dtype):
     """测试identity - 基本功能（n=6）
-    
+
     API限制：排除 float64 和 uint16（CANN 限制）
     """
     return xp.identity(6, dtype=dtype)
@@ -196,17 +221,24 @@ def test_identity_large(xp, dtype):
 # ========== full 测试 ==========
 # API限制：full 不支持 uint16（CANN aclnnInplaceFillScalarGetWorkspaceSize error）
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    numpy.uint8,  # uint16 不支持
-    numpy.bool_
-    # complex64/128 也不支持！
-])
+
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        numpy.uint8,  # uint16 不支持
+        numpy.bool_,
+        # complex64/128 也不支持！
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_full(xp, dtype):
     """测试full - 基本功能
-    
+
     API限制：排除 uint16 和 complex（CANN 限制）
     """
     # 根据dtype选择合适的fill_value
@@ -219,16 +251,22 @@ def test_full(xp, dtype):
     return xp.full((3, 4), fill_value, dtype=dtype)
 
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    # uint8 会触发溢出检查差异，单独测试
-    numpy.bool_
-])
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        # uint8 会触发溢出检查差异，单独测试
+        numpy.bool_,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_full_1d(xp, dtype):
     """测试full - 1维数组
-    
+
     使用非负值避免 uint8 溢出检查差异
     """
     if dtype == numpy.bool_:
@@ -240,10 +278,7 @@ def test_full_1d(xp, dtype):
     return xp.full((20,), fill_value, dtype=dtype)
 
 
-@testing.for_dtypes([
-    numpy.float32, numpy.int32, numpy.int64,
-    numpy.bool_
-])
+@testing.for_dtypes([numpy.float32, numpy.int32, numpy.int64, numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_full_3d(xp, dtype):
     """测试full - 3维数组"""
@@ -266,21 +301,28 @@ def test_full_zero_fill(xp, dtype):
 # ========== full_like 测试 ==========
 # API限制：full_like 需要显式 dtype 参数
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-    numpy.uint8,  # uint16 不支持
-    numpy.bool_
-])
+
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int8,
+        numpy.int16,
+        numpy.int32,
+        numpy.int64,
+        numpy.uint8,  # uint16 不支持
+        numpy.bool_,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_full_like(xp, dtype):
     """测试full_like - 基本功能
-    
+
     API差异：asnumpy需要显式传递dtype参数
     API限制：排除 uint16（CANN 不支持）
     """
     a = testing.shaped_arange((2, 3, 4), dtype=dtype, xp=xp)
-    
+
     # 根据dtype选择合适的fill_value
     if dtype == numpy.bool_:
         fill_value = False
@@ -288,42 +330,44 @@ def test_full_like(xp, dtype):
         fill_value = 7
     else:
         fill_value = 2.71
-    
+
     return xp.full_like(a, fill_value, dtype=dtype)
 
 
-@testing.for_dtypes([
-    numpy.float32, numpy.float64,
-    numpy.int32, numpy.int64,
-])
+@testing.for_dtypes(
+    [
+        numpy.float32,
+        numpy.float64,
+        numpy.int32,
+        numpy.int64,
+    ]
+)
 @testing.numpy_asnumpy_array_equal()
 def test_full_like_1d(xp, dtype):
     """测试full_like - 1维数组"""
     a = testing.shaped_arange((15,), dtype=dtype, xp=xp)
-    
+
     if dtype == numpy.bool_:
         fill_value = True
     elif numpy.issubdtype(dtype, numpy.integer):
         fill_value = 10
     else:
         fill_value = 0.5
-    
+
     return xp.full_like(a, fill_value, dtype=dtype)
 
 
-@testing.for_dtypes([
-    numpy.float32, numpy.int32
-])
+@testing.for_dtypes([numpy.float32, numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_full_like_large(xp, dtype):
     """测试full_like - 较大数组"""
     a = testing.shaped_arange((5, 6, 7), dtype=dtype, xp=xp)
-    
+
     if numpy.issubdtype(dtype, numpy.integer):
         fill_value = 99
     else:
         fill_value = 9.99
-    
+
     return xp.full_like(a, fill_value, dtype=dtype)
 
 

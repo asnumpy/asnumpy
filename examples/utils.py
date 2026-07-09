@@ -24,12 +24,12 @@ def create_arrays(shape: Tuple[int, ...], dtype: np.dtype):
     # numpy 基准数据
     m1_np = np.random.normal(0, 1, shape).astype(dtype)
     m2_np = np.random.normal(0, 1, shape).astype(dtype)
-    
+
     # asnumpy测试数据 - 从 numpy 转换
     import asnumpy as ap
     m1_asnp = ap.ndarray.from_numpy(m1_np)
     m2_asnp = ap.ndarray.from_numpy(m2_np)
-    
+
     return m1_asnp, m2_asnp, m1_np, m2_np
 
 
@@ -41,11 +41,11 @@ def calculate_stable_metric(times: list, trim_ratio: float = 0.1) -> float:
     """
     if not times:
         return 0.0
-    
+
     sorted_times = sorted(times)
     keep_count = int(len(sorted_times) * (1.0 - trim_ratio))
     if keep_count < 1:
         keep_count = 1
-        
+
     valid_times = sorted_times[:keep_count]
     return min(valid_times)

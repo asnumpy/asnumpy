@@ -318,13 +318,13 @@ NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype) {
     py::dtype py_dtype = x.dtype;
     aclDataType in_dtype = NPUArray::GetACLDataType(py_dtype);
     aclDataType out_dtype = in_dtype;
-    
+
     py::dtype out_py_dtype = NPUArray::GetPyDtype(out_dtype);
     if (dtype != std::nullopt) {
         out_py_dtype = *dtype;
         out_dtype = NPUArray::GetACLDataType(out_py_dtype);
     }
-    
+
     // 2. 创建输出数组
     NPUArray out(x.shape, out_py_dtype);
 

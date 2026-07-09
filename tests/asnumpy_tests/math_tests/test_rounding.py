@@ -27,8 +27,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -71,7 +71,10 @@ def test_rint_float_basic(xp, dtype):
     return xp.rint(a)
 
 
-@pytest.mark.xfail(reason="Mismatch: rint on int32/64 results in inconsistent output dtype compared to Numpy")
+@pytest.mark.xfail(
+    reason="[FIXABLE] dtype promotion: rint on int32/64 outputs inconsistent dtype vs NumPy",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_rint_int_mismatch_xfail(xp, dtype):
     """记录：rint 对整数类型的输出 dtype 与 numpy 不一致"""
@@ -88,7 +91,7 @@ def test_floor_basic(xp, dtype):
     return xp.floor(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnFloor does not support float16 and Complex types")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnFloor unsupported dtypes (float16/complex)", strict=True)
 @testing.for_dtypes([numpy.float16, numpy.complex64])
 def test_floor_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.5], dtype)
@@ -107,7 +110,10 @@ def test_fix_basic(xp, dtype):
     return xp.fix(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnFix only supports float32")
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnFix only supports float32, auto-cast needed for other dtypes",
+    strict=True,
+)
 @testing.for_dtypes([numpy.float64, numpy.int32])
 def test_fix_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.5], dtype)
@@ -123,7 +129,10 @@ def test_ceil_basic(xp, dtype):
     return xp.ceil(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnCeil only supports float32/64")
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnCeil only supports float32/64, auto-cast needed for int dtypes",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32, numpy.int64])
 def test_ceil_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1], dtype)
@@ -139,7 +148,10 @@ def test_trunc_basic(xp, dtype):
     return xp.trunc(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnTrunc only supports float32")
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnTrunc only supports float32, auto-cast needed for other dtypes",
+    strict=True,
+)
 @testing.for_dtypes([numpy.float64, numpy.int32])
 def test_trunc_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.5], dtype)

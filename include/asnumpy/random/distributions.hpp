@@ -55,4 +55,4 @@ NPUArray Lognormal(float mean, float sigma, const std::vector<int64_t>& size);
 
 //NPUArray Multinomial(int64_t n, const NPUArray& pvals, const std::vector<int64_t>& size);
 
-}
+} // namespace asnumpy

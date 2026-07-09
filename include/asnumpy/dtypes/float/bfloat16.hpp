@@ -22,27 +22,27 @@
 namespace asnumpy {
 namespace dtypes {
 
-// 自定义 bfloat16 实现（移除 Eigen 依赖）
+// Custom bfloat16 implementation (removed Eigen dependency)
 class bfloat16 {
-private:
+  private:
     uint16_t rep_;
     struct ConstructFromRepTag {};
     constexpr bfloat16(uint16_t rep, ConstructFromRepTag) : rep_(rep) {}
 
     static uint16_t encode_from_float(float f) {
         uint32_t u = bit_cast<uint32_t>(f);
-        // bfloat16: 1符号位 + 8指数位 + 7尾数位
-        // 直接截取 float32 的高16位
+        // bfloat16: 1 sign + 8 exponent + 7 mantissa bits
+        // directly truncate high 16 bits of float32
         return static_cast<uint16_t>(u >> 16);
     }
 
     static float decode_to_float(uint16_t bits) {
-        // 将 bfloat16 位模式扩展到 float32
+        // extend bfloat16 bit pattern to float32
         uint32_t u = static_cast<uint32_t>(bits) << 16;
         return bit_cast<float>(u);
     }
 
-public:
+  public:
     static constexpr int kBits = 16;
     static constexpr int kExponentBias = 127;
     static constexpr int kMantissaBits = 7;
@@ -54,9 +54,7 @@ public:
 
     constexpr uint16_t rep() const { return rep_; }
 
-    static constexpr bfloat16 FromRep(uint16_t rep) {
-        return bfloat16(rep, ConstructFromRepTag{});
-    }
+    static constexpr bfloat16 FromRep(uint16_t rep) { return bfloat16(rep, ConstructFromRepTag{}); }
 
     explicit operator float() const { return decode_to_float(rep_); }
     explicit operator double() const { return static_cast<double>(static_cast<float>(*this)); }
@@ -84,17 +82,17 @@ public:
     bool operator!=(const bfloat16& other) const { return !(*this == other); }
     bool operator<(const bfloat16& other) const {
         float a = static_cast<float>(*this), b = static_cast<float>(other);
-        if (std::isnan(a) || std::isnan(b)) return false;
+        if (std::isnan(a) || std::isnan(b))
+            return false;
         return a < b;
     }
     bool operator<=(const bfloat16& other) const { return *this < other || *this == other; }
     bool operator>(const bfloat16& other) const { return other < *this; }
     bool operator>=(const bfloat16& other) const { return other <= *this; }
 
-    // ACL 枚举获取
+    // get ACL enum
     static constexpr aclDataType getACLenum() { return ACL_BF16; }
 };
 
-}  // namespace dtypes
-}  // namespace asnumpy
-
+} // namespace dtypes
+} // namespace asnumpy

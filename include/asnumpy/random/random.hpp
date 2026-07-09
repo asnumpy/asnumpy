@@ -17,8 +17,5 @@
 #pragma once
 
 namespace asnumpy {
-namespace random {
-
-
-}
-}
+namespace random {}
+} // namespace asnumpy

@@ -21,8 +21,15 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
-from tests.asnumpy_tests.math_tests.conftest import _create_array
+
+
+def _create_array(xp, data, dtype):
+    np_arr = numpy.array(data, dtype=dtype)
+    if xp is numpy:
+        return np_arr
+    return xp.ndarray.from_numpy(np_arr)
 
 
 # ========== 1. 求和 (Sum) ==========
@@ -37,7 +44,9 @@ def test_sum_basic(xp, dtype):
     return xp.sum(a, axis=0, keepdims=False)
 
 
-@pytest.mark.xfail(reason="Bug: sum use aclnnFlatten which does not support float64")
+@pytest.mark.xfail(
+    reason="[FIXABLE] sum uses aclnnFlatten which does not support float64", strict=True
+)
 @testing.for_dtypes([numpy.float32])
 def test_sum_axis_none_xfail(xp, dtype):
     a = _create_array(xp, [1.0, 2.0], dtype)
@@ -66,14 +75,16 @@ def test_prod_axis_none_xfail(xp, dtype):
 # ========== 3. 归约 Dtype 限制 (XFAIL) ==========
 
 
-@pytest.mark.xfail(reason="Mismatch: asnumpy sum/prod keeps original dtype for int8/16/32, whereas numpy promotes")
+@pytest.mark.xfail(
+    reason="[FIXABLE] dtype promotion: sum/prod keeps original dtype, NumPy promotes", strict=True
+)
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
 def test_sum_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
     return xp.sum(a, axis=0, keepdims=False)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnSum/Prod unsupported dtypes (float16, uint16/32/64)")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnSum/Prod unsupported dtypes (float16/uints)", strict=True)
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.uint64])
 def test_sum_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1, 1], dtype)
@@ -99,7 +110,9 @@ def test_nanprod_basic(xp, dtype):
     return xp.nanprod(a, axis=0, keepdims=False)
 
 
-@pytest.mark.xfail(reason="Bug: nansum/nanprod unsupported dtypes (float16/64, uints, complex)")
+@pytest.mark.xfail(
+    reason="[FIXABLE] nansum/nanprod unsupported dtypes (float16/64/uints/complex)", strict=True
+)
 @testing.for_dtypes([numpy.float16, numpy.float64, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_nan_reduction_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
@@ -127,14 +140,18 @@ def test_cumprod_basic(xp, dtype):
     return xp.cumprod(a, axis=0)
 
 
-@pytest.mark.xfail(reason="Mismatch: cumulative ops keep int8/16/32 dtypes, numpy promotes")
+@pytest.mark.xfail(
+    reason="[FIXABLE] dtype promotion: cumulative ops keep int dtype, NumPy promotes", strict=True
+)
 @testing.for_dtypes([numpy.int8, numpy.int16, numpy.int32, numpy.uint8])
 def test_cumsum_int_mismatch_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
     return xp.cumsum(a, axis=0)
 
 
-@pytest.mark.xfail(reason="Bug: cumprod/cumsum unsupported dtypes (float16, uints, complex)")
+@pytest.mark.xfail(
+    reason="[FIXABLE] cumprod/cumsum unsupported dtypes (float16/uints/complex)", strict=True
+)
 @testing.for_dtypes([numpy.float16, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_cumulative_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
@@ -160,7 +177,9 @@ def test_nancumprod_basic(xp, dtype):
     return xp.nancumprod(a, axis=0)
 
 
-@pytest.mark.xfail(reason="Bug: nancumsum/nancumprod unsupported float64/uints/complex")
+@pytest.mark.xfail(
+    reason="[FIXABLE] nancumsum/nancumprod unsupported dtypes (float64/uints/complex)", strict=True
+)
 @testing.for_dtypes([numpy.float64, numpy.uint16, numpy.uint32, numpy.complex64])
 def test_nan_cumulative_unsupported_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)

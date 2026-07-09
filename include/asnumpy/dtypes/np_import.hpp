@@ -39,8 +39,8 @@
 #endif
 
 // Place <locale> before <Python.h> for macOS compatibility (harmless elsewhere)
-#include <locale>
 #include <Python.h>
+#include <locale>
 
 #include <numpy/arrayobject.h>
 #include <numpy/arrayscalars.h>
@@ -55,8 +55,8 @@
 #define PyArray_DescrProto PyArray_Descr
 #endif
 
-namespace asnumpy{
-    namespace dtypes{
-        void ImportNumpy();
-    }
+namespace asnumpy {
+namespace dtypes {
+void ImportNumpy();
 }
+} // namespace asnumpy

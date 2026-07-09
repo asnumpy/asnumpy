@@ -1,0 +1,114 @@
+/******************************************************************************
+ * Copyright (c) 2025 AISS Group at Harbin Institute of Technology. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *****************************************************************************/
+
+#include <asnumpy/math/rational_routines.hpp>
+#include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/npu_array.hpp>
+
+#include <acl/acl.h>
+#include <aclnn/aclnn_base.h>
+#include <aclnnop/aclnn_abs.h>
+#include <aclnnop/aclnn_div.h>
+#include <aclnnop/aclnn_gcd.h>
+#include <aclnnop/aclnn_mul.h>
+
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <stdexcept>
+
+namespace asnumpy {
+
+NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
+        // initialize intermediate and final result arrays
+    auto out_dtype = x1.dtype;
+    auto acl_dtype = x1.aclDtype;
+    auto shape = GetBroadcastShape(x1, x2);
+    if (dtype != std::nullopt) {
+        out_dtype = *dtype;
+    }
+    auto out = NPUArray(shape, out_dtype);
+
+        // step 1: compute product of x1 and x2 (a * b)
+    LOG_DEBUG("aclnnMul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    NPUArray product(shape, out_dtype);
+    uint64_t mul_workspace_size = 0;
+    aclOpExecutor* mul_executor = nullptr;
+    auto error =
+        aclnnMulGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, product.tensorPtr, &mul_workspace_size, &mul_executor);
+    ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
+
+    AclWorkspace mul_workspace(mul_workspace_size);
+
+    error = aclnnMul(mul_workspace.get(), mul_workspace_size, mul_executor, nullptr);
+    ACLNN_CHECK(error, "aclnnMul");
+    error = aclrtSynchronizeDevice();
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnMul completed");
+
+        // step 2: compute absolute product of x1 and x2 (|a * b|)
+    LOG_DEBUG("aclnnAbs start: input_shape={}, aclDtype={}", detail::FormatShape(product.shape),
+              AclDtypeName(product.aclDtype));
+    NPUArray abs_product(shape, out_dtype);
+    uint64_t abs_workspace_size = 0;
+    aclOpExecutor* abs_executor = nullptr;
+    error = aclnnAbsGetWorkspaceSize(product.tensorPtr, abs_product.tensorPtr, &abs_workspace_size, &abs_executor);
+    ACLNN_CHECK(error, "aclnnAbsGetWorkspaceSize");
+
+    AclWorkspace abs_workspace(abs_workspace_size);
+
+    error = aclnnAbs(abs_workspace.get(), abs_workspace_size, abs_executor, nullptr);
+    ACLNN_CHECK(error, "aclnnAbs");
+    error = aclrtSynchronizeDevice();
+    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
+    LOG_INFO("aclnnAbs completed");
+
+        // step 3: compute GCD of x1 and x2 (GCD(a, b))
+        NPUArray gcd_result = Gcd(x1, x2); // reuse existing Gcd function
+
+        // step 4: compute LCM = |a*b| / GCD(a,b)
+    return EXECUTE_BINARY_OP(
+        abs_product, gcd_result, out_dtype,
+        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnDivGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnDiv(workspace, workspaceSize, executor, nullptr);
+        },
+        "Lcm", "aclnnDiv");
+}
+
+NPUArray Gcd(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
+        // initialize output array with broadcast shape
+    auto out_dtype = x1.dtype;
+    auto shape = GetBroadcastShape(x1, x2);
+    auto out = NPUArray(shape, out_dtype);
+    if (dtype != std::nullopt) {
+        out_dtype = *dtype;
+    }
+    return EXECUTE_BINARY_OP(
+        x1, x2, out_dtype,
+        [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+            return aclnnGcdGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
+        },
+        [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+            return aclnnGcd(workspace, workspaceSize, executor, nullptr);
+        },
+        "Gcd", "aclnnGcd");
+}
+
+} // namespace asnumpy

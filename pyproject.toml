@@ -16,15 +16,17 @@
 
 [build-system]
 requires = [
-  "scikit-build-core>=0.11.6",
+  "scikit-build-core>=0.12.1",
   "pybind11>=3.0.0",
-  "numpy>=1.26",
+  "numpy>=2.0",
+  "setuptools-scm==9.2.2",
+  "towncrier>=24",
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "asnumpy"
-version = "0.2.0"
+dynamic = ["version"]
 description = "A NumPy-like library accelerated by Ascend NPU"
 readme = "README.md"
 authors = [{ name = "神里绫华的狗", email = "wuzhenqing@stu.hit.edu.cn" }]
@@ -35,9 +37,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: POSIX :: Linux"
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.26.0",
+    "numpy>=2.0",
     "loguru>=0.7.0"
 ]
 
@@ -45,9 +47,12 @@ dependencies = [
 dev = [
     "ruff>=0.15.0",
     "mypy>=1.19.0",
+    "pre-commit>=4.0.0",
 ]
 test = [
     "pytest>=9.0.0",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.8.0",
 ]
 
 [project.urls]
@@ -56,7 +61,7 @@ Repository = "https://gitcode.com/cann/asnumpy"
 
 # scikit-build-core configuration
 [tool.scikit-build.wheel]
-packages = ["asnumpy"]
+packages = ["src/asnumpy"]
 exclude = ["**/*.pyc", "**/__pycache__", "**/test", "**/tests"]
 
 [tool.scikit-build.install]
@@ -79,19 +84,49 @@ make-fallback = true
 mode = "redirect"
 verbose = true
 
+# scikit-build-core metadata configuration
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["src/asnumpy/_version.py"]
+
+# setuptools-scm configuration (version from git tags)
+[tool.setuptools_scm]
+write_to = "src/asnumpy/_version.py"
+tag_regex = '^v?(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+
+# towncrier configuration (fragment-based CHANGELOG management)
+[tool.towncrier]
+directory = "changes"
+filename = "CHANGELOG.md"
+package = "asnumpy"
+package_dir = "src"
+
 # pytest configuration
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = [
     "--import-mode=importlib",
-    "-v"
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+]
+
+# Coverage configuration (Python layer only; C++ coverage via gcov/lcov post-1.0)
+[tool.coverage.run]
+source = ["src/asnumpy"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
 ]
 
 # Ruff configuration (linter + formatter)
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 100
-src = ["asnumpy", "tests"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = [
@@ -106,13 +141,18 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # function call in default argument (common in NumPy API)
+    "B017",   # pytest.raises(Exception) is intentional for NPU operator error diversity
+    "UP038",  # isinstance(X, Y) with | syntax not available on Python 3.10
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.ruff.lint.isort]
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true

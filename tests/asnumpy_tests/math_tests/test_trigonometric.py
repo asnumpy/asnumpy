@@ -16,8 +16,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -33,7 +33,9 @@ def _create_array(xp, data, dtype):
 
 
 # 对于 sin/cos/tan，float16 目前在 C++ 绑定层可能存在映射问题
-@pytest.mark.xfail(condition=True, reason="Bug: aclDataType mapping for float16 is missing in C++ core")
+@pytest.mark.xfail(
+    condition=True, reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True
+)
 @testing.for_dtypes([numpy.float16])
 @testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
 def test_trig_float16_xfail(xp, dtype):
@@ -70,7 +72,9 @@ def test_tan_basic(xp, dtype):
 # --- 针对非浮点类型的 xfail 标注 (遵循 Logic 风格) ---
 
 
-@pytest.mark.xfail(reason="Bug: aclnnSin does not support Int32, asnumpy missing auto-cast")
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnSin does not support Int32, auto-cast needed", strict=True
+)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_sin_int(xp, dtype):
@@ -79,7 +83,7 @@ def test_sin_int(xp, dtype):
     return xp.sin(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnCos does not support Bool, asnumpy missing auto-cast")
+@pytest.mark.xfail(reason="[FIXABLE] aclnnCos does not support Bool, auto-cast needed", strict=True)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
 def test_cos_bool(xp, dtype):
@@ -115,7 +119,7 @@ def test_arctan_basic(xp, dtype):
     return xp.arctan(a)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnArccos throws RuntimeError on x > 1")
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose()
 def test_arccos_out_of_domain(xp, dtype):
@@ -138,7 +142,9 @@ def test_arctan2_basic(xp, dtype):
     return xp.arctan2(t_y, t_x)
 
 
-@pytest.mark.xfail(reason="Bug: aclnnArctan2 does not support Int32 input")
+@pytest.mark.xfail(
+    reason="[FIXABLE] aclnnArctan2 does not support Int32, auto-cast needed", strict=True
+)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_array_equal()
 def test_arctan2_int(xp, dtype):

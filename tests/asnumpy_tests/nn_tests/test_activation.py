@@ -28,6 +28,7 @@
 
 import numpy
 import pytest
+
 from asnumpy import testing
 
 # ========== 辅助函数 ==========
@@ -57,6 +58,7 @@ numpy.softmax = _numpy_softmax
 # ==========================================================================
 # 1. 基础功能测试 (Basic)
 # ==========================================================================
+
 
 # ---------- 1.1 一维数组 ----------
 @testing.for_dtypes([numpy.float32])
@@ -99,6 +101,7 @@ def test_softmax_single_element(xp, dtype):
 # ==========================================================================
 # 2. axis 参数测试 (Axis Parameter)
 # ==========================================================================
+
 
 # ---------- 2.1 二维数组 axis ----------
 @testing.for_dtypes([numpy.float32])
@@ -182,13 +185,16 @@ def test_softmax_3d_negative_axis(xp, dtype):
 # 3. 多维输入测试 (Multi-dimensional Input)
 # ==========================================================================
 
+
 # ---------- 3.1 二维不同形状 ----------
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_softmax_2d_wide(xp, dtype):
     """测试二维宽矩阵 softmax (2x10)"""
-    data = [[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]]
+    data = [
+        [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1],
+    ]
     a = _create_array(xp, data, dtype)
     return xp.softmax(a, axis=1)
 
@@ -239,6 +245,7 @@ def test_softmax_batch_classification(xp, dtype):
 # ==========================================================================
 # 4. 数值稳定性测试 (Numerical Stability)
 # ==========================================================================
+
 
 # ---------- 4.1 大正值 ----------
 @testing.for_dtypes([numpy.float32])
@@ -332,6 +339,7 @@ def test_softmax_2d_extreme_mixed(xp, dtype):
 # 5. 多 dtype 测试 (Dtype Support)
 # ==========================================================================
 
+
 @testing.for_dtypes([numpy.float32, numpy.float64])
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_softmax_dtypes(xp, dtype):
@@ -354,7 +362,10 @@ def test_softmax_2d_dtypes(xp, dtype):
 # 6. 空数组 / 边界情况测试 (Edge Cases)
 # ==========================================================================
 
-@pytest.mark.xfail(reason="NPU operator does not support empty arrays", strict=True)
+
+@pytest.mark.xfail(
+    reason="[UPSTREAM] CANN 8.0.RC1: operator does not support empty arrays", strict=True
+)
 @testing.numpy_asnumpy_allclose(rtol=1e-5)
 def test_softmax_empty(xp):
     """测试 softmax: 空数组"""

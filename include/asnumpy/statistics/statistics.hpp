@@ -17,4 +17,3 @@
 #pragma once
 
 #include <asnumpy/statistics/averages_and_variances.hpp>
-

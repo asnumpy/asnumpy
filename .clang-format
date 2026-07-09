@@ -1,0 +1,37 @@
+---
+# clang-format configuration for asnumpy
+# BasedOnStyle: LLVM with project-specific adjustments
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+# 4-space indent (matches existing code)
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Line width
+ColumnLimit: 120
+
+# Brace style: same-line opening brace (matches existing code)
+BreakBeforeBraces: Attach
+
+# Pointer/reference alignment
+PointerAlignment: Left
+
+# Include sorting: project headers first, then system
+IncludeCategories:
+  - Regex: '^<asnumpy/.*>'
+    Priority: 1
+  - Regex: '^<.*>'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+SortIncludes: true
+
+# Spaces
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+
+# Keep existing line breaks in comment blocks
+ReflowComments: false

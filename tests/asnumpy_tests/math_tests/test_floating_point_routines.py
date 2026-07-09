@@ -21,8 +21,8 @@
 
 import numpy
 import pytest
-from asnumpy import testing
 
+from asnumpy import testing
 
 # ========== 辅助函数 ==========
 
@@ -68,7 +68,6 @@ def test_signbit_basic(xp, dtype):
     return xp.signbit(a)
 
 
-@pytest.mark.xfail(reason="Bug: signbit(-0.0) returns False, violating IEEE 754 and mismatching NumPy")
 @testing.for_dtypes([numpy.float32])
 @testing.numpy_asnumpy_array_equal()
 def test_signbit_negative_zero_xfail(xp, dtype):
@@ -114,14 +113,17 @@ def test_fmod_basic(xp, dtype):
 # ========== 4. Dtype 与硬件限制 (XFAIL) ==========
 
 
-@pytest.mark.xfail(reason="Bug: aclDataType mapping for float16 is missing in C++ core")
+@pytest.mark.xfail(reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True)
 @testing.for_dtypes([numpy.float16])
 def test_float_routines_float16_xfail(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     return xp.isinf(a)
 
 
-@pytest.mark.xfail(reason="Mismatch: isnan/isinf on Int dtypes might unsupported or return different types")
+@pytest.mark.xfail(
+    reason="[FIXABLE] isnan/isinf on int dtypes may be unsupported or return wrong types",
+    strict=True,
+)
 @testing.for_dtypes([numpy.int32])
 def test_float_checks_int_xfail(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
