@@ -16,32 +16,25 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstdint>
+#include <asnumpy/utils/npu_array.hpp>
+#include <acl/acl.h>
 
 namespace asnumpy {
-namespace dtypes {
 
-inline void f32_exp_frac_to_unbiased_and_mant(uint32_t exp, uint32_t frac, int& e_unbiased, float& mant) {
-    if (exp == 0) {
-        e_unbiased = -126;
-        mant = std::ldexp(static_cast<float>(frac), -149);
-        return;
-    }
-    e_unbiased = static_cast<int>(exp) - 127;
-    mant = 1.0f + static_cast<float>(frac) * (1.0f / 8388608.0f);
-}
+/**
+ * @brief Cast an array to `targetDtype` on device, via aclnnCast.
+ *
+ * Returns a deep copy unchanged when the array is already `targetDtype`, so callers can invoke it
+ * unconditionally. Takes an aclDataType rather than a py::dtype so no NumPy round trip is involved.
+ *
+ * This is the single cast primitive: the promotion layer, `astype`, and the ops that need to widen
+ * an operand all route through it.
+ *
+ * @param input Array to cast.
+ * @param targetDtype Desired ACL element type.
+ * @return NPUArray of the same shape with element type `targetDtype`.
+ * @throws std::runtime_error If the ACL cast fails (e.g. the kernel lacks this dtype pair).
+ */
+NPUArray CastTo(const NPUArray& input, aclDataType targetDtype);
 
-inline float mx_decode_sign_exp_mant(uint8_t sign, uint8_t exp, uint8_t mant, int bias, float mant_step) {
-    if (exp == 0) {
-        float v = static_cast<float>(mant) * mant_step;
-        return sign ? -v : v;
-    }
-    float base = 1.0f + static_cast<float>(mant) * mant_step;
-    int e = static_cast<int>(exp) - bias;
-    float v = std::ldexp(base, e);
-    return sign ? -v : v;
-}
-
-} // namespace dtypes
 } // namespace asnumpy

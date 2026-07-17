@@ -14,6 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
+#include <asnumpy/dtypes/dtype_table.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 #include <cstddef>
@@ -292,6 +293,17 @@ py::array NPUArray::ToNumpy() const {
     if (tensorByteSize == 0)
         return result;
 
+    // The host buffer is sized from `dtype`, the device buffer from `aclDtype`. dtype_table keeps
+    // those in exact correspondence, so a mismatch means that invariant is broken. Check before
+    // any copy: this guard previously sat in only one branch, which is how a float16 array came to
+    // be written as 4-byte floats into a 2-byte-per-element buffer.
+    if (static_cast<int64_t>(info.size * info.itemsize) != static_cast<int64_t>(tensorByteSize))
+        throw std::runtime_error(
+            fmt::format("[npu_array.cpp](ToNumpy) size mismatch: host buffer is {} bytes for dtype '{}', but the "
+                        "device tensor is {} bytes for aclDataType '{}'",
+                        info.size * info.itemsize, py::str(this->dtype).cast<std::string>(), tensorByteSize,
+                        asnumpy::dtypes::Name(this->aclDtype)));
+
     void* rawDataPtr = nullptr;
     auto error = aclGetRawTensorAddr(this->tensorPtr, &rawDataPtr);
     ACL_RT_CHECK(error, "aclGetRawTensorAddr");
@@ -299,35 +311,10 @@ py::array NPUArray::ToNumpy() const {
         throw std::runtime_error("[npu_array.cpp](ToNumpy) aclGetRawTensorAddr returned null pointer");
     }
 
-    // special types need special handling
-    if (this->aclDtype == ACL_FLOAT16 || this->aclDtype == ACL_BF16) {
-        // for float16 and bf16, copy to temp buffer first, then convert
-        std::vector<uint16_t> temp_buffer(this->tensorSize);
-        error = aclrtMemcpy(temp_buffer.data(), tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
-        ACL_RT_CHECK(error, "aclrtMemcpy");
-
-        // convert to float32
-        float* result_ptr = static_cast<float*>(info.ptr);
-        for (size_t i = 0; i < this->tensorSize; ++i) {
-            if (this->aclDtype == ACL_FLOAT16) {
-                // simple float16 to float32 conversion
-                uint16_t h = temp_buffer[i];
-                uint32_t f = ((h & 0x8000) << 16) | (((h & 0x7c00) + 0x1c000) << 13) | ((h & 0x03ff) << 13);
-                result_ptr[i] = *reinterpret_cast<float*>(&f);
-            } else { // ACL_BF16
-                // bfloat16 to float32 conversion
-                uint16_t bf = temp_buffer[i];
-                uint32_t f = (bf << 16);
-                result_ptr[i] = *reinterpret_cast<float*>(&f);
-            }
-        }
-    } else {
-        // for other types, copy directly
-        if (info.size * info.itemsize != tensorByteSize)
-            throw std::runtime_error("[npu_array.cpp](ToNumpy) Size mismatch between tensor and NumPy array");
-        error = aclrtMemcpy(info.ptr, tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
-        ACL_RT_CHECK(error, "aclrtMemcpy");
-    }
+    // Every supported dtype has an identical host and device representation (NumPy float16 and
+    // ACL_FLOAT16 are both IEEE-754 binary16), so a raw copy is exact for all of them.
+    error = aclrtMemcpy(info.ptr, tensorByteSize, rawDataPtr, tensorByteSize, ACL_MEMCPY_DEVICE_TO_HOST);
+    ACL_RT_CHECK(error, "aclrtMemcpy");
 
     return result;
 }
@@ -355,187 +342,40 @@ int64_t NPUArray::GetShapeSize(const std::vector<int64_t>& shape) {
 /**
  * @brief Helper function to convert py::dtype to aclDataType.
  *
- * Converts Python data type to ACL data type for NPU operations.
+ * Thin delegation to asnumpy::dtypes::AclFromNumpy, which owns the mapping. Do not reintroduce
+ * mapping logic here: the table is the single source of truth.
  *
  * @param dtype Input py::dtype.
  * @return aclDataType The converted aclDataType.
- * @throws std::runtime_error If input data type is not supported.
+ * @throws std::invalid_argument If the dtype is big-endian, structured, or has no ACL equivalent.
+ *         Surfaces to Python as ValueError.
  */
-aclDataType NPUArray::GetACLDataType(py::dtype dtype) {
-    if (dtype.is(py::dtype("float16")))
-        return ACL_FLOAT16;
-    if (dtype.is(py::dtype::of<float>()))
-        return ACL_FLOAT;
-    if (dtype.is(py::dtype::of<double>()))
-        return ACL_DOUBLE;
-    if (dtype.is(py::dtype::of<int8_t>()))
-        return ACL_INT8;
-    if (dtype.is(py::dtype::of<int16_t>()))
-        return ACL_INT16;
-    if (dtype.is(py::dtype::of<int32_t>()))
-        return ACL_INT32;
-    if (dtype.is(py::dtype::of<int64_t>()))
-        return ACL_INT64;
-    if (dtype.is(py::dtype::of<uint8_t>()))
-        return ACL_UINT8;
-    if (dtype.is(py::dtype::of<uint16_t>()))
-        return ACL_UINT16;
-    if (dtype.is(py::dtype::of<uint32_t>()))
-        return ACL_UINT32;
-    if (dtype.is(py::dtype::of<uint64_t>()))
-        return ACL_UINT64;
-    if (dtype.is(py::dtype::of<bool>()))
-        return ACL_BOOL;
-    if (dtype.is(py::dtype::of<std::complex<float>>()))
-        return ACL_COMPLEX64;
-    if (dtype.is(py::dtype::of<std::complex<double>>()))
-        return ACL_COMPLEX128;
-    throw std::runtime_error("[npu_array.cpp](GetACLDataType) Unsupported py::dtype for aclDataType.");
-}
+aclDataType NPUArray::GetACLDataType(py::dtype dtype) { return asnumpy::dtypes::AclFromNumpy(dtype); }
 
 /**
  * @brief Helper function to convert aclDataType to py::dtype.
  *
- * Converts ACL data type to Python data type for NumPy compatibility.
+ * Thin delegation to asnumpy::dtypes::NumpyFromAcl. Exact inverse of GetACLDataType over the
+ * supported set.
  *
  * @param acl_type Input aclDataType.
  * @return py::dtype The converted py::dtype.
- * @throws std::runtime_error If input data type is not supported.
+ * @throws std::invalid_argument If `acl_type` has no NumPy equivalent (bf16, fp8/6/4, int4,
+ *         uint1, complex32). Surfaces to Python as ValueError.
  */
-py::dtype NPUArray::GetPyDtype(aclDataType acl_type) {
-    switch (acl_type) {
-    case ACL_FLOAT:
-        return py::dtype::of<float>();
-    case ACL_DOUBLE:
-        return py::dtype::of<double>();
-    case ACL_INT8:
-        return py::dtype::of<int8_t>();
-    case ACL_INT16:
-        return py::dtype::of<int16_t>();
-    case ACL_INT32:
-        return py::dtype::of<int32_t>();
-    case ACL_INT64:
-        return py::dtype::of<int64_t>();
-    case ACL_UINT8:
-        return py::dtype::of<uint8_t>();
-    case ACL_UINT16:
-        return py::dtype::of<uint16_t>();
-    case ACL_UINT32:
-        return py::dtype::of<uint32_t>();
-    case ACL_UINT64:
-        return py::dtype::of<uint64_t>();
-    case ACL_BOOL:
-        return py::dtype::of<bool>();
-    case ACL_FLOAT16:
-        return py::dtype::of<float>(); // float16 maps to float, preserving float semantics
-    case ACL_BF16:
-        return py::dtype::of<float>(); // bf16 maps to float, preserving float semantics
-    case ACL_INT4:
-        return py::dtype::of<uint8_t>(); // int4 maps to uint8
-    case ACL_UINT1:
-        return py::dtype::of<uint8_t>(); // uint1 maps to uint8
-    case ACL_COMPLEX64:
-        return py::dtype::of<std::complex<float>>();
-    case ACL_COMPLEX128:
-        return py::dtype::of<std::complex<double>>();
-    case ACL_COMPLEX32:
-        return py::dtype::of<std::complex<float>>(); // complex32 maps to complex64
-    case ACL_STRING:
-        return py::dtype::of<char*>(); // string pointer
-    case ACL_DT_UNDEFINED:
-        return py::dtype::of<uint8_t>(); // undefined type maps to uint8
-    case ACL_HIFLOAT8:
-        return py::dtype::of<uint8_t>(); // Float8 variants map to uint8
-    case ACL_FLOAT8_E5M2:
-        return py::dtype::of<uint8_t>(); // Float8 E5M2 format maps to uint8
-    case ACL_FLOAT8_E4M3FN:
-        return py::dtype::of<uint8_t>(); // Float8 E4M3FN format maps to uint8
-    case ACL_FLOAT8_E8M0:
-        return py::dtype::of<uint8_t>(); // Float8 E8M0 format maps to uint8
-    case ACL_FLOAT6_E3M2:
-        return py::dtype::of<uint8_t>(); // Float6 E3M2 format maps to uint8
-    case ACL_FLOAT6_E2M3:
-        return py::dtype::of<uint8_t>(); // Float6 E2M3 format maps to uint8
-    case ACL_FLOAT4_E2M1:
-        return py::dtype::of<uint8_t>(); // Float4 E2M1 format maps to uint8
-    case ACL_FLOAT4_E1M2:
-        return py::dtype::of<uint8_t>(); // Float4 E1M2 format maps to uint8
-    default:
-        throw std::runtime_error("[npu_array.cpp](GetPyDtype) Unsupported aclDataType for py::dtype conversion.");
-    }
-}
+py::dtype NPUArray::GetPyDtype(aclDataType acl_type) { return asnumpy::dtypes::NumpyFromAcl(acl_type); }
 
 /**
  * @brief Helper function to get byte size corresponding to aclDataType.
  *
- * Returns the byte size corresponding to ACL data type for memory allocation.
+ * Thin delegation to asnumpy::dtypes::ItemSize. Defined for unsupported ACL types too, so
+ * byte-size math stays available for diagnostics.
  *
  * @param dataType Input aclDataType.
  * @return int64_t Byte size of the data type.
- * @throws std::runtime_error If input data type is not supported.
+ * @throws std::invalid_argument If `dataType` is unknown. Surfaces to Python as ValueError.
  */
-int64_t NPUArray::GetDataTypeSize(aclDataType dataType) {
-    switch (dataType) {
-    case ACL_FLOAT:
-        return sizeof(float);
-    case ACL_DOUBLE:
-        return sizeof(double);
-    case ACL_INT8:
-        return sizeof(int8_t);
-    case ACL_INT16:
-        return sizeof(int16_t);
-    case ACL_INT32:
-        return sizeof(int32_t);
-    case ACL_INT64:
-        return sizeof(int64_t);
-    case ACL_UINT8:
-        return sizeof(uint8_t);
-    case ACL_UINT16:
-        return sizeof(uint16_t);
-    case ACL_UINT32:
-        return sizeof(uint32_t);
-    case ACL_UINT64:
-        return sizeof(uint64_t);
-    case ACL_BOOL:
-        return sizeof(bool);
-    case ACL_FLOAT16:
-        return sizeof(uint16_t); // 2 bytes
-    case ACL_BF16:
-        return sizeof(uint16_t); // 2 bytes
-    case ACL_INT4:
-        return 1; // 4 bits, byte-aligned
-    case ACL_UINT1:
-        return 1; // 1 bit, byte-aligned
-    case ACL_COMPLEX64:
-        return sizeof(std::complex<float>);
-    case ACL_COMPLEX128:
-        return sizeof(std::complex<double>);
-    case ACL_COMPLEX32:
-        return sizeof(std::complex<float>); // complex32 maps to complex64
-    case ACL_STRING:
-        return sizeof(char*); // string pointer
-    case ACL_DT_UNDEFINED:
-        return 0; // undefined type
-    case ACL_HIFLOAT8:
-        return 1; // Float8 variant, 1 byte
-    case ACL_FLOAT8_E5M2:
-        return 1; // Float8 E5M2 format, 1 byte
-    case ACL_FLOAT8_E4M3FN:
-        return 1; // Float8 E4M3FN format, 1 byte
-    case ACL_FLOAT8_E8M0:
-        return 1; // Float8 E8M0 format, 1 byte
-    case ACL_FLOAT6_E3M2:
-        return 1; // Float6 E3M2 format, 1 byte
-    case ACL_FLOAT6_E2M3:
-        return 1; // Float6 E2M3 format, 1 byte
-    case ACL_FLOAT4_E2M1:
-        return 1; // Float4 E2M1 format, 1 byte
-    case ACL_FLOAT4_E1M2:
-        return 1; // Float4 E1M2 format, 1 byte
-    default:
-        throw std::runtime_error("[npu_array.cpp](GetDataTypeSize) Unsupported aclDataType for size calculation.");
-    }
-}
+int64_t NPUArray::GetDataTypeSize(aclDataType dataType) { return asnumpy::dtypes::ItemSize(dataType); }
 
 std::vector<int64_t> GetBroadcastShape(const NPUArray& a, const NPUArray& b) {
     const std::vector<int64_t>& shapeA = a.shape;

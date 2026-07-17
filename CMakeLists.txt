@@ -28,15 +28,69 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Symbol visibility. Do not remove, and do not change the value -- see the footgun below.
+#
+# asnumpy's public ABI is exactly one symbol: PyInit__core. The build produces no linkable artifact
+# (every csrc/ target is an OBJECT lib; there is no SHARED/STATIC lib, no install(EXPORT), no
+# installed header), and the wheel ships only asnumpy/_core*.so. So every C++ symbol here is an
+# implementation detail and belongs hidden. pybind11 already exports the one symbol that must be
+# exported, via PYBIND11_EXPORT on the module init function -- which is why no export macro of our
+# own (ASNUMPY_API / generate_export_header) is warranted: it would advertise a C++ API contract
+# that deliberately does not exist.
+#
+# The concrete hazard this closes, measured on this tree: without these two lines _core.so exported
+# 1027 dynamic symbols, of which 808 were fmt::/spdlog:: vague-linkage template and inline copies
+# (79% of the total), and 26 of those were *weak* symbols whose names also exist in libfmt.so.8 /
+# libspdlog.so.1 -- the very libraries _core.so dynamically links (readelf -d shows both as NEEDED).
+# Weak symbols merge by name at load time, first one wins, so any other extension in the same
+# interpreter carrying a different fmt/spdlog version could silently bind our calls to its copy, or
+# ours to its. It also exported 90 NPUArray symbols. With the lines: 31 symbols, 0 fmt, 0 spdlog,
+# 0 NPUArray. Those template copies are inherent to a header-heavy C++ stack -- Cython-based CuPy
+# has no fmt/spdlog and so has no equivalent exposure; do not cite CuPy's lack of this flag here.
+#
+# CMAKE_VISIBILITY_INLINES_HIDDEN is the half that removes those weak inline copies -- it is not
+# redundant with the line above it. pybind11Config.cmake prescribes exactly this pair.
+#
+# pybind11 also forces hidden on its own types (PYBIND11_NAMESPACE carries
+# visibility("hidden")), so a default-visibility class holding a pybind type -- NPUArray::dtype is
+# one -- additionally trips -Wattributes in every TU. That warning is the symptom pybind11's own
+# CMake comment names ("mixed hidden/non-hidden types"); it is evidence here, not the reason.
+# pybind11_add_module() sets visibility on the _core target only, never on the csrc/ OBJECT libs
+# that feed it, so a global set() is the only thing that reaches them.
+#
+# FOOTGUN: pybind11's guard is `if(NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET)` -- an EXISTENCE check.
+# Leaving this unset is safe (pybind11 forces hidden on _core itself); setting it to `hidden` is the
+# supported override. But setting it to any OTHER value, `default` included, silently disables
+# pybind11's fallback and leaves _core exporting everything -- worse than having no line at all.
+#
+# Size gain is real but secondary (-7%), and almost entirely dynamic-linking metadata: .dynstr -81%,
+# .text only -0.4%. There is no measurable link-time gain. Do not justify these lines on size.
+#
+# Must precede the add_subdirectory() calls below: the target property is initialized from this
+# variable at target-creation time.
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
 # FetchContent module (for fmt, spdlog, etc.)
 include(FetchContent)
+
+# ========== Python with NumPy ==========
+# Find Python BEFORE pybind11. With PYBIND11_FINDPYTHON=ON, pybind11 runs its own find_package(Python);
+# resolving it first here means that call reuses this result instead of re-detecting, which is what
+# produced the second, duplicate "Found Python" line at configure time.
+#
+# Request Development.Module, NOT the full Development. `Development` pulls in Development.Embed, whose
+# artifacts (libpython) exist only to embed the interpreter in a host program -- something asnumpy never
+# does. The build consumes exactly two Python things: Python::NumPy and Python_NumPy_INCLUDE_DIRS
+# (bindings/python/CMakeLists.txt), plus Python::Module via pybind11_add_module; none needs Embed, and
+# readelf confirms _core.so has no libpython in NEEDED. Requesting Development.Embed makes configure
+# fail on interpreters that ship no libpython (manylinux wheel images, python-build-standalone) for a
+# library the module never links -- a real hazard for the v0.4.0 wheel release, not a hypothetical.
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
 # ========== pybind11 (from pip, scikit-build-core auto-configures CMAKE_PREFIX_PATH) ==========
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
-
-# ========== Python with NumPy ==========
-find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
 
 # ========== CANN SDK (environment variable lookup) ==========
 if(DEFINED ENV{ASCEND_TOOLKIT_HOME})

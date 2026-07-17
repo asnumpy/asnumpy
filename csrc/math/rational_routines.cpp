@@ -33,23 +33,22 @@
 namespace asnumpy {
 
 NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-        // initialize intermediate and final result arrays
-    auto out_dtype = x1.dtype;
-    auto acl_dtype = x1.aclDtype;
-    auto shape = GetBroadcastShape(x1, x2);
-    if (dtype != std::nullopt) {
-        out_dtype = *dtype;
-    }
-    auto out = NPUArray(shape, out_dtype);
+    // Promote first: the intermediates below feed raw tensors to aclnn, so mixing a narrower
+    // out_dtype with wider operands (lcm(int32, int64)) would mis-type every step.
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+    auto out_dtype = dtype.has_value() ? dtype.value() : dtypes::NumpyFromAcl(operands.common());
+    auto shape = GetBroadcastShape(a, b);
 
-        // step 1: compute product of x1 and x2 (a * b)
-    LOG_DEBUG("aclnnMul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
-              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    // step 1: compute product of x1 and x2 (a * b)
+    LOG_DEBUG("aclnnMul start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(a.shape),
+              detail::FormatShape(b.shape), AclDtypeName(a.aclDtype));
     NPUArray product(shape, out_dtype);
     uint64_t mul_workspace_size = 0;
     aclOpExecutor* mul_executor = nullptr;
     auto error =
-        aclnnMulGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, product.tensorPtr, &mul_workspace_size, &mul_executor);
+        aclnnMulGetWorkspaceSize(a.tensorPtr, b.tensorPtr, product.tensorPtr, &mul_workspace_size, &mul_executor);
     ACLNN_CHECK(error, "aclnnMulGetWorkspaceSize");
 
     AclWorkspace mul_workspace(mul_workspace_size);
@@ -60,7 +59,7 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnMul completed");
 
-        // step 2: compute absolute product of x1 and x2 (|a * b|)
+    // step 2: compute absolute product of x1 and x2 (|a * b|)
     LOG_DEBUG("aclnnAbs start: input_shape={}, aclDtype={}", detail::FormatShape(product.shape),
               AclDtypeName(product.aclDtype));
     NPUArray abs_product(shape, out_dtype);
@@ -77,10 +76,10 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnAbs completed");
 
-        // step 3: compute GCD of x1 and x2 (GCD(a, b))
-        NPUArray gcd_result = Gcd(x1, x2); // reuse existing Gcd function
+    // step 3: compute GCD of x1 and x2 (GCD(a, b))
+    NPUArray gcd_result = Gcd(a, b, out_dtype); // reuse existing Gcd function
 
-        // step 4: compute LCM = |a*b| / GCD(a,b)
+    // step 4: compute LCM = |a*b| / GCD(a,b)
     return EXECUTE_BINARY_OP(
         abs_product, gcd_result, out_dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
@@ -93,15 +92,11 @@ NPUArray Lcm(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
 }
 
 NPUArray Gcd(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-        // initialize output array with broadcast shape
-    auto out_dtype = x1.dtype;
-    auto shape = GetBroadcastShape(x1, x2);
-    auto out = NPUArray(shape, out_dtype);
-    if (dtype != std::nullopt) {
-        out_dtype = *dtype;
-    }
+    // Pass `dtype` through: ExecuteBinaryOp promotes the operands, so pinning the output to
+    // x1.dtype would hand the kernel a narrower out than its inputs and return the wrong dtype
+    // (gcd(int32, int64) must be int64, as in NumPy).
     return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+        x1, x2, dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnGcdGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
