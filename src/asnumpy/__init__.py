@@ -28,6 +28,16 @@ from .cann import finalize, init, reset_device, reset_device_force, set_device
 
 if TYPE_CHECKING:
     from . import linalg, random
+    from ._dtype import (
+        can_cast,
+        dtype,
+        finfo,
+        iinfo,
+        isdtype,
+        issubdtype,
+        promote_types,
+        result_type,
+    )
     from ._types import (
         ArrayLike,
         AxisLike,
@@ -162,7 +172,12 @@ if TYPE_CHECKING:
     from .utils import broadcast_shape, ndarray
 
 
-# Common NumPy dtype aliases accessible as ap.float32, ap.int32, etc.
+# NumPy dtype aliases accessible as ap.float32, ap.int32, etc. These resolve to NumPy's own
+# objects (ap.float32 is np.float32) -- asnumpy has no dtype system of its own.
+#
+# The canonical spellings plus the C-derived aliases NumPy itself exposes. The dtype table keys on
+# pybind11's normalized_num(), so equivalent-but-distinct types (longlong vs int64) map to the same
+# ACL type; they are listed here so `ap.<name>` agrees with what from_numpy actually accepts.
 _NUMPY_DTYPE_NAMES = {
     "float16",
     "float32",
@@ -178,6 +193,25 @@ _NUMPY_DTYPE_NAMES = {
     "complex64",
     "complex128",
     "bool_",
+    # C-derived aliases for the same underlying types
+    "bool",
+    "byte",
+    "ubyte",
+    "short",
+    "ushort",
+    "intc",
+    "uintc",
+    "int_",
+    "uint",
+    "longlong",
+    "ulonglong",
+    "intp",
+    "uintp",
+    "half",
+    "single",
+    "double",
+    "csingle",
+    "cdouble",
 }
 
 _LAZY_MAPPING = {
@@ -328,6 +362,15 @@ _LAZY_MAPPING = {
     # .utils
     "broadcast_shape": ".utils",
     "ndarray": ".utils",
+    # ._dtype
+    "can_cast": "._dtype",
+    "dtype": "._dtype",
+    "finfo": "._dtype",
+    "iinfo": "._dtype",
+    "isdtype": "._dtype",
+    "issubdtype": "._dtype",
+    "promote_types": "._dtype",
+    "result_type": "._dtype",
 }
 
 

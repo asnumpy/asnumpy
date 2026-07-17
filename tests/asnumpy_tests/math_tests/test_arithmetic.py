@@ -105,13 +105,15 @@ def test_absolute(xp, dtype):
     return xp.absolute(a)
 
 
-# ========== 4. 广播与特殊 Dtype 限制 (XFAIL) ==========
+# ========== 4. 广播与特殊 Dtype 限制 ==========
 
 
-@pytest.mark.xfail(reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True)
+# float16 has an 11-bit mantissa, so its ULP near 1.0 is ~9.8e-4. The default rtol=1e-7 is four
+# orders of magnitude tighter than the type can represent and would fail on a single-ULP
+# disagreement between NumPy's float16 add and aclnnAdd.
 @testing.for_dtypes([numpy.float16])
-@testing.numpy_asnumpy_allclose()
-def test_arithmetic_float16_xfail(xp, dtype):
+@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
+def test_arithmetic_float16(xp, dtype):
     a = _create_array(xp, [1.0], dtype)
     b = _create_array(xp, [2.0], dtype)
     return xp.add(a, b)

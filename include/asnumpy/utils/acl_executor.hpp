@@ -23,6 +23,8 @@
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
+#include "asnumpy/dtypes/dtype_table.hpp"
+#include "asnumpy/dtypes/promote.hpp"
 #include "asnumpy/utils/acl_resource.hpp"
 #include "asnumpy/utils/npu_array.hpp"
 #include "asnumpy/utils/status_handler.hpp"
@@ -54,7 +56,7 @@ inline std::string FormatShape(const std::vector<int64_t>& shape) {
  * @tparam GetWorkspaceSizeFunc Type of the function to get workspace size
  * @tparam ExecuteFunc Type of the function to execute the operation
  * @param input Input array
- * @param dtype Output data type (optional, defaults to input dtype)
+ * @param dtype Output data type. If nullopt, the input's dtype is used.
  * @param get_workspace_size_func Function to get workspace size and executor
  * @param execute_func Function to execute the operator
  * @param op_name Operator name (for logging and error messages)
@@ -72,8 +74,10 @@ NPUArray ExecuteUnaryOp(const NPUArray& input, std::optional<py::dtype> dtype,
                   src_func, aclnn_api, detail::FormatShape(input.shape), input.tensorSize,
                   AclDtypeName(input.aclDtype));
 
-    // Determine output type and shape
-    auto out = NPUArray(input.shape, dtype.value());
+    // Determine output type and shape. nullopt means "same as input" -- the doxygen promised this
+    // default but the code used to call dtype.value() unconditionally, throwing bad_optional_access
+    // with no op name or source context. ExecuteBinaryOp honours nullopt, so this stays symmetric.
+    auto out = dtype.has_value() ? NPUArray(input.shape, dtype.value()) : NPUArray(input.shape, input.aclDtype);
 
     // Get workspace size and executor
     uint64_t workspaceSize = 0;
@@ -107,9 +111,14 @@ NPUArray ExecuteUnaryOp(const NPUArray& input, std::optional<py::dtype> dtype,
  *
  * @tparam GetWorkspaceSizeFunc Type of the function to get workspace size
  * @tparam ExecuteFunc Type of the function to execute the operation
+ * Both operands are promoted to numpy.result_type(x1.dtype, x2.dtype) before the kernel runs, so
+ * the result does not depend on argument order. An operand is only cast when its dtype differs
+ * from the promoted type, so same-dtype calls -- the common case -- cost nothing extra.
+ *
  * @param x1 First input array
  * @param x2 Second input array
- * @param dtype Output data type (optional, defaults to x1 dtype)
+ * @param dtype Output data type. If nullopt, the promoted operand type is used. Pass an explicit
+ *              dtype for ops whose output type is not the operand type (comparisons return bool).
  * @param get_workspace_size_func Function to get workspace size and executor
  * @param execute_func Function to execute the operator
  * @param op_name Operator name (for logging and error messages)
@@ -123,18 +132,27 @@ NPUArray ExecuteBinaryOp(const NPUArray& x1, const NPUArray& x2, std::optional<p
                          GetWorkspaceSizeFunc&& get_workspace_size_func, ExecuteFunc&& execute_func,
                          const std::string& op_name, const std::string& aclnn_api, const char* src_file,
                          const char* src_func) {
-    spdlog::debug("[{}]({}) {} start: x1_shape={}, x2_shape={}, aclDtype={}", detail::LogBasename(src_file), src_func,
-                  aclnn_api, detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    spdlog::debug("[{}]({}) {} start: x1_shape={}, x2_shape={}, x1_dtype={}, x2_dtype={}",
+                  detail::LogBasename(src_file), src_func, aclnn_api, detail::FormatShape(x1.shape),
+                  detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype), AclDtypeName(x2.aclDtype));
 
-    // Determine output shape and type
-    auto out_shape = GetBroadcastShape(x1, x2);
-    auto out = NPUArray(out_shape, dtype.value());
+    // Promote operands to a common dtype. Previously x2's dtype was never consulted and x1's won,
+    // which made the result depend on argument order.
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+
+    // Determine output shape and type. The default path uses the aclDataType ctor directly rather
+    // than going through NumpyFromAcl: building a Python np.dtype only for NPUArray to convert it
+    // straight back would cost a dtype construction plus an inverse table lookup on every op.
+    auto out_shape = GetBroadcastShape(a, b);
+    auto out = dtype.has_value() ? NPUArray(out_shape, dtype.value()) : NPUArray(out_shape, operands.common());
 
     // Get workspace size and executor
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error =
-        std::invoke(get_workspace_size_func, x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
+        std::invoke(get_workspace_size_func, a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     CheckAclnnStatus(error, src_file, src_func, aclnn_api + "GetWorkspaceSize");
 
     // RAII management of workspace

@@ -17,11 +17,12 @@
 #include <asnumpy/linalg/norms.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
-#include <asnumpy/utils/dtype_promotion.hpp>
+#include <asnumpy/utils/cast.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
+#include <aclnnop/aclnn_cast.h>
 #include <aclnnop/aclnn_exp.h>
 #include <aclnnop/aclnn_mul.h>
 #include <aclnnop/aclnn_norm.h>
@@ -32,6 +33,14 @@
 #include <stdexcept>
 
 using namespace asnumpy;
+
+namespace {
+
+// Cast to a target dtype. Thin alias kept so the call sites below read unchanged; the primitive
+// itself now lives in asnumpy/utils/cast.hpp and is shared with the promotion layer and astype.
+NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) { return asnumpy::CastTo(input, targetDtype); }
+
+} // anonymous namespace
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
     LOG_DEBUG("aclnnNorm start: input_shape={}, aclDtype={}, ord={}, axis={}, keepdims={}",
