@@ -33,7 +33,12 @@ class ndarray(_ndarray):
     def __init__(self, other: _ndarray) -> None: ...
 
     def __init__(self, shape_or_array, dtype=None):
-        if isinstance(shape_or_array, _ndarray):
+        if type(shape_or_array) is _ndarray:
+            # Exact _ndarray instances are private one-shot values produced by
+            # _core. Wrapping consumes them; they must not be used afterwards.
+            super().__init__(shape_or_array, _move=True)
+        elif isinstance(shape_or_array, _ndarray):
+            # Public ndarray instances and subclasses retain deep-copy semantics.
             super().__init__(shape_or_array)
         elif isinstance(shape_or_array, (Sequence, int)):
             if dtype is None:
