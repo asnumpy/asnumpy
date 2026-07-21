@@ -270,12 +270,16 @@ from ._core.math import (
     trunc as _trunc,
 )
 from ._types import ArrayLike, AxisOptional, DTypeLike
+from ._ufunc import create_ufunc as _create_ufunc
 from .utils import _convert_dtype, ndarray
 
 
-# Trigonometric functions
-def sin(x: ArrayLike) -> ndarray:
-    return ndarray(_sin(x))
+# Trigonometric functions (ufunc-registered)
+sin = _create_ufunc(
+    'sin',
+    (('f->f', _sin), ('e->e', _sin), ('d->d', _sin)),
+    doc='Compute sine element-wise.',
+)
 
 
 def cos(x: ArrayLike) -> ndarray:
@@ -368,9 +372,18 @@ def gelu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_gelu(x, _convert_dtype(dtype)))
 
 
-# Arithmetic operations
-def add(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def _add_fallback(x1, x2, dtype=None):
+    """Fallback for add with dtypes not in loop table (e.g. int32)."""
     return ndarray(_add(x1, x2, _convert_dtype(dtype)))
+
+
+# Arithmetic operations (ufunc-registered)
+add = _create_ufunc(
+    'add',
+    (('ff->f', _add), ('dd->d', _add)),
+    fallback=_add_fallback,
+    doc='Add arguments element-wise.',
+)
 
 
 def reciprocal(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -381,8 +394,11 @@ def positive(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_positive(x, _convert_dtype(dtype)))
 
 
-def negative(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
-    return ndarray(_negative(x, _convert_dtype(dtype)))
+negative = _create_ufunc(
+    'negative',
+    (('f->f', _negative), ('d->d', _negative), ('i->i', _negative)),
+    doc='Numerical negative, element-wise.',
+)
 
 
 def multiply(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -625,12 +641,10 @@ def fix(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 
 def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     converted_dtype = _convert_dtype(dtype)
-
     if converted_dtype is None:
         host = x.to_numpy() if hasattr(x, "to_numpy") else np.asarray(x)
         if np.issubdtype(host.dtype, np.integer) or np.issubdtype(host.dtype, np.bool_):
             return ndarray.from_numpy(np.asarray(np.floor(host)))
-
     return ndarray(_floor(x, converted_dtype))
 
 
