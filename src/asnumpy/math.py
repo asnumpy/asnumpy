@@ -270,12 +270,24 @@ from ._core.math import (
     trunc as _trunc,
 )
 from ._types import ArrayLike, AxisOptional, DTypeLike
+from ._ufunc import create_ufunc as _create_ufunc
 from .utils import _convert_dtype, ndarray
 
 
-# Trigonometric functions
-def sin(x: ArrayLike) -> ndarray:
+# Trigonometric functions (ufunc-registered)
+def _sin_fallback(x, dtype=None):
+    """Fallback for sin: delegate to _core for non-registered dtypes (e.g. int)."""
+    if dtype is not None:
+        raise TypeError("sin() does not support the 'dtype' parameter")
     return ndarray(_sin(x))
+
+
+sin = _create_ufunc(
+    'sin',
+    (('f->f', _sin, False), ('e->e', _sin, False), ('d->d', _sin, False)),
+    doc='Compute sine element-wise.',
+    fallback=_sin_fallback,
+)
 
 
 def cos(x: ArrayLike) -> ndarray:
@@ -368,9 +380,18 @@ def gelu(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_gelu(x, _convert_dtype(dtype)))
 
 
-# Arithmetic operations
-def add(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+# Arithmetic operations (ufunc-registered)
+def _add_fallback(x1, x2, dtype=None):
+    """Fallback for add with dtypes not in loop table (e.g. int32)."""
     return ndarray(_add(x1, x2, _convert_dtype(dtype)))
+
+
+add = _create_ufunc(
+    'add',
+    (('ff->f', _add), ('dd->d', _add)),
+    fallback=_add_fallback,
+    doc='Add arguments element-wise.',
+)
 
 
 def reciprocal(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -381,8 +402,17 @@ def positive(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     return ndarray(_positive(x, _convert_dtype(dtype)))
 
 
-def negative(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def _negative_fallback(x, dtype=None):
+    """Fallback for negative with dtypes not in loop table (e.g. int64, float16)."""
     return ndarray(_negative(x, _convert_dtype(dtype)))
+
+
+negative = _create_ufunc(
+    'negative',
+    (('f->f', _negative), ('d->d', _negative), ('i->i', _negative)),
+    doc='Numerical negative, element-wise.',
+    fallback=_negative_fallback,
+)
 
 
 def multiply(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
@@ -625,12 +655,10 @@ def fix(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
 
 def floor(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
     converted_dtype = _convert_dtype(dtype)
-
     if converted_dtype is None:
         host = x.to_numpy() if hasattr(x, "to_numpy") else np.asarray(x)
         if np.issubdtype(host.dtype, np.integer) or np.issubdtype(host.dtype, np.bool_):
             return ndarray.from_numpy(np.asarray(np.floor(host)))
-
     return ndarray(_floor(x, converted_dtype))
 
 
