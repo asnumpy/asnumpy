@@ -85,6 +85,70 @@ class ndarray(_ndarray):
     def to_numpy(self) -> np.ndarray:
         return super().to_numpy()
 
+    __array_priority__ = 100.0
+
+    def __array_ufunc__(self, ufunc_obj, method, *inputs, **kwargs):
+        """Implement NumPy ufunc protocol.
+
+        When a NumPy ufunc (e.g. np.sin, np.add) is called with an asnumpy
+        ndarray, this method dispatches to the corresponding asnumpy ufunc.
+
+        Args:
+            ufunc_obj: The numpy.ufunc being applied.
+            method: The ufunc method ('__call__', 'outer', 'reduce', etc.).
+            *inputs: Input arrays.
+            **kwargs: Additional keyword arguments (out, dtype, etc.).
+
+        Returns:
+            Result from the asnumpy ufunc, or NotImplemented if unhandled.
+        """
+        import asnumpy as anp
+
+        if method not in ("__call__",):
+            return NotImplemented
+
+        name = getattr(ufunc_obj, "__name__", None)
+        if name is None:
+            return NotImplemented
+
+        func = getattr(anp, name, None)
+        if func is None or not hasattr(func, "_ops"):
+            return NotImplemented
+
+        out = kwargs.pop("out", None)
+        dtype = kwargs.pop("dtype", None)
+
+        try:
+            return func(*inputs, dtype=dtype, out=out, **kwargs)
+        except TypeError:
+            return NotImplemented
+
+    def __array_function__(self, func, types, args, kwargs):
+        """Implement NumPy array function protocol.
+
+        When a NumPy function (e.g. numpy.sin, numpy.add) is called with
+        an asnumpy ndarray, this method dispatches to the corresponding
+        asnumpy function.
+
+        Args:
+            func: The numpy function being called.
+            types: Collection of types involved in the call.
+            args: Positional arguments.
+            kwargs: Keyword arguments.
+
+        Returns:
+            Result from the asnumpy function, or NotImplemented if unhandled.
+        """
+        import asnumpy as anp
+
+        name = func.__name__
+        anp_func = getattr(anp, name, None)
+
+        if anp_func is None or anp_func is func:
+            return NotImplemented
+
+        return anp_func(*args, **kwargs)
+
 
 @logger.catch(reraise=True)
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:
