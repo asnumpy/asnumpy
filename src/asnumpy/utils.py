@@ -33,13 +33,14 @@ class ndarray(_ndarray):
     def __init__(self, other: _ndarray) -> None: ...
 
     def __init__(self, shape_or_array, dtype=None):
-        if type(shape_or_array) is _ndarray:
-            # Exact _ndarray instances are private one-shot values produced by
-            # _core. Wrapping consumes them; they must not be used afterwards.
-            super().__init__(shape_or_array, _move=True)
-        elif isinstance(shape_or_array, _ndarray):
-            # Public ndarray instances and subclasses retain deep-copy semantics.
+        if isinstance(shape_or_array, ndarray):
+            # Public ndarray and its subclasses retain deep-copy semantics, so an
+            # explicit ndarray(existing_array) never consumes the source array.
             super().__init__(shape_or_array)
+        elif isinstance(shape_or_array, _ndarray):
+            # A base _ndarray that is not a public ndarray is a private one-shot
+            # result produced by _core; wrapping consumes it via move semantics.
+            super().__init__(shape_or_array, _move=True)
         elif isinstance(shape_or_array, (Sequence, int)):
             if dtype is None:
                 raise ValueError("dtype must be specified when initializing with shape")

@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+# *****************************************************************************
+# Copyright (c) 2025 ISE Group at Harbin Institute of Technology. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *****************************************************************************
+
 """Benchmark public ndarray wrapping before and after the move-semantics change.
 
 For the final performance conclusion, run this script against separately built
@@ -11,6 +27,7 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import logging
 import math
 import platform
 import statistics
@@ -22,6 +39,8 @@ import numpy as np
 
 import asnumpy as anp
 from asnumpy import _core
+
+logger = logging.getLogger("benchmark_move_wrapper")
 
 Benchmark = Callable[[], object]
 
@@ -128,6 +147,8 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
+    if not logging.getLogger().handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
     modes = ("public", "core") if args.mode == "both" else (args.mode,)
     records: list[dict[str, object]] = []
 
@@ -151,11 +172,14 @@ def main() -> None:
                     **metrics,
                 }
                 records.append(record)
-                print(
-                    f"{operator:10s} {mode:6s} {str(shape):18s} "
-                    f"median={metrics['median_ms']:.6f} ms "
-                    f"p95={metrics['p95_ms']:.6f} ms "
-                    f"min={metrics['minimum_ms']:.6f} ms"
+                logger.info(
+                    "%-10s %-6s %-18s median=%.6f ms p95=%.6f ms min=%.6f ms",
+                    operator,
+                    mode,
+                    str(shape),
+                    metrics["median_ms"],
+                    metrics["p95_ms"],
+                    metrics["minimum_ms"],
                 )
 
     payload = {
@@ -171,7 +195,7 @@ def main() -> None:
     }
     if args.json:
         args.json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        print(f"wrote {args.json}")
+        logger.info("wrote %s", args.json)
 
 
 if __name__ == "__main__":
