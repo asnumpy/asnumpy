@@ -39,6 +39,10 @@ result = ap.multiply(m1_npu, m2_npu)
 print(result.to_numpy())
 ```
 
+> **Note**: The Performance section below benchmarks `ap.mean()` (a reduction operation),
+> which differs from the `ap.multiply()` (element-wise) demo above. See [benchmarks.md](docs/benchmarks.md)
+> for full reproduction steps.
+
 <!-- toc -->
 
 - [Features](#features)
@@ -115,14 +119,17 @@ Runnable scripts are in [`examples/`](examples/).
 
 ## Performance
 
-At 3000×3000 `float32`, `ap.multiply()` runs **128.70× faster** than `np.multiply()` on the same machine.
+At 3000×3000 `float32`, `ap.mean()` runs **35.70× faster** than `np.mean()` on the same machine.
+As data scale increases, the NPU's parallel computing advantage becomes more pronounced.
 
-| Shape | AsNumpy (NPU) | NumPy (CPU) | Speedup |
-|-------|---------------|-------------|---------|
-| (500, 500) | 1.9355 s | 0.1708 s | 0.09× |
-| (1000, 1000) | 0.0692 s | 0.7029 s | 10.16× |
-| (2000, 2000) | 0.1033 s | 3.8387 s | 37.17× |
-| (3000, 3000) | 0.1115 s | 14.3567 s | **128.70×** |
+> `ap.mean()` is a reduction operation; the top-section demo uses `ap.multiply()` (element-wise).
+
+| Shape | Data Size | AsNumpy (ms) | NumPy (ms) | Speedup |
+|-------|-----------|-------------|------------|---------|
+| (500, 500) | 250,000 | 0.1446 | 0.1429 | 0.99× |
+| (1000, 1000) | 1,000,000 | 0.1510 | 0.4904 | 3.25× |
+| (2000, 2000) | 4,000,000 | 0.1636 | 1.9372 | 11.84× |
+| (3000, 3000) | 9,000,000 | 0.1857 | 6.6303 | **35.70×** |
 
 Full test environment, controlled variables, and reproduction instructions: [benchmarks.md](docs/benchmarks.md).
 
