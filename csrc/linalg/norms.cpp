@@ -17,11 +17,11 @@
 #include <asnumpy/linalg/norms.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/dtype_promotion.hpp>
 #include <asnumpy/utils/status_handler.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
-#include <aclnnop/aclnn_cast.h>
 #include <aclnnop/aclnn_exp.h>
 #include <aclnnop/aclnn_mul.h>
 #include <aclnnop/aclnn_norm.h>
@@ -32,28 +32,6 @@
 #include <stdexcept>
 
 using namespace asnumpy;
-
-namespace {
-
-// Helper: cast NPUArray to target dtype
-NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) {
-    LOG_DEBUG("aclnnCast start: input_shape={}, aclDtype={}, targetDtype={}", detail::FormatShape(input.shape),
-              AclDtypeName(input.aclDtype), AclDtypeName(targetDtype));
-    auto result = NPUArray(input.shape, targetDtype);
-    uint64_t wsSize = 0;
-    aclOpExecutor* exec = nullptr;
-    auto err = aclnnCastGetWorkspaceSize(input.tensorPtr, targetDtype, result.tensorPtr, &wsSize, &exec);
-    ACLNN_CHECK(err, "aclnnCastGetWorkspaceSize");
-    AclWorkspace ws(wsSize);
-    err = aclnnCast(ws.get(), wsSize, exec, nullptr);
-    ACLNN_CHECK(err, "aclnnCast");
-    err = aclrtSynchronizeDevice();
-    ACL_RT_CHECK(err, "aclrtSynchronizeDevice");
-    LOG_INFO("aclnnCast completed");
-    return result;
-}
-
-} // anonymous namespace
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
     LOG_DEBUG("aclnnNorm start: input_shape={}, aclDtype={}, ord={}, axis={}, keepdims={}",

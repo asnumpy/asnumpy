@@ -17,6 +17,7 @@
 #include <asnumpy/math/trigonometric_functions.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/dtype_promotion.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
@@ -99,14 +100,12 @@ NPUArray Tan(const NPUArray& x) {
 }
 
 NPUArray Arcsin(const NPUArray& x) {
-    aclDataType aclType = ACL_FLOAT;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
-        aclType = x.aclDtype;
-    }
+    aclDataType aclType = PromoteUnaryFloating(x.aclDtype);
     ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
+    NPUArray input = EnsureAclDtype(x, aclType);
     py::dtype dtype = NPUArray::GetPyDtype(aclType);
     return EXECUTE_UNARY_OP(
-        x, dtype,
+        input, dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAsinGetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -117,14 +116,12 @@ NPUArray Arcsin(const NPUArray& x) {
 }
 
 NPUArray Arccos(const NPUArray& x) {
-    aclDataType aclType = ACL_FLOAT;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
-        aclType = x.aclDtype;
-    }
+    aclDataType aclType = PromoteUnaryFloating(x.aclDtype);
     ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
+    NPUArray input = EnsureAclDtype(x, aclType);
     py::dtype dtype = NPUArray::GetPyDtype(aclType);
     return EXECUTE_UNARY_OP(
-        x, dtype,
+        input, dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAcosGetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -135,14 +132,12 @@ NPUArray Arccos(const NPUArray& x) {
 }
 
 NPUArray Arctan(const NPUArray& x) {
-    aclDataType aclType = ACL_FLOAT;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
-        aclType = x.aclDtype;
-    }
+    aclDataType aclType = PromoteUnaryFloating(x.aclDtype);
     ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
+    NPUArray input = EnsureAclDtype(x, aclType);
     py::dtype dtype = NPUArray::GetPyDtype(aclType);
     return EXECUTE_UNARY_OP(
-        x, dtype,
+        input, dtype,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAtanGetWorkspaceSize(in, out, workspaceSize, executor);
         },

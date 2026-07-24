@@ -148,11 +148,9 @@ def test_clip_basic(xp, dtype):
     return xp.clip(a, 3, 8)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: clip forces non-float32 types to float32", strict=True
-)
 @testing.for_dtypes([numpy.int32, numpy.float64])
-def test_clip_dtype_mismatch_xfail(xp, dtype):
+@testing.numpy_asnumpy_allclose()
+def test_clip_dtype_promotion(xp, dtype):
     a = _create_array(xp, [1, 5, 10], dtype)
     return xp.clip(a, 3, 8)
 

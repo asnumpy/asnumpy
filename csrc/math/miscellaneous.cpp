@@ -17,8 +17,10 @@
 #include <asnumpy/math/miscellaneous.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/dtype_promotion.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_ops_macros.hpp>
+#include <asnumpy/utils/npu_scalar.hpp>
 
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
@@ -150,13 +152,22 @@ namespace asnumpy {
 NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max) {
     LOG_DEBUG("aclnnClampTensor start: a_shape={}, aclDtype={}", detail::FormatShape(a.shape),
               AclDtypeName(a.aclDtype));
-    auto temp = GetBroadcastShape(a, a_min);
-    auto x = NPUArray(temp, ACL_FLOAT);
-    auto broadcast = GetBroadcastShape(x, a_max);
-    auto result = NPUArray(broadcast, ACL_FLOAT);
+    // Preserve integral `a` when bounds are also integral; otherwise widen floating operands.
+    aclDataType outType = a.aclDtype;
+    if (IsFloatingAclDtype(a.aclDtype) || IsFloatingAclDtype(a_min.aclDtype) || IsFloatingAclDtype(a_max.aclDtype)) {
+        outType = PromoteBinaryFloating(a.aclDtype, PromoteBinaryFloating(a_min.aclDtype, a_max.aclDtype));
+    }
+
+    NPUArray in_a = EnsureAclDtype(a, outType);
+    NPUArray in_min = EnsureAclDtype(a_min, outType);
+    NPUArray in_max = EnsureAclDtype(a_max, outType);
+    auto temp_shape = GetBroadcastShape(in_a, in_min);
+    NPUArray temp(temp_shape, outType);
+    auto broadcast = GetBroadcastShape(temp, in_max);
+    auto result = NPUArray(broadcast, outType);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnClampTensorGetWorkspaceSize(a.tensorPtr, a_min.tensorPtr, a_max.tensorPtr, result.tensorPtr,
+    auto error = aclnnClampTensorGetWorkspaceSize(in_a.tensorPtr, in_min.tensorPtr, in_max.tensorPtr, result.tensorPtr,
                                                   &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnClampTensorGetWorkspaceSize");
 
@@ -174,10 +185,12 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, const NPUArray& a_max) {
 NPUArray Clip(const NPUArray& a, float a_min, float a_max) {
     LOG_DEBUG("aclnnClamp start: a_shape={}, aclDtype={}, a_min={}, a_max={}", detail::FormatShape(a.shape),
               AclDtypeName(a.aclDtype), a_min, a_max);
+    // Keep input dtype (Python ints arrive as float via pybind; NumPy int bounds keep `a.dtype`).
+    aclDataType outType = a.aclDtype;
     auto shape = a.shape;
-    auto amin_scalar = aclCreateScalar(&a_min, ACL_FLOAT);
-    auto amax_scalar = aclCreateScalar(&a_max, ACL_FLOAT);
-    auto result = NPUArray(shape, ACL_FLOAT);
+    auto amin_scalar = CreateScalar(a_min, outType);
+    auto amax_scalar = CreateScalar(a_max, outType);
+    auto result = NPUArray(shape, outType);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
     auto error =
@@ -198,12 +211,18 @@ NPUArray Clip(const NPUArray& a, float a_min, float a_max) {
 NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max) {
     LOG_DEBUG("aclnnClampMin start: a_shape={}, aclDtype={}, a_min={}", detail::FormatShape(a.shape),
               AclDtypeName(a.aclDtype), a_min);
+    aclDataType outType = a.aclDtype;
+    if (IsFloatingAclDtype(a_max.aclDtype)) {
+        outType = PromoteBinaryFloating(a.aclDtype, a_max.aclDtype);
+    }
     auto shape = a.shape;
-    auto amin_scalar = aclCreateScalar(&a_min, ACL_FLOAT);
-    auto temp = NPUArray(shape, ACL_FLOAT);
+    NPUArray in_a = EnsureAclDtype(a, outType);
+    auto amin_scalar = CreateScalar(a_min, outType);
+    auto temp = NPUArray(shape, outType);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnClampMinGetWorkspaceSize(a.tensorPtr, amin_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnClampMinGetWorkspaceSize(in_a.tensorPtr, amin_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnClampMinGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -214,9 +233,10 @@ NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max) {
     ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnClampMin completed");
 
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+    NPUArray in_max = EnsureAclDtype(a_max, outType);
+    py::dtype dtype = NPUArray::GetPyDtype(outType);
     return EXECUTE_BINARY_OP(
-        temp, a_max, dtype,
+        temp, in_max, dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnClampMaxTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -229,12 +249,18 @@ NPUArray Clip(const NPUArray& a, float a_min, const NPUArray& a_max) {
 NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
     LOG_DEBUG("aclnnClampMax start: a_shape={}, aclDtype={}, a_max={}", detail::FormatShape(a.shape),
               AclDtypeName(a.aclDtype), a_max);
+    aclDataType outType = a.aclDtype;
+    if (IsFloatingAclDtype(a_min.aclDtype)) {
+        outType = PromoteBinaryFloating(a.aclDtype, a_min.aclDtype);
+    }
     auto shape = a.shape;
-    auto amax_scalar = aclCreateScalar(&a_max, ACL_FLOAT);
-    auto temp = NPUArray(shape, ACL_FLOAT);
+    NPUArray in_a = EnsureAclDtype(a, outType);
+    auto amax_scalar = CreateScalar(a_max, outType);
+    auto temp = NPUArray(shape, outType);
     uint64_t workspaceSize1 = 0;
     aclOpExecutor* executor1;
-    auto error1 = aclnnClampMaxGetWorkspaceSize(a.tensorPtr, amax_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
+    auto error1 =
+        aclnnClampMaxGetWorkspaceSize(in_a.tensorPtr, amax_scalar, temp.tensorPtr, &workspaceSize1, &executor1);
     ACLNN_CHECK(error1, "aclnnClampMaxGetWorkspaceSize");
 
     AclWorkspace workspace1(workspaceSize1);
@@ -245,9 +271,10 @@ NPUArray Clip(const NPUArray& a, const NPUArray& a_min, float a_max) {
     ACL_RT_CHECK(error1, "aclrtSynchronizeDevice");
     LOG_INFO("aclnnClampMax completed");
 
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
+    NPUArray in_min = EnsureAclDtype(a_min, outType);
+    py::dtype dtype = NPUArray::GetPyDtype(outType);
     return EXECUTE_BINARY_OP(
-        temp, a_min, dtype,
+        temp, in_min, dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnClampMinTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
