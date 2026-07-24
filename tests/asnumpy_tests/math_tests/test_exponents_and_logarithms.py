@@ -93,16 +93,52 @@ def test_exp_float16_xfail(xp, dtype):
     return xp.exp(a)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: outputs float32 for integer inputs, NumPy outputs float64",
-    strict=True,
-)
 @testing.for_dtypes([numpy.int32])
 @testing.numpy_asnumpy_allclose()
-def test_exp_int_mismatch_xfail(xp, dtype):
+def test_exp_int_dtype_promotion(xp, dtype):
     data = [1, 2]
     a = _create_array(xp, data, dtype)
     return xp.exp(a)
+
+
+@testing.for_dtypes([numpy.int32])
+@testing.numpy_asnumpy_allclose()
+def test_log_int_dtype_promotion(xp, dtype):
+    data = [1, 2, 4]
+    a = _create_array(xp, data, dtype)
+    return xp.log(a)
+
+
+@testing.for_dtypes([numpy.int32])
+@testing.numpy_asnumpy_allclose()
+def test_log2_int_dtype_promotion(xp, dtype):
+    data = [1, 2, 4]
+    a = _create_array(xp, data, dtype)
+    return xp.log2(a)
+
+
+@testing.for_dtypes([numpy.int32])
+@testing.numpy_asnumpy_allclose()
+def test_log10_int_dtype_promotion(xp, dtype):
+    data = [1, 2, 4]
+    a = _create_array(xp, data, dtype)
+    return xp.log10(a)
+
+
+@testing.for_dtypes([numpy.int32, numpy.float64])
+@testing.numpy_asnumpy_allclose()
+def test_logaddexp_dtype_promotion(xp, dtype):
+    a = _create_array(xp, [1.0, 2.0], dtype)
+    b = _create_array(xp, [0.5, 1.5], dtype)
+    return xp.logaddexp(a, b)
+
+
+@testing.for_dtypes([numpy.int32, numpy.float64])
+@testing.numpy_asnumpy_allclose()
+def test_logaddexp2_dtype_promotion(xp, dtype):
+    a = _create_array(xp, [1.0, 2.0], dtype)
+    b = _create_array(xp, [0.5, 1.5], dtype)
+    return xp.logaddexp2(a, b)
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")

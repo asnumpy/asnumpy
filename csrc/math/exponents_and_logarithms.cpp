@@ -16,6 +16,7 @@
 
 #include <asnumpy/math/exponents_and_logarithms.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
+#include <asnumpy/utils/dtype_promotion.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
@@ -35,17 +36,48 @@
 #include <stdexcept>
 
 namespace asnumpy {
-NPUArray Exp(const NPUArray& x) {
-    // AOL operator limitation: integer types other than int64 are not supported
-    auto shape = x.shape;
-    aclDataType aclType = x.aclDtype;
-    if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64) {
-        aclType = ACL_DOUBLE;
+
+namespace {
+
+template <typename GetWs, typename Exec>
+NPUArray UnaryFloatingOp(const NPUArray& x, bool supports_float64, GetWs&& get_ws, Exec&& exec, const char* op_name,
+                         const char* api_name) {
+    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
+    ACL_DTYPE_WARN(x.aclDtype, desired, op_name);
+    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
+    NPUArray input = EnsureAclDtype(x, compute);
+    py::dtype dtype = NPUArray::GetPyDtype(compute);
+    NPUArray out = EXECUTE_UNARY_OP(input, dtype, std::forward<GetWs>(get_ws), std::forward<Exec>(exec), op_name,
+                                    api_name);
+    if (desired != compute) {
+        return CastToDtype(out, desired);
     }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return out;
+}
+
+template <typename GetWs, typename Exec>
+NPUArray BinaryFloatingOp(const NPUArray& x1, const NPUArray& x2, bool supports_float64, GetWs&& get_ws, Exec&& exec,
+                          const char* op_name, const char* api_name) {
+    aclDataType desired = PromoteBinaryFloating(x1.aclDtype, x2.aclDtype);
+    ACL_DTYPE_WARN(x1.aclDtype, desired, op_name);
+    ACL_DTYPE_WARN(x2.aclDtype, desired, op_name);
+    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
+    NPUArray in1 = EnsureAclDtype(x1, compute);
+    NPUArray in2 = EnsureAclDtype(x2, compute);
+    py::dtype dtype = NPUArray::GetPyDtype(compute);
+    NPUArray out = EXECUTE_BINARY_OP(in1, in2, dtype, std::forward<GetWs>(get_ws), std::forward<Exec>(exec), op_name,
+                                     api_name);
+    if (desired != compute) {
+        return CastToDtype(out, desired);
+    }
+    return out;
+}
+
+} // namespace
+
+NPUArray Exp(const NPUArray& x) {
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExpGetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -56,16 +88,8 @@ NPUArray Exp(const NPUArray& x) {
 }
 
 NPUArray Expm1(const NPUArray& x) {
-    // AOL operator limitation: integer types other than int64 are not supported
-    auto shape = x.shape;
-    aclDataType aclType = x.aclDtype;
-    if (x.aclDtype == ACL_BOOL || x.aclDtype == ACL_INT64) {
-        aclType = ACL_DOUBLE;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExpm1GetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -76,15 +100,8 @@ NPUArray Expm1(const NPUArray& x) {
 }
 
 NPUArray Exp2(const NPUArray& x) {
-    auto shape = x.shape;
-    aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
-        aclType = x.aclDtype;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExp2GetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -95,16 +112,8 @@ NPUArray Exp2(const NPUArray& x) {
 }
 
 NPUArray Log(const NPUArray& x) {
-    auto shape = x.shape;
-    aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE ||
-        x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128) {
-        aclType = x.aclDtype;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLogGetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -115,16 +124,8 @@ NPUArray Log(const NPUArray& x) {
 }
 
 NPUArray Log10(const NPUArray& x) {
-    auto shape = x.shape;
-    aclDataType aclType = ACL_FLOAT;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE ||
-        x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128) {
-        aclType = x.aclDtype;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog10GetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -135,16 +136,8 @@ NPUArray Log10(const NPUArray& x) {
 }
 
 NPUArray Log2(const NPUArray& x) {
-    auto shape = x.shape;
-    aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE ||
-        x.aclDtype == ACL_COMPLEX64 || x.aclDtype == ACL_COMPLEX128) {
-        aclType = x.aclDtype;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog2GetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -155,15 +148,8 @@ NPUArray Log2(const NPUArray& x) {
 }
 
 NPUArray Log1p(const NPUArray& x) {
-    auto shape = x.shape;
-    aclDataType aclType = ACL_DOUBLE;
-    if (x.aclDtype == ACL_FLOAT || x.aclDtype == ACL_FLOAT16 || x.aclDtype == ACL_DOUBLE) {
-        aclType = x.aclDtype;
-    }
-    ACL_DTYPE_WARN(x.aclDtype, aclType, __func__);
-    py::dtype dtype = NPUArray::GetPyDtype(aclType);
-    return EXECUTE_UNARY_OP(
-        x, dtype,
+    return UnaryFloatingOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog1pGetWorkspaceSize(in, out, workspaceSize, executor);
         },
@@ -174,9 +160,9 @@ NPUArray Log1p(const NPUArray& x) {
 }
 
 NPUArray Logaddexp(const NPUArray& x1, const NPUArray& x2) {
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
-    return EXECUTE_BINARY_OP(
-        x1, x2, dtype,
+    // aclnnLogAddExp does not support float64 outputs.
+    return BinaryFloatingOp(
+        x1, x2, /*supports_float64=*/false,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLogAddExpGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -187,9 +173,9 @@ NPUArray Logaddexp(const NPUArray& x1, const NPUArray& x2) {
 }
 
 NPUArray Logaddexp2(const NPUArray& x1, const NPUArray& x2) {
-    py::dtype dtype = NPUArray::GetPyDtype(ACL_FLOAT);
-    return EXECUTE_BINARY_OP(
-        x1, x2, dtype,
+    // aclnnLogAddExp2 does not support float64 outputs.
+    return BinaryFloatingOp(
+        x1, x2, /*supports_float64=*/false,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLogAddExp2GetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -198,4 +184,5 @@ NPUArray Logaddexp2(const NPUArray& x1, const NPUArray& x2) {
         },
         "Logaddexp2", "aclnnLogAddExp2");
 }
+
 } // namespace asnumpy

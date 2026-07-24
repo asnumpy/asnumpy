@@ -83,14 +83,10 @@ def test_hyperbolic_float16_xfail(xp, dtype):
     return xp.sinh(a)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: outputs float32 for integer inputs, NumPy outputs float64",
-    strict=True,
-)
 @testing.for_dtypes([numpy.int32, numpy.uint16, numpy.uint32, numpy.uint64])
-@testing.numpy_asnumpy_allclose()
-def test_hyperbolic_mismatch_xfail(xp, dtype):
-    """统计确认：sinh/cosh 等不支持 uint，且 int 提升精度不一致"""
+@testing.numpy_asnumpy_allclose(rtol=1e-5, atol=1e-6)
+def test_hyperbolic_int_dtype_promotion(xp, dtype):
+    """Integer inputs promote to float32/float64 like NumPy (ACL may compute in float32)."""
     data = [1, 2]
     a = _create_array(xp, data, dtype)
     return xp.sinh(a)

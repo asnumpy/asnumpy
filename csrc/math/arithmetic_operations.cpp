@@ -17,6 +17,7 @@
 #include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
+#include <asnumpy/utils/dtype_promotion.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
 
@@ -473,10 +474,33 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
 }
 
 /**
- * @brief Element-wise remainder, reusing Mod().
+ * @brief Element-wise remainder.
+ * Float path reuses Mod(); bool promotes to int8 (NumPy), computed as int32 then cast.
  */
 NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    return Mod(x1, x2, dtype.value_or(x1.dtype));
+    if (dtype.has_value()) {
+        return Mod(x1, x2, *dtype);
+    }
+    if (x1.aclDtype == ACL_BOOL || x2.aclDtype == ACL_BOOL) {
+        constexpr aclDataType kDesired = ACL_INT8;
+        // aclnnRemainder does not support int8; compute in int32 then cast back.
+        constexpr aclDataType kCompute = ACL_INT32;
+        ACL_DTYPE_WARN(x1.aclDtype, kDesired, __func__);
+        ACL_DTYPE_WARN(x2.aclDtype, kDesired, __func__);
+        NPUArray in1 = EnsureAclDtype(x1, kCompute);
+        NPUArray in2 = EnsureAclDtype(x2, kCompute);
+        NPUArray out = EXECUTE_BINARY_OP(
+            in1, in2, NPUArray::GetPyDtype(kCompute),
+            [](aclTensor* a, aclTensor* b, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
+                return aclnnRemainderTensorTensorGetWorkspaceSize(a, b, out, workspaceSize, executor);
+            },
+            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
+                return aclnnRemainderTensorTensor(workspace, workspaceSize, executor, nullptr);
+            },
+            "Remainder", "aclnnRemainderTensorTensor");
+        return CastToDtype(out, kDesired);
+    }
+    return Mod(x1, x2, x1.dtype);
 }
 
 /**

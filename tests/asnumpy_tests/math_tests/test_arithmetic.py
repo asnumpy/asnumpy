@@ -126,12 +126,9 @@ def test_arithmetic_int_mismatch_xfail(xp, dtype):
     return xp.add(a, b)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] aclnnRemainder does not support BOOL, auto-cast needed", strict=True
-)
 @testing.for_dtypes([numpy.bool_])
 @testing.numpy_asnumpy_array_equal()
-def test_remainder_bool_xfail(xp, dtype):
+def test_remainder_bool(xp, dtype):
     a = _create_array(xp, [True, False], dtype)
     b = _create_array(xp, [True, True], dtype)
     return xp.remainder(a, b)

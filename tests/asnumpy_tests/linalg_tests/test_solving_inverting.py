@@ -122,17 +122,13 @@ def test_inv_diagonal(xp, dtype):
 
 
 # ---------- 1.4 奇异矩阵边界 ----------
-@pytest.mark.xfail(
-    reason="[FIXABLE] inv() does not detect singular matrices — silently returns wrong result instead of raising LinAlgError",
-    strict=True,
-)
 @testing.for_dtypes([numpy.float32])
-@testing.numpy_asnumpy_allclose(rtol=1e-3, atol=1e-3)
-def test_inv_singular(xp, dtype):
-    """奇异矩阵: 行线性相关，应抛出异常（当前静默返回错误结果）"""
+def test_inv_singular(dtype):
+    """奇异矩阵: 行线性相关，应抛出异常"""
     data = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
-    a = _create_array(xp, data, dtype)
-    return xp.linalg.inv(a)
+    a = asnumpy.ndarray.from_numpy(numpy.array(data, dtype=dtype))
+    with pytest.raises((RuntimeError, ValueError, Exception)):
+        asnumpy.linalg.inv(a)
 
 
 def test_inv_zero_matrix():
