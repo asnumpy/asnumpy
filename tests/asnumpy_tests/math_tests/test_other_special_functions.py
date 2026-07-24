@@ -72,14 +72,9 @@ def test_sinc_float16_mapping_xfail(xp, dtype):
     return xp.sinc(a)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] aclnnSinc does not support INT32 output, auto-cast needed", strict=True
-)
 @testing.for_dtypes([numpy.int32])
-def test_sinc_int_output_xfail(xp, dtype):
-    """
-    记录：输入 int32 时，由于输出也被设为 int32，导致 aclnn 拒绝执行。
-    """
+@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
+def test_sinc_int(xp, dtype):
     data = [1, 2]
     a = _create_array(xp, data, dtype)
     return xp.sinc(a)

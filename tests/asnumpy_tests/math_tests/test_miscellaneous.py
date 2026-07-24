@@ -56,11 +56,19 @@ def test_absolute_unsupported_xfail(xp, dtype):
 
 
 @pytest.mark.xfail(
-    reason="[FIXABLE] dtype mismatch: fabs returns original int type, NumPy returns float",
+    reason="[FIXABLE] dtype mismatch: fabs(int8/uint8) NumPy→float16, asnumpy→float32",
     strict=True,
 )
-@testing.for_dtypes([numpy.int8, numpy.int32, numpy.uint8])
-def test_fabs_dtype_mismatch_xfail(xp, dtype):
+@testing.for_dtypes([numpy.int8, numpy.uint8])
+@testing.numpy_asnumpy_allclose()
+def test_fabs_float16_promote_xfail(xp, dtype):
+    a = _create_array(xp, [1, 2], dtype)
+    return xp.fabs(a)
+
+
+@testing.for_dtypes([numpy.int32])
+@testing.numpy_asnumpy_allclose()
+def test_fabs_int(xp, dtype):
     a = _create_array(xp, [-1, 2], dtype)
     return xp.fabs(a)
 
@@ -92,12 +100,9 @@ def test_square_float64(xp, dtype):
     return xp.square(a)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: square outputs float32 for integers, NumPy preserves/promotes",
-    strict=True,
-)
 @testing.for_dtypes([numpy.int32, numpy.int64])
-def test_square_int_mismatch_xfail(xp, dtype):
+@testing.numpy_asnumpy_allclose()
+def test_square_int(xp, dtype):
     a = _create_array(xp, [1, 2], dtype)
     return xp.square(a)
 
@@ -148,11 +153,9 @@ def test_clip_basic(xp, dtype):
     return xp.clip(a, 3, 8)
 
 
-@pytest.mark.xfail(
-    reason="[FIXABLE] dtype promotion: clip forces non-float32 types to float32", strict=True
-)
 @testing.for_dtypes([numpy.int32, numpy.float64])
-def test_clip_dtype_mismatch_xfail(xp, dtype):
+@testing.numpy_asnumpy_allclose()
+def test_clip_dtype_promotion(xp, dtype):
     a = _create_array(xp, [1, 5, 10], dtype)
     return xp.clip(a, 3, 8)
 
