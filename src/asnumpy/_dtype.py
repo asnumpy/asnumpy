@@ -26,6 +26,17 @@ unwrap an ``asnumpy.ndarray`` to its ``.dtype`` first. Handing the array itself 
 trigger a device-to-host transfer just to answer a question about metadata.
 """
 
+__all__ = [
+    "can_cast",
+    "dtype",
+    "finfo",
+    "iinfo",
+    "isdtype",
+    "issubdtype",
+    "promote_types",
+    "result_type",
+]
+
 # Verbatim re-exports: these are pure metadata operations with no array involved, so NumPy's
 # implementations apply unchanged.
 from numpy import can_cast as _np_can_cast
@@ -38,17 +49,6 @@ from numpy import promote_types as promote_types
 from numpy import result_type as _np_result_type
 
 from ._core import ndarray as _core_ndarray
-
-__all__ = [
-    "can_cast",
-    "dtype",
-    "finfo",
-    "iinfo",
-    "isdtype",
-    "issubdtype",
-    "promote_types",
-    "result_type",
-]
 
 
 def _unwrap(obj):

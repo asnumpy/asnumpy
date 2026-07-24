@@ -34,20 +34,22 @@ Linux/ELF only, which matches the project's supported-platform set (pyproject.to
 "Operating System :: POSIX :: Linux" and nothing else).
 """
 
+import importlib
 import shutil
 import subprocess
 import sys
 
 import pytest
 
-import asnumpy
+_nm = shutil.which("nm")
 
 
 def _exported_symbols() -> list[str]:
     """Demangled names of the dynamic symbols _core.so defines."""
-    so = asnumpy._core.__file__
+    assert _nm is not None
+    so = importlib.import_module("asnumpy._core").__file__
     out = subprocess.run(
-        ["nm", "-D", "--defined-only", "-C", so],
+        [_nm, "-D", "--defined-only", "-C", so],
         capture_output=True,
         text=True,
         check=True,
@@ -56,7 +58,7 @@ def _exported_symbols() -> list[str]:
 
 
 pytestmark = [
-    pytest.mark.skipif(shutil.which("nm") is None, reason="binutils nm not available"),
+    pytest.mark.skipif(_nm is None, reason="binutils nm not available"),
     pytest.mark.skipif(not sys.platform.startswith("linux"), reason="ELF/nm specific"),
 ]
 

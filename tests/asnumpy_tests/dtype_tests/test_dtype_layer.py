@@ -137,8 +137,8 @@ def test_maximum_does_not_demote():
 
 
 def test_explicit_dtype_argument_still_wins():
-    """An explicit dtype= overrides promotion."""
     assert ap.add(_arr(np.int32), _arr(np.int32), dtype=np.float32).dtype == np.float32
+
 
 
 def test_ldexp_does_not_promote_against_its_exponent():
