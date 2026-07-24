@@ -15,7 +15,6 @@
  *****************************************************************************/
 
 #include <asnumpy/math/other_special_functions.hpp>
-#include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/dtype_promotion.hpp>
 
 #include <acl/acl.h>
@@ -31,27 +30,15 @@ namespace asnumpy {
  * @brief Element-wise sinc function using aclnnSinc.
  */
 NPUArray Sinc(const NPUArray& x, std::optional<py::dtype> dtype) {
-    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
-    ACL_DTYPE_WARN(x.aclDtype, desired, __func__);
-    if (dtype != std::nullopt) {
-        desired = NPUArray::GetACLDataType(*dtype);
-    }
-    // aclnnSinc is float32-oriented on some CANN builds; float64 via compute+cast.
-    aclDataType compute = AclComputeFloatingDtype(desired, /*supports_float64=*/true);
-    NPUArray input = EnsureAclDtype(x, compute);
-    NPUArray out = EXECUTE_UNARY_OP(
-        input, NPUArray::GetPyDtype(compute),
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSincGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSinc(workspace, workspaceSize, executor, nullptr);
         },
-        "Sinc", "aclnnSinc");
-    if (desired != compute) {
-        return CastToDtype(out, desired);
-    }
-    return out;
+        "Sinc", "aclnnSinc", dtype);
 }
 
 } // namespace asnumpy

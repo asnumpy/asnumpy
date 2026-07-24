@@ -43,27 +43,8 @@
 
 namespace asnumpy {
 
-namespace {
-
-template <typename GetWs, typename Exec>
-NPUArray TrigUnaryOp(const NPUArray& x, bool supports_float64, GetWs&& get_ws, Exec&& exec, const char* op_name,
-                     const char* api_name) {
-    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
-    ACL_DTYPE_WARN(x.aclDtype, desired, op_name);
-    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
-    NPUArray input = EnsureAclDtype(x, compute);
-    NPUArray out = EXECUTE_UNARY_OP(input, NPUArray::GetPyDtype(compute), std::forward<GetWs>(get_ws),
-                                    std::forward<Exec>(exec), op_name, api_name);
-    if (desired != compute) {
-        return CastToDtype(out, desired);
-    }
-    return out;
-}
-
-} // namespace
-
 NPUArray Sin(const NPUArray& x) {
-    return TrigUnaryOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSinGetWorkspaceSize(in, out, workspaceSize, executor);
@@ -75,7 +56,7 @@ NPUArray Sin(const NPUArray& x) {
 }
 
 NPUArray Cos(const NPUArray& x) {
-    return TrigUnaryOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnCosGetWorkspaceSize(in, out, workspaceSize, executor);
@@ -87,7 +68,7 @@ NPUArray Cos(const NPUArray& x) {
 }
 
 NPUArray Tan(const NPUArray& x) {
-    return TrigUnaryOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnTanGetWorkspaceSize(in, out, workspaceSize, executor);

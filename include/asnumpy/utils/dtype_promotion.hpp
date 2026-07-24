@@ -16,9 +16,13 @@
 
 #pragma once
 
+#include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 
 #include <acl/acl.h>
+
+#include <optional>
+#include <utility>
 
 namespace asnumpy {
 
@@ -52,6 +56,29 @@ inline aclDataType AclComputeFloatingDtype(aclDataType desired, bool supports_fl
         return ACL_FLOAT;
     }
     return desired;
+}
+
+/**
+ * Shared unary floating path: promote → ensure ACL compute dtype → run op → cast back.
+ * Optional `dtype` overrides the NumPy-like desired output type (e.g. hyperbolic APIs).
+ */
+template <typename GetWs, typename Exec>
+NPUArray UnaryFloatingPromoteOp(const NPUArray& x, bool supports_float64, GetWs&& get_ws, Exec&& exec,
+                                const char* op_name, const char* api_name,
+                                std::optional<py::dtype> dtype = std::nullopt) {
+    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
+    ACL_DTYPE_WARN(x.aclDtype, desired, op_name);
+    if (dtype != std::nullopt) {
+        desired = NPUArray::GetACLDataType(*dtype);
+    }
+    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
+    NPUArray input = EnsureAclDtype(x, compute);
+    NPUArray out = EXECUTE_UNARY_OP(input, NPUArray::GetPyDtype(compute), std::forward<GetWs>(get_ws),
+                                    std::forward<Exec>(exec), op_name, api_name);
+    if (desired != compute) {
+        return CastToDtype(out, desired);
+    }
+    return out;
 }
 
 } // namespace asnumpy

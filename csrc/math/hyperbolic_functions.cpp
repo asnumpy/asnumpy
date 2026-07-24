@@ -33,100 +33,76 @@
 
 namespace asnumpy {
 
-namespace {
-
-template <typename GetWs, typename Exec>
-NPUArray HyperbolicOp(const NPUArray& x, std::optional<py::dtype> dtype, bool supports_float64, GetWs&& get_ws,
-                      Exec&& exec, const char* op_name, const char* api_name) {
-    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
-    ACL_DTYPE_WARN(x.aclDtype, desired, op_name);
-    py::dtype out_py_dtype = NPUArray::GetPyDtype(desired);
-    if (dtype != std::nullopt) {
-        out_py_dtype = *dtype;
-        desired = NPUArray::GetACLDataType(out_py_dtype);
-    }
-    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
-    NPUArray input = EnsureAclDtype(x, compute);
-    NPUArray out = EXECUTE_UNARY_OP(input, NPUArray::GetPyDtype(compute), std::forward<GetWs>(get_ws),
-                                    std::forward<Exec>(exec), op_name, api_name);
-    if (desired != compute) {
-        return CastToDtype(out, desired);
-    }
-    return out;
-}
-
-} // namespace
-
 NPUArray Sinh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnSinhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnSinh(workspace, workspaceSize, executor, nullptr);
         },
-        "Sinh", "aclnnSinh");
+        "Sinh", "aclnnSinh", dtype);
 }
 
 NPUArray Cosh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnCoshGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnCosh(workspace, workspaceSize, executor, nullptr);
         },
-        "Cosh", "aclnnCosh");
+        "Cosh", "aclnnCosh", dtype);
 }
 
 NPUArray Tanh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnTanhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnTanh(workspace, workspaceSize, executor, nullptr);
         },
-        "Tanh", "aclnnTanh");
+        "Tanh", "aclnnTanh", dtype);
 }
 
 NPUArray Arcsinh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAsinhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAsinh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arcsinh", "aclnnAsinh");
+        "Arcsinh", "aclnnAsinh", dtype);
 }
 
 NPUArray Arccosh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAcoshGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAcosh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arccosh", "aclnnAcosh");
+        "Arccosh", "aclnnAcosh", dtype);
 }
 
 NPUArray Arctanh(const NPUArray& x, std::optional<py::dtype> dtype) {
-    return HyperbolicOp(
-        x, dtype, /*supports_float64=*/false,
+    return UnaryFloatingPromoteOp(
+        x, /*supports_float64=*/false,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnAtanhGetWorkspaceSize(in, out, workspaceSize, executor);
         },
         [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
             return aclnnAtanh(workspace, workspaceSize, executor, nullptr);
         },
-        "Arctanh", "aclnnAtanh");
+        "Arctanh", "aclnnAtanh", dtype);
 }
 
 } // namespace asnumpy

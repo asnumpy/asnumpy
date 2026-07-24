@@ -40,22 +40,6 @@ namespace asnumpy {
 namespace {
 
 template <typename GetWs, typename Exec>
-NPUArray UnaryFloatingOp(const NPUArray& x, bool supports_float64, GetWs&& get_ws, Exec&& exec, const char* op_name,
-                         const char* api_name) {
-    aclDataType desired = PromoteUnaryFloating(x.aclDtype);
-    ACL_DTYPE_WARN(x.aclDtype, desired, op_name);
-    aclDataType compute = AclComputeFloatingDtype(desired, supports_float64);
-    NPUArray input = EnsureAclDtype(x, compute);
-    py::dtype dtype = NPUArray::GetPyDtype(compute);
-    NPUArray out = EXECUTE_UNARY_OP(input, dtype, std::forward<GetWs>(get_ws), std::forward<Exec>(exec), op_name,
-                                    api_name);
-    if (desired != compute) {
-        return CastToDtype(out, desired);
-    }
-    return out;
-}
-
-template <typename GetWs, typename Exec>
 NPUArray BinaryFloatingOp(const NPUArray& x1, const NPUArray& x2, bool supports_float64, GetWs&& get_ws, Exec&& exec,
                           const char* op_name, const char* api_name) {
     aclDataType desired = PromoteBinaryFloating(x1.aclDtype, x2.aclDtype);
@@ -76,7 +60,7 @@ NPUArray BinaryFloatingOp(const NPUArray& x1, const NPUArray& x2, bool supports_
 } // namespace
 
 NPUArray Exp(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExpGetWorkspaceSize(in, out, workspaceSize, executor);
@@ -88,7 +72,7 @@ NPUArray Exp(const NPUArray& x) {
 }
 
 NPUArray Expm1(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExpm1GetWorkspaceSize(in, out, workspaceSize, executor);
@@ -100,7 +84,7 @@ NPUArray Expm1(const NPUArray& x) {
 }
 
 NPUArray Exp2(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnExp2GetWorkspaceSize(in, out, workspaceSize, executor);
@@ -112,7 +96,7 @@ NPUArray Exp2(const NPUArray& x) {
 }
 
 NPUArray Log(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLogGetWorkspaceSize(in, out, workspaceSize, executor);
@@ -124,7 +108,7 @@ NPUArray Log(const NPUArray& x) {
 }
 
 NPUArray Log10(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog10GetWorkspaceSize(in, out, workspaceSize, executor);
@@ -136,7 +120,7 @@ NPUArray Log10(const NPUArray& x) {
 }
 
 NPUArray Log2(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog2GetWorkspaceSize(in, out, workspaceSize, executor);
@@ -148,7 +132,7 @@ NPUArray Log2(const NPUArray& x) {
 }
 
 NPUArray Log1p(const NPUArray& x) {
-    return UnaryFloatingOp(
+    return UnaryFloatingPromoteOp(
         x, /*supports_float64=*/true,
         [](aclTensor* in, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnLog1pGetWorkspaceSize(in, out, workspaceSize, executor);
