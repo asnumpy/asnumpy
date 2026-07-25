@@ -26,9 +26,17 @@ template copies, 26 of those *weak* and name-identical to the libfmt.so.8 / libs
 _core.so dynamically links. Weak symbols merge by name at load time, first one wins -- so another
 extension in the same interpreter with a different fmt/spdlog could bind our calls to its copy.
 
-These tests assert the *intent* (nothing leaks) rather than an exact symbol count. The residual
-symbols are libstdc++ types deliberately marked _GLIBCXX_VISIBILITY(default), and their number
-drifts with the GCC and pybind11 versions -- pinning a total would produce false failures.
+These tests assert the *intent* (no leaked *code* symbols) rather than an exact symbol count. The
+residual symbols are libstdc++ types deliberately marked _GLIBCXX_VISIBILITY(default), and their
+number drifts with the GCC and pybind11 versions -- pinning a total would produce false failures.
+
+RTTI (typeinfo / typeinfo name / vtable) for some third-party template instantiations can also stay
+default-visible even with -fvisibility=hidden: e.g. Ubuntu noble's libspdlog 1.12 shared library
+exports ``spdlog::sinks::base_sink<std::mutex>`` RTTI because ``std::mutex`` carries
+``_GLIBCXX_VISIBILITY(default)``. Those three symbols are required for cross-DSO typeinfo dedup
+against the libspdlog.so we link; they are not the weak function copies this test is meant to
+catch. Filter them out of the fmt/spdlog leak check. ``test_asnumpy_types_are_not_exported`` stays
+strict -- an exported NPUArray typeinfo is exactly the hazard that test guards against.
 
 Linux/ELF only, which matches the project's supported-platform set (pyproject.toml declares
 "Operating System :: POSIX :: Linux" and nothing else).
@@ -42,6 +50,9 @@ import sys
 import pytest
 
 _nm = shutil.which("nm")
+
+# Demangled nm -C lines: " typeinfo for Foo", " typeinfo name for Foo", " vtable for Foo".
+_RTTI_MARKERS = (" typeinfo for ", " typeinfo name for ", " vtable for ")
 
 
 def _exported_symbols() -> list[str]:
@@ -57,6 +68,11 @@ def _exported_symbols() -> list[str]:
     return out.splitlines()
 
 
+def _is_rtti(line: str) -> bool:
+    """RTTI must stay default-visibility to dedup against the DSO we link."""
+    return any(marker in line for marker in _RTTI_MARKERS)
+
+
 pytestmark = [
     pytest.mark.skipif(_nm is None, reason="binutils nm not available"),
     pytest.mark.skipif(not sys.platform.startswith("linux"), reason="ELF/nm specific"),
@@ -70,12 +86,13 @@ def test_module_init_symbol_is_exported():
 
 @pytest.mark.parametrize("leaked", ["fmt::", "spdlog::"])
 def test_bundled_cxx_dependencies_do_not_leak(leaked):
-    """fmt/spdlog template copies must not be exported.
+    """fmt/spdlog template *code* copies must not be exported.
 
     They are weak and collide by name with the libfmt.so.8 / libspdlog.so.1 that _core.so links,
-    so exporting them lets another extension's copy win at load time.
+    so exporting them lets another extension's copy win at load time. RTTI symbols are excluded;
+    see module docstring.
     """
-    hits = [line for line in _exported_symbols() if leaked in line]
+    hits = [line for line in _exported_symbols() if leaked in line and not _is_rtti(line)]
     assert not hits, f"{len(hits)} {leaked} symbols exported, e.g. {hits[:3]}"
 
 

@@ -22,7 +22,6 @@
 """
 
 import numpy
-import pytest
 
 from asnumpy import testing
 
@@ -133,6 +132,14 @@ def test_arithmetic_int_mismatch_xfail(xp, dtype):
 def test_remainder_bool(xp, dtype):
     a = _create_array(xp, [True, False], dtype)
     b = _create_array(xp, [True, True], dtype)
+    return xp.remainder(a, b)
+
+
+@testing.for_dtypes([numpy.int32])
+@testing.numpy_asnumpy_array_equal()
+def test_remainder_int32(xp, dtype):
+    a = _create_array(xp, [10, 7, -5], dtype)
+    b = _create_array(xp, [3, 2, 3], dtype)
     return xp.remainder(a, b)
 
 

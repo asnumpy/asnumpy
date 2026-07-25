@@ -397,16 +397,46 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         "Fmod", "aclnnFmodTensor");
 }
 
+namespace {
+
+// aclnnRemainder lacks narrow-integer loops; int32 holds every value of the types below.
+aclDataType RemainderComputeDtype(aclDataType desired) {
+    switch (desired) {
+    case ACL_BOOL:
+    case ACL_INT8:
+    case ACL_UINT8:
+    case ACL_INT16:
+    case ACL_UINT16:
+        return ACL_INT32;
+    case ACL_UINT32:
+        return ACL_INT64; // cannot fit in int32
+    default:
+        return desired;
+    }
+}
+
+} // namespace
+
 /**
  * @brief Element-wise remainder using aclnnRemainderTensorTensor.
+ *
+ * NumPy's remainder/mod have no bool loop (bool promotes to int8). Narrow integers that the
+ * kernel rejects are computed in a wider type then cast back so the result dtype still matches
+ * NumPy. np.mod is np.remainder; Remainder() just forwards here.
  */
 NPUArray Mod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.value_or(py::dtype::of<float>());
-    if (!(out_dtype.is(py::dtype::of<float>()) || out_dtype.is(py::dtype::of<double>()))) {
-        throw std::runtime_error("[arithmetic_operations.cpp](Mod) dtype must be float or double");
-    }
-    return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+    aclDataType desired = dtype.has_value() ? NPUArray::GetACLDataType(*dtype) : ResultType(x1.aclDtype, x2.aclDtype);
+    // np.remainder types: no '??->?' loop; bool/bool yields int8.
+    if (desired == ACL_BOOL)
+        desired = ACL_INT8;
+
+    const aclDataType compute = RemainderComputeDtype(desired);
+    ACL_DTYPE_WARN(x1.aclDtype, compute, __func__);
+    ACL_DTYPE_WARN(x2.aclDtype, compute, __func__);
+
+    PromotedOperands operands(x1, x2, compute);
+    NPUArray out = EXECUTE_BINARY_OP(
+        operands.x1(), operands.x2(), dtypes::NumpyFromAcl(compute),
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnRemainderTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -414,6 +444,9 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
             return aclnnRemainderTensorTensor(workspace, workspaceSize, executor, nullptr);
         },
         "Mod", "aclnnRemainderTensorTensor");
+    if (compute != desired)
+        return CastTo(out, desired);
+    return out;
 }
 
 /**
@@ -473,10 +506,10 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
 }
 
 /**
- * @brief Element-wise remainder, reusing Mod().
+ * @brief Element-wise remainder; identical to Mod (np.mod is np.remainder).
  */
 NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    return Mod(x1, x2, dtype.value_or(x1.dtype));
+    return Mod(x1, x2, dtype);
 }
 
 /**
