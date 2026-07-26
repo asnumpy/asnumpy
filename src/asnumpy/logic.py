@@ -63,6 +63,7 @@ from ._core.logic import (
     not_equal as _not_equal,
 )
 from ._types import ArrayLike, AxisLike, DTypeLike
+from ._ufunc import create_ufunc as _create_ufunc
 from .utils import _convert_dtype, ndarray
 
 
@@ -78,8 +79,22 @@ def any(x: ArrayLike, axis: AxisLike = None, keepdims: bool = False) -> ndarray:
     return ndarray(_any(x, axis, keepdims))
 
 
-def isfinite(x: ArrayLike) -> ndarray:
-    return ndarray(_isfinite(x))
+# ---------- Unary is-checks ----------
+
+
+def _is_check_fallback(name, func, x, dtype=None):
+    if dtype is not None:
+        raise TypeError(f"{name}() does not support the 'dtype' parameter")
+    return ndarray(func(x))
+
+
+# Prototype slice: unary is-check with bool output + fallback (representative #5)
+isfinite = _create_ufunc(
+    "isfinite",
+    (("f->?", _isfinite, False), ("e->?", _isfinite, False), ("d->?", _isfinite, False)),
+    fallback=lambda x, dtype=None: _is_check_fallback("isfinite", _isfinite, x, dtype),
+    doc="Test element-wise for finiteness (not infinity and not Not a Number).",
+)
 
 
 def isinf(x: ArrayLike) -> ndarray:
@@ -126,8 +141,18 @@ def less_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray
     return ndarray(_less_equal(x1, x2, _convert_dtype(dtype)))
 
 
-def equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+def _equal_fallback(x1, x2, dtype=None):
+    """Fallback for equal with dtypes not in loop table (e.g. int64, float16)."""
     return ndarray(_equal(x1, x2, _convert_dtype(dtype)))
+
+
+# Prototype slice: binary comparison with bool output + float+int loops (representative #4)
+equal = _create_ufunc(
+    "equal",
+    (("ff->?", _equal), ("dd->?", _equal), ("ii->?", _equal)),
+    doc="Returns (x1 == x2) element-wise.",
+    fallback=_equal_fallback,
+)
 
 
 def not_equal(x1: ArrayLike, x2: ArrayLike, dtype: DTypeLike = None) -> ndarray:

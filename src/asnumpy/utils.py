@@ -33,8 +33,14 @@ class ndarray(_ndarray):
     def __init__(self, other: _ndarray) -> None: ...
 
     def __init__(self, shape_or_array, dtype=None):
-        if isinstance(shape_or_array, _ndarray):
+        if isinstance(shape_or_array, ndarray):
+            # Public ndarray and its subclasses retain deep-copy semantics, so an
+            # explicit ndarray(existing_array) never consumes the source array.
             super().__init__(shape_or_array)
+        elif isinstance(shape_or_array, _ndarray):
+            # A base _ndarray that is not a public ndarray is a private one-shot
+            # result produced by _core; wrapping consumes it via move semantics.
+            super().__init__(shape_or_array, _move=True)
         elif isinstance(shape_or_array, (Sequence, int)):
             if dtype is None:
                 raise ValueError("dtype must be specified when initializing with shape")
@@ -125,6 +131,88 @@ class ndarray(_ndarray):
             # copies for what is at most one. Short-circuit to a single copy (or none).
             return ndarray(self) if copy else self
         return ndarray(super().astype(dtype))
+
+    __array_priority__ = 100.0
+
+    def __array_ufunc__(self, ufunc_obj, method, *inputs, **kwargs):
+        """Implement NumPy ufunc protocol.
+
+        When a NumPy ufunc (e.g. np.sin, np.add) is called with an asnumpy
+        ndarray, this method dispatches to the corresponding asnumpy ufunc.
+
+        Args:
+            ufunc_obj: The numpy.ufunc being applied.
+            method: The ufunc method ('__call__', 'outer', 'reduce', etc.).
+            *inputs: Input arrays.
+            **kwargs: Additional keyword arguments (out, dtype, etc.).
+
+        Returns:
+            Result from the asnumpy ufunc, or NotImplemented if unhandled.
+        """
+        import asnumpy as anp
+
+        if method not in ("__call__",):
+            return NotImplemented
+
+        name = getattr(ufunc_obj, "__name__", None)
+        if name is None:
+            return NotImplemented
+
+        func = getattr(anp, name, None)
+        if func is None or not hasattr(func, "_ops"):
+            return NotImplemented
+
+        out = kwargs.pop("out", None)
+        dtype = kwargs.pop("dtype", None)
+
+        # Unsupported numpy ufunc kwargs — return NotImplemented so NumPy
+        # falls back to its own implementation rather than silently ignoring them.
+        _UNSUPPORTED_UFUNC_KWARGS = frozenset(
+            ("where", "casting", "subok", "order", "signature", "extobj"),
+        )
+        if _UNSUPPORTED_UFUNC_KWARGS & kwargs.keys():
+            return NotImplemented
+
+        try:
+            return func(*inputs, dtype=dtype, out=out)
+        except TypeError as exc:
+            # Only return NotImplemented for expected dispatch failures
+            # (e.g. no matching loop for given dtypes). Internal bugs
+            # should propagate so they are not silently masked.
+            if "no matching loop" in str(exc):
+                return NotImplemented
+            raise
+
+    def __array_function__(self, func, types, args, kwargs):
+        """Implement NumPy array function protocol.
+
+        When a NumPy function (e.g. numpy.sin, numpy.add) is called with
+        an asnumpy ndarray, this method dispatches to the corresponding
+        asnumpy function.
+
+        Args:
+            func: The numpy function being called.
+            types: Collection of types involved in the call.
+            args: Positional arguments.
+            kwargs: Keyword arguments.
+
+        Returns:
+            Result from the asnumpy function, or NotImplemented if unhandled.
+        """
+        import asnumpy as anp
+
+        name = func.__name__
+        anp_func = getattr(anp, name, None)
+
+        if anp_func is None or anp_func is func:
+            return NotImplemented
+
+        try:
+            return anp_func(*args, **kwargs)
+        except TypeError as exc:
+            if "no matching loop" in str(exc):
+                return NotImplemented
+            raise
 
 
 @logger.catch(reraise=True)
