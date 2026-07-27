@@ -173,6 +173,47 @@ class ndarray(_ndarray):
                 return NotImplemented
             raise
 
+    def astype(
+        self,
+        dtype,
+        order: str = "K",
+        casting: str = "unsafe",
+        subok: bool = True,
+        copy: bool = True,
+    ) -> "ndarray":
+        """Copy of the array, cast to the given dtype.
+
+        The parameter order matches :meth:`numpy.ndarray.astype` positionally, so
+        ``x.astype(dt, "K")`` binds ``order`` as a NumPy user expects.
+
+        Args:
+            dtype: Target dtype.
+            order: Memory layout. Only ``"K"``/``"C"`` are meaningful: asnumpy arrays are always
+                dense and C-contiguous, so ``"F"``/``"A"`` raise rather than silently lie.
+            casting: Casting rule, checked against :func:`numpy.can_cast`. Defaults to
+                ``"unsafe"``, matching NumPy.
+            subok: Accepted for signature compatibility; asnumpy has no ndarray subclasses to
+                preserve, so only the default is allowed.
+            copy: If False, return self when the dtype already matches instead of copying.
+        """
+        dtype = np.dtype(dtype)
+        if order not in ("K", "C"):
+            raise ValueError(
+                f"order={order!r} is not supported: asnumpy arrays are always C-contiguous"
+            )
+        if not subok:
+            raise ValueError("subok=False is not supported")
+        if not np.can_cast(self.dtype, dtype, casting=casting):
+            raise TypeError(
+                f"Cannot cast array data from {self.dtype!r} to {dtype!r} "
+                f"according to the rule '{casting}'"
+            )
+        if dtype == self.dtype:
+            # CastTo would deep-copy on a dtype match, and re-wrapping copies again -- two device
+            # copies for what is at most one. Short-circuit to a single copy (or none).
+            return ndarray(self) if copy else self
+        return ndarray(super().astype(dtype))
+
 
 @logger.catch(reraise=True)
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:

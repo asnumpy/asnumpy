@@ -48,8 +48,14 @@ NPUArray Signbit(const NPUArray& x) {
 NPUArray Ldexp(const NPUArray& x1, const NPUArray& x2) {
     py::object base_scalar = py::float_(2.0);
     NPUArray pow2 = Power(base_scalar, x2);
-    NPUArray result = Multiply(x1, pow2);
-    return result;
+
+    // NumPy types ldexp as 'ei->e','fi->f','di->d': x2 is an exponent, not a value, so it never
+    // participates in promotion -- the output follows x1 alone. But there is no integer loop
+    // either, so an integer x1 widens to float64 rather than truncating (ldexp(1, -1) is 0.5, not
+    // 0). Pin the output explicitly; otherwise the internal Multiply promotes against pow2, which
+    // Power always produces as float64.
+    aclDataType out = dtypes::IsInexact(x1.aclDtype) ? x1.aclDtype : ACL_DOUBLE;
+    return Multiply(x1, pow2, dtypes::NumpyFromAcl(out));
 }
 
 NPUArray Copysign(const NPUArray& x1, const NPUArray& x2) {

@@ -32,13 +32,11 @@ def _create_array(xp, data, dtype):
 # ========== 1. 基础三角函数测试 (Sin, Cos, Tan) ==========
 
 
-# 对于 sin/cos/tan，float16 目前在 C++ 绑定层可能存在映射问题
-@pytest.mark.xfail(
-    condition=True, reason="[FIXABLE] C++ core missing aclDataType mapping for float16", strict=True
-)
+# float16's ULP near sin(pi/4)~0.707 is ~4.9e-4, so atol/rtol=1e-5 was ~30x tighter than a single
+# ULP -- any disagreement between NumPy's float16 sin and aclnnSin would hard-fail the test.
 @testing.for_dtypes([numpy.float16])
-@testing.numpy_asnumpy_allclose(atol=1e-5, rtol=1e-5)
-def test_trig_float16_xfail(xp, dtype):
+@testing.numpy_asnumpy_allclose(atol=1e-3, rtol=1e-3)
+def test_trig_float16(xp, dtype):
     data = [0.0, numpy.pi / 4]
     a = _create_array(xp, data, dtype)
     return xp.sin(a)

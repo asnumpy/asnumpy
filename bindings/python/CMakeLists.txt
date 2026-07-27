@@ -18,7 +18,6 @@ pybind11_add_module(_core
     module.cpp
     bind_array.cpp
     bind_cann.cpp
-    bind_dtypes.cpp
     bind_fft.cpp
     bind_linalg.cpp
     bind_math.cpp

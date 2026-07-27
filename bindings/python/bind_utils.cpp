@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <asnumpy/utils/cast.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <algorithm>
 #include <pybind11/pybind11.h>
@@ -42,6 +43,16 @@ void bind_utils(pybind11::module_& utils) {
             "Internal consuming constructor; the source must not be used afterwards")
         .def("to_numpy", &NPUArray::ToNumpy)
         .def_static("from_numpy", &NPUArray::FromNumpy, py::arg("host_data"))
+        .def(
+            "astype",
+            // Takes py::object, not py::dtype: py::dtype's caster is a strict isinstance check with
+            // no conversion, so it would reject the scalar-type spellings NumPy users write
+            // (np.float32) and accept only np.dtype("float32"). Normalizing here keeps direct
+            // _core.ndarray users -- e.g. whatever ap.load() returns -- working.
+            [](const NPUArray& self, const py::object& dtype) {
+                return asnumpy::CastTo(self, NPUArray::GetACLDataType(py::dtype::from_args(dtype)));
+            },
+            py::arg("dtype"), "Cast the array to the given dtype on device, returning a new array.")
         .def_property_readonly("shape",
                                [](const NPUArray& self) {
                                    py::tuple shape_tuple(self.shape.size());

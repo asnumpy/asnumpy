@@ -15,8 +15,8 @@
 # *****************************************************************************
 
 add_library(dtypes OBJECT
-    reg.cpp
-    np_import.cpp
+    dtype_table.cpp
+    promote.cpp
 )
 
 target_include_directories(dtypes PUBLIC
@@ -24,11 +24,7 @@ target_include_directories(dtypes PUBLIC
 )
 
 target_link_libraries(dtypes PUBLIC
+    fmt::fmt
     ascend_sdk
-    Python::Python
-    Python::NumPy
-)
-
-target_compile_definitions(dtypes PRIVATE
-    NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
+    pybind11::pybind11
 )

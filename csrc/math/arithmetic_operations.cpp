@@ -17,7 +17,7 @@
 #include <asnumpy/math/arithmetic_operations.hpp>
 #include <asnumpy/utils/acl_executor.hpp>
 #include <asnumpy/utils/acl_resource.hpp>
-#include <asnumpy/utils/dtype_promotion.hpp>
+#include <asnumpy/utils/cast.hpp>
 #include <asnumpy/utils/npu_array.hpp>
 #include <asnumpy/utils/npu_scalar.hpp>
 
@@ -50,11 +50,17 @@ namespace asnumpy {
  * @brief Element-wise addition using aclnnAdd.
  */
 NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnAdd start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
-              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
+    LOG_DEBUG("aclnnAdd start: x1_shape={}, x2_shape={}, x1_dtype={}, x2_dtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype), AclDtypeName(x2.aclDtype));
 
-    auto out_shape = GetBroadcastShape(x1, x2);
+    // Hand-rolled rather than EXECUTE_BINARY_OP because aclnnAdd takes an alpha scalar, so promote
+    // explicitly here. Without this, `add` would keep taking x1's dtype and stay order-dependent.
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : dtypes::NumpyFromAcl(operands.common());
+
+    auto out_shape = GetBroadcastShape(a, b);
     auto out = NPUArray(out_shape, out_dtype);
 
     int32_t one = 1;
@@ -66,7 +72,7 @@ NPUArray Add(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error =
-        aclnnAddGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
+        aclnnAddGetWorkspaceSize(a.tensorPtr, b.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnAddGetWorkspaceSize");
 
     AclWorkspace workspace(workspaceSize);
@@ -103,32 +109,8 @@ NPUArray Reciprocal(const NPUArray& x, std::optional<py::dtype> dtype) {
  * @brief Positive operator: copy or cast input array.
  */
 NPUArray Positive(const NPUArray& x, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnCast start: input_shape={}, tensorSize={}, aclDtype={}", detail::FormatShape(x.shape), x.tensorSize,
-              AclDtypeName(x.aclDtype));
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x.dtype;
-
-    if (out_dtype.is(x.dtype)) {
-        LOG_INFO("aclnnCast completed");
-        return NPUArray(x); // deep copy
-    }
-
-    auto out = NPUArray(x.shape, out_dtype);
-
-    uint64_t workspaceSize = 0;
-    aclOpExecutor* executor = nullptr;
-    auto error = aclnnCastGetWorkspaceSize(x.tensorPtr, out.aclDtype, out.tensorPtr, &workspaceSize, &executor);
-    ACLNN_CHECK(error, "aclnnCastGetWorkspaceSize");
-
-    AclWorkspace workspace(workspaceSize);
-
-    error = aclnnCast(workspace.get(), workspaceSize, executor, nullptr);
-    ACLNN_CHECK(error, "aclnnCast");
-
-    error = aclrtSynchronizeDevice();
-    ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
-
-    LOG_INFO("aclnnCast completed");
-    return out;
+    const aclDataType target = dtype.has_value() ? NPUArray::GetACLDataType(dtype.value()) : x.aclDtype;
+    return CastTo(x, target);
 }
 
 /**
@@ -151,9 +133,8 @@ NPUArray Negative(const NPUArray& x, std::optional<py::dtype> dtype) {
  * @brief Element-wise multiplication using aclnnMul.
  */
 NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = dtype.value_or(x1.dtype);
     return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+        x1, x2, dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnMulGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -167,9 +148,16 @@ NPUArray Multiply(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
  * @brief Element-wise division using aclnnDiv.
  */
 NPUArray Divide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    auto out_dtype = dtype.value_or(x1.dtype);
+    // NumPy types true_divide as 'ee->e','ff->f','dd->d','FF->F','DD->D' -- there is no integer
+    // loop, so integer operands are cast up to float64 rather than truncated. Promoting both
+    // operands here means ExecuteBinaryOp's own promotion is then a no-op.
+    aclDataType common = ResultType(x1.aclDtype, x2.aclDtype);
+    if (!dtypes::IsInexact(common))
+        common = ACL_DOUBLE;
+    PromotedOperands operands(x1, x2, common);
+
     return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+        operands.x1(), operands.x2(), dtype.has_value() ? dtype : dtypes::NumpyFromAcl(common),
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnDivGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -190,11 +178,17 @@ NPUArray TrueDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dt
  * @brief Element-wise subtraction using aclnnSub.
  */
 NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnSub start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
-              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnSub start: x1_shape={}, x2_shape={}, x1_dtype={}, x2_dtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype), AclDtypeName(x2.aclDtype));
+
+    // Hand-rolled because aclnnSub takes an alpha scalar; promote explicitly. See Add.
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+
     // 1. compute broadcast output shape
-    auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_shape = GetBroadcastShape(a, b);
+    auto out_dtype = dtype.has_value() ? dtype.value() : dtypes::NumpyFromAcl(operands.common());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. create alpha = 1 scalar
@@ -208,7 +202,7 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
     auto error =
-        aclnnSubGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
+        aclnnSubGetWorkspaceSize(a.tensorPtr, b.tensorPtr, alpha_scalar, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnSubGetWorkspaceSize");
 
     // 4. allocate workspace
@@ -233,17 +227,23 @@ NPUArray Subtract(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtyp
  * @brief Element-wise floor division using aclnnFloorDivide.
  */
 NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnFloorDivide start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
-              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
+    LOG_DEBUG("aclnnFloorDivide start: x1_shape={}, x2_shape={}, x1_dtype={}, x2_dtype={}",
+              detail::FormatShape(x1.shape), detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype),
+              AclDtypeName(x2.aclDtype));
+
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+
     // 1. compute broadcast output shape
-    auto out_shape = GetBroadcastShape(x1, x2);
-    auto out_dtype = dtype.value_or(x1.dtype);
+    auto out_shape = GetBroadcastShape(a, b);
+    auto out_dtype = dtype.has_value() ? dtype.value() : dtypes::NumpyFromAcl(operands.common());
     auto out = NPUArray(out_shape, out_dtype);
 
     // 2. get workspace
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor = nullptr;
-    auto error = aclnnFloorDivideGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
+    auto error = aclnnFloorDivideGetWorkspaceSize(a.tensorPtr, b.tensorPtr, out.tensorPtr, &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnFloorDivideGetWorkspaceSize");
 
     // 3. allocate workspace
@@ -265,9 +265,8 @@ NPUArray FloorDivide(const NPUArray& x1, const NPUArray& x2, std::optional<py::d
  * @brief Element-wise power using aclnnPowTensorTensor.
  */
 NPUArray Power(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.value_or(x1.dtype);
     return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+        x1, x2, dtype,
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnPowTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -398,16 +397,46 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
         "Fmod", "aclnnFmodTensor");
 }
 
+namespace {
+
+// aclnnRemainder lacks narrow-integer loops; int32 holds every value of the types below.
+aclDataType RemainderComputeDtype(aclDataType desired) {
+    switch (desired) {
+    case ACL_BOOL:
+    case ACL_INT8:
+    case ACL_UINT8:
+    case ACL_INT16:
+    case ACL_UINT16:
+        return ACL_INT32;
+    case ACL_UINT32:
+        return ACL_INT64; // cannot fit in int32
+    default:
+        return desired;
+    }
+}
+
+} // namespace
+
 /**
  * @brief Element-wise remainder using aclnnRemainderTensorTensor.
+ *
+ * NumPy's remainder/mod have no bool loop (bool promotes to int8). Narrow integers that the
+ * kernel rejects are computed in a wider type then cast back so the result dtype still matches
+ * NumPy. np.mod is np.remainder; Remainder() just forwards here.
  */
 NPUArray Mod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    py::dtype out_dtype = dtype.value_or(py::dtype::of<float>());
-    if (!(out_dtype.is(py::dtype::of<float>()) || out_dtype.is(py::dtype::of<double>()))) {
-        throw std::runtime_error("[arithmetic_operations.cpp](Mod) dtype must be float or double");
-    }
-    return EXECUTE_BINARY_OP(
-        x1, x2, out_dtype,
+    aclDataType desired = dtype.has_value() ? NPUArray::GetACLDataType(*dtype) : ResultType(x1.aclDtype, x2.aclDtype);
+    // np.remainder types: no '??->?' loop; bool/bool yields int8.
+    if (desired == ACL_BOOL)
+        desired = ACL_INT8;
+
+    const aclDataType compute = RemainderComputeDtype(desired);
+    ACL_DTYPE_WARN(x1.aclDtype, compute, __func__);
+    ACL_DTYPE_WARN(x2.aclDtype, compute, __func__);
+
+    PromotedOperands operands(x1, x2, compute);
+    NPUArray out = EXECUTE_BINARY_OP(
+        operands.x1(), operands.x2(), dtypes::NumpyFromAcl(compute),
         [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
             return aclnnRemainderTensorTensorGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
         },
@@ -415,6 +444,9 @@ NPUArray Mod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dt
             return aclnnRemainderTensorTensor(workspace, workspaceSize, executor, nullptr);
         },
         "Mod", "aclnnRemainderTensorTensor");
+    if (compute != desired)
+        return CastTo(out, desired);
+    return out;
 }
 
 /**
@@ -474,46 +506,31 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x) {
 }
 
 /**
- * @brief Element-wise remainder.
- * Float path reuses Mod(); bool promotes to int8 (NumPy), computed as int32 then cast.
+ * @brief Element-wise remainder; identical to Mod (np.mod is np.remainder).
  */
 NPUArray Remainder(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    if (dtype.has_value()) {
-        return Mod(x1, x2, *dtype);
-    }
-    if (x1.aclDtype == ACL_BOOL || x2.aclDtype == ACL_BOOL) {
-        constexpr aclDataType kDesired = ACL_INT8;
-        // aclnnRemainder does not support int8; compute in int32 then cast back.
-        constexpr aclDataType kCompute = ACL_INT32;
-        ACL_DTYPE_WARN(x1.aclDtype, kDesired, __func__);
-        ACL_DTYPE_WARN(x2.aclDtype, kDesired, __func__);
-        NPUArray in1 = EnsureAclDtype(x1, kCompute);
-        NPUArray in2 = EnsureAclDtype(x2, kCompute);
-        NPUArray out = EXECUTE_BINARY_OP(
-            in1, in2, NPUArray::GetPyDtype(kCompute),
-            [](aclTensor* a, aclTensor* b, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
-                return aclnnRemainderTensorTensorGetWorkspaceSize(a, b, out, workspaceSize, executor);
-            },
-            [](void* workspace, uint64_t workspaceSize, aclOpExecutor* executor, void* stream) {
-                return aclnnRemainderTensorTensor(workspace, workspaceSize, executor, nullptr);
-            },
-            "Remainder", "aclnnRemainderTensorTensor");
-        return CastToDtype(out, kDesired);
-    }
-    return Mod(x1, x2, x1.dtype);
+    return Mod(x1, x2, dtype);
 }
 
 /**
  * @brief Element-wise divmod using aclnnDivMod (mode=2) + Multiply/Subtract.
  */
 std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> dtype) {
-    LOG_DEBUG("aclnnDivMod start: x1_shape={}, x2_shape={}, aclDtype={}", detail::FormatShape(x1.shape),
-              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype));
-    // 1. determine output dtype (default: same as x1)
-    py::dtype out_dtype = dtype.has_value() ? dtype.value() : x1.dtype;
+    LOG_DEBUG("aclnnDivMod start: x1_shape={}, x2_shape={}, x1_dtype={}, x2_dtype={}", detail::FormatShape(x1.shape),
+              detail::FormatShape(x2.shape), AclDtypeName(x1.aclDtype), AclDtypeName(x2.aclDtype));
+
+    // Hand-rolled like Add/Subtract, so promote explicitly. Steps 3-4 feed raw tensors to aclnn and
+    // to the (now promoting) Multiply/Subtract, so a narrower out_dtype than the operands would
+    // silently truncate q*x2.
+    PromotedOperands operands(x1, x2);
+    const NPUArray& a = operands.x1();
+    const NPUArray& b = operands.x2();
+
+    // 1. determine output dtype (default: the promoted operand type)
+    py::dtype out_dtype = dtype.has_value() ? dtype.value() : dtypes::NumpyFromAcl(operands.common());
 
     // 2. broadcast output shape
-    auto out_shape = GetBroadcastShape(x1, x2);
+    auto out_shape = GetBroadcastShape(a, b);
 
     // 3. quotient q = floor(x1 / x2) via aclnnDivMod(mode=2)
     NPUArray quotient(out_shape, out_dtype);
@@ -521,7 +538,7 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     uint64_t ws_size = 0;
     aclOpExecutor* executor = nullptr;
     auto error =
-        aclnnDivModGetWorkspaceSize(x1.tensorPtr, x2.tensorPtr, /*mode=*/2, quotient.tensorPtr, &ws_size, &executor);
+        aclnnDivModGetWorkspaceSize(a.tensorPtr, b.tensorPtr, /*mode=*/2, quotient.tensorPtr, &ws_size, &executor);
     ACLNN_CHECK(error, "aclnnDivModGetWorkspaceSize");
 
     AclWorkspace ws(ws_size);
@@ -530,8 +547,8 @@ std::pair<NPUArray, NPUArray> Divmod(const NPUArray& x1, const NPUArray& x2, std
     ACLNN_CHECK(error, "aclnnDivMod");
 
     // 4. remainder r = x1 - q * x2
-    NPUArray qx2 = Multiply(quotient, x2, out_dtype);
-    NPUArray remainder = Subtract(x1, qx2, out_dtype);
+    NPUArray qx2 = Multiply(quotient, b, out_dtype);
+    NPUArray remainder = Subtract(a, qx2, out_dtype);
 
     // 5. synchronize
     error = aclrtSynchronizeDevice();

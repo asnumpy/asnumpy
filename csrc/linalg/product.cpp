@@ -198,8 +198,10 @@ NPUArray dot(const NPUArray& a, const NPUArray& b) {
               AclDtypeName(a.aclDtype));
     // case 1: both are scalars
     if (a.shape.size() == 0 && b.shape.size() == 0) {
+        // std::nullopt, not a.dtype: ExecuteBinaryOp promotes the operands, so pinning a's dtype
+        // would give the kernel an out narrower than its inputs.
         return EXECUTE_BINARY_OP(
-            a, b, a.dtype,
+            a, b, std::nullopt,
             [](aclTensor* in1, aclTensor* in2, aclTensor* out, uint64_t* workspaceSize, aclOpExecutor** executor) {
                 return aclnnDotGetWorkspaceSize(in1, in2, out, workspaceSize, executor);
             },

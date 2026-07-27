@@ -16,7 +16,9 @@
 
 [build-system]
 requires = [
-  "scikit-build-core>=0.12.1",
+  # >=1.0.0 is required, not cosmetic: [[tool.dynamic-metadata]] below is a top-level table that
+  # older versions never look at, so they would silently produce version 0.0.0 rather than error.
+  "scikit-build-core>=1.0.0",
   "pybind11>=3.0.0",
   "numpy>=2.0",
   "setuptools-scm==9.2.2",
@@ -84,10 +86,22 @@ make-fallback = true
 mode = "redirect"
 verbose = true
 
-# scikit-build-core metadata configuration
+# scikit-build-core sdist configuration
 [tool.scikit-build]
-metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 sdist.include = ["src/asnumpy/_version.py"]
+# third_party is the CuPy reference checkout: never built, linked, imported, or packaged. Without
+# this it lands in the sdist anyway (scikit-build-core selects sdist contents from git), which made
+# up 86% of the tarball and produced dangling-symlink warnings, because CuPy's own nested
+# submodules are uninitialized. The leading slash anchors the pattern to the project root:
+# gitignore semantics would otherwise match `third_party` at any depth, and sdist.exclude also
+# feeds wheel file selection.
+sdist.exclude = ["/third_party"]
+
+# Dynamic metadata: version supplied by setuptools-scm. Replaces the deprecated
+# tool.scikit-build.metadata table. `provider` here names an entry point rather than an import
+# path, and takes no `field` key -- the setuptools_scm plugin defaults its field to "version".
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.setuptools_scm"
 
 # setuptools-scm configuration (version from git tags)
 [tool.setuptools_scm]
