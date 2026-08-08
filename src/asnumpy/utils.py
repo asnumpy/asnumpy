@@ -214,6 +214,24 @@ class ndarray(_ndarray):
             return ndarray(self) if copy else self
         return ndarray(super().astype(dtype))
 
+    def mean(
+        self,
+        axis=None,
+        dtype=None,
+        out: "ndarray | None" = None,
+        keepdims: bool = False,
+    ) -> "ndarray":
+        """Return the arithmetic mean along the requested axes.
+
+        This mirrors :meth:`cupy.ndarray.mean` and delegates to the public
+        function so axis normalization, dtype promotion, and ``out=`` behavior
+        have a single implementation.
+        """
+
+        from .statistics import mean
+
+        return mean(self, axis=axis, dtype=dtype, out=out, keepdims=keepdims)
+
 
 @logger.catch(reraise=True)
 def broadcast_shape(shape_a: Sequence[int], shape_b: Sequence[int]) -> tuple:

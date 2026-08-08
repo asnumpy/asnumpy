@@ -15,9 +15,9 @@
  ******************************************************************************/
 
 #include <asnumpy/statistics/averages_and_variances.hpp>
-#include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <utility>
 
 namespace py = pybind11;
 
@@ -25,10 +25,25 @@ namespace asnumpy {
 
 void bind_statistics(py::module_& statistics) {
     statistics.doc() = "statistics module of asnumpy";
-    statistics.def("mean", py::overload_cast<const NPUArray&, int64_t, bool, std::optional<py::dtype>>(&Mean),
-                   py::arg("a"), py::arg("axis"), py::arg("keepdims"), py::arg("dtype") = py::none());
-    statistics.def("mean", py::overload_cast<const NPUArray&, std::optional<py::dtype>>(&Mean), py::arg("a"),
-                   py::arg("dtype") = py::none());
+    statistics.def(
+        "mean",
+        [](const NPUArray& a, const std::vector<int64_t>& axes, bool keepdims, py::dtype compute_dtype,
+           py::dtype result_dtype, const py::object& out) -> py::object {
+            if (out.is_none()) {
+                return py::cast(
+                    Mean(a, axes, keepdims, std::move(compute_dtype), std::move(result_dtype)));
+            }
+
+            // Keep and return the exact Python object supplied by the caller.
+            // This matters for a public `asnumpy.ndarray`, which is a Python
+            // subclass of the bound NPUArray base class.
+            NPUArray& out_array = out.cast<NPUArray&>();
+            MeanOut(a, axes, keepdims, std::move(compute_dtype), out_array);
+            return out;
+        },
+        py::arg("a"), py::arg("axes"), py::arg("keepdims"), py::arg("compute_dtype"),
+        py::arg("result_dtype"), py::arg("out") = py::none(),
+        "Compute a mean over normalized axes, optionally into an existing array.");
 }
 
 } // namespace asnumpy
