@@ -21,10 +21,27 @@
 #include <acl/acl.h>
 #include <aclnn/aclnn_base.h>
 
-#include <optional>
-#include <utility>
+#include <cstdint>
+#include <vector>
 
 namespace asnumpy {
-NPUArray Mean(const NPUArray& a, int64_t axis, bool keepdims, std::optional<py::dtype> dtype = std::nullopt);
-double Mean(const NPUArray& a, std::optional<py::dtype> dtype = std::nullopt);
+
+/**
+ * Compute the arithmetic mean over one or more already-normalized axes.
+ *
+ * `axes` must contain unique, non-negative axes.  An empty vector means a
+ * no-op reduction, which is distinct from reducing all dimensions.  The
+ * Python layer expands ``axis=None`` to every axis before entering the core so
+ * this distinction is never ambiguous.
+ */
+NPUArray Mean(const NPUArray& a, const std::vector<int64_t>& axes, bool keepdims, py::dtype compute_dtype,
+              py::dtype result_dtype);
+
+/**
+ * Compute a mean into an existing array and preserve that Python object's
+ * identity and storage.  The mean is accumulated using `compute_dtype`, then
+ * written into `out` with a device copy or cast as required.
+ */
+void MeanOut(const NPUArray& a, const std::vector<int64_t>& axes, bool keepdims, py::dtype compute_dtype,
+             NPUArray& out);
 } // namespace asnumpy
