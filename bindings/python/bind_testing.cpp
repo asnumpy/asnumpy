@@ -14,7 +14,15 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <algorithm>
+#include <asnumpy/utils/npu_array.hpp>
+
+#include <cstdint>
 #include <pybind11/pybind11.h>
 
-void bind_testing(pybind11::module_& testing) { testing.doc() = "testing module of asnumpy"; }
+void bind_testing(pybind11::module_& testing) {
+    testing.doc() = "Private native helpers used by AsNumPy's test suite";
+    testing.def(
+        "_device_address",
+        [](const NPUArray& array) { return reinterpret_cast<uintptr_t>(array.device_address()); }, py::arg("array"),
+        "Return a device address for storage-identity assertions only.");
+}
