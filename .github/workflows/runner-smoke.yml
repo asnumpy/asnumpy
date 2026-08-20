@@ -1,0 +1,195 @@
+name: Ascend 910B Runner Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      verify_restart:
+        description: Require a marker written before the latest host restart
+        required: true
+        default: false
+        type: boolean
+
+# The runner is configured locally. This workflow does not check out repository
+# code and does not need access to the GitHub token.
+permissions: {}
+
+concurrency:
+  group: asnumpy-runner-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Verify runner, NPU, and storage
+    if: >-
+      github.ref == 'refs/heads/master' &&
+      (github.actor == github.repository_owner || github.actor == 'anangxu') &&
+      (github.triggering_actor == github.repository_owner || github.triggering_actor == 'anangxu')
+    runs-on: [self-hosted, linux, ascend-910b, cann-9.1, asnumpy]
+    timeout-minutes: 10
+    env:
+      VERIFY_RESTART: ${{ inputs.verify_restart }}
+
+    steps:
+      - name: Check local runner environment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+
+          if (( EUID == 0 )); then
+            echo "The self-hosted runner must not run as root." >&2
+            exit 1
+          fi
+          if [[ "$(uname -m)" != "aarch64" ]]; then
+            echo "Expected Linux aarch64, found $(uname -m)." >&2
+            exit 1
+          fi
+          for command_name in timeout npu-smi realpath stat findmnt mktemp df; do
+            command -v "$command_name" >/dev/null || {
+              echo "Required command is missing: $command_name" >&2
+              exit 1
+            }
+          done
+          timeout 30s npu-smi info >/dev/null
+
+          cann_root="${ASNUMPY_CI_CANN_ROOT:?Set ASNUMPY_CI_CANN_ROOT in the local runner environment}"
+          if [[ "$cann_root" != /* || ! -d "$cann_root" ]]; then
+            echo "ASNUMPY_CI_CANN_ROOT must be an absolute directory." >&2
+            exit 1
+          fi
+          cann_root="$(realpath -e -- "$cann_root")"
+          if [[ ! -f "$cann_root/set_env.sh" || ! -d "$cann_root/include" || \
+                ! -d "$cann_root/lib64" || ! -e "$cann_root/lib64/libascendcl.so" ]]; then
+            echo "The configured CANN installation is incomplete." >&2
+            exit 1
+          fi
+          cann_91=false
+          for version_file in \
+            "$cann_root/version.cfg" \
+            "$cann_root/ascend_toolkit_install.info" \
+            "$cann_root/aarch64-linux/ascend_toolkit_install.info"; do
+            if [[ -f "$version_file" ]] && grep -Eiq '(^|[^0-9])9[.]1([^0-9]|$)' "$version_file"; then
+              cann_91=true
+            fi
+          done
+          cann_dir_name="$(basename "$cann_root")"
+          if [[ "$cann_dir_name" == cann-9.1 || "$cann_dir_name" == cann-9.1.* || \
+                "$cann_dir_name" == cann-9.1-* ]]; then
+            cann_91=true
+          fi
+          if [[ "$cann_91" != true ]]; then
+            echo "The configured toolkit could not be identified as CANN 9.1." >&2
+            exit 1
+          fi
+          set +u
+          source "$cann_root/set_env.sh"
+          set -Eeuo pipefail
+
+          python_bin="${ASNUMPY_CI_PYTHON:?Set ASNUMPY_CI_PYTHON in the local runner environment}"
+          if [[ "$python_bin" != /* || ! -x "$python_bin" ]]; then
+            echo "ASNUMPY_CI_PYTHON must be an executable absolute path." >&2
+            exit 1
+          fi
+          "$python_bin" - <<'PY'
+          import ctypes
+          import platform
+          import sys
+
+          if platform.python_implementation() != "CPython" or sys.version_info < (3, 10):
+              raise SystemExit("CPython 3.10 or newer is required")
+          ctypes.CDLL("libascendcl.so")
+          PY
+
+          work_root="${MODELARTS_WORK_ROOT:-$HOME/work}"
+          runner_temp="${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          for storage_path in "$work_root" "$runner_temp"; do
+            if [[ "$storage_path" != /* || ! -d "$storage_path" || ! -w "$storage_path" || -L "$storage_path" ]]; then
+              echo "Storage path must be an absolute, writable, non-symlink directory: $storage_path" >&2
+              exit 1
+            fi
+          done
+          work_root="$(realpath -e -- "$work_root")"
+          runner_temp="$(realpath -e -- "$runner_temp")"
+          case "$runner_temp" in
+            "$work_root"|"$work_root"/*)
+              echo "RUNNER_TEMP must not be on the persistent work path." >&2
+              exit 1
+              ;;
+          esac
+          work_mount="$(findmnt -n -o TARGET -T "$work_root")"
+          temp_mount="$(findmnt -n -o TARGET -T "$runner_temp")"
+          if [[ -z "$work_mount" || -z "$temp_mount" || "$work_mount" == "$temp_mount" ]]; then
+            echo "Persistent and temporary paths must use different mounts." >&2
+            exit 1
+          fi
+
+          persistent_root="$work_root/github-actions/asnumpy"
+          smoke_dir="$persistent_root/runner-smoke"
+          for storage_path in "$work_root" "$work_root/github-actions" "$persistent_root" "$smoke_dir"; do
+            if [[ -L "$storage_path" ]]; then
+              echo "Refusing symlink storage path: $storage_path" >&2
+              exit 1
+            fi
+          done
+          mkdir -p "$smoke_dir"
+          chmod 0700 "$persistent_root" "$smoke_dir"
+
+          marker="$smoke_dir/last-success.txt"
+          previous_state=missing
+          previous_boot_id=""
+          if [[ -e "$marker" || -L "$marker" ]]; then
+            if [[ -L "$marker" || ! -f "$marker" || "$(stat -c %u "$marker")" != "$EUID" || \
+                  "$(stat -c %h "$marker")" != 1 || "$(stat -c %s "$marker")" -gt 4096 ]]; then
+              echo "Refusing an invalid persistent marker." >&2
+              exit 1
+            fi
+            previous_boot_id="$(sed -n 's/^boot_id=//p' "$marker" | head -n 1)"
+            if [[ ! "$previous_boot_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+              echo "The persistent marker has an invalid format." >&2
+              exit 1
+            fi
+            previous_state=found
+          fi
+          current_boot_id="$(</proc/sys/kernel/random/boot_id)"
+          if [[ "$VERIFY_RESTART" == true ]]; then
+            if [[ "$previous_state" != found ]]; then
+              echo "No marker from a previous run was found." >&2
+              exit 1
+            fi
+            if [[ "$previous_boot_id" == "$current_boot_id" ]]; then
+              echo "The host has not restarted since the previous smoke run." >&2
+              exit 1
+            fi
+          fi
+
+          temp_probe="$(mktemp "${runner_temp%/}/asnumpy-runner-smoke.XXXXXX")"
+          printf 'temporary storage probe\n' > "$temp_probe"
+          rm -f -- "$temp_probe"
+
+          echo "Persistent storage capacity:"
+          df -h --output=size,used,avail,pcent,target "$work_root"
+
+          checked_at="$(date --iso-8601=seconds)"
+          marker_tmp="$(mktemp "$smoke_dir/.last-success.XXXXXX")"
+          printf 'format=1\nboot_id=%s\nrun_id=%s\nrun_attempt=%s\nchecked_at=%s\n' \
+            "$current_boot_id" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$checked_at" > "$marker_tmp"
+          chmod 0600 "$marker_tmp"
+          mv -T -f -- "$marker_tmp" "$marker"
+
+          restart_result="not requested"
+          if [[ "$VERIFY_RESTART" == true ]]; then
+            restart_result=passed
+          fi
+          if ! {
+            echo "## Ascend 910B runner smoke result"
+            echo
+            echo "- Architecture: passed"
+            echo "- NPU access: passed"
+            echo "- CANN 9.1 runtime: passed"
+            echo "- CPython 3.10+: passed"
+            echo "- Persistent storage: writable (previous marker: $previous_state)"
+            echo "- Temporary storage: writable and on a separate mount"
+            echo "- Restart persistence check: $restart_result"
+          } >> "$GITHUB_STEP_SUMMARY"; then
+            echo "::warning::Checks passed, but the job summary could not be written."
+          fi
