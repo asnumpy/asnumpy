@@ -1,14 +1,6 @@
 name: Ascend 910B Runner Smoke
 
 on:
-  # Temporary trusted-branch trigger used to validate the repository-scoped
-  # runner before this workflow reaches the default branch. Remove it after
-  # the smoke run succeeds; fork pull requests never match this branch.
-  push:
-    branches:
-      - codex/runner-smoke-test
-    paths:
-      - .github/workflows/runner-smoke.yml
   workflow_dispatch:
     inputs:
       verify_restart:
@@ -30,17 +22,14 @@ jobs:
     name: Verify runner, NPU, and storage
     if: >-
       github.repository == 'asnumpy/asnumpy' &&
-      ((github.event_name == 'push' &&
-      github.ref == 'refs/heads/codex/runner-smoke-test' &&
-      github.actor == 'anangxu') ||
-      (github.event_name == 'workflow_dispatch' &&
+      github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/master' &&
       (github.actor == 'anangxu' || github.actor == 'wuzhenqing') &&
-      (github.triggering_actor == 'anangxu' || github.triggering_actor == 'wuzhenqing')))
+      (github.triggering_actor == 'anangxu' || github.triggering_actor == 'wuzhenqing')
     runs-on: [self-hosted, Linux, ARM64, ascend-910b, cann-9.1, asnumpy]
     timeout-minutes: 10
     env:
-      VERIFY_RESTART: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_restart || false }}
+      VERIFY_RESTART: ${{ inputs.verify_restart }}
 
     steps:
       - name: Check local runner environment
