@@ -1,0 +1,264 @@
+name: Ascend 910B Runner Smoke
+
+# Future workflows can use this check as a gate:
+#
+# jobs:
+#   runner_environment:
+#     uses: ./.github/workflows/runner-smoke.yml
+#   build:
+#     needs: runner_environment
+#     if: >-
+#       needs.runner_environment.result == 'success' &&
+#       needs.runner_environment.outputs.healthy == 'true'
+#     runs-on: [self-hosted, Linux, ARM64, ascend-910b, cann-9.1, asnumpy]
+
+on:
+  workflow_call:
+    outputs:
+      healthy:
+        description: Whether every runner environment check passed
+        value: ${{ jobs.environment_check.outputs.healthy }}
+  workflow_dispatch:
+
+# This workflow only inspects the runner. It does not need repository contents,
+# secrets, or access to the GitHub token.
+permissions: {}
+
+jobs:
+  invocation_policy:
+    name: Verify trusted invocation
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the protected repository and branch
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ "$REPOSITORY" != "asnumpy/asnumpy" ]]; then
+            echo "::error::This runner check is restricted to asnumpy/asnumpy."
+            exit 1
+          fi
+          if [[ "$REF" != "refs/heads/master" ]]; then
+            echo "::error::This self-hosted runner check is restricted to refs/heads/master."
+            exit 1
+          fi
+
+  environment_check:
+    name: Check self-hosted runner environment
+    needs: invocation_policy
+    runs-on: [self-hosted, Linux, ARM64, ascend-910b, cann-9.1, asnumpy]
+    timeout-minutes: 10
+    outputs:
+      healthy: ${{ steps.health.outputs.healthy }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check runner and operating system
+        run: |
+          set -Eeuo pipefail
+
+          echo "Runner name: ${RUNNER_NAME:-unknown}"
+          echo "Runner OS: ${RUNNER_OS:-unknown}"
+          echo "Runner architecture: ${RUNNER_ARCH:-unknown}"
+          echo "Kernel and machine: $(uname -srmo)"
+
+          if [[ "${RUNNER_OS:-}" != "Linux" ]]; then
+            echo "::error::Expected runner OS Linux, found ${RUNNER_OS:-unknown}."
+            exit 1
+          fi
+          if [[ "${RUNNER_ARCH:-}" != "ARM64" ]]; then
+            echo "::error::Expected runner architecture ARM64, found ${RUNNER_ARCH:-unknown}."
+            exit 1
+          fi
+
+          machine="$(uname -m)"
+          if [[ "$machine" != "aarch64" && "$machine" != "arm64" ]]; then
+            echo "::error::Expected an ARM64 Linux host, found $machine."
+            exit 1
+          fi
+          if [[ ! -r /etc/os-release ]]; then
+            echo "::error::Cannot read /etc/os-release."
+            exit 1
+          fi
+
+          echo "Operating system release:"
+          cat /etc/os-release
+
+      - name: Check GCC
+        if: ${{ !cancelled() }}
+        run: |
+          set -Eeuo pipefail
+
+          command -v gcc
+          gcc --version
+          echo "Target: $(gcc -dumpmachine)"
+
+          gcc_version="$(gcc -dumpfullversion -dumpversion)"
+          if [[ ! "$gcc_version" =~ ^([0-9]+)([.]([0-9]+))?([.][0-9]+)*$ ]]; then
+            echo "::error::Cannot parse GCC version: $gcc_version"
+            exit 1
+          fi
+          gcc_major="$((10#${BASH_REMATCH[1]}))"
+          gcc_minor="$((10#${BASH_REMATCH[3]:-0}))"
+          if (( gcc_major < 11 || (gcc_major == 11 && gcc_minor < 2) )); then
+            echo "::error::GCC $gcc_version is older than the required 11.2."
+            exit 1
+          fi
+
+          smoke_dir="$(mktemp -d "${RUNNER_TEMP:?}/asnumpy-gcc.XXXXXX")"
+          trap 'rm -rf -- "$smoke_dir"' EXIT
+          printf '%s\n' 'int main(void) { return 0; }' > "$smoke_dir/smoke.c"
+          gcc "$smoke_dir/smoke.c" -o "$smoke_dir/gcc-smoke"
+          "$smoke_dir/gcc-smoke"
+
+      - name: Check BiSheng compiler
+        if: ${{ !cancelled() }}
+        run: |
+          set -Eeuo pipefail
+
+          command -v bisheng
+          bisheng --version
+
+          smoke_dir="$(mktemp -d "${RUNNER_TEMP:?}/asnumpy-bisheng.XXXXXX")"
+          trap 'rm -rf -- "$smoke_dir"' EXIT
+          printf '%s\n' 'int main(void) { return 0; }' > "$smoke_dir/smoke.c"
+          bisheng -x c -c "$smoke_dir/smoke.c" -o "$smoke_dir/smoke.o"
+          test -s "$smoke_dir/smoke.o"
+
+      - name: Check Python
+        if: ${{ !cancelled() }}
+        run: |
+          set -Eeuo pipefail
+
+          command -v python3
+          python3 --version
+          python3 - <<'PY'
+          import platform
+          import sys
+
+          print(f"Executable: {sys.executable}")
+          print(f"Implementation: {platform.python_implementation()}")
+          print(f"Version: {sys.version}")
+          print(f"Platform: {platform.platform()}")
+          print(f"Machine: {platform.machine()}")
+
+          if platform.python_implementation() != "CPython":
+              raise SystemExit("CPython is required")
+          if sys.version_info < (3, 10):
+              raise SystemExit("CPython 3.10 or newer is required")
+          PY
+
+          if ! python3 -m pip --version; then
+            echo "::warning::pip is not available from python3."
+          fi
+
+      - name: Check Ascend NPU and CANN runtime
+        if: ${{ !cancelled() }}
+        run: |
+          set -Eeuo pipefail
+
+          for command_name in timeout npu-smi realpath; do
+            if ! command -v "$command_name" >/dev/null; then
+              echo "::error::Required command is missing: $command_name"
+              exit 1
+            fi
+          done
+          if ! timeout -k 5s 30s npu-smi info >/dev/null 2>&1; then
+            echo "::error::npu-smi could not query the Ascend NPU within 30 seconds."
+            exit 1
+          fi
+          echo "Ascend NPU query: passed"
+
+          cann_root="${ASNUMPY_CI_CANN_ROOT:-${ASCEND_TOOLKIT_HOME:-${ASCEND_HOME_PATH:-/usr/local/Ascend/ascend-toolkit/latest}}}"
+          if [[ "$cann_root" != /* || ! -d "$cann_root" ]]; then
+            echo "::error::CANN root must be an existing absolute directory: $cann_root"
+            exit 1
+          fi
+          cann_root="$(realpath -e -- "$cann_root")"
+          echo "CANN root: $cann_root"
+
+          if [[ ! -f "$cann_root/set_env.sh" || ! -r "$cann_root/set_env.sh" ]]; then
+            echo "::error::CANN environment script is missing or unreadable."
+            exit 1
+          fi
+          if [[ ! -d "$cann_root/include" || ! -d "$cann_root/lib64" ]]; then
+            echo "::error::CANN include or lib64 directory is missing."
+            exit 1
+          fi
+          if [[ ! -f "$cann_root/lib64/libascendcl.so" || \
+                ! -r "$cann_root/lib64/libascendcl.so" ]]; then
+            echo "::error::CANN libascendcl.so is missing or unreadable."
+            exit 1
+          fi
+
+      - name: Write environment summary
+        if: always()
+        env:
+          CHECK_STATUS: ${{ job.status }}
+        run: |
+          set +e
+
+          cann_root="${ASNUMPY_CI_CANN_ROOT:-${ASCEND_TOOLKIT_HOME:-${ASCEND_HOME_PATH:-/usr/local/Ascend/ascend-toolkit/latest}}}"
+
+          os_version="unknown"
+          if [[ -r /etc/os-release ]]; then
+            while IFS='=' read -r key value; do
+              if [[ "$key" == "PRETTY_NAME" ]]; then
+                os_version="${value#\"}"
+                os_version="${os_version%\"}"
+                break
+              fi
+            done < /etc/os-release
+          fi
+
+          first_line_or_unavailable() {
+            local executable="$1"
+            shift
+            local output
+
+            if ! command -v "$executable" >/dev/null 2>&1; then
+              printf 'unavailable'
+              return
+            fi
+            if ! output="$("$@" 2>&1)"; then
+              printf 'unavailable'
+              return
+            fi
+            output="${output%%$'\n'*}"
+            output="${output//$'\r'/}"
+            if [[ -z "$output" ]]; then
+              output="unavailable"
+            fi
+            printf '%s' "$output"
+          }
+
+          gcc_version="$(first_line_or_unavailable gcc gcc --version)"
+          bisheng_version="$(first_line_or_unavailable bisheng bisheng --version)"
+          python_version="$(first_line_or_unavailable python3 python3 --version)"
+
+          if ! {
+            printf '## Ascend 910B runner environment\n\n'
+            printf -- '- Result: **%s**\n' "$CHECK_STATUS"
+            printf -- '- Runner: %s\n' "${RUNNER_NAME:-unknown}"
+            printf -- '- Runner OS / architecture: %s / %s\n' \
+              "${RUNNER_OS:-unknown}" "${RUNNER_ARCH:-unknown}"
+            printf -- '- Operating system: %s\n' "$os_version"
+            printf -- '- Kernel: %s\n' "$(uname -srmo 2>/dev/null || echo unavailable)"
+            printf -- '- GCC: %s\n' "$gcc_version"
+            printf -- '- BiSheng: %s\n' "$bisheng_version"
+            printf -- '- Python: %s\n' "$python_version"
+            printf -- '- CANN root: %s\n' "$cann_root"
+          } >> "$GITHUB_STEP_SUMMARY"; then
+            echo "::warning::Environment checks ran, but the job summary could not be written."
+          fi
+
+      - name: Mark environment healthy
+        id: health
+        if: ${{ success() }}
+        run: echo "healthy=true" >> "$GITHUB_OUTPUT"
