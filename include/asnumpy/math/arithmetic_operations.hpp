@@ -220,9 +220,9 @@ NPUArray Fmod(const NPUArray& x1, const NPUArray& x2, std::optional<py::dtype> d
  * @brief Compute the element-wise remainder (mod) of two arrays.
  *
  * The result is defined as:
- *     remainder(x1, x2) = x1 - round(x1 / x2) * x2,
- * which differs from fmod: remainder's result is closer to zero in magnitude,
- * and its sign may follow the divisor.
+ *     remainder(x1, x2) = x1 - floor(x1 / x2) * x2,
+ * consistent with numpy.remainder: the result has the same sign as the divisor
+ * (e.g. remainder(5, 3) = 2, remainder(-4, 3) = 2).
  *
  * Supports broadcasting of input shapes according to standard array broadcasting rules.
  * Uses NPU operator aclnnRemainderTensorTensor.
@@ -257,10 +257,10 @@ std::pair<NPUArray, NPUArray> Modf(const NPUArray& x);
  * @brief Compute the element-wise remainder of division.
  *
  * The result is defined as:
- *     remainder(x1, x2) = x1 - round(x1 / x2) * x2
+ *     remainder(x1, x2) = x1 - floor(x1 / x2) * x2
  *
- * It differs from fmod in that remainder's result is closer
- * to zero in magnitude, and its sign may follow the divisor.
+ * Consistent with numpy.remainder, the result has the same sign as the
+ * divisor (e.g. remainder(5, 3) = 2, remainder(-4, 3) = 2).
  *
  * Supports broadcasting of input shapes according to standard array broadcasting rules.
  * Internally reuses Mod() which calls aclnnRemainderTensorTensor.
