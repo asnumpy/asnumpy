@@ -94,7 +94,20 @@ def _wraps_partial(impl, name):
     """Function wrapper helper."""
 
     def decorator(wrapper):
-        return functools.wraps(impl)(wrapper)
+        functools.wraps(impl)(wrapper)
+        # functools.wraps exposes the wrapped signature, so pytest would try
+        # to resolve the parameter injected by the decorator (``name``, e.g.
+        # ``order`` or ``dtype``) as a fixture and fail collection. Hide the
+        # injected parameter from the exposed signature; the wrapper still
+        # forwards it to the wrapped function as a keyword argument.
+        signature = inspect.signature(impl)
+        parameters = [
+            parameter
+            for parameter in signature.parameters.values()
+            if parameter.name != name
+        ]
+        wrapper.__signature__ = signature.replace(parameters=parameters)
+        return wrapper
 
     return decorator
 
