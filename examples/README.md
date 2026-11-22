@@ -9,6 +9,7 @@
 | [03_multiply](03_multiply.py) |  用asnumpy.multiply和numpy.multiply分别对输入数组 x1 和 x2 执行逐元素乘法运算并对比结果，并计算它们的运行时间  |
 | [04_all](04_all.py) |  用asnumpy.all和numpy.all分别对输入数组 x 执行对输入数组执行逻辑与归约操作，判断所有元素是否均为 True并对比结果，并计算它们的运行时间  |
 | [05_divide](05_divide.py) |  用asnumpy.divide和numpy.divide分别对输入数组 x1 和 x2 执行逐元素除法并对比结果，并计算它们的运行时间  |
+| [11_cupy_basics](11_cupy_basics.py) |  参考CuPy Basics示例，使用asarray/array将数据传入NPU，执行加法后用asnumpy取回结果并与NumPy校验  |
 
 ## 下一步预期实现样例
 | 函数名 | 预期功能描述 |

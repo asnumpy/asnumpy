@@ -74,6 +74,23 @@ def _normalize_norm_axis(axis: AxisLike, ndim: int):
     return tuple(normalized)
 
 
+def _native_norm_ord(ord, ndim: int, axis) -> float | None:
+    """Return the aclnnNorm p value when the requested norm is elementwise."""
+    numeric_ord = isinstance(ord, (int, float, np.integer, np.floating))
+    if axis is None:
+        if ndim == 1 and (ord is None or numeric_ord):
+            return 2.0 if ord is None else float(ord)
+        if ndim == 2 and (ord is None or ord == "fro"):
+            return 2.0
+        return None
+
+    if len(axis) == 1 and (ord is None or numeric_ord):
+        return 2.0 if ord is None else float(ord)
+    if len(axis) == 2 and (ord is None or ord == "fro"):
+        return 2.0
+    return None
+
+
 def matrix_power(a: ArrayLike, n: int) -> ndarray:
     host = _as_host_array(a)
     if n < 0:
@@ -97,16 +114,26 @@ def norm(
     axis: AxisLike = None,
     keepdims: bool = False,
 ) -> ndarray:
+    """Compute a norm on NPU when aclnnNorm provides equivalent semantics.
+
+    Vector norms and default/Frobenius matrix norms use the native operator.
+    Specialized matrix norms such as spectral and nuclear norms retain the
+    NumPy compatibility path because they are not elementwise p-norms.
+    """
+    array = _ensure_ndarray(a)
+    normalized_axis = _normalize_norm_axis(axis, array.ndim)
+    native_ord = _native_norm_ord(ord, array.ndim, normalized_axis)
+
+    if native_ord is not None and not np.issubdtype(array.dtype, np.complexfloating):
+        axes = tuple(range(array.ndim)) if normalized_axis is None else normalized_axis
+        native_input = array
+        if not np.issubdtype(array.dtype, np.inexact):
+            # NumPy returns float64 for integer and boolean norms.
+            native_input = array.astype(np.float64)
+        return ndarray(_norm(native_input, native_ord, axes, keepdims))
+
     host = _as_host_array(a)
-    normalized_axis = _normalize_norm_axis(axis, host.ndim)
-
-    try:
-        result = np.linalg.norm(host, ord=ord, axis=normalized_axis, keepdims=keepdims)
-    except TypeError:
-        if normalized_axis is None and ord is None:
-            return ndarray(_norm(a, 2.0, (), keepdims))
-        raise
-
+    result = np.linalg.norm(host, ord=ord, axis=normalized_axis, keepdims=keepdims)
     return _to_asnumpy_array(result)
 
 

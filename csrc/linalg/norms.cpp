@@ -31,6 +31,8 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <memory>
+#include <numeric>
 #include <stdexcept>
 
 using namespace asnumpy;
@@ -45,6 +47,12 @@ NPUArray CastToDtype(const NPUArray& input, aclDataType targetDtype) { return as
 
 NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& axis, bool keepdims) {
     auto axes = detail::NormalizeAxes(axis, a.shape.size(), "norm");
+    // aclnnNorm interprets an empty dimension list as "reduce all". Mirror
+    // that in the output shape instead of leaving the input shape unchanged.
+    if (axes.empty()) {
+        axes.resize(a.shape.size());
+        std::iota(axes.begin(), axes.end(), 0);
+    }
     LOG_DEBUG("aclnnNorm start: input_shape={}, aclDtype={}, ord={}, axis={}, keepdims={}",
               detail::FormatShape(a.shape), AclDtypeName(a.aclDtype), ord, detail::FormatShape(axis), keepdims);
     auto shape = a.shape;
@@ -58,12 +66,24 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
             shape.erase(shape.begin() + *it);
         }
     }
-    auto ord_scalar = aclCreateScalar(&ord, ACL_DOUBLE);
-    aclIntArray* axis_array = aclCreateIntArray(axes.data(), axes.size());
-    auto result = NPUArray(shape, ACL_FLOAT);
+    auto ord_scalar =
+        std::unique_ptr<aclScalar, decltype(&aclDestroyScalar)>(aclCreateScalar(&ord, ACL_DOUBLE), &aclDestroyScalar);
+    auto axis_array = std::unique_ptr<aclIntArray, decltype(&aclDestroyIntArray)>(
+        aclCreateIntArray(axes.data(), axes.size()), &aclDestroyIntArray);
+    if (!ord_scalar || !axis_array) {
+        throw std::runtime_error("[norms.cpp](Linalg_Norm) Failed to create norm scalar or axis array");
+    }
+
+    aclDataType output_dtype = ACL_FLOAT;
+    if (a.aclDtype == ACL_DOUBLE || a.aclDtype == ACL_COMPLEX128) {
+        output_dtype = ACL_DOUBLE;
+    } else if (a.aclDtype == ACL_FLOAT16) {
+        output_dtype = ACL_FLOAT16;
+    }
+    auto result = NPUArray(shape, output_dtype);
     uint64_t workspaceSize = 0;
     aclOpExecutor* executor;
-    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar, axis_array, keepdims, result.tensorPtr,
+    auto error = aclnnNormGetWorkspaceSize(a.tensorPtr, ord_scalar.get(), axis_array.get(), keepdims, result.tensorPtr,
                                            &workspaceSize, &executor);
     ACLNN_CHECK(error, "aclnnNormGetWorkspaceSize");
     AclWorkspace workspace(workspaceSize);
@@ -71,8 +91,6 @@ NPUArray Linalg_Norm(const NPUArray& a, double ord, const std::vector<int64_t>& 
     ACLNN_CHECK(error, "aclnnNorm");
     error = aclrtSynchronizeDevice();
     ACL_RT_CHECK(error, "aclrtSynchronizeDevice");
-    aclDestroyScalar(ord_scalar);
-    aclDestroyIntArray(axis_array);
     LOG_INFO("aclnnNorm completed");
     return result;
 }

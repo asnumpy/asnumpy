@@ -47,6 +47,9 @@ if TYPE_CHECKING:
         ShapeLike,
     )
     from .array import (
+        array,
+        asarray,
+        asnumpy,
         concatenate,
         empty,
         empty_like,
@@ -54,6 +57,7 @@ if TYPE_CHECKING:
         eye,
         full,
         full_like,
+        get_array_module,
         hstack,
         identity,
         linspace,
@@ -223,6 +227,9 @@ _NUMPY_DTYPE_NAMES = {
 
 _LAZY_MAPPING = {
     # .array
+    "array": ".array",
+    "asarray": ".array",
+    "asnumpy": ".array",
     "concatenate": ".array",
     "empty": ".array",
     "empty_like": ".array",
@@ -230,6 +237,7 @@ _LAZY_MAPPING = {
     "eye": ".array",
     "full": ".array",
     "full_like": ".array",
+    "get_array_module": ".array",
     "hstack": ".array",
     "identity": ".array",
     "linspace": ".array",
@@ -403,9 +411,18 @@ def __getattr__(name):
     if name in _LAZY_MAPPING:
         module_path = _LAZY_MAPPING[name]
         module = importlib.import_module(module_path, package=__package__)
-        if name == module_path.strip("."):
-            return module
-        return getattr(module, name)
+        # Cache every export from the imported module. Importing a submodule
+        # installs it on the package automatically, which would otherwise shadow
+        # a same-named function (for example, asnumpy.array) when another export
+        # from that module was accessed first.
+        for export_name, export_module_path in _LAZY_MAPPING.items():
+            if export_module_path != module_path:
+                continue
+            is_submodule = export_name == module_path.strip(".") and not hasattr(
+                module, export_name
+            )
+            globals()[export_name] = module if is_submodule else getattr(module, export_name)
+        return globals()[name]
 
     # Fall back to numpy for dtype aliases (e.g., ap.float32 -> np.float32)
     if name in _NUMPY_DTYPE_NAMES:

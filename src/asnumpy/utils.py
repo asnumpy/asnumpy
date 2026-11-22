@@ -91,6 +91,76 @@ class ndarray(_ndarray):
     def to_numpy(self) -> np.ndarray:
         return super().to_numpy()  # type: ignore[no-any-return]
 
+    def get(self) -> np.ndarray:
+        """Copy the device array to host memory, matching CuPy's ``get``."""
+        return self.to_numpy()
+
+    def _binary_op(self, other, function_name: str, reverse: bool = False) -> "ndarray":
+        from . import math as math_ops
+
+        other = _coerce_operator_operand(other, self)
+        function = getattr(math_ops, function_name)
+        if reverse:
+            return function(other, self)  # type: ignore[no-any-return]
+        return function(self, other)  # type: ignore[no-any-return]
+
+    def __add__(self, other) -> "ndarray":
+        return self._binary_op(other, "add")
+
+    def __radd__(self, other) -> "ndarray":
+        return self._binary_op(other, "add", reverse=True)
+
+    def __sub__(self, other) -> "ndarray":
+        return self._binary_op(other, "subtract")
+
+    def __rsub__(self, other) -> "ndarray":
+        return self._binary_op(other, "subtract", reverse=True)
+
+    def __mul__(self, other) -> "ndarray":
+        return self._binary_op(other, "multiply")
+
+    def __rmul__(self, other) -> "ndarray":
+        return self._binary_op(other, "multiply", reverse=True)
+
+    def __truediv__(self, other) -> "ndarray":
+        return self._binary_op(other, "true_divide")
+
+    def __rtruediv__(self, other) -> "ndarray":
+        return self._binary_op(other, "true_divide", reverse=True)
+
+    def __floordiv__(self, other) -> "ndarray":
+        return self._binary_op(other, "floor_divide")
+
+    def __rfloordiv__(self, other) -> "ndarray":
+        return self._binary_op(other, "floor_divide", reverse=True)
+
+    def __mod__(self, other) -> "ndarray":
+        return self._binary_op(other, "remainder")
+
+    def __rmod__(self, other) -> "ndarray":
+        return self._binary_op(other, "remainder", reverse=True)
+
+    def __pow__(self, other) -> "ndarray":
+        return self._binary_op(other, "power")
+
+    def __rpow__(self, other) -> "ndarray":
+        return self._binary_op(other, "power", reverse=True)
+
+    def __neg__(self) -> "ndarray":
+        from .math import negative
+
+        return negative(self)  # type: ignore[no-any-return]
+
+    def __pos__(self) -> "ndarray":
+        from .math import positive
+
+        return positive(self)  # type: ignore[no-any-return]
+
+    def __abs__(self) -> "ndarray":
+        from .math import absolute
+
+        return absolute(self)  # type: ignore[no-any-return]
+
     __array_priority__ = 100.0
 
     def __array_ufunc__(self, ufunc_obj, method, *inputs, **kwargs):
@@ -277,9 +347,7 @@ class ndarray(_ndarray):
         items = key if isinstance(key, tuple) else (key,)
         for item in items:
             if isinstance(item, bool) or not isinstance(item, (int, np.integer)):
-                raise TypeError(
-                    f"only integer indices are supported, got {type(item).__name__}"
-                )
+                raise TypeError(f"only integer indices are supported, got {type(item).__name__}")
         return ndarray(super().__getitem__(key))
 
 
@@ -330,3 +398,18 @@ def _ensure_ndarray(a) -> ndarray:
     if isinstance(a, ndarray):
         return a
     return ndarray.from_numpy(np.asarray(a))
+
+
+def _coerce_operator_operand(value, reference: ndarray) -> ndarray:
+    """Convert an operator operand while preserving NumPy's weak-scalar rules."""
+    if isinstance(value, ndarray):
+        return value
+
+    from ._ufunc import _coerce_weak_scalar, _dtype_kind, _is_weak_scalar
+    from .array import asarray
+
+    if _is_weak_scalar(value):
+        scalar_dtype = np.dtype(type(value))
+        if _dtype_kind(scalar_dtype) <= _dtype_kind(reference.dtype):
+            value = _coerce_weak_scalar(value, reference.dtype)
+    return asarray(value)

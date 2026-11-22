@@ -14,6 +14,7 @@
 # limitations under the License.
 # *****************************************************************************
 
+import numpy as np
 from loguru import logger
 
 from ._core.array import (
@@ -63,6 +64,48 @@ from ._core.array import (
 )
 from ._types import ArrayLike, DTypeLike, ScalarLike, ShapeLike
 from .utils import _convert_dtype, _normalize_shape, ndarray
+
+
+def _transfer_to_device(a: ArrayLike, dtype: DTypeLike, copy: bool) -> ndarray:
+    """Convert host or device input, avoiding a device-to-device copy when requested."""
+    target_dtype = _convert_dtype(dtype)
+    if isinstance(a, ndarray):
+        if target_dtype is None or a.dtype == target_dtype:
+            return ndarray(a) if copy else a
+        return a.astype(target_dtype, copy=copy)
+
+    # A host-to-device transfer necessarily allocates device storage, even when
+    # copy=False. np.asarray still avoids an additional host-side copy.
+    return ndarray.from_numpy(np.asarray(a, dtype=target_dtype))
+
+
+@logger.catch(reraise=True)
+def array(a: ArrayLike, dtype: DTypeLike = None, copy: bool = True) -> ndarray:
+    """Create a device array from host data or another device array."""
+    return _transfer_to_device(a, dtype, copy)
+
+
+@logger.catch(reraise=True)
+def asarray(a: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+    """Convert input to a device array, reusing device input when possible."""
+    return _transfer_to_device(a, dtype, copy=False)
+
+
+@logger.catch(reraise=True)
+def asnumpy(a: ArrayLike) -> np.ndarray:
+    """Return input as a NumPy array, copying device data to the host."""
+    if isinstance(a, ndarray):
+        return a.to_numpy()
+    return np.asarray(a)
+
+
+def get_array_module(*args):
+    """Return :mod:`asnumpy` if any argument is a device array, else NumPy."""
+    import asnumpy as ap
+
+    if any(isinstance(arg, ndarray) for arg in args):
+        return ap
+    return np
 
 
 @logger.catch(reraise=True)
