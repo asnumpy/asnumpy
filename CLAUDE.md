@@ -17,10 +17,11 @@ Uses **scikit-build-core** (CMake + Python build frontend), not traditional setu
 
 ### Environment Setup
 
-CANN SDK path must be set before building:
+Set `ASCEND_TOOLKIT_HOME` (or `ASCEND_HOME_PATH`) before building when the CANN SDK is not in the default location:
 ```bash
 export ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest
 ```
+If neither variable is set, CMake falls back to `/usr/local/Ascend/ascend-toolkit/latest` with a warning.
 
 ### Build Commands
 
@@ -61,10 +62,10 @@ pytest tests/asnumpy_tests/logic_tests/
 ### Run Single Test File or Function
 ```bash
 # Single file
-pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py
+pytest tests/asnumpy_tests/math_tests/test_other_special_functions.py
 
 # Single function
-pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
+pytest tests/asnumpy_tests/math_tests/test_other_special_functions.py::test_sinc_basic
 ```
 
 ### Parallel Testing
@@ -119,10 +120,10 @@ Pre-commit hooks run automatically on `git commit` if installed via `pre-commit 
 ### Three-Layer Design
 
 1. **Python Frontend** (`src/asnumpy/`)
-   - `__init__.py` - Main exports (122+ functions)
-   - `math.py` - Mathematical functions (80+ ops: sin, cos, exp, log, etc.)
+   - `__init__.py` - Public API exports via lazy loading
+   - `math.py` - Mathematical functions (sin, cos, exp, log, etc.)
    - `linalg/` - Linear algebra
-   - `logic.py` - Logical operations (16 functions)
+   - `logic.py` - Logical operations
    - `array.py` - Array creation functions
    - `random/` - Random sampling
    - `statistics.py` - Statistical functions
@@ -154,21 +155,24 @@ Pre-commit hooks run automatically on `git commit` if installed via `pre-commit 
 - **buffer** (std::shared_ptr\<DeviceBuffer\>, private) - Refcounted device allocation
 - **byteOffset** (int64_t, private) - Start of this array's data within `buffer`
 
-**Shared storage, zero-copy views.** `Reshape`, `Flatten`, `Ravel` and `GetItem` return
-views: they share `buffer` with their source and allocate nothing. Semantics match NumPy,
-so a view and its source alias the same memory. Nothing can currently write in place (there
-is no `__setitem__` and `multiply()` rejects `out=`), but any future in-place API must
-honor that rule. `Transpose` is the deliberate exception — it materializes, because a
-permuted array is not C-contiguous and downstream operators assume they are.
+**Shared storage, zero-copy views.** `Reshape`, `Flatten`, `Ravel` and supported
+`GetItem` operations return views: they share `buffer` with their source and allocate
+nothing. A view and its source alias the same memory. AsNumpy deliberately differs
+from NumPy for `Flatten`: NumPy's `flatten()` copies, while AsNumpy's is zero-copy.
+Nothing can currently write in place (there is no `__setitem__` and `multiply()`
+rejects `out=`), but any future in-place API must honor the shared-storage rule.
+`Transpose` is the deliberate exception — it materializes, because a permuted array
+is not C-contiguous and downstream operators assume they are.
 
-**Memory pooling.** Allocations go through `asnumpy::DeviceMemoryPool`
-(`include/asnumpy/utils/device_memory_pool.hpp`), never `aclrtMalloc` directly. The pool
-caches freed blocks by exact byte size (capped at 256 MB, evicting largest-first), because
-the driver's allocation cost is not proportional to the request — 64 MB measured 399 µs
-against 15 µs for 4 MB, and every operator allocates at least one output. If you add a
-place that needs device memory, go through the pool and call `Clear()` before any device
-reset. Workspace allocations inside individual operator bodies still use their own
-`aclrtMalloc`/`aclrtFree` pairs and are not pooled.
+**Memory pooling.** NPUArray device buffers and standard `AclWorkspace` allocations go
+through `asnumpy::DeviceMemoryPool` (`include/asnumpy/utils/device_memory_pool.hpp`),
+not directly through `aclrtMalloc`. The pool caches freed blocks by exact byte size
+(capped at 256 MB, evicting largest-first), because the driver's allocation cost is not
+proportional to the request — 64 MB measured 399 µs against 15 µs for 4 MB, and every
+operator allocates at least one output. If you add a place that needs device memory,
+go through the pool and call `Clear()` before any device reset or finalization.
+Specialized operator bodies may still manage workspaces directly with their own
+`aclrtMalloc`/`aclrtFree` pairs.
 
 **RAII resource management**: the destructor calls `aclDestroyTensor`; `DeviceBuffer`'s
 destructor returns the allocation to the pool when the last referencing array dies. No
@@ -246,19 +250,23 @@ Follow this sequence (example: adding `sinc` function):
 
 4. **Add Python wrapper** (`src/asnumpy/math.py`)
    ```python
-   from .lib.asnumpy_core.math import sinc as _ap_sinc
-   
-   def sinc(x: ndarray, dtype: Optional[np.dtype] = None) -> ndarray:
-       return ndarray(_ap_sinc(x, _convert_dtype(dtype)))
+   from ._core.math import sinc as _sinc
+
+   def sinc(x: ArrayLike, dtype: DTypeLike = None) -> ndarray:
+       return ndarray(_sinc(x, _convert_dtype(dtype)))
    ```
 
-5. **Export to main namespace** (`src/asnumpy/__init__.py`)
+5. **Register the public export** (`src/asnumpy/__init__.py`)
+   Add the function to `_LAZY_MAPPING` and optionally to the `TYPE_CHECKING` imports for static analysis:
    ```python
-   from .math import sinc
-   __all__ = [..., "sinc"]
+   _LAZY_MAPPING = {
+       # ...
+       "sinc": ".math",
+   }
    ```
+   `__all__` is generated from `_LAZY_MAPPING`, and `__getattr__` imports the function on first access.
 
-6. **Write tests** (`tests/asnumpy_tests/math_tests/test_miscellaneous.py`)
+6. **Write tests** (`tests/asnumpy_tests/math_tests/test_other_special_functions.py`)
    ```python
    @testing.for_float_dtypes(no_float16=True)
    @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
@@ -269,48 +277,45 @@ Follow this sequence (example: adding `sinc` function):
 7. **Rebuild and test**
    ```bash
    pip install -e .
-   pytest tests/asnumpy_tests/math_tests/test_miscellaneous.py::test_sinc_basic
+   pytest tests/asnumpy_tests/math_tests/test_other_special_functions.py::test_sinc_basic
    ```
 
 ### CANN Operator Pattern
 
-Typical CANN operator execution flow:
+For common unary and binary operators, prefer the `EXECUTE_UNARY_OP` and
+`EXECUTE_BINARY_OP` helpers in `include/asnumpy/utils/acl_executor.hpp`, or a
+dtype-promoting wrapper such as `UnaryFloatingPromoteOp`. They handle output creation,
+workspace lifetime, error checks, and device synchronization. A manual ACLNN sequence
+should use the same RAII and checked-error pattern:
 
 ```cpp
-// 1. Determine dtypes
-aclDataType out_dtype = /* ... */;
-
-// 2. Create output array
+// 1. Determine dtypes and create the output array
 NPUArray out(x.shape, out_py_dtype);
 
-// 3. Get workspace size and executor
+// 2. Get workspace size and executor
 uint64_t workspaceSize = 0;
 aclOpExecutor* executor = nullptr;
 auto error = aclnnOperatorGetWorkspaceSize(
     x.tensorPtr, out.tensorPtr, &workspaceSize, &executor
 );
-// Check error
+ACLNN_CHECK(error, "aclnnOperatorGetWorkspaceSize");
 
-// 4. Allocate workspace if needed
-void* workspaceAddr = nullptr;
-if (workspaceSize > 0) {
-    aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST);
-}
+// 3. Allocate pooled workspace with RAII
+asnumpy::AclWorkspace workspace(workspaceSize);
 
-// 5. Execute operator
-error = aclnnOperator(workspaceAddr, workspaceSize, executor, nullptr);
-// Check error
+// 4. Execute operator
+error = aclnnOperator(workspace.get(), workspaceSize, executor, nullptr);
+ACLNN_CHECK(error, "aclnnOperator");
 
-// 6. Synchronize device
-aclrtSynchronizeDevice();
-
-// 7. Free workspace
-if (workspaceAddr) aclrtFree(workspaceAddr);
+// 5. Synchronize device; workspace is released automatically on return or throw
+error = aclrtSynchronizeDevice();
+ACL_RT_CHECK(error, "aclnnOperator: aclrtSynchronizeDevice");
 
 return out;
 ```
 
-**Error handling**: Always check ACL return values and use `aclGetRecentErrMsg()` for details.
+**Error handling**: Check ACL and ACLNN return values with `ACL_RT_CHECK` and
+`ACLNN_CHECK`; these include source context and details from `aclGetRecentErrMsg()`.
 
 ### Testing Utilities
 
@@ -318,8 +323,8 @@ AsNumpy provides decorators for parameterized testing:
 
 **Data type decorators**:
 - `@testing.for_float_dtypes(no_float16=True)` - float32, float64
-- `@testing.for_int_dtypes()` - int8, int16, int32, int64, uint8, uint16
-- `@testing.for_all_dtypes()` - All supported types
+- `@testing.for_int_dtypes()` - int8, int16, int32, int64, uint8, uint16, uint32, uint64
+- `@testing.for_all_dtypes()` - Broad default set; excludes float16, uint32, and uint64 unless their `no_*` options are overridden, and includes bool and complex by default
 - `@testing.for_dtypes([np.float32, np.int32])` - Specific types
 
 **Comparison decorators**:
@@ -328,12 +333,15 @@ AsNumpy provides decorators for parameterized testing:
 
 **Test pattern**:
 ```python
+import numpy as np
+
 @testing.for_float_dtypes(no_float16=True)
 @testing.numpy_asnumpy_allclose(rtol=1e-4, atol=1e-5)
 def test_operator(xp, dtype):
-    """xp is either numpy or asnumpy, depending on test run."""
-    a = xp.array([1.0, 2.0, 3.0], dtype=dtype)
-    return xp.operator(a)  # Automatically compares numpy vs asnumpy results
+    """The comparison decorator runs the body with NumPy and AsNumpy."""
+    a_np = np.array([1.0, 2.0, 3.0], dtype=dtype)
+    a = a_np if xp is np else xp.ndarray.from_numpy(a_np)
+    return xp.sinc(a)  # Automatically compares NumPy vs AsNumpy results
 ```
 
 ## Branch Management
@@ -344,18 +352,14 @@ def test_operator(xp, dtype):
 - **Release branches**: `release/vX.Y.Z` (for stabilization)
 - **Hotfix branches**: `hotfix/<name>` (backport fixes to master)
 
-**Always use merge commits, never squash.** This preserves authorship and contribution statistics.
+**Use squash merges for all pull requests.** The repository allows only squash merging. Each PR is combined into one commit on `master`, so new changes form a linear history; existing merge commits remain unchanged. Do not create merge commits or use rebase merging.
 
-**Commit hygiene**: Before submitting a PR, squash trivial commits (typo fixes, formatting) into meaningful commits:
-```bash
-git rebase -i master
-# Mark trivial commits with 's' (squash) or 'f' (fixup)
-```
+**Commit hygiene**: Keep commits within a PR logical and easy to review, but there is no need to squash them locally before merging. Write a clear PR title and description, since they are used for the squashed commit message.
 
 ## Important Constraints
 
 1. **Python >= 3.10** - Uses modern type hints and features
-2. **CANN >= 8.2.RC1** - Required for operator support
+2. **CANN >= 8.2.RC1.alpha003** - Required for operator support
 3. **GCC >= 11.2** - C++17 features
 4. **CMake >= 3.22** - scikit-build-core requirement
 5. **Ascend 910B NPU** - Hardware target
@@ -387,11 +391,12 @@ When CANN built-in operators don't cover a NumPy API, AsNumpy uses [OpenBOAT](ht
 Version is managed by `setuptools-scm` from git tags:
 - Tag format: `vX.Y.Z` (e.g., `v0.2.0`)
 - Version written to `src/asnumpy/_version.py` at build time
+- An exact release tag produces version `X.Y.Z`; untagged development builds produce PEP 440 pre-release versions without the `+g<commit>` local segment
 - No manual version editing needed
 
 ## Common Issues
 
-**Build fails with "CANN SDK not found"**: Set `ASCEND_TOOLKIT_HOME` environment variable before building.
+**Build fails because the CANN SDK is not found**: Set `ASCEND_TOOLKIT_HOME` or `ASCEND_HOME_PATH` to the CANN toolkit location, or install it at the default path shown above.
 
 **Import error after C++ changes**: Rebuild with `pip install -e .` - Python changes are live, C++ changes need recompilation.
 
