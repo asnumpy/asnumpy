@@ -114,21 +114,54 @@ master ─── PR_A ─── PR_B ─── PR_C ─── PR_D ─── PR_
 
 #### Release Process
 
+Release artifacts are currently built and validated on a local Ascend/CANN machine,
+then uploaded to GitHub Releases. The GitHub-hosted runners do not provide this
+environment, so they are not part of the release build.
+
 1. Cut a release branch from `master`:
    ```bash
    git checkout master
-   git checkout -b release/v0.3.0
+   git checkout -b release/v0.3.1
    ```
-2. Run tests and stabilize. Fix any issues directly on the release branch.
-3. Tag the release:
+2. Run tests, update the changelog, and stabilize. Fix any issues directly on the release branch.
+3. Tag the release. An annotated tag records the release message and tagger:
    ```bash
-   git tag v0.3.0
+   git tag -a v0.3.1 -m "Release v0.3.1"
    ```
-4. If additional fixes are needed after tagging, apply them on the release branch and tag a new patch version (e.g., `v0.3.1`).
-5. Cherry-pick those fixes back to `master` (see [Hotfix Process](#333-hotfix-process)).
-6. Delete the release branch when the release series is no longer maintained:
+4. In a clean checkout of that tag, build both the source distribution and wheel.
+   Do not build a release from a dirty working tree or an untagged commit:
    ```bash
-   git branch -d release/v0.3.0
+   git switch --detach v0.3.1
+   conda activate asnumpy
+   export ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest
+   python -m pip install build twine
+   python -m build
+   python -m twine check dist/*
+   ```
+   An exact tag produces `asnumpy-0.3.1.tar.gz` and a wheel such as
+   `asnumpy-0.3.1-cp313-cp313-linux_aarch64.whl`. Untagged development builds use
+   a pre-release version such as `0.3.1.dev73` instead. Keep `dist/` limited to the
+   artifacts being released so that validation and upload commands cannot pick up
+   an older build.
+5. Install the newly built wheel into a clean environment with the matching Python
+   version and AArch64 architecture, then run the release tests on an Ascend NPU.
+   A `cp313` wheel only supports CPython 3.13; build a separate wheel in each
+   supported Python environment instead of renaming the tags.
+6. Push the tag and publish the artifacts to a GitHub Release, either through the
+   web interface or with the GitHub CLI:
+   ```bash
+   git push origin v0.3.1
+   gh release create v0.3.1 dist/* --title "AsNumpy v0.3.1" --generate-notes
+   ```
+   GitHub Releases can distribute the native `linux_aarch64` wheel directly. PyPI
+   requires a supported portable platform tag such as `manylinux`; do not rename a
+   wheel to claim compatibility. Producing a manylinux wheel requires a compliant
+   build and an `auditwheel` check that leaves the host CANN libraries external.
+7. If additional fixes are needed after tagging, apply them on the release branch and tag a new patch version (e.g., `v0.3.2`).
+8. Cherry-pick those fixes back to `master` (see [Hotfix Process](#333-hotfix-process)).
+9. Delete the release branch when the release series is no longer maintained:
+   ```bash
+   git branch -d release/v0.3.1
    ```
 
 #### Hotfix Process

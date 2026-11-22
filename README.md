@@ -155,7 +155,6 @@ Known obstacles, recorded here so the work is not mistaken for a formality:
 
 | Obstacle | Why it blocks packaging |
 |---|---|
-| Version string carries a local segment | `setuptools-scm` yields e.g. `0.4.1.dev19+g6661f5461`; the `+…` suffix is a PEP 440 local identifier, which package indexes reject outright. |
 | `auditwheel` would bundle CANN | Repairing a wheel vendors its dependencies, but `libascendcl` and friends **must** come from the host's CANN installation. They need explicit exclusion, or wheels will ship a conflicting runtime. |
 | `manylinux` images lack CANN | CANN is not present in the standard build images and must be installed into them, which also fixes the CANN version a given wheel is built against. |
 | `fmt`/`spdlog` are system-only | `CMakeLists.txt` resolves both with `NO_DEFAULT_PATH` against distro paths, so build images must provide them — `FetchContent` is included but unused as a fallback. |
@@ -198,9 +197,18 @@ pip install build
 # Build the current Python project (create source distribution and wheel)
 python -m build
 
+# Or build only the wheel
+python -m build --wheel
+
 # Install all generated wheel (.whl) files from the dist/ directory
 pip install dist/*.whl
 ```
+
+Development builds omit the `+g<commit>` local version segment, producing names such
+as `asnumpy-0.3.1.dev73-cp313-cp313-linux_aarch64.whl`. Building from an exact
+`vX.Y.Z` tag produces the release version `asnumpy-X.Y.Z-...whl`. See the
+[developer guide](docs/developer_guide.md#release-process) for the local build,
+validation, and GitHub Release upload process.
 
 **Verify the installation**
 
