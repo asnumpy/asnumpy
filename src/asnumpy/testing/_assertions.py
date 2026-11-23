@@ -33,6 +33,8 @@ import re
 import warnings
 from contextlib import contextmanager
 
+import numpy
+
 
 def assert_raises(exception_class, func=None, *args, **kwargs):
     """Assert that a function raises the specified exception type.
@@ -301,10 +303,42 @@ class _AssertNoWarningsContext:
         return False
 
 
+def _arrays_equal(actual_array, desired_array):
+    """Element-wise array comparison consistent with numpy.testing.assert_equal.
+
+    NaN values at the same position compare equal for floating/complex dtypes.
+    """
+    if actual_array.shape != desired_array.shape:
+        return False
+    if actual_array.dtype.kind in "fc" and desired_array.dtype.kind in "fc":
+        return bool(numpy.array_equal(actual_array, desired_array, equal_nan=True))
+    return bool(numpy.array_equal(actual_array, desired_array))
+
+
+def _objects_equal(actual, desired):
+    """Compare scalars, NumPy arrays, and containers element-wise."""
+    if isinstance(actual, numpy.ndarray) or isinstance(desired, numpy.ndarray):
+        return _arrays_equal(numpy.asarray(actual), numpy.asarray(desired))
+    if isinstance(actual, (list, tuple)) and isinstance(desired, (list, tuple)):
+        return len(actual) == len(desired) and all(
+            _objects_equal(a, d) for a, d in zip(actual, desired)
+        )
+    if isinstance(actual, dict) and isinstance(desired, dict):
+        return actual.keys() == desired.keys() and all(
+            _objects_equal(actual[key], desired[key]) for key in actual
+        )
+    try:
+        return bool(actual == desired)
+    except ValueError:
+        return _arrays_equal(numpy.asarray(actual), numpy.asarray(desired))
+
+
 def assert_equal(actual, desired, err_msg=""):
     """Assert that two objects are equal.
 
     General-purpose equality check for any Python objects.
+    NumPy arrays and containers holding arrays are compared element-wise,
+    consistent with numpy.testing.assert_equal.
 
     Args:
         actual: Actual value.
@@ -318,8 +352,9 @@ def assert_equal(actual, desired, err_msg=""):
         assert_equal(result, expected)
         assert_equal(a.shape, (3, 4))
         assert_equal(type(arr), numpy.ndarray)
+        assert_equal(numpy.array([1, 2]), numpy.array([1, 2]))
     """
-    if actual != desired:
+    if not _objects_equal(actual, desired):
         msg = f"\nActual: {actual}\nDesired: {desired}"
         if err_msg:
             msg = f"{err_msg}\n{msg}"
